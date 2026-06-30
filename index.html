@@ -10,17 +10,17 @@
 /* ─── RESET & BASE ─────────────────────────────────────────────────────── */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 :root {
-  --bg:       #0d0f14;
-  --bg2:      #13161e;
-  --bg3:      #1a1e2a;
-  --bg4:      #222736;
-  --border:   #2a2f3e;
-  --orange:   #e5891a;
-  --orange2:  #f5a83a;
-  --orange-dim: rgba(229,106,26,.12);
+  --bg:       #0a0a0a;
+  --bg2:      #141110;
+  --bg3:      #1c1714;
+  --bg4:      #251f1a;
+  --border:   #2e2622;
+  --orange:   #e2541f;
+  --orange2:  #f2772e;
+  --orange-dim: rgba(226,84,31,.12);
   --text:     #e8eaf0;
-  --text2:    #9aa0b4;
-  --text3:    #5a6275;
+  --text2:    #a39a92;
+  --text3:    #6b6258;
   --green:    #22c55e;
   --red:      #ef4444;
   --yellow:   #f59e0b;
@@ -59,7 +59,7 @@ body {
   padding: 20px 18px;
   border-bottom: 1px solid var(--border);
 }
-.sidebar-logo img { width: 36px; height: 36px; object-fit: contain; filter: drop-shadow(0 0 8px rgba(229,106,26,.5)); }
+.sidebar-logo img { width: 36px; height: 36px; object-fit: contain; filter: drop-shadow(0 0 8px rgba(226,84,31,.5)); }
 .sidebar-logo-text { line-height: 1.2; }
 .sidebar-logo-text .brand { font-size: 13px; font-weight: 800; color: var(--text); letter-spacing: .3px; }
 .sidebar-logo-text .sub { font-size: 10px; color: var(--orange); font-weight: 600; letter-spacing: .5px; text-transform: uppercase; }
@@ -79,7 +79,7 @@ body {
   user-select: none;
 }
 .nav-item:hover { background: var(--bg3); color: var(--text); }
-.nav-item.active { background: var(--orange-dim); color: var(--orange); border-color: rgba(229,106,26,.25); font-weight: 600; }
+.nav-item.active { background: var(--orange-dim); color: var(--orange); border-color: rgba(226,84,31,.25); font-weight: 600; }
 .nav-item .icon { font-size: 15px; width: 20px; text-align: center; flex-shrink: 0; }
 .nav-item .badge {
   margin-left: auto;
@@ -135,7 +135,7 @@ body {
   display: flex; align-items: center; gap: 7px;
   padding: 7px 14px;
   background: var(--orange-dim);
-  border: 1px solid rgba(229,106,26,.35);
+  border: 1px solid rgba(226,84,31,.35);
   border-radius: 8px;
   color: var(--orange);
   font-size: 12px; font-weight: 600;
@@ -143,7 +143,7 @@ body {
   transition: all .2s;
   white-space: nowrap;
 }
-.upload-btn:hover { background: rgba(229,106,26,.2); border-color: var(--orange); }
+.upload-btn:hover { background: rgba(226,84,31,.2); border-color: var(--orange); }
 .upload-btn input { display: none; }
 
 .sheets-btn {
@@ -225,7 +225,7 @@ body {
 .card-badge {
   display: inline-flex; align-items: center; gap: 5px;
   background: var(--orange-dim);
-  border: 1px solid rgba(229,106,26,.25);
+  border: 1px solid rgba(226,84,31,.25);
   color: var(--orange);
   font-size: 10px; font-weight: 700;
   padding: 3px 9px; border-radius: 20px;
@@ -244,7 +244,7 @@ body {
 .search-box {
   flex: 1; min-width: 200px;
   padding: 8px 14px 8px 36px;
-  background: var(--bg3) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%235a6275' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") no-repeat 11px center;
+  background: var(--bg3) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b6258' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") no-repeat 11px center;
   border: 1px solid var(--border);
   border-radius: 8px;
   color: var(--text);
@@ -310,12 +310,12 @@ th:last-child { width: 7%; }
 th:not(:first-child):not(:last-child) { width: 7.4%; }
 td {
   padding: 8px 6px;
-  border-bottom: 1px solid rgba(42,47,62,.6);
+  border-bottom: 1px solid rgba(46,38,34,.6);
   text-align: center; color: var(--text2); font-size: 12px;
 }
 td:first-child { text-align: left; padding-left: 14px; white-space: normal; word-break: break-word; line-height: 1.3; color: var(--text); font-weight: 600; }
 tr:last-child td { border-bottom: none; }
-tr:hover td { background: rgba(229,106,26,.05); }
+tr:hover td { background: rgba(226,84,31,.05); }
 tr.hidden-row { display: none; }
 
 .dot {
@@ -335,7 +335,7 @@ tr.hidden-row { display: none; }
 .pc-3 { background: rgba(34,197,94,.12); color: #22c55e; }
 .pc-4 { background: rgba(59,130,246,.12); color: #3b82f6; }
 .pc-5 { background: rgba(168,85,247,.12); color: #a855f7; }
-.pc-6 { background: rgba(229,106,26,.15); color: var(--orange); }
+.pc-6 { background: rgba(226,84,31,.15); color: var(--orange); }
 
 /* ─── UPSELL CARDS ─────────────────────────────────────────────────────── */
 .upsell-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
@@ -363,7 +363,7 @@ tr.hidden-row { display: none; }
 .upsell-steps li {
   display: flex; gap: 8px; align-items: flex-start;
   padding: 5px 0; font-size: 11.5px; color: var(--text2); line-height: 1.45;
-  border-bottom: 1px solid rgba(42,47,62,.6);
+  border-bottom: 1px solid rgba(46,38,34,.6);
 }
 .upsell-steps li:last-child { border-bottom: none; }
 .step-n {
@@ -422,7 +422,7 @@ tr.hidden-row { display: none; }
 .flag-table { width: 100%; border-collapse: collapse; }
 .flag-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--text2); vertical-align: top; }
 .flag-table tr:last-child td { border-bottom: none; }
-.flag-table tr:hover td { background: rgba(229,106,26,.05); }
+.flag-table tr:hover td { background: rgba(226,84,31,.05); }
 .flag-table .client-col { color: var(--text); font-weight: 600; width: 28%; }
 .flag-tag {
   display: inline-block; font-size: 9.5px; font-weight: 700;
@@ -881,7 +881,7 @@ tr.hidden-row { display: none; }
       <div class="kpi"><div class="kpi-icon">⚡</div><div class="kpi-val">—</div><div class="kpi-lbl">Avg Response Time</div><div class="kpi-sub">Awaiting data</div></div>
     </div>
 
-    <div class="card" style="background:rgba(229,106,26,.06);border-color:rgba(229,106,26,.2)">
+    <div class="card" style="background:rgba(226,84,31,.06);border-color:rgba(226,84,31,.2)">
       <div style="text-align:center;padding:40px 20px;color:var(--text3)">
         <div style="font-size:38px;margin-bottom:14px">💬</div>
         <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px">Text Agent Dashboard — Coming Soon</div>
@@ -1119,7 +1119,7 @@ tr.hidden-row { display: none; }
       4. Click <strong>Publish</strong> → copy the generated link<br>
       5. Paste it above and click Connect
     </div>
-    <div style="font-size:11px;color:var(--text3);margin-bottom:16px;background:rgba(229,106,26,.08);padding:10px 12px;border-radius:8px;border:1px solid rgba(229,106,26,.25)">
+    <div style="font-size:11px;color:var(--text3);margin-bottom:16px;background:rgba(226,84,31,.08);padding:10px 12px;border-radius:8px;border:1px solid rgba(226,84,31,.25)">
       <strong style="color:var(--orange)">📋 Required columns:</strong> Business Name, Yelp, Google LSA, Voice Agent, Thumbtack, Chat Widget, Contact Form, Acculynx, Builder Prime, Go High Level, Housecall Pro &nbsp;(use YES/NO or TRUE/FALSE)
     </div>
     <div id="sheetsStatus" style="font-size:12px;margin-bottom:12px;display:none"></div>
@@ -1354,8 +1354,8 @@ function destroyChart(key) {
 }
 
 const C = {
-  grid: 'rgba(42,47,62,.8)', tick: '#5a6275', text: '#9aa0b4',
-  orange: '#e5891a', orange2: '#f5a83a', red: '#ef4444', green: '#22c55e',
+  grid: 'rgba(46,38,34,.8)', tick: '#6b6258', text: '#a39a92',
+  orange: '#e2541f', orange2: '#f2772e', red: '#ef4444', green: '#22c55e',
   blue: '#3b82f6', yellow: '#f59e0b', purple: '#a855f7',
 };
 
@@ -1495,7 +1495,7 @@ function rebuildAdoptionBar(pk) {
       chart.getDatasetMeta(0).data.forEach((bar, i) => {
         const v = p[i];
         if (!v) return;
-        ctx.fillStyle = '#9aa0b4'; ctx.font = 'bold 10px Segoe UI'; ctx.textAlign = 'center';
+        ctx.fillStyle = '#a39a92'; ctx.font = 'bold 10px Segoe UI'; ctx.textAlign = 'center';
         ctx.fillText(v + '%', bar.x, bar.y - 5);
       });
       ctx.restore();
@@ -1504,7 +1504,7 @@ function rebuildAdoptionBar(pk) {
 
   const ds = {
     data: pcts,
-    backgroundColor: pcts.map(v => v > 50 ? C.orange : v > 10 ? C.yellow : 'rgba(229,106,26,.25)'),
+    backgroundColor: pcts.map(v => v > 50 ? C.orange : v > 10 ? C.yellow : 'rgba(226,84,31,.25)'),
     borderRadius: { topLeft: 6, topRight: 6 }, borderSkipped: false, barPercentage: 0.6,
   };
   ds._pcts = pcts;
@@ -1515,7 +1515,7 @@ function rebuildAdoptionBar(pk) {
     options: {
       responsive: true, maintainAspectRatio: false, layout: { padding: { top: 20 } },
       plugins: { legend: { display: false },
-        tooltip: { backgroundColor: '#13161e', borderColor: '#2a2f3e', borderWidth: 1, titleColor: '#e8eaf0', bodyColor: C.orange, padding: 12, cornerRadius: 8,
+        tooltip: { backgroundColor: '#141110', borderColor: '#2e2622', borderWidth: 1, titleColor: '#e8eaf0', bodyColor: C.orange, padding: 12, cornerRadius: 8,
           callbacks: { label: c => ` ${c.parsed.y}% — ${counts[c.dataIndex]} of ${total} clients` } } },
       scales: {
         y: { beginAtZero: true, max: 100, grid: { color: C.grid }, ticks: { callback: v => v + '%', color: C.tick, font: { size: 11 } }, border: { display: false } },
@@ -1542,7 +1542,7 @@ function rebuildDistDonut(pk) {
     dist.push(counts[i] || 0);
     labels.push(`${i} product${i>1?'s':''} (${counts[i]||0})`);
   }
-  const palette = ['#e5891a40','#f59e0b','#e5891a','#c96e0f','#b85c0c','#7c3aed','#1a1a2e','#3b82f6','#22c55e'];
+  const palette = ['#e2541f40','#f59e0b','#e2541f','#b8431a','#8f3010','#7c3aed','#1a1512','#3b82f6','#22c55e'];
   const colors = dist.map((_,i) => palette[i % palette.length]);
 
   const badgeEl = document.getElementById('badge-' + pk + '-clients');
@@ -1555,12 +1555,12 @@ function rebuildDistDonut(pk) {
 
   chartRegistry[chartKey] = new Chart(canvas, {
     type: 'doughnut',
-    data: { labels, datasets: [{ data: dist, backgroundColor: colors, borderWidth: 3, borderColor: '#13161e', hoverOffset: 8 }] },
+    data: { labels, datasets: [{ data: dist, backgroundColor: colors, borderWidth: 3, borderColor: '#141110', hoverOffset: 8 }] },
     options: {
       responsive: true, maintainAspectRatio: false, cutout: '68%',
       plugins: {
         legend: { position: 'right', labels: { color: C.text, font: { size: 11, weight: '600' }, padding: 12, usePointStyle: true, pointStyleWidth: 10 } },
-        tooltip: { backgroundColor: '#13161e', borderColor: '#2a2f3e', borderWidth: 1, titleColor: '#e8eaf0', bodyColor: C.orange, padding: 12, cornerRadius: 8,
+        tooltip: { backgroundColor: '#141110', borderColor: '#2e2622', borderWidth: 1, titleColor: '#e8eaf0', bodyColor: C.orange, padding: 12, cornerRadius: 8,
           callbacks: { label: ctx => ` ${ctx.parsed} clients` } }
       }
     }
@@ -1618,7 +1618,7 @@ function rebuildGapBar(pk) {
     options: {
       indexAxis: 'y', responsive: true, maintainAspectRatio: false, layout: { padding: { right: 16 } },
       plugins: { legend: { display: false },
-        tooltip: { backgroundColor: '#13161e', borderColor: '#2a2f3e', borderWidth: 1, titleColor: '#e8eaf0', bodyColor: C.orange, padding: 12, cornerRadius: 8,
+        tooltip: { backgroundColor: '#141110', borderColor: '#2e2622', borderWidth: 1, titleColor: '#e8eaf0', bodyColor: C.orange, padding: 12, cornerRadius: 8,
           callbacks: { label: ctx => ` ${ctx.parsed.x} clients to upsell (${Math.round(ctx.parsed.x/total*100)}%)` } } },
       scales: {
         x: { beginAtZero: true, max: total, grid: { color: C.grid }, ticks: { color: C.tick, font: { size: 11 } }, border: { display: false } },
