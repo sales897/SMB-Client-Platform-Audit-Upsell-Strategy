@@ -280,6 +280,38 @@ body {
 }
 .pm-tab:hover { border-color: var(--orange); color: var(--orange); }
 .pm-tab.active { background: var(--orange-dim); border-color: var(--orange); color: var(--orange); }
+
+/* ─── Client Directory ─────────────────────────────────────────────────── */
+.portfolio-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 9px; border-radius: 20px;
+  font-size: 10.5px; font-weight: 700;
+  margin: 2px 3px 2px 0;
+  white-space: nowrap;
+}
+.chip-smb { background: rgba(229,106,26,.15); color: var(--orange); border: 1px solid rgba(229,106,26,.3); }
+.chip-whitelabel { background: rgba(34,197,94,.15); color: var(--green); border: 1px solid rgba(34,197,94,.3); }
+.chip-support { background: rgba(239,68,68,.15); color: var(--red); border: 1px solid rgba(239,68,68,.3); }
+
+.row-action-btn {
+  padding: 5px 11px; font-size: 10.5px; font-weight: 700;
+  border-radius: 6px; cursor: pointer; border: 1px solid var(--border);
+  background: var(--bg3); color: var(--text2); margin-right: 6px;
+  transition: all .15s;
+}
+.row-action-btn:hover { border-color: var(--orange); color: var(--orange); }
+.row-action-btn.danger:hover { border-color: var(--red); color: var(--red); background: rgba(239,68,68,.08); }
+
+.edit-client-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px;
+  max-height: 320px; overflow-y: auto; padding: 4px 2px;
+}
+.edit-client-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 7px 10px; background: var(--bg3); border-radius: 7px; border: 1px solid var(--border);
+}
+.edit-client-row label { font-size: 12px; color: var(--text2); }
+.edit-client-row input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--orange); cursor: pointer; }
 .row-count { font-size: 11px; color: var(--text3); margin-left: auto; white-space: nowrap; }
 
 .tbl-scroll {
@@ -552,6 +584,10 @@ tr.hidden-row { display: none; }
 
   <div class="nav-section">
     <div class="nav-label">Overview</div>
+    <div class="nav-item" onclick="showPage('clients')">
+      <span class="icon">👥</span> All Clients
+      <span class="badge" id="navClientsBadge">0</span>
+    </div>
     <div class="nav-item active" onclick="showPage('smb')">
       <span class="icon">📊</span> SMB Dashboard
       <span class="badge">63</span>
@@ -619,6 +655,48 @@ tr.hidden-row { display: none; }
         📋 Connect Sheets
       </button>
     </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       PAGE 0: ALL CLIENTS — unified directory across every portfolio
+  ════════════════════════════════════════════════════════════════════════ -->
+  <div class="page" id="page-clients">
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-icon">👥</div><div class="kpi-val orange" id="cl-total">0</div><div class="kpi-lbl">Unique Clients</div><div class="kpi-sub">Across all portfolios</div></div>
+      <div class="kpi"><div class="kpi-icon">📊</div><div class="kpi-val" id="cl-smb-count">0</div><div class="kpi-lbl">SMB Clients</div></div>
+      <div class="kpi"><div class="kpi-icon">🏷️</div><div class="kpi-val green" id="cl-wl-count">0</div><div class="kpi-lbl">White Label Partners</div></div>
+      <div class="kpi"><div class="kpi-icon">🎫</div><div class="kpi-val red" id="cl-support-count">0</div><div class="kpi-lbl">Support Clients</div></div>
+      <div class="kpi"><div class="kpi-icon">🔗</div><div class="kpi-val" id="cl-multi-count" style="color:var(--purple)">0</div><div class="kpi-lbl">In 2+ Portfolios</div><div class="kpi-sub">Cross-sold accounts</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div><div class="card-title">Unified Client Directory</div><div class="card-sub">Clients with the same name across portfolios are merged into a single row · Updates live with every upload</div></div>
+      </div>
+      <div class="table-controls">
+        <input type="text" class="search-box" id="clientsSearch" placeholder="Search all clients..." oninput="filterClientsDirectory()">
+        <div style="display:flex;gap:6px;flex-wrap:wrap" id="clientsFilterPills">
+          <button class="filter-pill active" onclick="filterClientsByPortfolio('all',this)">All Portfolios</button>
+          <button class="filter-pill" onclick="filterClientsByPortfolio('smb',this)">📊 SMB</button>
+          <button class="filter-pill" onclick="filterClientsByPortfolio('whitelabel',this)">🏷️ White Label</button>
+          <button class="filter-pill" onclick="filterClientsByPortfolio('support',this)">🎫 Support</button>
+          <button class="filter-pill" onclick="filterClientsByPortfolio('multi',this)">🔗 2+ Portfolios</button>
+        </div>
+        <span class="row-count" id="clientsRowCount">0 clients</span>
+      </div>
+      <div class="tbl-scroll" style="max-height:560px">
+        <table style="table-layout:auto">
+          <thead><tr>
+            <th style="text-align:left;padding-left:14px;width:24%">Client Name</th>
+            <th style="width:30%">Portfolios</th>
+            <th style="width:12%"># Products</th>
+            <th style="width:34%">Actions</th>
+          </tr></thead>
+          <tbody id="clientsDirectoryBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="page-footer">Client Success Hub · Niche Inc. · Unified Client Directory · v2.0 · Confidential</div>
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════════
@@ -1105,6 +1183,34 @@ tr.hidden-row { display: none; }
   </div>
 </div>
 
+<!-- EDIT CLIENT MODAL -->
+<div class="modal-overlay" id="editClientModal">
+  <div class="modal" style="width:560px">
+    <h3>✏️ Edit Client</h3>
+    <p id="editClientName" style="font-weight:700;color:var(--text);font-size:15px;margin-bottom:4px"></p>
+    <p style="margin-bottom:16px">Toggle which products this client has, grouped by portfolio. Unchecking removes them from that product only — it does not remove them from the portfolio.</p>
+    <div id="editClientGroups"></div>
+    <div class="modal-btns" style="margin-top:16px">
+      <button class="btn btn-ghost" onclick="closeEditClientModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveEditClient()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- DELETE CLIENT CONFIRMATION MODAL -->
+<div class="modal-overlay" id="deleteClientModal">
+  <div class="modal">
+    <h3>🗑️ Remove Client</h3>
+    <p id="deleteClientText">Are you sure you want to remove this client?</p>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:18px;background:var(--bg3);padding:12px 14px;border-radius:8px;border:1px solid var(--border)" id="deleteClientPortfolioList">
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeDeleteClientModal()">Cancel</button>
+      <button class="btn" style="background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3)" onclick="confirmDeleteClient()">Remove from All Selected Portfolios</button>
+    </div>
+  </div>
+</div>
+
 <!-- GOOGLE SHEETS MODAL -->
 <div class="modal-overlay" id="sheetsModal">
   <div class="modal">
@@ -1135,6 +1241,7 @@ tr.hidden-row { display: none; }
 // NAVIGATION
 // ════════════════════════════════════════════════════════════════════════
 const pageMeta = {
+  clients:    { title: 'All Clients',          sub: 'Unified directory across every portfolio' },
   smb:        { title: 'SMB Dashboard',       sub: 'Platform audit · 63 active clients' },
   whitelabel: { title: 'White Label',          sub: 'Partner accounts' },
   support:    { title: 'Support Dashboard',    sub: 'Open tickets & resolution metrics' },
@@ -1394,6 +1501,7 @@ function rebuildAll() {
   rebuildUpsellCards();   // SMB-only report page
   rebuildActionPlan();    // static 90-day execution guide
   rebuildProductCatalogPage(); // Manage Products page (uses activeManagePortfolio)
+  rebuildClientsDirectory();   // unified cross-portfolio client directory
 }
 
 // ─── TABLE HEADERS ────────────────────────────────────────────────────────────
@@ -2084,6 +2192,214 @@ function rebuildProductCatalogPage() {
         <button class="btn" style="background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.25);padding:7px 14px;font-size:11px" onclick="requestRemoveProduct('${pk}','${p.key}')">🗑️ Remove</button>
       </div>`;
   });
+}
+
+
+// ════════════════════════════════════════════════════════════════════════
+// ALL CLIENTS — unified cross-portfolio directory (merge-by-name)
+// ════════════════════════════════════════════════════════════════════════
+const PORTFOLIO_LABELS = { smb: 'SMB', whitelabel: 'White Label', support: 'Support' };
+const PORTFOLIO_ICONS  = { smb: '📊', whitelabel: '🏷️', support: '🎫' };
+
+let activeClientsFilter = 'all';
+
+function buildMergedClients() {
+  const merged = {};
+  ['smb', 'whitelabel', 'support'].forEach(pk => {
+    getClients(pk).forEach((c, idx) => {
+      const norm = (c.name || '').trim().toLowerCase();
+      if (!norm) return;
+      if (!merged[norm]) merged[norm] = { displayName: c.name.trim(), portfolios: {} };
+      merged[norm].portfolios[pk] = { idx, client: c };
+    });
+  });
+  return merged;
+}
+
+function rebuildClientsDirectory() {
+  const merged = buildMergedClients();
+  const rows = Object.values(merged).sort((a, b) => a.displayName.localeCompare(b.displayName));
+
+  const totalEl = document.getElementById('cl-total');
+  const smbEl = document.getElementById('cl-smb-count');
+  const wlEl = document.getElementById('cl-wl-count');
+  const supportEl = document.getElementById('cl-support-count');
+  const multiEl = document.getElementById('cl-multi-count');
+  const navBadge = document.getElementById('navClientsBadge');
+
+  const smbCount = getClients('smb').length;
+  const wlCount = getClients('whitelabel').length;
+  const supportCount = getClients('support').length;
+  const multiCount = rows.filter(r => Object.keys(r.portfolios).length >= 2).length;
+
+  if (totalEl) totalEl.textContent = rows.length;
+  if (smbEl) smbEl.textContent = smbCount;
+  if (wlEl) wlEl.textContent = wlCount;
+  if (supportEl) supportEl.textContent = supportCount;
+  if (multiEl) multiEl.textContent = multiCount;
+  if (navBadge) navBadge.textContent = rows.length;
+
+  const tbody = document.getElementById('clientsDirectoryBody');
+  if (!tbody) return;
+  tbody.innerHTML = '';
+
+  rows.forEach(row => {
+    const portfolioKeys = Object.keys(row.portfolios);
+    let totalProducts = 0;
+    portfolioKeys.forEach(pk => {
+      const keys = getProdKeys(pk);
+      totalProducts += keys.filter(k => row.portfolios[pk].client[k]).length;
+    });
+
+    const chips = portfolioKeys.map(pk =>
+      `<span class="portfolio-chip chip-${pk}">${PORTFOLIO_ICONS[pk]} ${PORTFOLIO_LABELS[pk]}</span>`
+    ).join('');
+
+    const safeName = row.displayName.replace(/'/g, "\\'");
+    const portfolioAttrs = portfolioKeys.map(pk => `data-has-${pk}="true"`).join(' ');
+
+    tbody.innerHTML += `
+      <tr data-name="${row.displayName.toLowerCase()}" data-portfolio-count="${portfolioKeys.length}" ${portfolioAttrs}>
+        <td style="padding-left:14px;color:var(--text);font-weight:600">${row.displayName}</td>
+        <td>${chips}</td>
+        <td><span class="pc-badge pc-${Math.min(totalProducts,6)}">${totalProducts}</span></td>
+        <td>
+          <button class="row-action-btn" onclick="openEditClientModal('${safeName}')">✏️ Edit</button>
+          <button class="row-action-btn danger" onclick="openDeleteClientModal('${safeName}')">🗑️ Remove</button>
+        </td>
+      </tr>`;
+  });
+
+  filterClientsDirectory();
+}
+
+function filterClientsDirectory() {
+  const searchEl = document.getElementById('clientsSearch');
+  const q = searchEl ? searchEl.value.toLowerCase() : '';
+  let n = 0;
+  document.querySelectorAll('#clientsDirectoryBody tr').forEach(row => {
+    const name = row.dataset.name || '';
+    const pc = parseInt(row.dataset.portfolioCount || 0);
+    let show = name.includes(q);
+    if (show && activeClientsFilter !== 'all') {
+      if (activeClientsFilter === 'multi') {
+        show = pc >= 2;
+      } else {
+        const camelKey = 'has' + activeClientsFilter.charAt(0).toUpperCase() + activeClientsFilter.slice(1);
+        show = row.dataset[camelKey] === 'true';
+      }
+    }
+    row.style.display = show ? '' : 'none';
+    if (show) n++;
+  });
+  const rc = document.getElementById('clientsRowCount');
+  if (rc) rc.textContent = `${n} client${n !== 1 ? 's' : ''}`;
+}
+
+function filterClientsByPortfolio(p, btn) {
+  activeClientsFilter = p;
+  document.querySelectorAll('#clientsFilterPills .filter-pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  filterClientsDirectory();
+}
+
+// ─── EDIT CLIENT ──────────────────────────────────────────────────────────────
+let editingClientName = null;
+
+function openEditClientModal(name) {
+  editingClientName = name;
+  const merged = buildMergedClients();
+  const norm = name.trim().toLowerCase();
+  const entry = merged[norm];
+  if (!entry) return;
+
+  document.getElementById('editClientName').textContent = entry.displayName;
+  const container = document.getElementById('editClientGroups');
+  container.innerHTML = '';
+
+  Object.keys(entry.portfolios).forEach(pk => {
+    const client = entry.portfolios[pk].client;
+    const catalog = getCatalog(pk);
+    let groupHtml = `<div style="margin-bottom:14px">
+      <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">${PORTFOLIO_ICONS[pk]} ${PORTFOLIO_LABELS[pk]}</div>
+      <div class="edit-client-grid">`;
+    catalog.forEach(p => {
+      const checked = client[p.key] ? 'checked' : '';
+      groupHtml += `
+        <div class="edit-client-row">
+          <label for="ec-${pk}-${p.key}">${p.label}</label>
+          <input type="checkbox" id="ec-${pk}-${p.key}" data-pk="${pk}" data-key="${p.key}" ${checked}>
+        </div>`;
+    });
+    groupHtml += `</div></div>`;
+    container.innerHTML += groupHtml;
+  });
+
+  document.getElementById('editClientModal').classList.add('open');
+}
+
+function closeEditClientModal() {
+  editingClientName = null;
+  document.getElementById('editClientModal').classList.remove('open');
+}
+
+function saveEditClient() {
+  if (!editingClientName) { closeEditClientModal(); return; }
+  const merged = buildMergedClients();
+  const norm = editingClientName.trim().toLowerCase();
+  const entry = merged[norm];
+  if (!entry) { closeEditClientModal(); return; }
+
+  document.querySelectorAll('#editClientGroups input[type=checkbox]').forEach(cb => {
+    const pk = cb.dataset.pk;
+    const key = cb.dataset.key;
+    const portfolioEntry = entry.portfolios[pk];
+    if (portfolioEntry) {
+      portfolioEntry.client[key] = cb.checked;
+    }
+  });
+
+  closeEditClientModal();
+  rebuildAll();
+  showUploadFeedback(`Updated "${entry.displayName}"`, false);
+}
+
+// ─── DELETE CLIENT ────────────────────────────────────────────────────────────
+let deletingClientName = null;
+
+function openDeleteClientModal(name) {
+  deletingClientName = name;
+  const merged = buildMergedClients();
+  const norm = name.trim().toLowerCase();
+  const entry = merged[norm];
+  if (!entry) return;
+
+  const portfolioKeys = Object.keys(entry.portfolios);
+  document.getElementById('deleteClientText').textContent =
+    `Are you sure you want to remove "${entry.displayName}" entirely?`;
+  document.getElementById('deleteClientPortfolioList').innerHTML =
+    `This will remove them from: <strong>${portfolioKeys.map(pk => PORTFOLIO_LABELS[pk]).join(', ')}</strong>`;
+
+  document.getElementById('deleteClientModal').classList.add('open');
+}
+
+function closeDeleteClientModal() {
+  deletingClientName = null;
+  document.getElementById('deleteClientModal').classList.remove('open');
+}
+
+function confirmDeleteClient() {
+  if (!deletingClientName) { closeDeleteClientModal(); return; }
+  const norm = deletingClientName.trim().toLowerCase();
+
+  ['smb', 'whitelabel', 'support'].forEach(pk => {
+    PORTFOLIOS[pk].clients = getClients(pk).filter(c => (c.name || '').trim().toLowerCase() !== norm);
+  });
+
+  const removedName = deletingClientName;
+  closeDeleteClientModal();
+  rebuildAll();
+  showUploadFeedback(`Removed "${removedName}" from all portfolios`, false);
 }
 
 // ════════════════════════════════════════════════════════════════════════
