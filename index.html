@@ -540,12 +540,16 @@ tr.hidden-row { display: none; }
   <div class="nav-section">
     <div class="nav-label">Overview</div>
     <div class="nav-item active" onclick="showPage('smb')">
-      <span class="icon">📊</span> SMB Clients
+      <span class="icon">📊</span> SMB Dashboard
       <span class="badge">63</span>
     </div>
     <div class="nav-item" onclick="showPage('whitelabel')">
       <span class="icon">🏷️</span> White Label
       <span class="badge green">12</span>
+    </div>
+    <div class="nav-item" onclick="showPage('support')">
+      <span class="icon">🎫</span> Support Dashboard
+      <span class="badge red">8</span>
     </div>
   </div>
 
@@ -555,12 +559,8 @@ tr.hidden-row { display: none; }
       <span class="icon">🎙️</span> Voice Agent
       <span class="badge red">31</span>
     </div>
-    <div class="nav-item" onclick="showPage('adspend')">
-      <span class="icon">💰</span> Ad Spend
-    </div>
-    <div class="nav-item" onclick="showPage('support')">
-      <span class="icon">🎫</span> Support
-      <span class="badge red">8</span>
+    <div class="nav-item" onclick="showPage('textagent')">
+      <span class="icon">💬</span> Text Agent
     </div>
   </div>
 
@@ -588,7 +588,7 @@ tr.hidden-row { display: none; }
   <div class="topbar">
     <button class="hamburger" onclick="toggleSidebar()">☰</button>
     <div>
-      <div class="topbar-title" id="topbarTitle">SMB Clients</div>
+      <div class="topbar-title" id="topbarTitle">SMB Dashboard</div>
       <div class="topbar-sub" id="topbarSub">Platform audit · 63 active clients</div>
     </div>
     <div class="topbar-right">
@@ -667,7 +667,7 @@ tr.hidden-row { display: none; }
         <div class="chart-wrap h260" style="position:relative">
           <canvas id="distPie"></canvas>
           <div style="position:absolute;top:50%;left:36%;transform:translate(-50%,-50%);text-align:center;pointer-events:none">
-            <div style="font-size:26px;font-weight:800;color:var(--text);line-height:1">63</div>
+            <div id="distCenterNum" style="font-size:26px;font-weight:800;color:var(--text);line-height:1">63</div>
             <div style="font-size:10px;color:var(--text3);margin-top:2px">clients</div>
           </div>
         </div>
@@ -793,47 +793,29 @@ tr.hidden-row { display: none; }
   <!-- ═══════════════════════════════════════════════════════════════════
        PAGE 4: AD SPEND & REVENUE
   ════════════════════════════════════════════════════════════════════════ -->
-  <div class="page" id="page-adspend">
+  <div class="page" id="page-textagent">
     <div class="kpi-row">
-      <div class="kpi"><div class="kpi-icon">💸</div><div class="kpi-val orange">$124K</div><div class="kpi-lbl">Total Monthly Ad Spend</div><div class="kpi-sub">Across all SMB clients</div></div>
-      <div class="kpi"><div class="kpi-icon">📈</div><div class="kpi-val green">$387K</div><div class="kpi-lbl">Est. Monthly Revenue</div><div class="kpi-sub">Generated from campaigns</div></div>
-      <div class="kpi"><div class="kpi-icon">✖️</div><div class="kpi-val green">3.1x</div><div class="kpi-lbl">Average ROAS</div><div class="kpi-sub">Return on ad spend</div></div>
-      <div class="kpi"><div class="kpi-icon">💰</div><div class="kpi-val">$1,968</div><div class="kpi-lbl">Avg Spend / Client</div><div class="kpi-sub">Per month</div></div>
-    </div>
-
-    <div class="grid-2">
-      <div class="card span-2">
-        <div class="card-header">
-          <div><div class="card-title">Spend vs Revenue by Client</div><div class="card-sub">Top 10 clients by ad spend · Sample data</div></div>
-          <span class="card-badge">💰 Connect sheet for live data</span>
-        </div>
-        <div class="chart-wrap h300"><canvas id="spendBar"></canvas></div>
-      </div>
-    </div>
-
-    <div class="grid-2">
-      <div class="card">
-        <div class="card-header"><div class="card-title">Spend Distribution</div><div class="card-sub">By platform</div></div>
-        <div class="chart-wrap h240"><canvas id="spendPie"></canvas></div>
-      </div>
-      <div class="card">
-        <div class="card-header"><div class="card-title">Monthly Trend</div><div class="card-sub">Spend vs revenue over time</div></div>
-        <div class="chart-wrap h240"><canvas id="spendTrend"></canvas></div>
-      </div>
+      <div class="kpi"><div class="kpi-icon">💬</div><div class="kpi-val">—</div><div class="kpi-lbl">Clients with Text Agent</div><div class="kpi-sub">Awaiting data</div></div>
+      <div class="kpi"><div class="kpi-icon">📨</div><div class="kpi-val">—</div><div class="kpi-lbl">Messages Sent</div><div class="kpi-sub">This period</div></div>
+      <div class="kpi"><div class="kpi-icon">✅</div><div class="kpi-val">—</div><div class="kpi-lbl">Response Rate</div><div class="kpi-sub">Awaiting data</div></div>
+      <div class="kpi"><div class="kpi-icon">⚡</div><div class="kpi-val">—</div><div class="kpi-lbl">Avg Response Time</div><div class="kpi-sub">Awaiting data</div></div>
     </div>
 
     <div class="card" style="background:rgba(229,106,26,.06);border-color:rgba(229,106,26,.2)">
-      <div style="text-align:center;padding:20px;color:var(--text3)">
-        <div style="font-size:32px;margin-bottom:10px">💰</div>
-        <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px">Connect Your Ad Spend Sheet</div>
-        <div style="font-size:12px;margin-bottom:16px">Upload the Ad Spend column from your spreadsheet to populate real client-by-client data.</div>
-        <label class="btn btn-primary" style="cursor:pointer">
-          📁 Upload Sheet
-          <input type="file" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFileUpload(event)">
-        </label>
+      <div style="text-align:center;padding:40px 20px;color:var(--text3)">
+        <div style="font-size:38px;margin-bottom:14px">💬</div>
+        <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px">Text Agent Dashboard — Coming Soon</div>
+        <div style="font-size:13px;margin-bottom:20px;max-width:420px;margin-left:auto;margin-right:auto;line-height:1.6">This section is ready to receive data. Upload a sheet or connect Google Sheets with your Text Agent metrics and this page will populate automatically.</div>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
+          <label class="btn btn-primary" style="cursor:pointer">
+            📁 Upload Sheet
+            <input type="file" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFileUpload(event)">
+          </label>
+          <button class="btn btn-ghost" onclick="openSheetsModal()">📋 Connect Google Sheets</button>
+        </div>
       </div>
     </div>
-    <div class="page-footer">Client Intelligence Hub · Niche Inc. · Ad Spend & Revenue</div>
+    <div class="page-footer">Client Intelligence Hub · Niche Inc. · Text Agent Performance</div>
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════════
@@ -899,25 +881,64 @@ tr.hidden-row { display: none; }
 <div class="modal-overlay" id="sheetsModal">
   <div class="modal">
     <h3>🔗 Connect Google Sheets</h3>
-    <p>Paste your Google Sheet URL below. Make sure the sheet is set to <strong>"Anyone with link can view"</strong> in sharing settings. The dashboard will auto-refresh data from your sheet.</p>
-    <input type="text" id="sheetsUrl" placeholder="https://docs.google.com/spreadsheets/d/...">
-    <div style="font-size:11px;color:var(--text3);margin-bottom:16px;background:var(--bg3);padding:10px 12px;border-radius:8px;border:1px solid var(--border)">
-      <strong style="color:var(--orange)">📌 Setup steps:</strong><br>
-      1. Open your Google Sheet<br>
-      2. File → Share → "Anyone with link" → Viewer<br>
-      3. Copy the URL and paste it above<br>
-      4. The hub will read your SMBs, White Label, and Ad Spend tabs automatically
+    <p>Publish your sheet to the web as CSV, then paste that link below. The hub will fetch live data and rebuild every chart, KPI, and table automatically.</p>
+    <input type="text" id="sheetsUrl" placeholder="https://docs.google.com/spreadsheets/d/.../pub?output=csv">
+    <div style="font-size:11px;color:var(--text3);margin-bottom:14px;background:var(--bg3);padding:10px 12px;border-radius:8px;border:1px solid var(--border)">
+      <strong style="color:var(--orange)">📌 How to get the link:</strong><br>
+      1. In Google Sheets: <strong>File → Share → Publish to web</strong><br>
+      2. Select the <strong>SMBs</strong> sheet/tab specifically (not "Entire Document")<br>
+      3. Choose format: <strong>Comma-separated values (.csv)</strong><br>
+      4. Click <strong>Publish</strong> → copy the generated link<br>
+      5. Paste it above and click Connect
     </div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:16px;background:rgba(229,106,26,.08);padding:10px 12px;border-radius:8px;border:1px solid rgba(229,106,26,.25)">
+      <strong style="color:var(--orange)">📋 Required columns:</strong> Business Name, Yelp, Google LSA, Voice Agent, Thumbtack, Chat Widget, Contact Form, Acculynx, Builder Prime, Go High Level, Housecall Pro &nbsp;(use YES/NO or TRUE/FALSE)
+    </div>
+    <div id="sheetsStatus" style="font-size:12px;margin-bottom:12px;display:none"></div>
     <div class="modal-btns">
       <button class="btn btn-ghost" onclick="closeSheetsModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="connectSheets()">Connect Sheet</button>
+      <button class="btn btn-primary" id="sheetsConnectBtn" onclick="connectSheets()">Connect Sheet</button>
     </div>
   </div>
 </div>
 
 <script>
-// ─── DATA ───────────────────────────────────────────────────────────────────
-const clients = [
+// ════════════════════════════════════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════════════════════════════════════
+const pageMeta = {
+  smb:        { title: 'SMB Dashboard',       sub: 'Platform audit · 63 active clients' },
+  whitelabel: { title: 'White Label',          sub: 'Partner accounts' },
+  support:    { title: 'Support Dashboard',    sub: 'Open tickets & resolution metrics' },
+  voice:      { title: 'Voice Agent',          sub: 'Performance & activity flags' },
+  textagent:  { title: 'Text Agent',           sub: 'Performance & messaging metrics' },
+  upsell:     { title: 'Upsell Playbook',      sub: 'By product · prioritized action cards' },
+  action:     { title: 'Action Plan',          sub: '90-day step-by-step execution guide' },
+};
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.querySelector(`.nav-item[onclick="showPage('${id}')"]`).classList.add('active');
+  document.getElementById('topbarTitle').textContent = pageMeta[id].title;
+  document.getElementById('topbarSub').textContent = pageMeta[id].sub;
+  closeSidebar();
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebarOverlay').classList.toggle('open');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebarOverlay').classList.remove('open');
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// SAMPLE / FALLBACK DATA — used until a sheet or file is connected
+// ════════════════════════════════════════════════════════════════════════
+const SAMPLE_CLIENTS = [
   {"name": "1-800 Water Damage of San Bernardino County", "yelp": true, "google_lsa": false, "voice_agent": true, "thumbtack": false, "chat_widget": true, "contact_form": false, "acculynx": false, "builder_prime": false, "ghl": false, "housecall_pro": false},
   {"name": "4EverFix", "yelp": true, "google_lsa": true, "voice_agent": false, "thumbtack": false, "chat_widget": false, "contact_form": false, "acculynx": false, "builder_prime": false, "ghl": false, "housecall_pro": false},
   {"name": "AAA Garage Door And Gates", "yelp": true, "google_lsa": false, "voice_agent": false, "thumbtack": false, "chat_widget": false, "contact_form": false, "acculynx": false, "builder_prime": false, "ghl": false, "housecall_pro": false},
@@ -981,145 +1002,75 @@ const clients = [
   {"name": "Up & Above Heating and Cooling", "yelp": true, "google_lsa": true, "voice_agent": true, "thumbtack": true, "chat_widget": true, "contact_form": true, "acculynx": false, "builder_prime": false, "ghl": false, "housecall_pro": false},
   {"name": "Your Temp Guys", "yelp": true, "google_lsa": false, "voice_agent": true, "thumbtack": false, "chat_widget": false, "contact_form": false, "acculynx": false, "builder_prime": false, "ghl": false, "housecall_pro": false},
   {"name": "Zoom Drain", "yelp": true, "google_lsa": true, "voice_agent": true, "thumbtack": true, "chat_widget": false, "contact_form": false, "acculynx": false, "builder_prime": false, "ghl": false, "housecall_pro": false}
-]
+];
 
 const products = ["yelp","google_lsa","voice_agent","thumbtack","chat_widget","contact_form","acculynx","builder_prime","ghl","housecall_pro"];
 const productLabels = ["Yelp","Google LSA","Voice Agent","Thumbtack","Chat Widget","Contact Form","Acculynx","Builder Prime","Go High Level","Housecall Pro"];
 
-// ─── NAVIGATION ─────────────────────────────────────────────────────────────
-const pageMeta = {
-  smb:        { title: 'SMB Clients',         sub: 'Platform audit · 63 active clients' },
-  whitelabel: { title: 'White Label',          sub: 'Partner accounts' },
-  voice:      { title: 'Voice Agent',          sub: 'Performance & activity flags' },
-  adspend:    { title: 'Ad Spend & Revenue',   sub: 'Financial performance tracker' },
-  support:    { title: 'Support Dashboard',    sub: 'Open tickets & resolution metrics' },
-  upsell:     { title: 'Upsell Playbook',      sub: 'By product · prioritized action cards' },
-  action:     { title: 'Action Plan',          sub: '90-day step-by-step execution guide' },
+// live, mutable dataset — starts as a copy of the sample data
+let clients = JSON.parse(JSON.stringify(SAMPLE_CLIENTS));
+
+// ─── CHART INSTANCE REGISTRY (so we can destroy + rebuild on new data) ───────
+const chartRegistry = {};
+function destroyChart(key) {
+  if (chartRegistry[key]) { chartRegistry[key].destroy(); delete chartRegistry[key]; }
+}
+
+const C = {
+  grid: 'rgba(42,47,62,.8)', tick: '#5a6275', text: '#9aa0b4',
+  orange: '#e5891a', orange2: '#f5a83a', red: '#ef4444', green: '#22c55e',
+  blue: '#3b82f6', yellow: '#f59e0b', purple: '#a855f7',
 };
 
-function showPage(id) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('page-' + id).classList.add('active');
-  document.querySelector(`.nav-item[onclick="showPage('${id}')"]`).classList.add('active');
-  document.getElementById('topbarTitle').textContent = pageMeta[id].title;
-  document.getElementById('topbarSub').textContent = pageMeta[id].sub;
-  closeSidebar();
+// ════════════════════════════════════════════════════════════════════════
+// MASTER REBUILD — called any time `clients` changes (upload, sheets, etc)
+// ════════════════════════════════════════════════════════════════════════
+function rebuildDashboard() {
+  rebuildKPIs();
+  rebuildAdoptionBar();
+  rebuildDistDonut();
+  rebuildGapBar();
+  rebuildClientTable();
+  rebuildUpsellCounts();
+  console.log(`✅ Dashboard rebuilt with ${clients.length} clients`);
 }
 
-function toggleSidebar() {
-  document.getElementById('sidebar').classList.toggle('open');
-  document.getElementById('sidebarOverlay').classList.toggle('open');
-}
-function closeSidebar() {
-  document.getElementById('sidebar').classList.remove('open');
-  document.getElementById('sidebarOverlay').classList.remove('open');
-}
+// ─── KPI RECALCULATION ────────────────────────────────────────────────────
+function rebuildKPIs() {
+  const total = clients.length;
+  if (total === 0) return;
 
-// ─── SHEETS MODAL ───────────────────────────────────────────────────────────
-function openSheetsModal() { document.getElementById('sheetsModal').classList.add('open'); }
-function closeSheetsModal() { document.getElementById('sheetsModal').classList.remove('open'); }
-function connectSheets() {
-  const url = document.getElementById('sheetsUrl').value.trim();
-  if (!url) { alert('Please paste a Google Sheets URL'); return; }
-  document.getElementById('dataSourcePill').innerHTML = '<span class="dot"></span> Google Sheets';
-  document.getElementById('dataSourcePill').style.color = 'var(--green)';
-  closeSheetsModal();
-  alert('✅ Sheet connected! In a production deployment this would fetch live data. For now the hub is using your spreadsheet sample data.');
-}
+  const counts = products.map(p => clients.filter(c => c[p]).length);
+  const totalProductInstances = counts.reduce((a,b) => a+b, 0);
+  const avgProducts = (totalProductInstances / total).toFixed(1);
+  const totalUpsellOpps = products.reduce((sum,p,i) => sum + (total - counts[i]), 0);
+  const yelpIdx = products.indexOf('yelp');
+  const yelpPct = total ? Math.round(counts[yelpIdx]/total*100*10)/10 : 0;
+  const untouchedCount = counts.filter(c => c === 0).length;
 
-// ─── FILE UPLOAD ─────────────────────────────────────────────────────────────
-function handleFileUpload(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = function(ev) {
-    try {
-      const wb = XLSX.read(ev.target.result, {type: 'binary'});
-      const sheet = wb.Sheets[wb.SheetNames[0]];
-      const data = XLSX.utils.sheet_to_json(sheet);
-      if (data.length > 0) {
-        alert(`✅ Loaded ${data.length} rows from "${file.name}". Dashboard updated!`);
-        document.getElementById('dataSourcePill').innerHTML = '<span class="dot"></span> ' + file.name;
-        document.getElementById('dataSourcePill').style.color = 'var(--green)';
-      }
-    } catch(err) { alert('Could not read file: ' + err.message); }
-  };
-  reader.readAsBinaryString(file);
+  const kpiRow = document.querySelector('#page-smb .kpi-row');
+  if (!kpiRow) return;
+  const vals = kpiRow.querySelectorAll('.kpi-val');
+  const subs = kpiRow.querySelectorAll('.kpi-sub');
+  if (vals[0]) vals[0].textContent = total;
+  if (vals[1]) vals[1].textContent = products.length;
+  if (vals[2]) vals[2].textContent = avgProducts;
+  if (vals[3]) vals[3].textContent = totalUpsellOpps;
+  if (vals[4]) vals[4].textContent = untouchedCount + ' / ' + products.length;
+  if (vals[5]) vals[5].textContent = yelpPct + '%';
+  if (subs[0]) subs[0].textContent = 'Active in platform';
 }
 
-// ─── BUILD CLIENT TABLE ──────────────────────────────────────────────────────
-(function buildTable() {
-  const tbody = document.getElementById('clientTableBody');
-  clients.forEach(c => {
-    const pc = products.filter(p => c[p]).length;
-    const attrs = products.map(p => `data-${p}="${c[p]}"`).join(' ');
-    let row = `<tr data-name="${c.name.toLowerCase()}" data-count="${pc}" ${attrs}>`;
-    row += `<td>${c.name}</td>`;
-    products.forEach(p => {
-      row += `<td><span class="dot ${c[p] ? 'dot-yes' : 'dot-no'}">${c[p] ? '✓' : '○'}</span></td>`;
-    });
-    row += `<td><span class="pc-badge pc-${pc}">${pc}</span></td></tr>`;
-    tbody.innerHTML += row;
-  });
-})();
-
-// ─── TABLE FILTERS ───────────────────────────────────────────────────────────
-let activeFilter = 'all';
-function filterTable() {
-  const q = document.getElementById('clientSearch').value.toLowerCase();
-  let n = 0;
-  document.querySelectorAll('#clientTableBody tr').forEach(row => {
-    const name = row.dataset.name || '';
-    const cnt = parseInt(row.dataset.count || 0);
-    let show = name.includes(q);
-    if (show && activeFilter !== 'all') {
-      if (activeFilter === 'multi') show = cnt >= 3;
-      else if (activeFilter === 'google_lsa') show = row.dataset.google_lsa === 'false';
-      else if (activeFilter === 'voice_agent') show = row.dataset.voice_agent === 'false';
-      else if (activeFilter === 'contact_form') show = row.dataset.contact_form === 'false';
-      else show = row.dataset[activeFilter] === 'true';
-    }
-    row.classList.toggle('hidden-row', !show);
-    if (show) n++;
-  });
-  document.getElementById('rowCount').textContent = `${n} client${n !== 1 ? 's' : ''}`;
-}
-function filterByProduct(p, btn) {
-  activeFilter = p;
-  document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  filterTable();
-}
-
-// ─── CHART HELPERS ────────────────────────────────────────────────────────────
-const C = { // dark theme chart defaults
-  grid: 'rgba(42,47,62,.8)',
-  tick: '#5a6275',
-  text: '#9aa0b4',
-  orange: '#e5891a',
-  orange2: '#f5a83a',
-  red: '#ef4444',
-  green: '#22c55e',
-  blue: '#3b82f6',
-  yellow: '#f59e0b',
-  purple: '#a855f7',
-};
-
-const adoptionCounts = products.map(p => clients.filter(c => c[p]).length);
-const adoptionPcts   = adoptionCounts.map(n => Math.round(n / 63 * 100));
-const gapCounts      = products.map(p => 63 - clients.filter(c => c[p]).length);
-
-// ─── ADOPTION BAR ─────────────────────────────────────────────────────────────
-const adoptionCtx = document.getElementById('adoptionBar').getContext('2d');
+// ─── ADOPTION BAR (rebuildable) ──────────────────────────────────────────────
 const barLabelPlugin = {
   id: 'barLabel',
   afterDatasetsDraw(chart) {
     const { ctx } = chart;
+    const pcts = chart.data.datasets[0]._pcts || [];
     ctx.save();
     chart.getDatasetMeta(0).data.forEach((bar, i) => {
-      const v = adoptionPcts[i];
-      if (v === 0) return;
+      const v = pcts[i];
+      if (!v) return;
       ctx.fillStyle = '#9aa0b4';
       ctx.font = 'bold 10px Segoe UI';
       ctx.textAlign = 'center';
@@ -1128,91 +1079,155 @@ const barLabelPlugin = {
     ctx.restore();
   }
 };
-new Chart(adoptionCtx, {
-  type: 'bar',
-  plugins: [barLabelPlugin],
-  data: {
-    labels: productLabels,
-    datasets: [{
-      data: adoptionPcts,
-      backgroundColor: adoptionPcts.map(v => v > 50 ? C.orange : v > 10 ? C.yellow : 'rgba(229,106,26,.25)'),
-      borderRadius: { topLeft: 6, topRight: 6 },
-      borderSkipped: false,
-      barPercentage: 0.6,
-    }]
-  },
-  options: {
-    responsive: true, maintainAspectRatio: false,
-    layout: { padding: { top: 20 } },
-    plugins: {
-      legend: { display: false },
-      tooltip: { backgroundColor: '#13161e', borderColor: '#2a2f3e', borderWidth: 1, titleColor: '#e8eaf0', bodyColor: C.orange, padding: 12, cornerRadius: 8,
-        callbacks: { label: ctx => ` ${ctx.parsed.y}% — ${adoptionCounts[ctx.dataIndex]} of 63 clients` } }
-    },
-    scales: {
-      y: { beginAtZero: true, max: 100, grid: { color: C.grid }, ticks: { callback: v => v + '%', color: C.tick, font: { size: 11 } }, border: { display: false } },
-      x: { grid: { display: false }, ticks: { color: C.text, font: { size: 10 } }, border: { display: false } }
-    }
-  }
-});
 
-// ─── DONUT ────────────────────────────────────────────────────────────────────
-const distData   = [28, 27, 6, 1, 0, 1];
-const distLabels = ['1 product (28)', '2 products (27)', '3 products (6)', '4 products (1)', '5 products (0)', '6 products (1)'];
-const distColors = [C.orange + '40', C.yellow, C.orange, '#c96e0f', '#7c3aed', '#1a1a2e'];
-new Chart(document.getElementById('distPie'), {
-  type: 'doughnut',
-  data: { labels: distLabels, datasets: [{ data: distData, backgroundColor: distColors, borderWidth: 3, borderColor: '#13161e', hoverOffset: 8 }] },
-  options: {
-    responsive: true, maintainAspectRatio: false, cutout: '68%',
-    plugins: {
-      legend: { position: 'right', labels: { color: C.text, font: { size: 11, weight: '600' }, padding: 12, usePointStyle: true, pointStyleWidth: 10 } },
-      tooltip: { backgroundColor: '#13161e', borderColor: '#2a2f3e', borderWidth: 1, titleColor: '#e8eaf0', bodyColor: C.orange, padding: 12, cornerRadius: 8,
-        callbacks: { label: ctx => ` ${ctx.parsed} clients` } }
-    }
-  }
-});
+function rebuildAdoptionBar() {
+  const total = clients.length || 1;
+  const counts = products.map(p => clients.filter(c => c[p]).length);
+  const pcts = counts.map(n => Math.round(n / total * 100));
 
-// ─── GAP BAR ─────────────────────────────────────────────────────────────────
+  destroyChart('adoption');
+  const ctx = document.getElementById('adoptionBar').getContext('2d');
+  const ds = {
+    data: pcts,
+    backgroundColor: pcts.map(v => v > 50 ? C.orange : v > 10 ? C.yellow : 'rgba(229,106,26,.25)'),
+    borderRadius: { topLeft: 6, topRight: 6 }, borderSkipped: false, barPercentage: 0.6,
+  };
+  ds._pcts = pcts;
+  chartRegistry.adoption = new Chart(ctx, {
+    type: 'bar', plugins: [barLabelPlugin],
+    data: { labels: productLabels, datasets: [ds] },
+    options: {
+      responsive: true, maintainAspectRatio: false, layout: { padding: { top: 20 } },
+      plugins: { legend: { display: false },
+        tooltip: { backgroundColor: '#13161e', borderColor: '#2a2f3e', borderWidth: 1, titleColor: '#e8eaf0', bodyColor: C.orange, padding: 12, cornerRadius: 8,
+          callbacks: { label: c => ` ${c.parsed.y}% — ${counts[c.dataIndex]} of ${total} clients` } } },
+      scales: {
+        y: { beginAtZero: true, max: 100, grid: { color: C.grid }, ticks: { callback: v => v + '%', color: C.tick, font: { size: 11 } }, border: { display: false } },
+        x: { grid: { display: false }, ticks: { color: C.text, font: { size: 10 } }, border: { display: false } }
+      }
+    }
+  });
+}
+
+// ─── DISTRIBUTION DONUT (rebuildable) ────────────────────────────────────────
+function rebuildDistDonut() {
+  const counts = {};
+  clients.forEach(c => {
+    const n = products.filter(p => c[p]).length;
+    counts[n] = (counts[n] || 0) + 1;
+  });
+  const maxProd = Math.max(products.length, ...Object.keys(counts).map(Number), 1);
+  const dist = [];
+  const labels = [];
+  for (let i = 1; i <= Math.max(maxProd, 1); i++) {
+    if (i > 8 && !counts[i]) continue; // don't show empty tail buckets past 8
+    dist.push(counts[i] || 0);
+    labels.push(`${i} product${i>1?'s':''} (${counts[i]||0})`);
+  }
+  const palette = ['#e5891a40','#f59e0b','#e5891a','#c96e0f','#b85c0c','#7c3aed','#1a1a2e','#3b82f6','#22c55e'];
+  const colors = dist.map((_,i) => palette[i % palette.length]);
+
+  destroyChart('dist');
+  chartRegistry.dist = new Chart(document.getElementById('distPie'), {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data: dist, backgroundColor: colors, borderWidth: 3, borderColor: '#13161e', hoverOffset: 8 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '68%',
+      plugins: {
+        legend: { position: 'right', labels: { color: C.text, font: { size: 11, weight: '600' }, padding: 12, usePointStyle: true, pointStyleWidth: 10 } },
+        tooltip: { backgroundColor: '#13161e', borderColor: '#2a2f3e', borderWidth: 1, titleColor: '#e8eaf0', bodyColor: C.orange, padding: 12, cornerRadius: 8,
+          callbacks: { label: ctx => ` ${ctx.parsed} clients` } }
+      }
+    }
+  });
+  // update center label
+  const centerNum = document.getElementById('distCenterNum');
+  if (centerNum) centerNum.textContent = clients.length;
+}
+
+// ─── UPSELL GAP BAR (rebuildable) ────────────────────────────────────────────
 const hLabelPlugin = {
   id: 'hLabel',
   afterDatasetsDraw(chart) {
     const { ctx } = chart;
+    const gaps = chart.data.datasets[0]._gaps || [];
     ctx.save();
     chart.getDatasetMeta(0).data.forEach((bar, i) => {
-      const v = gapCounts[i];
+      const v = gaps[i];
       if (v < 3) return;
-      ctx.fillStyle = 'white';
-      ctx.font = 'bold 11px Segoe UI';
-      ctx.textAlign = 'right';
-      ctx.textBaseline = 'middle';
+      ctx.fillStyle = 'white'; ctx.font = 'bold 11px Segoe UI';
+      ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
       if (bar.x - 8 > bar.base + 30) ctx.fillText(v + ' clients', bar.x - 8, bar.y);
     });
     ctx.restore();
   }
 };
-new Chart(document.getElementById('gapBar'), {
-  type: 'bar',
-  plugins: [hLabelPlugin],
-  data: {
-    labels: productLabels,
-    datasets: [{ data: gapCounts,
-      backgroundColor: gapCounts.map(v => v >= 60 ? C.red : v >= 50 ? C.orange : v >= 20 ? C.yellow : C.green),
-      borderRadius: { topRight: 6, bottomRight: 6 }, borderSkipped: 'left', barPercentage: 0.65 }]
-  },
-  options: {
-    indexAxis: 'y', responsive: true, maintainAspectRatio: false, layout: { padding: { right: 16 } },
-    plugins: {
-      legend: { display: false },
-      tooltip: { backgroundColor: '#13161e', borderColor: '#2a2f3e', borderWidth: 1, titleColor: '#e8eaf0', bodyColor: C.orange, padding: 12, cornerRadius: 8,
-        callbacks: { label: ctx => ` ${ctx.parsed.x} clients to upsell (${Math.round(ctx.parsed.x/63*100)}%)` } }
-    },
-    scales: {
-      x: { beginAtZero: true, max: 63, grid: { color: C.grid }, ticks: { color: C.tick, font: { size: 11 }, stepSize: 10 }, border: { display: false } },
-      y: { grid: { display: false }, ticks: { color: C.text, font: { size: 11, weight: '600' } }, border: { display: false } }
+
+function rebuildGapBar() {
+  const total = clients.length || 1;
+  const counts = products.map(p => clients.filter(c => c[p]).length);
+  const gaps = counts.map(n => total - n);
+
+  destroyChart('gap');
+  const ds = {
+    data: gaps,
+    backgroundColor: gaps.map(v => v >= total*0.85 ? C.red : v >= total*0.7 ? C.orange : v >= total*0.3 ? C.yellow : C.green),
+    borderRadius: { topRight: 6, bottomRight: 6 }, borderSkipped: 'left', barPercentage: 0.65,
+  };
+  ds._gaps = gaps;
+  chartRegistry.gap = new Chart(document.getElementById('gapBar'), {
+    type: 'bar', plugins: [hLabelPlugin],
+    data: { labels: productLabels, datasets: [ds] },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false, layout: { padding: { right: 16 } },
+      plugins: { legend: { display: false },
+        tooltip: { backgroundColor: '#13161e', borderColor: '#2a2f3e', borderWidth: 1, titleColor: '#e8eaf0', bodyColor: C.orange, padding: 12, cornerRadius: 8,
+          callbacks: { label: ctx => ` ${ctx.parsed.x} clients to upsell (${Math.round(ctx.parsed.x/total*100)}%)` } } },
+      scales: {
+        x: { beginAtZero: true, max: total, grid: { color: C.grid }, ticks: { color: C.tick, font: { size: 11 } }, border: { display: false } },
+        y: { grid: { display: false }, ticks: { color: C.text, font: { size: 11, weight: '600' } }, border: { display: false } }
+      }
     }
-  }
-});
+  });
+}
+
+// ─── CLIENT TABLE (rebuildable) ──────────────────────────────────────────────
+function rebuildClientTable() {
+  const tbody = document.getElementById('clientTableBody');
+  tbody.innerHTML = '';
+  clients.forEach(c => {
+    const pc = products.filter(p => c[p]).length;
+    const attrs = products.map(p => `data-${p}="${!!c[p]}"`).join(' ');
+    let row = `<tr data-name="${(c.name||'').toLowerCase()}" data-count="${pc}" ${attrs}>`;
+    row += `<td>${c.name || '—'}</td>`;
+    products.forEach(p => {
+      row += `<td><span class="dot ${c[p] ? 'dot-yes' : 'dot-no'}">${c[p] ? '✓' : '○'}</span></td>`;
+    });
+    row += `<td><span class="pc-badge pc-${Math.min(pc,6)}">${pc}</span></td></tr>`;
+    tbody.innerHTML += row;
+  });
+  activeFilter = 'all';
+  document.querySelectorAll('.filter-pill').forEach((b,i) => b.classList.toggle('active', i===0));
+  const search = document.getElementById('clientSearch');
+  if (search) search.value = '';
+  filterTable();
+}
+
+// ─── UPSELL PLAYBOOK COUNTS (rebuildable numbers only — text stays curated) ──
+function rebuildUpsellCounts() {
+  const total = clients.length || 1;
+  document.querySelectorAll('#upsellGrid .upsell-card').forEach(card => {
+    const nameEl = card.querySelector('.upsell-name');
+    const numEl = card.querySelector('.upsell-num');
+    if (!nameEl || !numEl) return;
+    const label = nameEl.textContent.trim();
+    const key = products[productLabels.indexOf(label)];
+    if (!key) return;
+    const using = clients.filter(c => c[key]).length;
+    const gap = total - using;
+    numEl.textContent = gap + ' clients';
+  });
+}
 
 // ─── VOICE CHARTS ────────────────────────────────────────────────────────────
 new Chart(document.getElementById('voiceDonut'), {
@@ -1241,62 +1256,6 @@ new Chart(document.getElementById('voiceBar'), {
     scales: {
       x: { stacked: false, grid: { display: false }, ticks: { color: C.text }, border: { display: false } },
       y: { grid: { color: C.grid }, ticks: { color: C.tick }, border: { display: false } }
-    }
-  }
-});
-
-// ─── AD SPEND CHARTS ────────────────────────────────────────────────────────
-const spendClients = ['Home Quality Rem.','Sol-Up (Dean Martin)','HQR Air','Zoom Drain','Up & Above','Paragon Roofing','Spartan Pest','Melody Plumbing','Orbit Electric','CA Fleming'];
-const spendData    = [12400, 9800, 8500, 7200, 6900, 5800, 5200, 4600, 4100, 3800];
-const revenueData  = [38400, 29800, 25900, 22100, 21500, 17200, 15600, 14200, 12500, 11900];
-new Chart(document.getElementById('spendBar'), {
-  type: 'bar',
-  data: {
-    labels: spendClients,
-    datasets: [
-      { label: 'Ad Spend', data: spendData, backgroundColor: C.orange, borderRadius: 5, barPercentage: 0.5 },
-      { label: 'Revenue', data: revenueData, backgroundColor: C.green, borderRadius: 5, barPercentage: 0.5 }
-    ]
-  },
-  options: { responsive: true, maintainAspectRatio: false,
-    plugins: { legend: { labels: { color: C.text, usePointStyle: true } },
-      tooltip: { backgroundColor: '#13161e', borderColor: '#2a2f3e', borderWidth: 1, titleColor: '#e8eaf0', padding: 10, cornerRadius: 8,
-        callbacks: { label: ctx => ` ${ctx.dataset.label}: $${ctx.parsed.y.toLocaleString()}` } } },
-    scales: {
-      x: { grid: { display: false }, ticks: { color: C.text, font: { size: 10 } }, border: { display: false } },
-      y: { grid: { color: C.grid }, ticks: { color: C.tick, callback: v => '$' + (v/1000).toFixed(0) + 'K' }, border: { display: false } }
-    }
-  }
-});
-new Chart(document.getElementById('spendPie'), {
-  type: 'doughnut',
-  data: {
-    labels: ['Yelp Ads', 'Google LSA', 'Thumbtack', 'Other'],
-    datasets: [{ data: [52, 31, 12, 5], backgroundColor: [C.orange, C.blue, C.green, C.tick], borderWidth: 3, borderColor: '#13161e', hoverOffset: 6 }]
-  },
-  options: { responsive: true, maintainAspectRatio: false, cutout: '60%',
-    plugins: { legend: { position: 'bottom', labels: { color: C.text, padding: 12, usePointStyle: true } },
-      tooltip: { backgroundColor: '#13161e', borderColor: '#2a2f3e', borderWidth: 1, titleColor: '#e8eaf0', bodyColor: C.orange, padding: 10, cornerRadius: 8,
-        callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed}%` } } }
-  }
-});
-const months = ['Jan','Feb','Mar','Apr','May','Jun'];
-new Chart(document.getElementById('spendTrend'), {
-  type: 'line',
-  data: {
-    labels: months,
-    datasets: [
-      { label: 'Ad Spend', data: [98000,104000,111000,118000,121000,124000], borderColor: C.orange, backgroundColor: 'rgba(229,106,26,.1)', fill: true, tension: .4, pointRadius: 4, pointBackgroundColor: C.orange },
-      { label: 'Revenue', data: [290000,312000,335000,358000,375000,387000], borderColor: C.green, backgroundColor: 'rgba(34,197,94,.08)', fill: true, tension: .4, pointRadius: 4, pointBackgroundColor: C.green }
-    ]
-  },
-  options: { responsive: true, maintainAspectRatio: false,
-    plugins: { legend: { labels: { color: C.text, usePointStyle: true } },
-      tooltip: { backgroundColor: '#13161e', borderColor: '#2a2f3e', borderWidth: 1, titleColor: '#e8eaf0', padding: 10, cornerRadius: 8,
-        callbacks: { label: ctx => ` ${ctx.dataset.label}: $${(ctx.parsed.y/1000).toFixed(0)}K` } } },
-    scales: {
-      x: { grid: { display: false }, ticks: { color: C.text }, border: { display: false } },
-      y: { grid: { color: C.grid }, ticks: { color: C.tick, callback: v => '$' + (v/1000).toFixed(0) + 'K' }, border: { display: false } }
     }
   }
 });
@@ -1464,6 +1423,231 @@ phases.forEach(ph => {
       <div class="phase-steps">${steps}</div>
     </div>`;
 });
+
+// ════════════════════════════════════════════════════════════════════════
+// TABLE FILTER / SEARCH (re-added — needed by rebuildClientTable)
+// ════════════════════════════════════════════════════════════════════════
+let activeFilter = 'all';
+function filterTable() {
+  const searchEl = document.getElementById('clientSearch');
+  const q = searchEl ? searchEl.value.toLowerCase() : '';
+  let n = 0;
+  document.querySelectorAll('#clientTableBody tr').forEach(row => {
+    const name = row.dataset.name || '';
+    const cnt = parseInt(row.dataset.count || 0);
+    let show = name.includes(q);
+    if (show && activeFilter !== 'all') {
+      if (activeFilter === 'multi') show = cnt >= 3;
+      else show = row.dataset[activeFilter] === 'false';
+    }
+    row.classList.toggle('hidden-row', !show);
+    if (show) n++;
+  });
+  const rc = document.getElementById('rowCount');
+  if (rc) rc.textContent = `${n} client${n !== 1 ? 's' : ''}`;
+}
+function filterByProduct(p, btn) {
+  activeFilter = p;
+  document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  filterTable();
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// DATA INGESTION ENGINE — shared by file upload + Google Sheets
+// ════════════════════════════════════════════════════════════════════════
+
+// Map of acceptable header variants → internal product keys
+const HEADER_MAP = {
+  'business name': 'name', 'client name': 'name', 'company': 'name', 'name': 'name',
+  'yelp': 'yelp',
+  'google lsa': 'google_lsa', 'google_lsa': 'google_lsa', 'lsa': 'google_lsa',
+  'voice agent': 'voice_agent', 'voice_agent': 'voice_agent',
+  'thumbtack': 'thumbtack',
+  'chat widget': 'chat_widget', 'chat_widget': 'chat_widget',
+  'contact form': 'contact_form', 'contact_form': 'contact_form',
+  'acculynx': 'acculynx',
+  'builder prime': 'builder_prime', 'builder_prime': 'builder_prime',
+  'go high level': 'ghl', 'ghl': 'ghl', 'gohighlevel': 'ghl',
+  'housecall pro': 'housecall_pro', 'housecall_pro': 'housecall_pro',
+};
+
+function truthy(v) {
+  if (v === true || v === 1) return true;
+  if (v === false || v === null || v === undefined || v === '') return false;
+  const s = String(v).trim().toUpperCase();
+  return ['YES','Y','TRUE','1','X','✓','✔'].includes(s);
+}
+
+// Parses an array of row-objects (from XLSX or CSV) into our clients[] shape
+function parseRowsToClients(rows) {
+  if (!rows || rows.length === 0) return null;
+
+  // Build a normalized header lookup from the first row's keys
+  const firstRowKeys = Object.keys(rows[0]);
+  const keyMap = {}; // original header -> internal key
+  firstRowKeys.forEach(k => {
+    const norm = k.trim().toLowerCase();
+    if (HEADER_MAP[norm]) keyMap[k] = HEADER_MAP[norm];
+  });
+
+  if (!Object.values(keyMap).includes('name')) {
+    throw new Error('Could not find a "Business Name" / "Client Name" column in your sheet.');
+  }
+
+  const parsed = rows.map(row => {
+    const client = {};
+    products.forEach(p => client[p] = false);
+    Object.entries(row).forEach(([origKey, val]) => {
+      const mapped = keyMap[origKey];
+      if (!mapped) return;
+      if (mapped === 'name') client.name = String(val || '').trim();
+      else client[mapped] = truthy(val);
+    });
+    return client;
+  }).filter(c => c.name && c.name.length > 0);
+
+  return parsed.length ? parsed : null;
+}
+
+// Lightweight CSV parser (handles quoted commas)
+function parseCSV(text) {
+  const lines = text.replace(/\r/g, '').split('\n').filter(l => l.trim().length);
+  if (lines.length < 2) return [];
+  const splitLine = (line) => {
+    const out = []; let cur = ''; let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') { inQuotes = !inQuotes; }
+      else if (ch === ',' && !inQuotes) { out.push(cur); cur = ''; }
+      else { cur += ch; }
+    }
+    out.push(cur);
+    return out.map(s => s.trim());
+  };
+  const headers = splitLine(lines[0]);
+  return lines.slice(1).map(line => {
+    const cells = splitLine(line);
+    const obj = {};
+    headers.forEach((h, i) => obj[h] = cells[i] !== undefined ? cells[i] : '');
+    return obj;
+  });
+}
+
+function showUploadFeedback(msg, isError) {
+  const pill = document.getElementById('dataSourcePill');
+  if (pill) {
+    pill.innerHTML = `<span class="dot" style="background:${isError ? 'var(--red)' : 'var(--green)'}"></span> ${msg}`;
+    pill.style.color = isError ? 'var(--red)' : 'var(--green)';
+  }
+}
+
+// ─── FILE UPLOAD (.xlsx / .xls / .csv) ───────────────────────────────────────
+function handleFileUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const isCSV = /\.csv$/i.test(file.name);
+  const reader = new FileReader();
+
+  reader.onload = function(ev) {
+    try {
+      let rows;
+      if (isCSV) {
+        rows = parseCSV(ev.target.result);
+      } else {
+        const wb = XLSX.read(ev.target.result, { type: 'binary' });
+        // Prefer a sheet literally named like "SMBs", else use the first sheet
+        const smbSheetName = wb.SheetNames.find(n => /smb/i.test(n)) || wb.SheetNames[0];
+        const sheet = wb.Sheets[smbSheetName];
+        rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+      }
+
+      const newClients = parseRowsToClients(rows);
+      if (!newClients) throw new Error('No valid client rows found. Check your column headers.');
+
+      clients = newClients;
+      rebuildDashboard();
+      showUploadFeedback(`${file.name} (${newClients.length} clients)`, false);
+      e.target.value = ''; // allow re-uploading the same file name later
+    } catch (err) {
+      showUploadFeedback('Upload failed: ' + err.message, true);
+      alert('⚠️ Could not process file: ' + err.message);
+    }
+  };
+  reader.onerror = () => showUploadFeedback('File read error', true);
+
+  if (isCSV) reader.readAsText(file);
+  else reader.readAsBinaryString(file);
+}
+
+// ─── GOOGLE SHEETS (published-to-web CSV) ────────────────────────────────────
+function toCsvExportUrl(url) {
+  // If it's already a /pub?output=csv or /export?format=csv link, use as-is
+  if (/output=csv|format=csv/i.test(url)) return url;
+  // Try to convert a normal edit-link into a CSV export link
+  const m = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
+  if (m) {
+    const gidMatch = url.match(/[?&#]gid=([0-9]+)/);
+    const gid = gidMatch ? gidMatch[1] : '0';
+    return `https://docs.google.com/spreadsheets/d/${m[1]}/export?format=csv&gid=${gid}`;
+  }
+  return url;
+}
+
+function setSheetsStatus(msg, isError) {
+  const el = document.getElementById('sheetsStatus');
+  if (!el) return;
+  el.style.display = 'block';
+  el.style.color = isError ? 'var(--red)' : 'var(--green)';
+  el.textContent = msg;
+}
+
+async function connectSheets() {
+  const input = document.getElementById('sheetsUrl');
+  const url = (input.value || '').trim();
+  if (!url) { setSheetsStatus('Please paste a Google Sheets link.', true); return; }
+
+  const btn = document.getElementById('sheetsConnectBtn');
+  btn.disabled = true;
+  btn.textContent = 'Connecting…';
+  setSheetsStatus('Fetching data…', false);
+
+  try {
+    const csvUrl = toCsvExportUrl(url);
+    const res = await fetch(csvUrl);
+    if (!res.ok) throw new Error(`Sheet returned HTTP ${res.status}. Make sure it is published to the web.`);
+    const text = await res.text();
+    if (/<html/i.test(text.slice(0, 200))) {
+      throw new Error('That link is not a published CSV. Use File → Share → Publish to web → CSV.');
+    }
+    const rows = parseCSV(text);
+    const newClients = parseRowsToClients(rows);
+    if (!newClients) throw new Error('No valid client rows found. Check your column headers.');
+
+    clients = newClients;
+    rebuildDashboard();
+    setSheetsStatus(`✅ Connected — loaded ${newClients.length} clients from Google Sheets.`, false);
+    showUploadFeedback('Google Sheets (' + newClients.length + ')', false);
+    setTimeout(closeSheetsModal, 1400);
+  } catch (err) {
+    setSheetsStatus('⚠️ ' + err.message, true);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Connect Sheet';
+  }
+}
+
+function openSheetsModal() { document.getElementById('sheetsModal').classList.add('open'); }
+function closeSheetsModal() {
+  document.getElementById('sheetsModal').classList.remove('open');
+  setTimeout(() => { const s = document.getElementById('sheetsStatus'); if (s) s.style.display = 'none'; }, 300);
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// INITIAL RENDER — builds everything with sample data on page load
+// ════════════════════════════════════════════════════════════════════════
+rebuildDashboard();
+
 </script>
 </body>
 </html>
