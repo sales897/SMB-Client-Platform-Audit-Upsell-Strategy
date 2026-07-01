@@ -1943,6 +1943,22 @@ const PORTFOLIOS = {
   support:    { name: 'Support',     clients: JSON.parse(JSON.stringify(SUPPORT_SAMPLE_CLIENTS)),  catalog: JSON.parse(JSON.stringify(SUPPORT_CATALOG)) },
 };
 
+// Snapshot of each portfolio's original placeholder client names, used to detect
+// whether a portfolio is still showing untouched sample data (so uploads/Sheets
+// connects can replace it outright instead of merging real clients alongside demo ones)
+const ORIGINAL_SAMPLE_NAMES = {
+  smb:        SMB_SAMPLE_CLIENTS.map(c => (c.name || '').trim().toLowerCase().replace(/\s+/g, ' ')),
+  whitelabel: WL_SAMPLE_CLIENTS.map(c => (c.name || '').trim().toLowerCase().replace(/\s+/g, ' ')),
+  support:    SUPPORT_SAMPLE_CLIENTS.map(c => (c.name || '').trim().toLowerCase().replace(/\s+/g, ' ')),
+};
+function isStillSampleData(pk) {
+  const current = getClients(pk).map(c => (c.name || '').trim().toLowerCase().replace(/\s+/g, ' '));
+  const original = ORIGINAL_SAMPLE_NAMES[pk] || [];
+  if (current.length !== original.length) return false;
+  const curSet = new Set(current);
+  return original.every(n => curSet.has(n));
+}
+
 let activePortfolio = 'smb'; // which dashboard is currently visible / upload target
 let activeManagePortfolio = 'smb'; // which catalog is being edited on the Manage Products page
 
@@ -3969,8 +3985,11 @@ function confirmMapping() {
   });
   const incoming = Array.from(byName.values());
 
-  // Detect duplicates against clients already saved in this portfolio
-  const existingClients = getClients(pk);
+  // Detect duplicates against clients already saved in this portfolio.
+  // If this portfolio is still showing untouched sample/placeholder data, treat it as
+  // empty here so the real upload replaces it outright instead of merging alongside it.
+  const discardSample = isStillSampleData(pk);
+  const existingClients = discardSample ? [] : getClients(pk);
   const existingByName = new Map();
   existingClients.forEach((c, i) => existingByName.set(normName(c.name), i));
   const dups = [];
@@ -3981,7 +4000,7 @@ function confirmMapping() {
     else brandNew.push(c);
   });
 
-  pendingImport.result = { incoming, brandNew, dups, intraMerged, prodKeys };
+  pendingImport.result = { incoming, brandNew, dups, intraMerged, prodKeys, discardSample };
   document.getElementById('mappingModal').classList.remove('open');
   renderDuplicatesReview();
   document.getElementById('duplicatesModal').classList.add('open');
@@ -3989,9 +4008,10 @@ function confirmMapping() {
 
 function renderDuplicatesReview() {
   const { fileName, pk } = pendingImport;
-  const { incoming, brandNew, dups, intraMerged } = pendingImport.result;
+  const { incoming, brandNew, dups, intraMerged, discardSample } = pendingImport.result;
   document.getElementById('dupSummaryText').innerHTML =
-    `<strong style="color:var(--text)">${fileName}</strong> → ${PORTFOLIOS[pk].name}. Review below, then save.`;
+    `<strong style="color:var(--text)">${fileName}</strong> → ${PORTFOLIOS[pk].name}. Review below, then save.` +
+    (discardSample ? `<br><span style="color:var(--orange)">🧹 This dashboard is still showing sample data — it'll be cleared and replaced with your upload.</span>` : '');
   document.getElementById('importSummaryStats').innerHTML = `
     <div class="stat"><b>${incoming.length}</b><span>Rows Mapped</span></div>
     <div class="stat"><b>${brandNew.length}</b><span>New Clients</span></div>
@@ -4032,8 +4052,8 @@ function closeDuplicatesModal() {
 
 function applyImport() {
   const { pk, fileName } = pendingImport;
-  const { brandNew, dups } = pendingImport.result;
-  let clients = getClients(pk).slice();
+  const { brandNew, dups, discardSample } = pendingImport.result;
+  let clients = discardSample ? [] : getClients(pk).slice();
   let replaced = 0, skipped = 0, added = 0, keptBoth = 0;
 
   dups.forEach(d => {
@@ -4048,6 +4068,7 @@ function applyImport() {
   persistAndRebuild(pk);
 
   const parts = [];
+  if (discardSample) parts.push('replaced sample data');
   if (added) parts.push(`${added} added`);
   if (replaced) parts.push(`${replaced} replaced`);
   if (keptBoth) parts.push(`${keptBoth} added as new`);
