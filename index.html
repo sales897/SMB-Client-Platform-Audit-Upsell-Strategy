@@ -667,14 +667,14 @@ tr.hidden-row { display: none; }
   <div class="nav-section">
     <div class="nav-label">Ad Spend</div>
     <div class="nav-item" onclick="showPage('adspend')">
-      <span class="icon">💰</span> Call Ad Spend Management
+      <span class="icon">💰</span> Ad Spend Management
     </div>
   </div>
 
   <div class="nav-section">
     <div class="nav-label">Collections</div>
     <div class="nav-item" onclick="showPage('collections')">
-      <span class="icon">🧾</span> Collections
+      <span class="icon">📋</span> Collections
       <span class="badge red" id="navCollectionsBadge" style="display:none">0</span>
     </div>
   </div>
@@ -713,7 +713,7 @@ tr.hidden-row { display: none; }
         <span class="role-pill user" id="userBadgeRole">User</span>
       </div>
       <label class="upload-btn" id="uploadBtnLabel" title="Uploads into the currently open dashboard">
-        📁 Upload to <span id="uploadTargetLabel">SMB</span>
+        📁 Upload File
         <input type="file" id="fileUpload" accept=".xlsx,.xls,.csv" onchange="handleFileUpload(event)">
       </label>
       <button class="sheets-btn" id="sheetsConnectTopBtn" onclick="openSheetsModal()" title="Connects a sheet into the currently open dashboard">
@@ -1242,7 +1242,11 @@ tr.hidden-row { display: none; }
 
     <div class="card" style="margin-bottom:20px" id="asAddCard">
       <div class="card-header">
-        <div><div class="card-title">Add a Business</div><div class="card-sub">Tracks budget, add-ons, promo status, and internal notes per business</div></div>
+        <div><div class="card-title">Add a Business</div><div class="card-sub">Tracks budget, add-ons, promo status, and internal notes per business — add one at a time or upload a list</div></div>
+        <label class="upload-btn" style="position:relative">
+          📁 Upload File
+          <input type="file" id="asFileUpload" accept=".xlsx,.xls,.csv" onchange="handleAdSpendFileUpload(event)">
+        </label>
       </div>
       <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr 1.2fr;gap:10px;align-items:end;margin-bottom:10px">
         <div>
@@ -1312,7 +1316,7 @@ tr.hidden-row { display: none; }
         </table>
       </div>
     </div>
-    <div class="page-footer">Client Success Hub · Niche Inc. · Call Ad Spend Management</div>
+    <div class="page-footer">Client Success Hub · Niche Inc. · Ad Spend Management</div>
   </div>
 
   <!-- EDIT AD SPEND BUSINESS MODAL -->
@@ -1352,6 +1356,42 @@ tr.hidden-row { display: none; }
       <div class="modal-btns">
         <button class="btn btn-ghost" onclick="closeEditAdSpendModal()">Cancel</button>
         <button class="btn btn-primary" onclick="saveAdSpendEdit()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- AD SPEND: COLUMN MAPPING MODAL (step 1 of import) -->
+  <div class="modal-overlay" id="adSpendMappingModal">
+    <div class="modal wide">
+      <h3>🧩 Map Your Columns</h3>
+      <p id="asMappingFileLabel">We auto-detected these columns from your file. Fix anything that looks wrong, then continue.</p>
+      <div class="modal-scroll">
+        <table class="map-table">
+          <thead><tr><th style="width:34%">Your Column</th><th style="width:26%">Sample Value</th><th>Maps To</th></tr></thead>
+          <tbody id="asMappingTableBody"></tbody>
+        </table>
+      </div>
+      <div id="asMappingWarning" style="font-size:11px;color:var(--red);margin-bottom:10px;display:none">⚠️ Pick a column for Business Name before continuing.</div>
+      <div class="modal-btns">
+        <button class="btn btn-ghost" onclick="closeAdSpendMappingModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="confirmAdSpendMapping()">Continue →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- AD SPEND: REVIEW & DUPLICATES MODAL (step 2 of import) -->
+  <div class="modal-overlay" id="adSpendDuplicatesModal">
+    <div class="modal wide">
+      <h3>🔎 Review Import</h3>
+      <p id="asDupSummaryText">Here's what we found before saving.</p>
+      <div class="import-summary" id="asImportSummaryStats"></div>
+      <div id="asDupSection">
+        <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px">Duplicate businesses found</div>
+        <div class="modal-scroll" id="asDupList" style="max-height:32vh"></div>
+      </div>
+      <div class="modal-btns">
+        <button class="btn btn-ghost" onclick="backToAdSpendMapping()">← Back</button>
+        <button class="btn btn-primary" onclick="applyAdSpendImport()">Save Import</button>
       </div>
     </div>
   </div>
@@ -1668,7 +1708,7 @@ const pageMeta = {
   upsell:     { title: 'Upsell Playbook',      sub: 'By product · prioritized action cards' },
   action:     { title: 'Action Plan',          sub: '90-day step-by-step execution guide' },
   products:   { title: 'Manage Products',      sub: 'Add, remove, and configure your product catalog' },
-  adspend:    { title: 'Call Ad Spend Management', sub: 'Business-by-business budget, promo status, and recommendations' },
+  adspend:    { title: 'Ad Spend Management', sub: 'Business-by-business budget, promo status, and recommendations' },
   collections:{ title: 'Collections',              sub: 'Outstanding balances and card fails, with status and notes' },
   team:       { title: 'Team & Permissions',   sub: 'Manage who can view, edit, and upload' },
 };
@@ -2827,6 +2867,231 @@ function rebuildAdSpendTable() {
   }).join('');
 }
 
+// ─── AD SPEND IMPORT WIZARD (mapping + duplicate review) ───────────────────────
+let pendingAdSpendImport = null;
+
+function handleAdSpendFileUpload(e) {
+  if (!requirePermission('upload')) { e.target.value = ''; return; }
+  const file = e.target.files[0];
+  if (!file) return;
+  const isCSV = /\.csv$/i.test(file.name);
+  const reader = new FileReader();
+  const inputEl = e.target;
+
+  reader.onload = function(ev) {
+    try {
+      let rows;
+      if (isCSV) rows = parseCSV(ev.target.result);
+      else {
+        const wb = XLSX.read(ev.target.result, { type: 'binary' });
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+      }
+      if (!rows || rows.length === 0) throw new Error('No data rows found in this file.');
+      startAdSpendImport(rows, file.name, inputEl);
+    } catch (err) {
+      showUploadFeedback('Upload failed: ' + err.message, true);
+      alert('⚠️ Could not process file: ' + err.message);
+      inputEl.value = '';
+    }
+  };
+  reader.onerror = () => showUploadFeedback('File read error', true);
+
+  if (isCSV) reader.readAsText(file);
+  else reader.readAsBinaryString(file);
+}
+
+function guessAdSpendColumn(header) {
+  const h = normalizeHeader(header);
+  if (/business|client|company|^name$/.test(h)) return 'name';
+  if (/watermark/.test(h)) return 'watermark';
+  if (/budget|spend|monthly/.test(h)) return 'budget';
+  if (/add.?on/.test(h)) return 'addons';
+  if (/date|start/.test(h)) return 'startDate';
+  if (/promo|eligib/.test(h)) return 'promo';
+  if (/recommend|note/.test(h)) return 'recs';
+  return '';
+}
+
+function guessPromoValue(v) {
+  const s = normalizeHeader(String(v || ''));
+  if (/already/.test(s)) return 'Already Using';
+  if (/^y|yes|true|eligible/.test(s)) return 'Yes';
+  if (/^n|no|false|not/.test(s)) return 'No';
+  return 'No';
+}
+
+function startAdSpendImport(rows, fileName, inputEl) {
+  const headers = Object.keys(rows[0]);
+  const mapping = {};
+  headers.forEach((h,i) => { mapping[i] = guessAdSpendColumn(h); });
+  pendingAdSpendImport = { fileName, rows, headers, mapping, result: null, inputEl };
+  renderAdSpendMappingModal();
+  document.getElementById('adSpendMappingModal').classList.add('open');
+}
+
+function renderAdSpendMappingModal() {
+  const { rows, headers, mapping, fileName } = pendingAdSpendImport;
+  document.getElementById('asMappingFileLabel').innerHTML =
+    `<strong style="color:var(--text)">${fileName}</strong> → Ad Spend Management · ${rows.length} row${rows.length === 1 ? '' : 's'} detected. Fix anything that looks wrong, then continue.`;
+  const options = (selected) => `
+    <option value="">— Ignore this column —</option>
+    <option value="name" ${selected === 'name' ? 'selected' : ''}>👤 Business Name</option>
+    <option value="budget" ${selected === 'budget' ? 'selected' : ''}>💰 Budget ($/mo)</option>
+    <option value="watermark" ${selected === 'watermark' ? 'selected' : ''}>🎯 Watermark ($)</option>
+    <option value="addons" ${selected === 'addons' ? 'selected' : ''}>➕ Add-Ons</option>
+    <option value="startDate" ${selected === 'startDate' ? 'selected' : ''}>📅 Start Date</option>
+    <option value="promo" ${selected === 'promo' ? 'selected' : ''}>🎁 Promo Eligible</option>
+    <option value="recs" ${selected === 'recs' ? 'selected' : ''}>📝 Recommendations</option>`;
+  const body = document.getElementById('asMappingTableBody');
+  body.innerHTML = headers.map((h,i) => {
+    const sample = String(rows[0][h] ?? '').slice(0,40) || '—';
+    return `<tr>
+      <td class="col-header">${h}</td>
+      <td class="col-sample">${sample}</td>
+      <td><select data-idx="${i}" onchange="onAdSpendMappingChange(this)">${options(mapping[i])}</select></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('asMappingWarning').style.display = 'none';
+}
+
+function onAdSpendMappingChange(sel) {
+  pendingAdSpendImport.mapping[sel.getAttribute('data-idx')] = sel.value;
+  document.getElementById('asMappingWarning').style.display = 'none';
+}
+
+function closeAdSpendMappingModal() {
+  document.getElementById('adSpendMappingModal').classList.remove('open');
+  if (pendingAdSpendImport && pendingAdSpendImport.inputEl) pendingAdSpendImport.inputEl.value = '';
+  pendingAdSpendImport = null;
+}
+
+function confirmAdSpendMapping() {
+  const { rows, headers, mapping } = pendingAdSpendImport;
+  if (!Object.values(mapping).includes('name')) {
+    document.getElementById('asMappingWarning').style.display = 'block';
+    return;
+  }
+  const built = rows.map(row => {
+    const rec = { name: '', budget: 0, watermark: 0, addons: [], startDate: '', promo: 'No', recs: '' };
+    headers.forEach((h,i) => {
+      const target = mapping[i];
+      if (!target) return;
+      const val = row[h];
+      if (target === 'name') { if (!rec.name) rec.name = String(val ?? '').trim(); }
+      else if (target === 'budget') rec.budget = Number(String(val).replace(/[^0-9.-]/g,'')) || 0;
+      else if (target === 'watermark') rec.watermark = Number(String(val).replace(/[^0-9.-]/g,'')) || 0;
+      else if (target === 'addons') rec.addons = parseAddons(String(val ?? ''));
+      else if (target === 'startDate') rec.startDate = normalizeDateValue(val);
+      else if (target === 'promo') rec.promo = guessPromoValue(val);
+      else if (target === 'recs') rec.recs = String(val ?? '').trim();
+    });
+    return rec;
+  }).filter(r => r.name);
+
+  const byName = new Map();
+  let intraMerged = 0;
+  built.forEach(r => {
+    const key = normName(r.name);
+    if (byName.has(key)) intraMerged++;
+    byName.set(key, r); // last row for a repeated name wins
+  });
+  const incoming = Array.from(byName.values());
+
+  const existingByName = new Map(AD_SPEND_BUSINESSES.map(b => [normName(b.name), b]));
+  const dups = [];
+  const brandNew = [];
+  incoming.forEach(r => {
+    const key = normName(r.name);
+    if (existingByName.has(key)) dups.push({ name: r.name, existing: existingByName.get(key), incoming: r, action: 'replace' });
+    else brandNew.push(r);
+  });
+
+  pendingAdSpendImport.result = { incoming, brandNew, dups, intraMerged };
+  document.getElementById('adSpendMappingModal').classList.remove('open');
+  renderAdSpendDuplicatesReview();
+  document.getElementById('adSpendDuplicatesModal').classList.add('open');
+}
+
+function renderAdSpendDuplicatesReview() {
+  const { fileName } = pendingAdSpendImport;
+  const { incoming, brandNew, dups, intraMerged } = pendingAdSpendImport.result;
+  document.getElementById('asDupSummaryText').innerHTML = `<strong style="color:var(--text)">${fileName}</strong> → Ad Spend Management. Review below, then save.`;
+  document.getElementById('asImportSummaryStats').innerHTML = `
+    <div class="stat"><b>${incoming.length}</b><span>Rows Mapped</span></div>
+    <div class="stat"><b>${brandNew.length}</b><span>New Businesses</span></div>
+    <div class="stat" style="${dups.length ? 'border-color:var(--orange)' : ''}"><b style="${dups.length ? 'color:var(--orange)' : ''}">${dups.length}</b><span>Duplicates Found</span></div>
+    ${intraMerged ? `<div class="stat"><b>${intraMerged}</b><span>Merged Within File</span></div>` : ''}
+  `;
+  const dupList = document.getElementById('asDupList');
+  const dupSection = document.getElementById('asDupSection');
+  if (dups.length === 0) { dupSection.style.display = 'none'; }
+  else {
+    dupSection.style.display = '';
+    dupList.innerHTML = dups.map((d,i) => `
+      <div class="dup-row">
+        <div class="dup-name">${d.name}<span class="dup-sub">Already in Ad Spend Management — choose what to do</span></div>
+        <select onchange="setAdSpendDupAction(${i}, this.value)" style="width:220px">
+          <option value="replace" ${d.action === 'replace' ? 'selected' : ''}>🔄 Replace existing record</option>
+          <option value="skip" ${d.action === 'skip' ? 'selected' : ''}>⏭️ Skip — keep existing as-is</option>
+          <option value="both" ${d.action === 'both' ? 'selected' : ''}>➕ Keep both (add as new)</option>
+        </select>
+      </div>`).join('');
+  }
+}
+
+function setAdSpendDupAction(i, action) { pendingAdSpendImport.result.dups[i].action = action; }
+
+function backToAdSpendMapping() {
+  document.getElementById('adSpendDuplicatesModal').classList.remove('open');
+  renderAdSpendMappingModal();
+  document.getElementById('adSpendMappingModal').classList.add('open');
+}
+
+function closeAdSpendDuplicatesModal() {
+  document.getElementById('adSpendDuplicatesModal').classList.remove('open');
+  if (pendingAdSpendImport && pendingAdSpendImport.inputEl) pendingAdSpendImport.inputEl.value = '';
+  pendingAdSpendImport = null;
+}
+
+function applyAdSpendImport() {
+  const { fileName } = pendingAdSpendImport;
+  const { brandNew, dups } = pendingAdSpendImport.result;
+  let replaced = 0, skipped = 0, added = 0, keptBoth = 0;
+
+  dups.forEach(d => {
+    if (d.action === 'replace') {
+      Object.assign(d.existing, { budget: d.incoming.budget, watermark: d.incoming.watermark, addons: d.incoming.addons, startDate: d.incoming.startDate, promo: d.incoming.promo, recs: d.incoming.recs || d.existing.recs });
+      persistAdSpendBusiness(d.existing);
+      replaced++;
+    } else if (d.action === 'both') {
+      const rec = { id: (crypto.randomUUID ? crypto.randomUUID() : 'b_' + Date.now() + Math.random().toString(16).slice(2)), ...d.incoming };
+      AD_SPEND_BUSINESSES.push(rec);
+      persistAdSpendBusiness(rec);
+      keptBoth++;
+    } else skipped++;
+  });
+
+  brandNew.forEach(r => {
+    const rec = { id: (crypto.randomUUID ? crypto.randomUUID() : 'b_' + Date.now() + Math.random().toString(16).slice(2)), ...r };
+    AD_SPEND_BUSINESSES.push(rec);
+    persistAdSpendBusiness(rec);
+    added++;
+  });
+
+  localStorage.setItem(ADSPEND_CACHE_KEY, JSON.stringify(AD_SPEND_BUSINESSES));
+  rebuildAdSpendPage();
+
+  const parts = [];
+  if (added) parts.push(`${added} added`);
+  if (replaced) parts.push(`${replaced} replaced`);
+  if (keptBoth) parts.push(`${keptBoth} added as new`);
+  if (skipped) parts.push(`${skipped} skipped`);
+  showUploadFeedback(`${fileName} → Ad Spend Management · ${parts.join(', ') || 'no changes'} · Saved`, false);
+
+  closeAdSpendDuplicatesModal();
+}
+
 // ════════════════════════════════════════════════════════════════════════
 // COLLECTIONS — Outstanding Balances & Card Fails
 // Accounts live in Supabase table "collections_accounts" (falls back to
@@ -3561,7 +3826,10 @@ function renderMappingModal() {
   const options = (selected) => {
     let opts = `<option value="">— Ignore this column —</option>`;
     opts += `<option value="name" ${selected === 'name' ? 'selected' : ''}>👤 Client Name</option>`;
-    catalog.forEach(p => { opts += `<option value="${p.key}" ${selected === p.key ? 'selected' : ''}>${p.icon || ''} ${p.label}</option>`; });
+    catalog.forEach(p => {
+      const iconText = (typeof p.icon === 'string' && p.icon.startsWith('logo:')) ? '' : (p.icon || '');
+      opts += `<option value="${p.key}" ${selected === p.key ? 'selected' : ''}>${iconText ? iconText + ' ' : ''}${p.label}</option>`;
+    });
     return opts;
   };
   const body = document.getElementById('mappingTableBody');
