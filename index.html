@@ -1888,7 +1888,7 @@ function parseRowsToClients(rows, pk) {
     if (HEADER_MAP[norm]) keyMap[k] = HEADER_MAP[norm];
   });
   if (!Object.values(keyMap).includes('name')) {
-    throw new Error('Could not find a "Business Name" / "Client Name" column in your sheet.');
+    return null; // signal that headers are unrecognized (not just empty)
   }
   const parsed = rows.map(row => {
     const client = {};
@@ -1901,7 +1901,7 @@ function parseRowsToClients(rows, pk) {
     });
     return client;
   }).filter(c => c.name && c.name.length > 0);
-  return parsed.length ? parsed : null;
+  return parsed; // returns empty array [] if headers valid but no data rows yet
 }
 
 function parseCSV(text) {
@@ -2056,13 +2056,15 @@ function handleFileUpload(e) {
         rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
       }
       const newClients = parseRowsToClients(rows, pk);
-      if (!newClients) throw new Error('No valid client rows found. Check your column headers.');
+      if (newClients === null) throw new Error('Could not find a "Business Name" / "Client Name" column. Check your column headers.');
 
       PORTFOLIOS[pk].clients = newClients;
-      // Clear any saved Sheets URL for this portfolio when uploading a file instead
       clearSheetsUrl(pk);
       persistAndRebuild(pk);
-      showUploadFeedback(`${file.name} → ${PORTFOLIOS[pk].name} (${newClients.length} clients) · Saved`, false);
+      const msg = newClients.length === 0
+        ? `${file.name} → ${PORTFOLIOS[pk].name} · No data rows yet (headers OK)`
+        : `${file.name} → ${PORTFOLIOS[pk].name} (${newClients.length} clients) · Saved`;
+      showUploadFeedback(msg, newClients.length === 0);
       e.target.value = '';
     } catch (err) {
       showUploadFeedback('Upload failed: ' + err.message, true);
@@ -2115,13 +2117,15 @@ async function connectSheets() {
     }
     const rows = parseCSV(text);
     const newClients = parseRowsToClients(rows, pk);
-    if (!newClients) throw new Error('No valid client rows found. Check your column headers.');
+    if (newClients === null) throw new Error('Could not find a "Business Name" / "Client Name" column. Check your column headers.');
 
     PORTFOLIOS[pk].clients = newClients;
-    // Save both the URL (for auto-refresh on load) and the data (as fallback)
     saveSheetsUrl(pk, url);
     persistAndRebuild(pk);
-    setSheetsStatus(`✅ Connected — ${newClients.length} clients loaded into ${PORTFOLIOS[pk].name}. Auto-refreshes on every page load.`, false);
+    const statusMsg = newClients.length === 0
+      ? `✅ Connected to ${PORTFOLIOS[pk].name} — sheet is empty (no data rows yet). Will auto-populate when you add clients.`
+      : `✅ Connected — ${newClients.length} clients loaded into ${PORTFOLIOS[pk].name}. Auto-refreshes on every page load.`;
+    setSheetsStatus(statusMsg, false);
     setTimeout(closeSheetsModal, 2000);
   } catch (err) {
     setSheetsStatus('⚠️ ' + err.message, true);
