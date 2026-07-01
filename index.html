@@ -1930,20 +1930,9 @@ const SMB_CATALOG = [
   { key: 'housecall_pro', label: 'Housecall Pro',   icon: 'logo:housecall_pro', priority: 'low',    desc: '0% adoption — field service vertical play' },
 ];
 
-const WL_CATALOG = [
-  { key: 'yelp',             label: 'Yelp',              icon: '⭐', priority: 'high',   desc: 'not using — core lead gen product' },
-  { key: 'google_lsa',       label: 'Google LSA',        icon: '🔍', priority: 'high',   desc: 'not using — high intent leads' },
-  { key: 'voice_agent',      label: 'Voice Agent',       icon: '🎙️', priority: 'medium', desc: 'not using — call capture' },
-  { key: 'branded_app',      label: 'Branded App',       icon: '📲', priority: 'medium', desc: 'not using — white-label mobile experience' },
-  { key: 'white_label_crm',  label: 'White Label CRM',   icon: '🗂️', priority: 'high',   desc: 'not using — full platform stickiness driver' },
-];
+const WL_CATALOG = JSON.parse(JSON.stringify(SMB_CATALOG));
 
-const SUPPORT_CATALOG = [
-  { key: 'tier1_support',  label: 'Tier 1 Support',   icon: '🎧', priority: 'high',   desc: 'not enrolled — baseline support coverage' },
-  { key: 'tier2_support',  label: 'Tier 2 Support',   icon: '🛠️', priority: 'medium', desc: 'not enrolled — escalation coverage upsell' },
-  { key: 'live_chat',      label: 'Live Chat',        icon: '💬', priority: 'medium', desc: 'not enrolled — real-time support channel' },
-  { key: 'phone_support',  label: 'Phone Support',    icon: '📞', priority: 'low',    desc: 'not enrolled — direct phone line coverage' },
-];
+const SUPPORT_CATALOG = JSON.parse(JSON.stringify(SMB_CATALOG));
 
 // ════════════════════════════════════════════════════════════════════════
 // PORTFOLIO REGISTRY — single source of truth for all 3 dashboards
