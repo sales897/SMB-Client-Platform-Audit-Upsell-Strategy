@@ -286,6 +286,7 @@ body {
 .chip-smb { background:rgba(229,106,26,.15);color:var(--orange);border:1px solid rgba(229,106,26,.3); }
 .chip-whitelabel { background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.3); }
 .chip-support { background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3); }
+.chip-addon { background:var(--bg4);color:var(--text2);border:1px solid var(--border); }
 .row-action-btn { padding:5px 11px;font-size:10.5px;font-weight:700;border-radius:6px;cursor:pointer;border:1px solid var(--border);background:var(--bg3);color:var(--text2);margin-right:6px;transition:all .15s; }
 .row-action-btn:hover { border-color:var(--orange);color:var(--orange); }
 .row-action-btn.danger:hover { border-color:var(--red);color:var(--red);background:rgba(239,68,68,.08); }
@@ -482,6 +483,62 @@ tr.hidden-row { display: none; }
 .btn-primary:hover { background: var(--orange2); }
 .btn-ghost { background: var(--bg3); color: var(--text2); border: 1px solid var(--border); }
 .btn-ghost:hover { border-color: var(--orange); color: var(--orange); }
+.btn-sm { padding: 6px 12px; font-size: 11px; }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+.modal.wide { width: 720px; }
+.modal select {
+  width: 100%; padding: 9px 12px;
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text); font-size: 12px; outline: none;
+  transition: border-color .2s;
+}
+.modal select:focus { border-color: var(--orange); }
+.modal-scroll { max-height: 46vh; overflow-y: auto; margin-bottom: 16px; border: 1px solid var(--border); border-radius: 10px; }
+.map-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.map-table th { text-align: left; padding: 8px 12px; background: var(--bg3); color: var(--text3); font-size: 10px; text-transform: uppercase; letter-spacing: .04em; position: sticky; top: 0; }
+.map-table td { padding: 6px 12px; border-top: 1px solid var(--border); vertical-align: middle; }
+.map-table .col-header { font-weight: 700; color: var(--text); }
+.map-table .col-sample { color: var(--text3); font-size: 11px; }
+.dup-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-top: 1px solid var(--border); }
+.dup-row:first-child { border-top: none; }
+.dup-name { flex: 1; font-weight: 700; color: var(--text); font-size: 12px; }
+.dup-name .dup-sub { display: block; font-weight: 400; color: var(--text3); font-size: 10px; margin-top: 2px; }
+.import-summary { display: flex; gap: 16px; margin-bottom: 16px; flex-wrap: wrap; }
+.import-summary .stat { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 10px 16px; text-align: center; }
+.import-summary .stat b { display: block; font-size: 20px; color: var(--orange); }
+.import-summary .stat span { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .03em; }
+/* ─── ROLES / TEAM ─────────────────────────────────────────────────────── */
+.user-badge {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg3); border: 1px solid var(--border); border-radius: 20px;
+  padding: 5px 12px 5px 6px; font-size: 12px; color: var(--text); cursor: pointer;
+  transition: border-color .15s;
+}
+.user-badge:hover { border-color: var(--orange); }
+.user-avatar {
+  width: 22px; height: 22px; border-radius: 50%; background: var(--orange);
+  color: #fff; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.role-pill { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; padding: 2px 7px; border-radius: 10px; }
+.role-pill.admin { background: rgba(226,84,31,.18); color: var(--orange2); }
+.role-pill.superuser { background: rgba(59,130,246,.18); color: var(--blue); }
+.role-pill.user { background: rgba(163,154,146,.18); color: var(--text2); }
+.promo-pill { font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 12px; white-space: nowrap; display: inline-block; }
+.promo-pill.yes { background: rgba(34,197,94,.15); color: var(--green); }
+.promo-pill.no { background: rgba(239,68,68,.15); color: var(--red); }
+.promo-pill.using { background: rgba(59,130,246,.15); color: var(--blue); }
+.status-pill { font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 12px; white-space: nowrap; display: inline-block; border: none; cursor: pointer; }
+.status-select { font-size: 10px; font-weight: 700; padding: 4px 8px; border-radius: 12px; border: none; cursor: pointer; outline: none; -webkit-appearance: none; appearance: none; }
+.notes-thread { max-height: 260px; overflow-y: auto; margin-bottom: 14px; border: 1px solid var(--border); border-radius: 10px; }
+.note-entry { padding: 10px 14px; border-top: 1px solid var(--border); }
+.note-entry:first-child { border-top: none; }
+.note-entry .note-meta { font-size: 10px; color: var(--text3); margin-bottom: 3px; }
+.note-entry .note-meta b { color: var(--text2); }
+.note-entry .note-text { font-size: 12px; color: var(--text); line-height: 1.5; white-space: pre-wrap; }
+.note-empty { padding: 20px; text-align: center; font-size: 12px; color: var(--text3); }
+.team-row { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; background: var(--bg3); }
+.team-row .team-name { flex: 1; font-weight: 700; font-size: 13px; color: var(--text); }
+.team-row .team-email { font-size: 11px; color: var(--text3); }
 
 /* ─── SECTION HEADERS ──────────────────────────────────────────────────── */
 .section-hd { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
@@ -602,8 +659,30 @@ tr.hidden-row { display: none; }
     <div class="nav-item" onclick="showPage('action')">
       <span class="icon">🗺️</span> Action Plan
     </div>
-    <div class="nav-item" onclick="showPage('products')">
+    <div class="nav-item" id="navProductsItem" onclick="showPage('products')">
       <span class="icon">📦</span> Manage Products
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Ad Spend</div>
+    <div class="nav-item" onclick="showPage('adspend')">
+      <span class="icon">💰</span> Call Ad Spend Management
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Collections</div>
+    <div class="nav-item" onclick="showPage('collections')">
+      <span class="icon">🧾</span> Collections
+      <span class="badge red" id="navCollectionsBadge" style="display:none">0</span>
+    </div>
+  </div>
+
+  <div class="nav-section" id="navTeamSection" style="display:none">
+    <div class="nav-label">Admin</div>
+    <div class="nav-item" onclick="showPage('team')">
+      <span class="icon">🔐</span> Team &amp; Permissions
     </div>
   </div>
 
@@ -628,11 +707,16 @@ tr.hidden-row { display: none; }
       <div class="data-source-pill" id="dataSourcePill">
         <span class="dot"></span> Sample Data
       </div>
+      <div class="user-badge" id="userBadge" onclick="openUserSwitchModal()" title="Switch user / role">
+        <span class="user-avatar" id="userAvatar">?</span>
+        <span id="userBadgeName">Guest</span>
+        <span class="role-pill user" id="userBadgeRole">User</span>
+      </div>
       <label class="upload-btn" id="uploadBtnLabel" title="Uploads into the currently open dashboard">
         📁 Upload to <span id="uploadTargetLabel">SMB</span>
         <input type="file" id="fileUpload" accept=".xlsx,.xls,.csv" onchange="handleFileUpload(event)">
       </label>
-      <button class="sheets-btn" onclick="openSheetsModal()" title="Connects a sheet into the currently open dashboard">
+      <button class="sheets-btn" id="sheetsConnectTopBtn" onclick="openSheetsModal()" title="Connects a sheet into the currently open dashboard">
         📋 Connect Sheets
       </button>
     </div>
@@ -1145,6 +1229,303 @@ tr.hidden-row { display: none; }
     <div class="page-footer">Client Success Hub · Niche Inc. · Product Catalog Management</div>
   </div>
 
+  <!-- ═══════════════════════════════════════════════════════════════════
+       PAGE: CALL AD SPEND MANAGEMENT — shell, built out next
+  ════════════════════════════════════════════════════════════════════════ -->
+  <div class="page" id="page-adspend">
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-icon">🏢</div><div class="kpi-val orange" id="as-total">0</div><div class="kpi-lbl">Businesses Tracked</div></div>
+      <div class="kpi"><div class="kpi-icon">💰</div><div class="kpi-val" id="as-budget">$0</div><div class="kpi-lbl">Total Monthly Budget</div></div>
+      <div class="kpi"><div class="kpi-icon">🎁</div><div class="kpi-val green" id="as-promo">0</div><div class="kpi-lbl">Promo Eligible</div></div>
+      <div class="kpi"><div class="kpi-icon">✅</div><div class="kpi-val" style="color:var(--blue)" id="as-using">0</div><div class="kpi-lbl">Already Using</div></div>
+    </div>
+
+    <div class="card" style="margin-bottom:20px" id="asAddCard">
+      <div class="card-header">
+        <div><div class="card-title">Add a Business</div><div class="card-sub">Tracks budget, add-ons, promo status, and internal notes per business</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr 1.2fr;gap:10px;align-items:end;margin-bottom:10px">
+        <div>
+          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Business Name</label>
+          <input type="text" id="asName" placeholder="e.g. Summit Roofing Co." style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Budget ($/mo)</label>
+          <input type="number" id="asBudget" placeholder="2500" min="0" step="1" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Watermark ($)</label>
+          <input type="number" id="asWatermark" placeholder="1000" min="0" step="1" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Start Date</label>
+          <input type="date" id="asStartDate" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Promo Eligible</label>
+          <select id="asPromo" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+            <option value="Yes">Yes</option>
+            <option value="No">No</option>
+            <option value="Already Using">Already Using</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end">
+        <div>
+          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Add-Ons <span style="color:var(--text3)">(comma-separated)</span></label>
+          <input type="text" id="asAddons" placeholder="e.g. Rank Tracker, Extra Landing Page" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Recommendations</label>
+          <input type="text" id="asRecs" placeholder="e.g. Increase budget 20% after 30 days" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+        </div>
+        <button class="btn btn-primary" onclick="addAdSpendBusiness()">＋ Add Business</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div><div class="card-title">Businesses</div><div class="card-sub" id="asCountSub">0 businesses</div></div>
+      </div>
+      <div class="table-controls">
+        <input type="text" class="search-box" id="asSearch" placeholder="Search businesses..." oninput="rebuildAdSpendTable()">
+        <div style="display:flex;gap:6px;flex-wrap:wrap" id="asFilterPills">
+          <button class="filter-pill active" onclick="setAdSpendFilter('all',this)">All</button>
+          <button class="filter-pill" onclick="setAdSpendFilter('Yes',this)">🎁 Promo Eligible</button>
+          <button class="filter-pill" onclick="setAdSpendFilter('No',this)">Not Eligible</button>
+          <button class="filter-pill" onclick="setAdSpendFilter('Already Using',this)">Already Using</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr>
+            <th style="width:16%">Business</th>
+            <th style="width:10%">Budget</th>
+            <th style="width:10%">Watermark</th>
+            <th style="width:16%">Add-Ons</th>
+            <th style="width:10%">Start Date</th>
+            <th style="width:12%">Promo Eligible</th>
+            <th style="width:16%">Recommendations</th>
+            <th style="width:10%">Actions</th>
+          </tr></thead>
+          <tbody id="asTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="page-footer">Client Success Hub · Niche Inc. · Call Ad Spend Management</div>
+  </div>
+
+  <!-- EDIT AD SPEND BUSINESS MODAL -->
+  <div class="modal-overlay" id="editAdSpendModal">
+    <div class="modal wide">
+      <h3>✏️ Edit Business</h3>
+      <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr 1.2fr;gap:10px;align-items:end;margin-bottom:12px">
+        <div>
+          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Business Name</label>
+          <input type="text" id="asEditName" style="margin-bottom:0">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Budget ($/mo)</label>
+          <input type="number" id="asEditBudget" min="0" step="1" style="margin-bottom:0">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Watermark ($)</label>
+          <input type="number" id="asEditWatermark" min="0" step="1" style="margin-bottom:0">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Start Date</label>
+          <input type="date" id="asEditStartDate" style="margin-bottom:0">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Promo Eligible</label>
+          <select id="asEditPromo">
+            <option value="Yes">Yes</option>
+            <option value="No">No</option>
+            <option value="Already Using">Already Using</option>
+          </select>
+        </div>
+      </div>
+      <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Add-Ons <span style="color:var(--text3)">(comma-separated)</span></label>
+      <input type="text" id="asEditAddons">
+      <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Recommendations</label>
+      <textarea id="asEditRecs" rows="3" style="width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;margin-bottom:14px;resize:vertical;font-family:inherit"></textarea>
+      <div class="modal-btns">
+        <button class="btn btn-ghost" onclick="closeEditAdSpendModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveAdSpendEdit()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       PAGE: COLLECTIONS — Outstanding Balances & Card Fails
+  ════════════════════════════════════════════════════════════════════════ -->
+  <div class="page" id="page-collections">
+    <div class="card" style="margin-bottom:20px;padding:14px 18px">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:10px;letter-spacing:.5px;text-transform:uppercase;font-weight:700">Viewing</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="pm-tab active" data-pk="outstanding" onclick="switchCollectionsType('outstanding')">💵 Outstanding Balances</button>
+        <button class="pm-tab" data-pk="cardfail" onclick="switchCollectionsType('cardfail')">💳 Card Fails</button>
+      </div>
+    </div>
+
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-icon">🧾</div><div class="kpi-val orange" id="col-total">0</div><div class="kpi-lbl" id="col-total-lbl">Accounts</div></div>
+      <div class="kpi"><div class="kpi-icon">💰</div><div class="kpi-val" id="col-amount">$0</div><div class="kpi-lbl" id="col-amount-lbl">Total Owed</div></div>
+      <div class="kpi"><div class="kpi-icon">⚠️</div><div class="kpi-val red" id="col-needs">0</div><div class="kpi-lbl">Needs Attention</div><div class="kpi-sub">Pending, In Review, or Escalated</div></div>
+      <div class="kpi"><div class="kpi-icon">✅</div><div class="kpi-val green" id="col-resolved">0</div><div class="kpi-lbl">Resolved</div></div>
+    </div>
+
+    <div class="card" style="margin-bottom:20px" id="colAddCard">
+      <div class="card-header">
+        <div><div class="card-title" id="colAddTitle">Add Outstanding Balance</div><div class="card-sub">Or upload a list below — every account gets a status and a running note history</div></div>
+        <label class="upload-btn" id="colUploadBtnLabel" style="position:relative">
+          📁 Upload List
+          <input type="file" id="colFileUpload" accept=".xlsx,.xls,.csv" onchange="handleCollectionsFileUpload(event)">
+        </label>
+      </div>
+      <div style="display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr auto;gap:10px;align-items:end">
+        <div>
+          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Business Name</label>
+          <input type="text" id="colName" placeholder="e.g. Summit Roofing Co." style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Amount ($)</label>
+          <input type="number" id="colAmount" placeholder="450" min="0" step="0.01" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px" id="colDateLabel">Due Date</label>
+          <input type="date" id="colDate" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Status</label>
+          <select id="colStatus" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none"></select>
+        </div>
+        <button class="btn btn-primary" onclick="addCollectionsAccount()">＋ Add Account</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div><div class="card-title" id="colListTitle">Outstanding Balances</div><div class="card-sub" id="colCountSub">0 accounts</div></div>
+      </div>
+      <div class="table-controls">
+        <input type="text" class="search-box" id="colSearch" placeholder="Search accounts..." oninput="rebuildCollectionsTable()">
+        <div style="display:flex;gap:6px;flex-wrap:wrap" id="colFilterPills"></div>
+      </div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr>
+            <th style="width:24%">Business</th>
+            <th style="width:12%">Amount</th>
+            <th style="width:14%" id="colDateHeader">Due Date</th>
+            <th style="width:16%">Status</th>
+            <th style="width:24%">Latest Note</th>
+            <th style="width:10%">Actions</th>
+          </tr></thead>
+          <tbody id="colTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="page-footer">Client Success Hub · Niche Inc. · Collections</div>
+  </div>
+
+  <!-- COLLECTIONS: NOTES MODAL -->
+  <div class="modal-overlay" id="collectionsNotesModal">
+    <div class="modal wide">
+      <h3 id="colNotesTitle">📝 Notes</h3>
+      <p id="colNotesSub">Running history of updates on this account.</p>
+      <div class="notes-thread" id="colNotesThread"></div>
+      <textarea id="colNewNoteText" rows="2" placeholder="Add a quick note about progress or a status change..." style="width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;margin-bottom:14px;resize:vertical;font-family:inherit"></textarea>
+      <div class="modal-btns">
+        <button class="btn btn-ghost" onclick="closeCollectionsNotesModal()">Close</button>
+        <button class="btn btn-primary" onclick="addCollectionsNote()">Add Note</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- COLLECTIONS: COLUMN MAPPING MODAL (step 1 of import) -->
+  <div class="modal-overlay" id="collectionsMappingModal">
+    <div class="modal wide">
+      <h3>🧩 Map Your Columns</h3>
+      <p id="colMappingFileLabel">We auto-detected these columns from your file. Fix anything that looks wrong, then continue.</p>
+      <div class="modal-scroll">
+        <table class="map-table">
+          <thead><tr><th style="width:34%">Your Column</th><th style="width:26%">Sample Value</th><th>Maps To</th></tr></thead>
+          <tbody id="colMappingTableBody"></tbody>
+        </table>
+      </div>
+      <div id="colMappingWarning" style="font-size:11px;color:var(--red);margin-bottom:10px;display:none">⚠️ Pick a column for Business Name before continuing.</div>
+      <div class="modal-btns">
+        <button class="btn btn-ghost" onclick="closeCollectionsMappingModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="confirmCollectionsMapping()">Continue →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- COLLECTIONS: REVIEW & DUPLICATES MODAL (step 2 of import) -->
+  <div class="modal-overlay" id="collectionsDuplicatesModal">
+    <div class="modal wide">
+      <h3>🔎 Review Import</h3>
+      <p id="colDupSummaryText">Here's what we found before saving.</p>
+      <div class="import-summary" id="colImportSummaryStats"></div>
+      <div id="colDupSection">
+        <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px">Duplicate accounts found</div>
+        <div class="modal-scroll" id="colDupList" style="max-height:32vh"></div>
+      </div>
+      <div class="modal-btns">
+        <button class="btn btn-ghost" onclick="backToCollectionsMapping()">← Back</button>
+        <button class="btn btn-primary" onclick="applyCollectionsImport()">Save Import</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       PAGE: TEAM & PERMISSIONS — admin only
+  ════════════════════════════════════════════════════════════════════════ -->
+  <div class="page" id="page-team">
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header">
+        <div><div class="card-title">Add Team Member</div><div class="card-sub">Controls what they can see and edit across the Hub</div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 160px 120px;gap:10px;align-items:end">
+        <div>
+          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Name</label>
+          <input type="text" id="newMemberName" placeholder="e.g. Jordan Lee" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Email <span style="color:var(--text3)">(optional)</span></label>
+          <input type="text" id="newMemberEmail" placeholder="jordan@getniche.ai" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Role</label>
+          <select id="newMemberRole" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+            <option value="user">User — view only</option>
+            <option value="superuser">Super user — upload & edit</option>
+            <option value="admin">Admin — full access</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="addTeamMember()">＋ Add</button>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header">
+        <div><div class="card-title">Roles Explained</div></div>
+      </div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.9">
+        <div><span class="role-pill admin">Admin</span> Full access — upload, edit clients, manage the product catalog, and manage the team.</div>
+        <div><span class="role-pill superuser">Super user</span> Can upload spreadsheets, connect Sheets, and edit/merge clients. Cannot manage team or the product catalog.</div>
+        <div><span class="role-pill user">User</span> View-only — dashboards, charts, and reports, no editing or uploads.</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div><div class="card-title">Team Members</div><div class="card-sub" id="teamCountSub">0 people</div></div>
+      </div>
+      <div id="teamMembersList"></div>
+    </div>
+    <div class="page-footer">Client Success Hub · Niche Inc. · Team &amp; Permissions</div>
+  </div>
+
 </div><!-- end .main -->
 
 <!-- REMOVE PRODUCT CONFIRMATION MODAL -->
@@ -1215,6 +1596,55 @@ tr.hidden-row { display: none; }
   </div>
 </div>
 
+<!-- USER SWITCH / ROLE MODAL -->
+<div class="modal-overlay" id="userSwitchModal">
+  <div class="modal">
+    <h3>👋 Who's using the Hub?</h3>
+    <p>Pick your name to load the right permissions. Ask an Admin to add you under Team &amp; Permissions if you're not listed.</p>
+    <div class="modal-scroll" id="userSwitchList" style="max-height:280px"></div>
+    <div class="modal-btns" style="justify-content:space-between;align-items:center">
+      <span style="font-size:11px;color:var(--text3)">Not listed? Continue as a view-only guest.</span>
+      <button class="btn btn-ghost" onclick="continueAsGuest()">Continue as Guest</button>
+    </div>
+  </div>
+</div>
+
+<!-- COLUMN MAPPING MODAL (step 1 of import) -->
+<div class="modal-overlay" id="mappingModal">
+  <div class="modal wide">
+    <h3>🧩 Map Your Columns</h3>
+    <p id="mappingFileLabel">We auto-detected these columns from your file. Fix anything that looks wrong, then continue.</p>
+    <div class="modal-scroll">
+      <table class="map-table">
+        <thead><tr><th style="width:34%">Your Column</th><th style="width:26%">Sample Value</th><th>Maps To</th></tr></thead>
+        <tbody id="mappingTableBody"></tbody>
+      </table>
+    </div>
+    <div id="mappingWarning" style="font-size:11px;color:var(--red);margin-bottom:10px;display:none">⚠️ Pick a column for Client Name before continuing.</div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeMappingModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmMapping()">Continue →</button>
+    </div>
+  </div>
+</div>
+
+<!-- REVIEW & DUPLICATES MODAL (step 2 of import) -->
+<div class="modal-overlay" id="duplicatesModal">
+  <div class="modal wide">
+    <h3>🔎 Review Import</h3>
+    <p id="dupSummaryText">Here's what we found before saving.</p>
+    <div class="import-summary" id="importSummaryStats"></div>
+    <div id="dupSection">
+      <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px" id="dupSectionTitle">Duplicate clients found</div>
+      <div class="modal-scroll" id="dupList" style="max-height:32vh"></div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="backToMapping()">← Back</button>
+      <button class="btn btn-primary" onclick="applyImport()">Save Import</button>
+    </div>
+  </div>
+</div>
+
 <script>
 // ════════════════════════════════════════════════════════════════════════
 // NAVIGATION
@@ -1229,9 +1659,14 @@ const pageMeta = {
   upsell:     { title: 'Upsell Playbook',      sub: 'By product · prioritized action cards' },
   action:     { title: 'Action Plan',          sub: '90-day step-by-step execution guide' },
   products:   { title: 'Manage Products',      sub: 'Add, remove, and configure your product catalog' },
+  adspend:    { title: 'Call Ad Spend Management', sub: 'Business-by-business budget, promo status, and recommendations' },
+  collections:{ title: 'Collections',              sub: 'Outstanding balances and card fails, with status and notes' },
+  team:       { title: 'Team & Permissions',   sub: 'Manage who can view, edit, and upload' },
 };
 
 function showPage(id) {
+  if (id === 'team' && !requirePermission('admin')) return;
+  if (id === 'products' && !requirePermission('admin')) return;
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + id).classList.add('active');
@@ -1952,53 +2387,1038 @@ function parseCSV(text) {
 }
 
 // ════════════════════════════════════════════════════════════════════════
-// PERSISTENCE ENGINE
-// Priority: Google Sheets URL (saved) → localStorage data → sample data
+// SUPABASE CONNECTION
+// All data stored in Supabase — shared across all users and browsers
 // ════════════════════════════════════════════════════════════════════════
-const STORAGE_KEY = 'csh_portfolios_v1';
-const SHEETS_KEY  = 'csh_sheets_v1';
+const SUPABASE_URL = 'https://banmahudemvjkygwihsd.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhbm1haHVkZW12amt5Z3dpaHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5MjIzOTIsImV4cCI6MjA5ODQ5ODM5Mn0.01Y4i_nAFt-wmN-YNcE3dw_3od0NoU4HgvjwSCWw0cc';
+const API = SUPABASE_URL + '/rest/v1';
 
-// Save all portfolio clients + product catalogs to localStorage
-function saveToLocalStorage() {
-  try {
-    const snapshot = {};
-    ['smb', 'whitelabel', 'support'].forEach(pk => {
-      snapshot[pk] = {
-        clients: PORTFOLIOS[pk].clients,
-        catalog: PORTFOLIOS[pk].catalog,
-      };
-    });
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
-  } catch(e) {
-    console.warn('localStorage save failed:', e);
+const SB_HEADERS = {
+  'apikey': SUPABASE_KEY,
+  'Authorization': 'Bearer ' + SUPABASE_KEY,
+  'Content-Type': 'application/json',
+  'Prefer': 'return=representation',
+};
+
+// Supabase REST API helpers
+async function sbSelect(table, params = '') {
+  const res = await fetch(`${API}/${table}?${params}`, { headers: SB_HEADERS });
+  if (!res.ok) throw new Error(`Supabase GET ${table} failed: ${res.status}`);
+  return res.json();
+}
+
+async function sbUpsert(table, data) {
+  const res = await fetch(`${API}/${table}`, {
+    method: 'POST',
+    headers: { ...SB_HEADERS, 'Prefer': 'resolution=merge-duplicates,return=representation' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Supabase UPSERT ${table} failed: ${res.status} — ${err}`);
+  }
+  return res.json();
+}
+
+async function sbDelete(table, filter) {
+  const res = await fetch(`${API}/${table}?${filter}`, {
+    method: 'DELETE',
+    headers: SB_HEADERS,
+  });
+  if (!res.ok) throw new Error(`Supabase DELETE ${table} failed: ${res.status}`);
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// ROLES & PERMISSIONS
+// Team members live in Supabase table "team_members" (falls back to
+// localStorage if that table doesn't exist yet in your project — see the
+// CREATE TABLE snippet noted alongside this build).
+// Roles: admin > superuser > user
+// ════════════════════════════════════════════════════════════════════════
+const ROLE_RANK = { user: 1, superuser: 2, admin: 3 };
+const CURRENT_USER_KEY = 'csh_current_user_v1';
+const TEAM_CACHE_KEY = 'csh_team_members_v1';
+let TEAM_MEMBERS = [];
+
+function getCurrentUser() {
+  try { return JSON.parse(localStorage.getItem(CURRENT_USER_KEY) || 'null'); }
+  catch(e) { return null; }
+}
+
+function setCurrentUser(user) {
+  try { localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user)); } catch(e) {}
+  applyPermissionsToUI();
+}
+
+function hasRole(minRole) {
+  const u = getCurrentUser();
+  const rank = u ? (ROLE_RANK[u.role] || 1) : 1; // guests default to 'user' rank
+  return rank >= ROLE_RANK[minRole];
+}
+function isAdmin()   { return hasRole('admin'); }
+function canEdit()   { return hasRole('superuser'); }   // edit/merge/delete clients
+function canUpload() { return hasRole('superuser'); }   // upload files / connect Sheets
+
+// Central gate used by action handlers — shows a friendly nudge instead of failing silently
+function requirePermission(kind) {
+  const need = kind === 'admin' ? 'admin' : kind === 'edit' || kind === 'upload' ? 'superuser' : 'user';
+  if (hasRole(need)) return true;
+  const label = need === 'admin' ? 'an Admin' : 'a Super user or Admin';
+  alert(`🔒 You need to be ${label} to do that.\n\nCurrently signed in as: ${(getCurrentUser()||{}).name || 'Guest'} (${(getCurrentUser()||{}).role || 'user'}).\nSwitch users from the badge in the top bar, or ask an Admin to change your role under Team & Permissions.`);
+  return false;
+}
+
+function initials(name) {
+  return (name || '?').trim().split(/\s+/).slice(0,2).map(w => w[0]).join('').toUpperCase() || '?';
+}
+
+function applyPermissionsToUI() {
+  const u = getCurrentUser();
+  const role = u ? u.role : 'user';
+
+  // Top bar badge
+  const nameEl = document.getElementById('userBadgeName');
+  const roleEl = document.getElementById('userBadgeRole');
+  const avEl = document.getElementById('userAvatar');
+  if (nameEl) nameEl.textContent = u ? u.name : 'Guest';
+  if (avEl) avEl.textContent = initials(u ? u.name : 'Guest');
+  if (roleEl) {
+    roleEl.textContent = role === 'admin' ? 'Admin' : role === 'superuser' ? 'Super user' : 'User';
+    roleEl.className = 'role-pill ' + role;
+  }
+
+  // Upload / Connect Sheets — superuser+
+  const uploadBtn = document.getElementById('uploadBtnLabel');
+  const sheetsBtn = document.getElementById('sheetsConnectTopBtn');
+  const uploadAllowed = canUpload();
+  if (uploadBtn) uploadBtn.style.opacity = uploadAllowed ? '' : '.4';
+  if (uploadBtn) uploadBtn.style.pointerEvents = uploadAllowed ? '' : 'none';
+  if (sheetsBtn) sheetsBtn.disabled = !uploadAllowed;
+  if (sheetsBtn) sheetsBtn.style.opacity = uploadAllowed ? '' : '.4';
+
+  // Admin-only nav (Team & Permissions)
+  const teamSection = document.getElementById('navTeamSection');
+  if (teamSection) teamSection.style.display = isAdmin() ? '' : 'none';
+
+  // Manage Products nav — admin only (catalog structure)
+  const productsNav = document.getElementById('navProductsItem');
+  if (productsNav) productsNav.style.opacity = isAdmin() ? '' : '.4';
+
+  // Refresh anything currently rendered that depends on role
+  if (typeof rebuildClientsDirectory === 'function' && document.getElementById('clientsDirectoryBody')) {
+    try { rebuildClientsDirectory(); } catch(e) {}
+  }
+  if (typeof rebuildAdSpendPage === 'function' && document.getElementById('asTableBody')) {
+    try { rebuildAdSpendPage(); } catch(e) {}
+  }
+  if (typeof rebuildCollectionsPage === 'function' && document.getElementById('colTableBody')) {
+    try { rebuildCollectionsPage(); } catch(e) {}
   }
 }
 
-// Save a Google Sheets URL for a portfolio
-function saveSheetsUrl(pk, url) {
+// ─── Team member persistence (Supabase, with localStorage fallback) ───────────
+async function loadTeamMembers() {
   try {
+    const rows = await sbSelect('team_members', 'order=name.asc');
+    TEAM_MEMBERS = rows.map(r => ({ id: r.id, name: r.name, email: r.email || '', role: r.role }));
+    localStorage.setItem(TEAM_CACHE_KEY, JSON.stringify(TEAM_MEMBERS));
+  } catch(e) {
+    console.warn('team_members table unavailable, using local cache:', e.message);
+    try { TEAM_MEMBERS = JSON.parse(localStorage.getItem(TEAM_CACHE_KEY) || '[]'); }
+    catch(e2) { TEAM_MEMBERS = []; }
+  }
+  renderTeamUI();
+}
+
+async function persistTeamMember(member) {
+  localStorage.setItem(TEAM_CACHE_KEY, JSON.stringify(TEAM_MEMBERS));
+  try { await sbUpsert('team_members', member); }
+  catch(e) { console.warn('Could not save team member to Supabase (table may not exist yet):', e.message); }
+}
+
+function addTeamMember() {
+  if (!requirePermission('admin')) return;
+  const nameEl = document.getElementById('newMemberName');
+  const emailEl = document.getElementById('newMemberEmail');
+  const roleEl = document.getElementById('newMemberRole');
+  const name = nameEl.value.trim();
+  if (!name) { alert('Please enter a name.'); nameEl.focus(); return; }
+  const member = { id: (crypto.randomUUID ? crypto.randomUUID() : 'm_' + Date.now()), name, email: emailEl.value.trim(), role: roleEl.value };
+  TEAM_MEMBERS.push(member);
+  persistTeamMember(member);
+  nameEl.value = ''; emailEl.value = ''; roleEl.value = 'user';
+  renderTeamUI();
+}
+
+async function updateTeamMemberRole(id, role) {
+  if (!requirePermission('admin')) { renderTeamUI(); return; }
+  const m = TEAM_MEMBERS.find(x => x.id === id);
+  if (!m) return;
+  m.role = role;
+  persistTeamMember(m);
+  // If the change was to the currently signed-in user, refresh their session too
+  const cur = getCurrentUser();
+  if (cur && cur.id === id) setCurrentUser({ ...cur, role });
+}
+
+async function removeTeamMember(id) {
+  if (!requirePermission('admin')) return;
+  const m = TEAM_MEMBERS.find(x => x.id === id);
+  if (!m) return;
+  if (!confirm(`Remove ${m.name} from the team?`)) return;
+  TEAM_MEMBERS = TEAM_MEMBERS.filter(x => x.id !== id);
+  localStorage.setItem(TEAM_CACHE_KEY, JSON.stringify(TEAM_MEMBERS));
+  try { await sbDelete('team_members', `id=eq.${id}`); } catch(e) {}
+  renderTeamUI();
+}
+
+function renderTeamUI() {
+  const list = document.getElementById('teamMembersList');
+  const countSub = document.getElementById('teamCountSub');
+  if (countSub) countSub.textContent = `${TEAM_MEMBERS.length} ${TEAM_MEMBERS.length === 1 ? 'person' : 'people'}`;
+  if (list) {
+    list.innerHTML = TEAM_MEMBERS.length === 0
+      ? `<div style="font-size:12px;color:var(--text3);padding:12px">No team members yet — add one above.</div>`
+      : TEAM_MEMBERS.map(m => `
+        <div class="team-row">
+          <span class="user-avatar">${initials(m.name)}</span>
+          <div class="team-name">${m.name}${m.email ? `<div class="team-email">${m.email}</div>` : ''}</div>
+          <select onchange="updateTeamMemberRole('${m.id}', this.value)" style="width:170px;padding:6px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:11px">
+            <option value="user" ${m.role==='user'?'selected':''}>User — view only</option>
+            <option value="superuser" ${m.role==='superuser'?'selected':''}>Super user</option>
+            <option value="admin" ${m.role==='admin'?'selected':''}>Admin</option>
+          </select>
+          <button class="row-action-btn danger" onclick="removeTeamMember('${m.id}')">🗑️ Remove</button>
+        </div>`).join('');
+  }
+
+  // Also refresh the "who's using the Hub" switcher list
+  const switchList = document.getElementById('userSwitchList');
+  if (switchList) {
+    switchList.innerHTML = TEAM_MEMBERS.length === 0
+      ? `<div style="font-size:12px;color:var(--text3);padding:12px">No team members added yet. Continue as a guest below, or ask an Admin to add you.</div>`
+      : TEAM_MEMBERS.map(m => `
+        <div class="team-row" style="cursor:pointer" onclick="selectCurrentUser('${m.id}')">
+          <span class="user-avatar">${initials(m.name)}</span>
+          <div class="team-name">${m.name}${m.email ? `<div class="team-email">${m.email}</div>` : ''}</div>
+          <span class="role-pill ${m.role}">${m.role === 'admin' ? 'Admin' : m.role === 'superuser' ? 'Super user' : 'User'}</span>
+        </div>`).join('');
+  }
+}
+
+function selectCurrentUser(id) {
+  const m = TEAM_MEMBERS.find(x => x.id === id);
+  if (!m) return;
+  setCurrentUser({ id: m.id, name: m.name, role: m.role });
+  closeUserSwitchModal();
+}
+
+function continueAsGuest() {
+  setCurrentUser({ id: null, name: 'Guest', role: 'user' });
+  closeUserSwitchModal();
+}
+
+function openUserSwitchModal() {
+  renderTeamUI();
+  document.getElementById('userSwitchModal').classList.add('open');
+}
+function closeUserSwitchModal() {
+  document.getElementById('userSwitchModal').classList.remove('open');
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// CALL AD SPEND MANAGEMENT
+// Business list lives in Supabase table "ad_spend_businesses" (falls back to
+// localStorage if that table doesn't exist yet in your project — see the
+// CREATE TABLE snippet noted alongside this build). View is open to
+// everyone; adding/editing/removing requires Super user or Admin.
+// ════════════════════════════════════════════════════════════════════════
+const ADSPEND_CACHE_KEY = 'csh_adspend_v1';
+let AD_SPEND_BUSINESSES = [];
+let adSpendFilter = 'all';
+
+async function loadAdSpendBusinesses() {
+  try {
+    const rows = await sbSelect('ad_spend_businesses', 'order=name.asc');
+    AD_SPEND_BUSINESSES = rows.map(r => ({
+      id: r.id, name: r.name, budget: r.budget || 0, watermark: r.watermark || 0,
+      addons: Array.isArray(r.addons) ? r.addons : (r.addons ? String(r.addons).split(',').map(s => s.trim()).filter(Boolean) : []),
+      startDate: r.start_date || '', promo: r.promo_eligible || 'No', recs: r.recommendations || '',
+    }));
+    localStorage.setItem(ADSPEND_CACHE_KEY, JSON.stringify(AD_SPEND_BUSINESSES));
+  } catch(e) {
+    console.warn('ad_spend_businesses table unavailable, using local cache:', e.message);
+    try { AD_SPEND_BUSINESSES = JSON.parse(localStorage.getItem(ADSPEND_CACHE_KEY) || '[]'); }
+    catch(e2) { AD_SPEND_BUSINESSES = []; }
+  }
+  rebuildAdSpendPage();
+}
+
+async function persistAdSpendBusiness(b) {
+  localStorage.setItem(ADSPEND_CACHE_KEY, JSON.stringify(AD_SPEND_BUSINESSES));
+  try {
+    await sbUpsert('ad_spend_businesses', {
+      id: b.id, name: b.name, budget: b.budget, watermark: b.watermark,
+      addons: b.addons, start_date: b.startDate || null, promo_eligible: b.promo, recommendations: b.recs,
+    });
+  } catch(e) { console.warn('Could not save business to Supabase (table may not exist yet):', e.message); }
+}
+
+function parseAddons(str) { return (str || '').split(',').map(s => s.trim()).filter(Boolean); }
+
+function addAdSpendBusiness() {
+  if (!requirePermission('edit')) return;
+  const nameEl = document.getElementById('asName');
+  const name = nameEl.value.trim();
+  if (!name) { alert('Please enter a business name.'); nameEl.focus(); return; }
+  const b = {
+    id: (crypto.randomUUID ? crypto.randomUUID() : 'b_' + Date.now()),
+    name,
+    budget: Number(document.getElementById('asBudget').value) || 0,
+    watermark: Number(document.getElementById('asWatermark').value) || 0,
+    addons: parseAddons(document.getElementById('asAddons').value),
+    startDate: document.getElementById('asStartDate').value || '',
+    promo: document.getElementById('asPromo').value,
+    recs: document.getElementById('asRecs').value.trim(),
+  };
+  AD_SPEND_BUSINESSES.push(b);
+  persistAdSpendBusiness(b);
+  ['asName','asBudget','asWatermark','asAddons','asStartDate','asRecs'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('asPromo').value = 'Yes';
+  rebuildAdSpendPage();
+}
+
+let editingAdSpendId = null;
+function openEditAdSpendModal(id) {
+  if (!requirePermission('edit')) return;
+  const b = AD_SPEND_BUSINESSES.find(x => x.id === id);
+  if (!b) return;
+  editingAdSpendId = id;
+  document.getElementById('asEditName').value = b.name;
+  document.getElementById('asEditBudget').value = b.budget;
+  document.getElementById('asEditWatermark').value = b.watermark;
+  document.getElementById('asEditStartDate').value = b.startDate;
+  document.getElementById('asEditPromo').value = b.promo;
+  document.getElementById('asEditAddons').value = b.addons.join(', ');
+  document.getElementById('asEditRecs').value = b.recs;
+  document.getElementById('editAdSpendModal').classList.add('open');
+}
+function closeEditAdSpendModal() {
+  document.getElementById('editAdSpendModal').classList.remove('open');
+  editingAdSpendId = null;
+}
+function saveAdSpendEdit() {
+  const b = AD_SPEND_BUSINESSES.find(x => x.id === editingAdSpendId);
+  if (!b) return;
+  const nameEl = document.getElementById('asEditName');
+  const name = nameEl.value.trim();
+  if (!name) { alert('Please enter a business name.'); nameEl.focus(); return; }
+  b.name = name;
+  b.budget = Number(document.getElementById('asEditBudget').value) || 0;
+  b.watermark = Number(document.getElementById('asEditWatermark').value) || 0;
+  b.startDate = document.getElementById('asEditStartDate').value || '';
+  b.promo = document.getElementById('asEditPromo').value;
+  b.addons = parseAddons(document.getElementById('asEditAddons').value);
+  b.recs = document.getElementById('asEditRecs').value.trim();
+  persistAdSpendBusiness(b);
+  closeEditAdSpendModal();
+  rebuildAdSpendPage();
+}
+
+async function removeAdSpendBusiness(id) {
+  if (!requirePermission('edit')) return;
+  const b = AD_SPEND_BUSINESSES.find(x => x.id === id);
+  if (!b) return;
+  if (!confirm(`Remove "${b.name}" from Ad Spend Management?`)) return;
+  AD_SPEND_BUSINESSES = AD_SPEND_BUSINESSES.filter(x => x.id !== id);
+  localStorage.setItem(ADSPEND_CACHE_KEY, JSON.stringify(AD_SPEND_BUSINESSES));
+  try { await sbDelete('ad_spend_businesses', `id=eq.${id}`); } catch(e) {}
+  rebuildAdSpendPage();
+}
+
+function setAdSpendFilter(val, btn) {
+  adSpendFilter = val;
+  document.querySelectorAll('#asFilterPills .filter-pill').forEach(p => p.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  rebuildAdSpendTable();
+}
+
+function fmtMoney(n) { return '$' + Number(n || 0).toLocaleString('en-US'); }
+function fmtDate(d) {
+  if (!d) return '—';
+  const dt = new Date(d + 'T00:00:00');
+  if (isNaN(dt)) return d;
+  return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+function promoPillClass(p) { return p === 'Yes' ? 'yes' : p === 'Already Using' ? 'using' : 'no'; }
+
+function rebuildAdSpendPage() {
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  set('as-total', AD_SPEND_BUSINESSES.length);
+  set('as-budget', fmtMoney(AD_SPEND_BUSINESSES.reduce((s, b) => s + (b.budget || 0), 0)));
+  set('as-promo', AD_SPEND_BUSINESSES.filter(b => b.promo === 'Yes').length);
+  set('as-using', AD_SPEND_BUSINESSES.filter(b => b.promo === 'Already Using').length);
+  set('asCountSub', `${AD_SPEND_BUSINESSES.length} business${AD_SPEND_BUSINESSES.length === 1 ? '' : 'es'}`);
+
+  // View is open to everyone; the add form is only useful for Super user/Admin
+  const addCard = document.getElementById('asAddCard');
+  if (addCard) addCard.style.display = canEdit() ? '' : 'none';
+
+  rebuildAdSpendTable();
+}
+
+function rebuildAdSpendTable() {
+  const tbody = document.getElementById('asTableBody');
+  if (!tbody) return;
+  const q = (document.getElementById('asSearch') || {}).value?.toLowerCase().trim() || '';
+  const rows = AD_SPEND_BUSINESSES
+    .filter(b => adSpendFilter === 'all' || b.promo === adSpendFilter)
+    .filter(b => !q || b.name.toLowerCase().includes(q));
+
+  if (rows.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--text3)">${AD_SPEND_BUSINESSES.length === 0 ? 'No businesses yet — add one above.' : 'No matches.'}</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = rows.map(b => {
+    const addonsHtml = b.addons.length
+      ? b.addons.map(a => `<span class="portfolio-chip chip-addon" style="margin:1px">${a}</span>`).join('')
+      : '<span style="color:var(--text3)">—</span>';
+    const recsShort = b.recs ? (b.recs.length > 50 ? b.recs.slice(0, 50) + '…' : b.recs) : '—';
+    const safeId = b.id;
+    return `<tr>
+      <td style="font-weight:600;color:var(--text)">${b.name}</td>
+      <td>${fmtMoney(b.budget)}</td>
+      <td>${fmtMoney(b.watermark)}</td>
+      <td>${addonsHtml}</td>
+      <td>${fmtDate(b.startDate)}</td>
+      <td><span class="promo-pill ${promoPillClass(b.promo)}">${b.promo}</span></td>
+      <td title="${(b.recs || '').replace(/"/g, '&quot;')}" style="color:var(--text2)">${recsShort}</td>
+      <td>${canEdit() ? `
+        <button class="row-action-btn" onclick="openEditAdSpendModal('${safeId}')">✏️</button>
+        <button class="row-action-btn danger" onclick="removeAdSpendBusiness('${safeId}')">🗑️</button>` : `<span style="font-size:11px;color:var(--text3)">View only</span>`}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// COLLECTIONS — Outstanding Balances & Card Fails
+// Accounts live in Supabase table "collections_accounts" (falls back to
+// localStorage if that table doesn't exist yet — see the CREATE TABLE
+// snippet noted alongside this build). Viewing is open to everyone;
+// adding, uploading, changing status, and notes require Super user/Admin.
+// ════════════════════════════════════════════════════════════════════════
+const COLLECTIONS_CACHE_KEY = 'csh_collections_v1';
+let COLLECTIONS_ACCOUNTS = [];
+let activeCollectionsType = 'outstanding';
+let collectionsFilter = 'all';
+
+const COLLECTIONS_STATUSES = [
+  { key: 'pending',     label: 'Pending',      color: 'var(--text2)',  bg: 'rgba(163,154,146,.18)' },
+  { key: 'inreview',    label: 'In Review',    color: 'var(--yellow)', bg: 'rgba(245,158,11,.15)'  },
+  { key: 'contacted',   label: 'Contacted',    color: 'var(--blue)',   bg: 'rgba(59,130,246,.15)'  },
+  { key: 'paymentplan', label: 'Payment Plan', color: 'var(--purple)', bg: 'rgba(168,85,247,.15)'  },
+  { key: 'escalated',   label: 'Escalated',    color: 'var(--red)',    bg: 'rgba(239,68,68,.15)'   },
+  { key: 'resolved',    label: 'Resolved',     color: 'var(--green)',  bg: 'rgba(34,197,94,.15)'   },
+  { key: 'writeoff',    label: 'Write-Off',    color: 'var(--text3)',  bg: 'rgba(107,98,88,.28)'   },
+];
+function statusMeta(key) { return COLLECTIONS_STATUSES.find(s => s.key === key) || COLLECTIONS_STATUSES[0]; }
+
+async function loadCollectionsAccounts() {
+  try {
+    const rows = await sbSelect('collections_accounts', 'order=name.asc');
+    COLLECTIONS_ACCOUNTS = rows.map(r => ({
+      id: r.id, type: r.type || 'outstanding', name: r.name, amount: r.amount || 0,
+      date: r.record_date || '', status: r.status || 'pending',
+      notes: Array.isArray(r.notes) ? r.notes : [],
+    }));
+    localStorage.setItem(COLLECTIONS_CACHE_KEY, JSON.stringify(COLLECTIONS_ACCOUNTS));
+  } catch(e) {
+    console.warn('collections_accounts table unavailable, using local cache:', e.message);
+    try { COLLECTIONS_ACCOUNTS = JSON.parse(localStorage.getItem(COLLECTIONS_CACHE_KEY) || '[]'); }
+    catch(e2) { COLLECTIONS_ACCOUNTS = []; }
+  }
+  populateCollectionsControls();
+  rebuildCollectionsPage();
+}
+
+async function persistCollectionsAccount(a) {
+  localStorage.setItem(COLLECTIONS_CACHE_KEY, JSON.stringify(COLLECTIONS_ACCOUNTS));
+  try {
+    await sbUpsert('collections_accounts', {
+      id: a.id, type: a.type, name: a.name, amount: a.amount,
+      record_date: a.date || null, status: a.status, notes: a.notes,
+    });
+  } catch(e) { console.warn('Could not save collections account to Supabase (table may not exist yet):', e.message); }
+}
+
+function populateCollectionsControls() {
+  const sel = document.getElementById('colStatus');
+  if (sel && !sel.dataset.filled) {
+    sel.innerHTML = COLLECTIONS_STATUSES.map(s => `<option value="${s.key}">${s.label}</option>`).join('');
+    sel.dataset.filled = '1';
+  }
+  const pillsWrap = document.getElementById('colFilterPills');
+  if (pillsWrap && !pillsWrap.dataset.filled) {
+    let html = `<button class="filter-pill active" onclick="setCollectionsFilter('all',this)">All</button>`;
+    COLLECTIONS_STATUSES.forEach(s => { html += `<button class="filter-pill" onclick="setCollectionsFilter('${s.key}',this)">${s.label}</button>`; });
+    pillsWrap.innerHTML = html;
+    pillsWrap.dataset.filled = '1';
+  }
+}
+
+function switchCollectionsType(type) {
+  activeCollectionsType = type;
+  document.querySelectorAll('#page-collections .pm-tab').forEach(t => t.classList.toggle('active', t.dataset.pk === type));
+  const isOutstanding = type === 'outstanding';
+  document.getElementById('colAddTitle').textContent = isOutstanding ? 'Add Outstanding Balance' : 'Add Card Fail';
+  document.getElementById('colListTitle').textContent = isOutstanding ? 'Outstanding Balances' : 'Card Fails';
+  document.getElementById('col-total-lbl').textContent = isOutstanding ? 'Outstanding Accounts' : 'Failed Charges';
+  document.getElementById('col-amount-lbl').textContent = isOutstanding ? 'Total Owed' : 'Total Failed Amount';
+  document.getElementById('colDateLabel').textContent = isOutstanding ? 'Due Date' : 'Last Attempt';
+  document.getElementById('colDateHeader').textContent = isOutstanding ? 'Due Date' : 'Last Attempt';
+  collectionsFilter = 'all';
+  document.querySelectorAll('#colFilterPills .filter-pill').forEach((p,i) => p.classList.toggle('active', i===0));
+  rebuildCollectionsPage();
+}
+
+function addCollectionsAccount() {
+  if (!requirePermission('edit')) return;
+  const nameEl = document.getElementById('colName');
+  const name = nameEl.value.trim();
+  if (!name) { alert('Please enter a business name.'); nameEl.focus(); return; }
+  const a = {
+    id: (crypto.randomUUID ? crypto.randomUUID() : 'c_' + Date.now()),
+    type: activeCollectionsType, name,
+    amount: Number(document.getElementById('colAmount').value) || 0,
+    date: document.getElementById('colDate').value || '',
+    status: document.getElementById('colStatus').value || 'pending',
+    notes: [],
+  };
+  COLLECTIONS_ACCOUNTS.push(a);
+  persistCollectionsAccount(a);
+  ['colName','colAmount','colDate'].forEach(id => document.getElementById(id).value = '');
+  rebuildCollectionsPage();
+}
+
+function updateCollectionsStatus(id, status) {
+  if (!requirePermission('edit')) { rebuildCollectionsTable(); return; }
+  const a = COLLECTIONS_ACCOUNTS.find(x => x.id === id);
+  if (!a) return;
+  const prevLabel = statusMeta(a.status).label;
+  a.status = status;
+  const user = getCurrentUser();
+  a.notes = a.notes || [];
+  a.notes.unshift({ author: user ? user.name : 'Guest', text: `Status changed: ${prevLabel} → ${statusMeta(status).label}`, ts: new Date().toISOString(), system: true });
+  persistCollectionsAccount(a);
+  rebuildCollectionsPage();
+}
+
+async function removeCollectionsAccount(id) {
+  if (!requirePermission('edit')) return;
+  const a = COLLECTIONS_ACCOUNTS.find(x => x.id === id);
+  if (!a) return;
+  if (!confirm(`Remove "${a.name}" from Collections?`)) return;
+  COLLECTIONS_ACCOUNTS = COLLECTIONS_ACCOUNTS.filter(x => x.id !== id);
+  localStorage.setItem(COLLECTIONS_CACHE_KEY, JSON.stringify(COLLECTIONS_ACCOUNTS));
+  try { await sbDelete('collections_accounts', `id=eq.${id}`); } catch(e) {}
+  rebuildCollectionsPage();
+}
+
+let openNotesAccountId = null;
+function openCollectionsNotesModal(id) {
+  const a = COLLECTIONS_ACCOUNTS.find(x => x.id === id);
+  if (!a) return;
+  openNotesAccountId = id;
+  document.getElementById('colNotesTitle').textContent = `📝 ${a.name}`;
+  document.getElementById('colNotesSub').textContent = `${a.type === 'outstanding' ? 'Outstanding balance' : 'Card fail'} · ${fmtMoney(a.amount)}`;
+  renderNotesThread(a);
+  document.getElementById('colNewNoteText').value = '';
+  document.getElementById('collectionsNotesModal').classList.add('open');
+}
+function closeCollectionsNotesModal() {
+  document.getElementById('collectionsNotesModal').classList.remove('open');
+  openNotesAccountId = null;
+}
+function renderNotesThread(a) {
+  const wrap = document.getElementById('colNotesThread');
+  if (!a.notes || a.notes.length === 0) { wrap.innerHTML = `<div class="note-empty">No notes yet — add the first update below.</div>`; return; }
+  wrap.innerHTML = a.notes.map(n => `
+    <div class="note-entry">
+      <div class="note-meta"><b>${n.author}</b> · ${fmtNoteTime(n.ts)}${n.system ? ' · <span style="color:var(--text3)">auto</span>' : ''}</div>
+      <div class="note-text">${(n.text || '').replace(/</g,'&lt;')}</div>
+    </div>`).join('');
+}
+function fmtNoteTime(ts) {
+  const d = new Date(ts);
+  if (isNaN(d)) return '';
+  return d.toLocaleDateString('en-US', { month:'short', day:'numeric' }) + ' at ' + d.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' });
+}
+function addCollectionsNote() {
+  if (!requirePermission('edit')) return;
+  const a = COLLECTIONS_ACCOUNTS.find(x => x.id === openNotesAccountId);
+  if (!a) return;
+  const ta = document.getElementById('colNewNoteText');
+  const text = ta.value.trim();
+  if (!text) { ta.focus(); return; }
+  const user = getCurrentUser();
+  a.notes = a.notes || [];
+  a.notes.unshift({ author: user ? user.name : 'Guest', text, ts: new Date().toISOString() });
+  persistCollectionsAccount(a);
+  ta.value = '';
+  renderNotesThread(a);
+  rebuildCollectionsTable();
+}
+
+function setCollectionsFilter(key, btn) {
+  collectionsFilter = key;
+  document.querySelectorAll('#colFilterPills .filter-pill').forEach(p => p.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  rebuildCollectionsTable();
+}
+
+function rebuildCollectionsPage() {
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  const list = COLLECTIONS_ACCOUNTS.filter(a => a.type === activeCollectionsType);
+  set('col-total', list.length);
+  set('col-amount', fmtMoney(list.reduce((s,a) => s + (a.amount || 0), 0)));
+  set('col-needs', list.filter(a => ['pending','inreview','escalated'].includes(a.status)).length);
+  set('col-resolved', list.filter(a => a.status === 'resolved').length);
+  set('colCountSub', `${list.length} account${list.length === 1 ? '' : 's'}`);
+
+  const needsAttentionAll = COLLECTIONS_ACCOUNTS.filter(a => ['pending','inreview','escalated'].includes(a.status)).length;
+  const navBadge = document.getElementById('navCollectionsBadge');
+  if (navBadge) {
+    if (needsAttentionAll > 0) { navBadge.style.display = ''; navBadge.textContent = needsAttentionAll; }
+    else navBadge.style.display = 'none';
+  }
+
+  const addCard = document.getElementById('colAddCard');
+  if (addCard) addCard.style.display = canEdit() ? '' : 'none';
+
+  rebuildCollectionsTable();
+}
+
+function rebuildCollectionsTable() {
+  const tbody = document.getElementById('colTableBody');
+  if (!tbody) return;
+  const q = (document.getElementById('colSearch') || {}).value?.toLowerCase().trim() || '';
+  const rows = COLLECTIONS_ACCOUNTS
+    .filter(a => a.type === activeCollectionsType)
+    .filter(a => collectionsFilter === 'all' || a.status === collectionsFilter)
+    .filter(a => !q || a.name.toLowerCase().includes(q));
+
+  if (rows.length === 0) {
+    const totalForType = COLLECTIONS_ACCOUNTS.filter(a => a.type === activeCollectionsType).length;
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text3)">${totalForType === 0 ? 'No accounts yet — add one above or upload a list.' : 'No matches.'}</td></tr>`;
+    return;
+  }
+
+  const editable = canEdit();
+  tbody.innerHTML = rows.map(a => {
+    const meta = statusMeta(a.status);
+    const latestNote = (a.notes && a.notes[0]) ? a.notes[0].text : '';
+    const noteShort = latestNote ? (latestNote.length > 44 ? latestNote.slice(0,44) + '…' : latestNote) : '<span style="color:var(--text3)">No notes yet</span>';
+    const statusCell = editable
+      ? `<select class="status-select" style="background:${meta.bg};color:${meta.color}" onchange="updateCollectionsStatus('${a.id}', this.value)">
+          ${COLLECTIONS_STATUSES.map(s => `<option value="${s.key}" ${s.key === a.status ? 'selected' : ''}>${s.label}</option>`).join('')}
+        </select>`
+      : `<span class="status-pill" style="background:${meta.bg};color:${meta.color}">${meta.label}</span>`;
+    return `<tr>
+      <td style="font-weight:600;color:var(--text)">${a.name}</td>
+      <td>${fmtMoney(a.amount)}</td>
+      <td>${fmtDate(a.date)}</td>
+      <td>${statusCell}</td>
+      <td title="${(latestNote || '').replace(/"/g,'&quot;')}" style="color:var(--text2)">${noteShort}</td>
+      <td>
+        <button class="row-action-btn" onclick="openCollectionsNotesModal('${a.id}')">📝 ${a.notes ? a.notes.length : 0}</button>
+        ${editable ? `<button class="row-action-btn danger" onclick="removeCollectionsAccount('${a.id}')">🗑️</button>` : ''}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ─── COLLECTIONS IMPORT WIZARD (mapping + duplicate review) ────────────────────
+let pendingCollectionsImport = null;
+
+function handleCollectionsFileUpload(e) {
+  if (!requirePermission('upload')) { e.target.value = ''; return; }
+  const file = e.target.files[0];
+  if (!file) return;
+  const type = activeCollectionsType;
+  const isCSV = /\.csv$/i.test(file.name);
+  const reader = new FileReader();
+  const inputEl = e.target;
+
+  reader.onload = function(ev) {
+    try {
+      let rows;
+      if (isCSV) rows = parseCSV(ev.target.result);
+      else {
+        const wb = XLSX.read(ev.target.result, { type: 'binary' });
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+      }
+      if (!rows || rows.length === 0) throw new Error('No data rows found in this file.');
+      startCollectionsImport(rows, file.name, type, inputEl);
+    } catch (err) {
+      showUploadFeedback('Upload failed: ' + err.message, true);
+      alert('⚠️ Could not process file: ' + err.message);
+      inputEl.value = '';
+    }
+  };
+  reader.onerror = () => showUploadFeedback('File read error', true);
+
+  if (isCSV) reader.readAsText(file);
+  else reader.readAsBinaryString(file);
+}
+
+function guessCollectionsColumn(header) {
+  const h = normalizeHeader(header);
+  if (/business|client|company|^name$/.test(h)) return 'name';
+  if (/amount|balance|owed|total|charge|price/.test(h)) return 'amount';
+  if (/date|due|attempt|failed/.test(h)) return 'date';
+  if (/status/.test(h)) return 'status';
+  return '';
+}
+
+function guessStatusValue(v) {
+  const s = normalizeHeader(String(v || ''));
+  if (!s) return 'pending';
+  if (/write.?off|uncollect|bad debt/.test(s)) return 'writeoff';
+  if (/resolv|paid|settled|closed/.test(s)) return 'resolved';
+  if (/escalat|urgent|legal/.test(s)) return 'escalated';
+  if (/payment plan|plan|arrangement/.test(s)) return 'paymentplan';
+  if (/contact|follow/.test(s)) return 'contacted';
+  if (/review/.test(s)) return 'inreview';
+  return 'pending';
+}
+
+function normalizeDateValue(v) {
+  if (!v) return '';
+  const s = String(v).trim();
+  if (!s) return '';
+  const d = new Date(s);
+  if (!isNaN(d) && /\d/.test(s)) return d.toISOString().slice(0,10);
+  return '';
+}
+
+function startCollectionsImport(rows, fileName, type, inputEl) {
+  const headers = Object.keys(rows[0]);
+  const mapping = {};
+  headers.forEach((h,i) => { mapping[i] = guessCollectionsColumn(h); });
+  pendingCollectionsImport = { type, fileName, rows, headers, mapping, result: null, inputEl };
+  renderCollectionsMappingModal();
+  document.getElementById('collectionsMappingModal').classList.add('open');
+}
+
+function renderCollectionsMappingModal() {
+  const { type, rows, headers, mapping, fileName } = pendingCollectionsImport;
+  const typeLabel = type === 'outstanding' ? 'Outstanding Balances' : 'Card Fails';
+  document.getElementById('colMappingFileLabel').innerHTML =
+    `<strong style="color:var(--text)">${fileName}</strong> → ${typeLabel} · ${rows.length} row${rows.length === 1 ? '' : 's'} detected. Fix anything that looks wrong, then continue.`;
+  const options = (selected) => `
+    <option value="">— Ignore this column —</option>
+    <option value="name" ${selected === 'name' ? 'selected' : ''}>👤 Business Name</option>
+    <option value="amount" ${selected === 'amount' ? 'selected' : ''}>💰 Amount</option>
+    <option value="date" ${selected === 'date' ? 'selected' : ''}>📅 ${type === 'outstanding' ? 'Due Date' : 'Last Attempt'}</option>
+    <option value="status" ${selected === 'status' ? 'selected' : ''}>🏷️ Status</option>`;
+  const body = document.getElementById('colMappingTableBody');
+  body.innerHTML = headers.map((h,i) => {
+    const sample = String(rows[0][h] ?? '').slice(0,40) || '—';
+    return `<tr>
+      <td class="col-header">${h}</td>
+      <td class="col-sample">${sample}</td>
+      <td><select data-idx="${i}" onchange="onCollectionsMappingChange(this)">${options(mapping[i])}</select></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('colMappingWarning').style.display = 'none';
+}
+
+function onCollectionsMappingChange(sel) {
+  pendingCollectionsImport.mapping[sel.getAttribute('data-idx')] = sel.value;
+  document.getElementById('colMappingWarning').style.display = 'none';
+}
+
+function closeCollectionsMappingModal() {
+  document.getElementById('collectionsMappingModal').classList.remove('open');
+  if (pendingCollectionsImport && pendingCollectionsImport.inputEl) pendingCollectionsImport.inputEl.value = '';
+  pendingCollectionsImport = null;
+}
+
+function confirmCollectionsMapping() {
+  const { type, rows, headers, mapping } = pendingCollectionsImport;
+  if (!Object.values(mapping).includes('name')) {
+    document.getElementById('colMappingWarning').style.display = 'block';
+    return;
+  }
+  const built = rows.map(row => {
+    const rec = { name: '', amount: 0, date: '', status: 'pending' };
+    headers.forEach((h,i) => {
+      const target = mapping[i];
+      if (!target) return;
+      const val = row[h];
+      if (target === 'name') { if (!rec.name) rec.name = String(val ?? '').trim(); }
+      else if (target === 'amount') rec.amount = Number(String(val).replace(/[^0-9.-]/g,'')) || 0;
+      else if (target === 'date') rec.date = normalizeDateValue(val);
+      else if (target === 'status') rec.status = guessStatusValue(val);
+    });
+    return rec;
+  }).filter(r => r.name);
+
+  const byName = new Map();
+  let intraMerged = 0;
+  built.forEach(r => {
+    const key = normName(r.name);
+    if (byName.has(key)) intraMerged++;
+    byName.set(key, r); // last row for a repeated name wins
+  });
+  const incoming = Array.from(byName.values());
+
+  const existing = COLLECTIONS_ACCOUNTS.filter(a => a.type === type);
+  const existingByName = new Map(existing.map(a => [normName(a.name), a]));
+  const dups = [];
+  const brandNew = [];
+  incoming.forEach(r => {
+    const key = normName(r.name);
+    if (existingByName.has(key)) dups.push({ name: r.name, existing: existingByName.get(key), incoming: r, action: 'replace' });
+    else brandNew.push(r);
+  });
+
+  pendingCollectionsImport.result = { incoming, brandNew, dups, intraMerged };
+  document.getElementById('collectionsMappingModal').classList.remove('open');
+  renderCollectionsDuplicatesReview();
+  document.getElementById('collectionsDuplicatesModal').classList.add('open');
+}
+
+function renderCollectionsDuplicatesReview() {
+  const { fileName, type } = pendingCollectionsImport;
+  const { incoming, brandNew, dups, intraMerged } = pendingCollectionsImport.result;
+  const typeLabel = type === 'outstanding' ? 'Outstanding Balances' : 'Card Fails';
+  document.getElementById('colDupSummaryText').innerHTML = `<strong style="color:var(--text)">${fileName}</strong> → ${typeLabel}. Review below, then save.`;
+  document.getElementById('colImportSummaryStats').innerHTML = `
+    <div class="stat"><b>${incoming.length}</b><span>Rows Mapped</span></div>
+    <div class="stat"><b>${brandNew.length}</b><span>New Accounts</span></div>
+    <div class="stat" style="${dups.length ? 'border-color:var(--orange)' : ''}"><b style="${dups.length ? 'color:var(--orange)' : ''}">${dups.length}</b><span>Duplicates Found</span></div>
+    ${intraMerged ? `<div class="stat"><b>${intraMerged}</b><span>Merged Within File</span></div>` : ''}
+  `;
+  const dupList = document.getElementById('colDupList');
+  const dupSection = document.getElementById('colDupSection');
+  if (dups.length === 0) { dupSection.style.display = 'none'; }
+  else {
+    dupSection.style.display = '';
+    dupList.innerHTML = dups.map((d,i) => `
+      <div class="dup-row">
+        <div class="dup-name">${d.name}<span class="dup-sub">Already in ${typeLabel} — choose what to do</span></div>
+        <select onchange="setCollectionsDupAction(${i}, this.value)" style="width:220px">
+          <option value="replace" ${d.action === 'replace' ? 'selected' : ''}>🔄 Replace existing record</option>
+          <option value="skip" ${d.action === 'skip' ? 'selected' : ''}>⏭️ Skip — keep existing as-is</option>
+          <option value="both" ${d.action === 'both' ? 'selected' : ''}>➕ Keep both (add as new)</option>
+        </select>
+      </div>`).join('');
+  }
+}
+
+function setCollectionsDupAction(i, action) { pendingCollectionsImport.result.dups[i].action = action; }
+
+function backToCollectionsMapping() {
+  document.getElementById('collectionsDuplicatesModal').classList.remove('open');
+  renderCollectionsMappingModal();
+  document.getElementById('collectionsMappingModal').classList.add('open');
+}
+
+function closeCollectionsDuplicatesModal() {
+  document.getElementById('collectionsDuplicatesModal').classList.remove('open');
+  if (pendingCollectionsImport && pendingCollectionsImport.inputEl) pendingCollectionsImport.inputEl.value = '';
+  pendingCollectionsImport = null;
+}
+
+function applyCollectionsImport() {
+  const { type, fileName } = pendingCollectionsImport;
+  const { brandNew, dups } = pendingCollectionsImport.result;
+  let replaced = 0, skipped = 0, added = 0, keptBoth = 0;
+  const user = getCurrentUser();
+  const authorName = user ? user.name : 'Guest';
+
+  dups.forEach(d => {
+    if (d.action === 'replace') {
+      d.existing.amount = d.incoming.amount;
+      d.existing.date = d.incoming.date;
+      if (d.incoming.status) d.existing.status = d.incoming.status;
+      d.existing.notes = d.existing.notes || [];
+      d.existing.notes.unshift({ author: authorName, text: `Updated via import: ${fileName}`, ts: new Date().toISOString(), system: true });
+      persistCollectionsAccount(d.existing);
+      replaced++;
+    } else if (d.action === 'both') {
+      const rec = { id: (crypto.randomUUID ? crypto.randomUUID() : 'c_' + Date.now() + Math.random().toString(16).slice(2)), type, name: d.incoming.name, amount: d.incoming.amount, date: d.incoming.date, status: d.incoming.status || 'pending', notes: [] };
+      COLLECTIONS_ACCOUNTS.push(rec);
+      persistCollectionsAccount(rec);
+      keptBoth++;
+    } else skipped++;
+  });
+
+  brandNew.forEach(r => {
+    const rec = { id: (crypto.randomUUID ? crypto.randomUUID() : 'c_' + Date.now() + Math.random().toString(16).slice(2)), type, name: r.name, amount: r.amount, date: r.date, status: r.status || 'pending', notes: [] };
+    COLLECTIONS_ACCOUNTS.push(rec);
+    persistCollectionsAccount(rec);
+    added++;
+  });
+
+  localStorage.setItem(COLLECTIONS_CACHE_KEY, JSON.stringify(COLLECTIONS_ACCOUNTS));
+  rebuildCollectionsPage();
+
+  const parts = [];
+  if (added) parts.push(`${added} added`);
+  if (replaced) parts.push(`${replaced} replaced`);
+  if (keptBoth) parts.push(`${keptBoth} added as new`);
+  if (skipped) parts.push(`${skipped} skipped`);
+  showUploadFeedback(`${fileName} → Collections · ${parts.join(', ') || 'no changes'} · Saved`, false);
+
+  closeCollectionsDuplicatesModal();
+}
+
+// localStorage as instant cache (Supabase is source of truth)
+const STORAGE_KEY = 'csh_portfolios_v1';
+const SHEETS_KEY  = 'csh_sheets_v1';
+
+// ─── SUPABASE SAVE/LOAD ────────────────────────────────────────────────────────
+
+// Save all clients for a portfolio to Supabase
+async function saveClientsToSupabase(pk) {
+  try {
+    const clients = getClients(pk);
+
+    // Delete existing clients for this portfolio, then re-insert
+    await sbDelete('portfolio_clients', `portfolio=eq.${pk}`);
+
+    if (clients.length === 0) return;
+
+    const rows = clients.map(c => ({
+      portfolio: pk,
+      name: c.name,
+      products: Object.fromEntries(
+        getProdKeys(pk).map(k => [k, !!c[k]])
+      ),
+    }));
+
+    await sbUpsert('portfolio_clients', rows);
+    console.log(`✅ Saved ${clients.length} clients to Supabase [${pk}]`);
+  } catch(e) {
+    console.error('Supabase save clients failed:', e);
+    // Fall back to localStorage
+    saveToLocalStorage();
+  }
+}
+
+// Save product catalog for a portfolio to Supabase
+async function saveCatalogToSupabase(pk) {
+  try {
+    await sbDelete('product_catalogs', `portfolio=eq.${pk}`);
+    const rows = getCatalog(pk).map((p, i) => ({
+      portfolio: pk,
+      key: p.key,
+      label: p.label,
+      icon: p.icon,
+      priority: p.priority,
+      description: p.desc || '',
+      sort_order: i,
+    }));
+    if (rows.length > 0) await sbUpsert('product_catalogs', rows);
+    console.log(`✅ Saved catalog to Supabase [${pk}]`);
+  } catch(e) {
+    console.error('Supabase save catalog failed:', e);
+  }
+}
+
+// Save Google Sheets URL to Supabase
+async function saveSheetsUrl(pk, url) {
+  try {
+    await sbUpsert('sheets_connections', { portfolio: pk, url, last_synced: new Date().toISOString() });
+    // also cache locally for instant load
     const saved = JSON.parse(localStorage.getItem(SHEETS_KEY) || '{}');
     saved[pk] = url;
     localStorage.setItem(SHEETS_KEY, JSON.stringify(saved));
-  } catch(e) {}
+  } catch(e) {
+    console.error('Supabase save sheets URL failed:', e);
+  }
 }
 
-// Remove the saved Google Sheets URL for a portfolio
-function clearSheetsUrl(pk) {
+async function clearSheetsUrl(pk) {
   try {
+    await sbDelete('sheets_connections', `portfolio=eq.${pk}`);
     const saved = JSON.parse(localStorage.getItem(SHEETS_KEY) || '{}');
     delete saved[pk];
     localStorage.setItem(SHEETS_KEY, JSON.stringify(saved));
   } catch(e) {}
 }
 
-// Load all saved Sheets URLs
-function getSavedSheetsUrls() {
-  try { return JSON.parse(localStorage.getItem(SHEETS_KEY) || '{}'); }
-  catch(e) { return {}; }
+async function getSavedSheetsUrls() {
+  try {
+    const rows = await sbSelect('sheets_connections');
+    const result = {};
+    rows.forEach(r => result[r.portfolio] = r.url);
+    return result;
+  } catch(e) {
+    // Fall back to localStorage cache
+    try { return JSON.parse(localStorage.getItem(SHEETS_KEY) || '{}'); }
+    catch(e2) { return {}; }
+  }
 }
 
-// Load portfolio data from localStorage (returns true if data was found)
+// Load all portfolio data from Supabase
+async function loadFromSupabase() {
+  try {
+    const [clientRows, catalogRows] = await Promise.all([
+      sbSelect('portfolio_clients', 'order=name.asc'),
+      sbSelect('product_catalogs', 'order=sort_order.asc'),
+    ]);
+
+    let loadedClients = false;
+
+    // Load catalogs first (clients depend on catalog keys)
+    ['smb', 'whitelabel', 'support'].forEach(pk => {
+      const pkCatalog = catalogRows.filter(r => r.portfolio === pk);
+      if (pkCatalog.length > 0) {
+        PORTFOLIOS[pk].catalog = pkCatalog.map(r => ({
+          key: r.key, label: r.label, icon: r.icon,
+          priority: r.priority, desc: r.description,
+        }));
+      }
+    });
+
+    // Load clients
+    ['smb', 'whitelabel', 'support'].forEach(pk => {
+      const pkClients = clientRows.filter(r => r.portfolio === pk);
+      if (pkClients.length > 0) {
+        PORTFOLIOS[pk].clients = pkClients.map(r => ({
+          name: r.name,
+          ...r.products,
+        }));
+        loadedClients = true;
+      }
+    });
+
+    // Cache to localStorage for instant next load
+    saveToLocalStorage();
+    return loadedClients;
+  } catch(e) {
+    console.warn('Supabase load failed, trying localStorage:', e);
+    return loadFromLocalStorage();
+  }
+}
+
+// localStorage cache helpers (fallback when Supabase is unreachable)
+function saveToLocalStorage() {
+  try {
+    const snapshot = {};
+    ['smb', 'whitelabel', 'support'].forEach(pk => {
+      snapshot[pk] = { clients: PORTFOLIOS[pk].clients, catalog: PORTFOLIOS[pk].catalog };
+    });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
+  } catch(e) { console.warn('localStorage save failed:', e); }
+}
+
 function loadFromLocalStorage() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -2007,20 +3427,12 @@ function loadFromLocalStorage() {
     let loaded = false;
     ['smb', 'whitelabel', 'support'].forEach(pk => {
       if (snapshot[pk]) {
-        if (snapshot[pk].clients && snapshot[pk].clients.length > 0) {
-          PORTFOLIOS[pk].clients = snapshot[pk].clients;
-          loaded = true;
-        }
-        if (snapshot[pk].catalog && snapshot[pk].catalog.length > 0) {
-          PORTFOLIOS[pk].catalog = snapshot[pk].catalog;
-        }
+        if (snapshot[pk].clients?.length > 0) { PORTFOLIOS[pk].clients = snapshot[pk].clients; loaded = true; }
+        if (snapshot[pk].catalog?.length > 0) { PORTFOLIOS[pk].catalog = snapshot[pk].catalog; }
       }
     });
     return loaded;
-  } catch(e) {
-    console.warn('localStorage load failed:', e);
-    return false;
-  }
+  } catch(e) { return false; }
 }
 
 function showUploadFeedback(msg, isError) {
@@ -2051,21 +3463,34 @@ function updateDataSourcePill() {
   }
 }
 
-// Called after any data change — saves to localStorage
+// Called after any data change — saves to Supabase (async, non-blocking)
 function persistAndRebuild(pk) {
-  saveToLocalStorage();
   rebuildPortfolio(pk);
   rebuildClientsDirectory();
   if (pk === 'smb') rebuildUpsellCards();
   updateDataSourcePill();
+  // Save to Supabase in the background
+  saveClientsToSupabase(pk).catch(e => console.warn('Background Supabase save failed:', e));
 }
 
+// ════════════════════════════════════════════════════════════════════════
+// IMPORT WIZARD — column mapping + duplicate detection
+// Flow: handleFileUpload → startImportWizard (mapping modal) →
+//       confirmMapping (builds clients, detects duplicates) →
+//       renderDuplicatesReview (review modal) → applyImport (commit)
+// ════════════════════════════════════════════════════════════════════════
+let pendingImport = null;
+
+function normName(n) { return (n || '').trim().toLowerCase().replace(/\s+/g, ' '); }
+
 function handleFileUpload(e) {
+  if (!requirePermission('upload')) { e.target.value = ''; return; }
   const file = e.target.files[0];
   if (!file) return;
   const pk = activePortfolio;
   const isCSV = /\.csv$/i.test(file.name);
   const reader = new FileReader();
+  const inputEl = e.target;
 
   reader.onload = function(ev) {
     try {
@@ -2079,26 +3504,186 @@ function handleFileUpload(e) {
         const sheet = wb.Sheets[sheetName];
         rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
       }
-      const newClients = parseRowsToClients(rows, pk);
-      if (newClients === null) throw new Error('Could not find a "Business Name" / "Client Name" column. Check your column headers.');
-
-      PORTFOLIOS[pk].clients = newClients;
-      clearSheetsUrl(pk);
-      persistAndRebuild(pk);
-      const msg = newClients.length === 0
-        ? `${file.name} → ${PORTFOLIOS[pk].name} · No data rows yet (headers OK)`
-        : `${file.name} → ${PORTFOLIOS[pk].name} (${newClients.length} clients) · Saved`;
-      showUploadFeedback(msg, newClients.length === 0);
-      e.target.value = '';
+      if (!rows || rows.length === 0) throw new Error('No data rows found in this file.');
+      startImportWizard(rows, file.name, pk, inputEl);
     } catch (err) {
       showUploadFeedback('Upload failed: ' + err.message, true);
       alert('⚠️ Could not process file: ' + err.message);
+      inputEl.value = '';
     }
   };
   reader.onerror = () => showUploadFeedback('File read error', true);
 
   if (isCSV) reader.readAsText(file);
   else reader.readAsBinaryString(file);
+}
+
+function startImportWizard(rows, fileName, pk, inputEl) {
+  const headers = Object.keys(rows[0]);
+  const HEADER_MAP = buildHeaderMap(pk);
+  const mapping = {};
+  headers.forEach((h, i) => { mapping[i] = HEADER_MAP[normalizeHeader(h)] || ''; });
+  pendingImport = { pk, fileName, rows, headers, mapping, result: null, inputEl };
+  renderMappingModal();
+  document.getElementById('mappingModal').classList.add('open');
+}
+
+function renderMappingModal() {
+  const { pk, rows, headers, mapping, fileName } = pendingImport;
+  document.getElementById('mappingFileLabel').innerHTML =
+    `<strong style="color:var(--text)">${fileName}</strong> → ${PORTFOLIOS[pk].name} · ${rows.length} row${rows.length === 1 ? '' : 's'} detected. We auto-matched columns where we could — fix anything that looks wrong, then continue.`;
+  const catalog = getCatalog(pk);
+  const options = (selected) => {
+    let opts = `<option value="">— Ignore this column —</option>`;
+    opts += `<option value="name" ${selected === 'name' ? 'selected' : ''}>👤 Client Name</option>`;
+    catalog.forEach(p => { opts += `<option value="${p.key}" ${selected === p.key ? 'selected' : ''}>${p.icon || ''} ${p.label}</option>`; });
+    return opts;
+  };
+  const body = document.getElementById('mappingTableBody');
+  body.innerHTML = headers.map((h, i) => {
+    const sample = String(rows[0][h] ?? '').slice(0, 40) || '—';
+    return `<tr>
+      <td class="col-header">${h}</td>
+      <td class="col-sample">${sample}</td>
+      <td><select data-idx="${i}" onchange="onMappingChange(this)">${options(mapping[i])}</select></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('mappingWarning').style.display = 'none';
+}
+
+function onMappingChange(sel) {
+  pendingImport.mapping[sel.getAttribute('data-idx')] = sel.value;
+  document.getElementById('mappingWarning').style.display = 'none';
+}
+
+function closeMappingModal() {
+  document.getElementById('mappingModal').classList.remove('open');
+  if (pendingImport && pendingImport.inputEl) pendingImport.inputEl.value = '';
+  pendingImport = null;
+}
+
+function confirmMapping() {
+  const { pk, rows, headers, mapping } = pendingImport;
+  const nameCols = headers.filter((h, i) => mapping[i] === 'name');
+  if (nameCols.length === 0) {
+    document.getElementById('mappingWarning').style.display = 'block';
+    return;
+  }
+  const prodKeys = getProdKeys(pk);
+
+  const built = rows.map(row => {
+    const client = {};
+    prodKeys.forEach(k => client[k] = false);
+    headers.forEach((h, i) => {
+      const target = mapping[i];
+      if (!target) return;
+      if (target === 'name') { if (!client.name) client.name = String(row[h] ?? '').trim(); }
+      else client[target] = truthy(row[h]);
+    });
+    return client;
+  }).filter(c => c.name && c.name.length > 0);
+
+  // Merge duplicate names found within the file itself (OR their product flags together)
+  const byName = new Map();
+  let intraMerged = 0;
+  built.forEach(c => {
+    const key = normName(c.name);
+    if (byName.has(key)) {
+      const existing = byName.get(key);
+      prodKeys.forEach(k => existing[k] = existing[k] || c[k]);
+      intraMerged++;
+    } else {
+      byName.set(key, { ...c });
+    }
+  });
+  const incoming = Array.from(byName.values());
+
+  // Detect duplicates against clients already saved in this portfolio
+  const existingClients = getClients(pk);
+  const existingByName = new Map();
+  existingClients.forEach((c, i) => existingByName.set(normName(c.name), i));
+  const dups = [];
+  const brandNew = [];
+  incoming.forEach(c => {
+    const key = normName(c.name);
+    if (existingByName.has(key)) dups.push({ name: c.name, existingIndex: existingByName.get(key), incoming: c, action: 'replace' });
+    else brandNew.push(c);
+  });
+
+  pendingImport.result = { incoming, brandNew, dups, intraMerged, prodKeys };
+  document.getElementById('mappingModal').classList.remove('open');
+  renderDuplicatesReview();
+  document.getElementById('duplicatesModal').classList.add('open');
+}
+
+function renderDuplicatesReview() {
+  const { fileName, pk } = pendingImport;
+  const { incoming, brandNew, dups, intraMerged } = pendingImport.result;
+  document.getElementById('dupSummaryText').innerHTML =
+    `<strong style="color:var(--text)">${fileName}</strong> → ${PORTFOLIOS[pk].name}. Review below, then save.`;
+  document.getElementById('importSummaryStats').innerHTML = `
+    <div class="stat"><b>${incoming.length}</b><span>Rows Mapped</span></div>
+    <div class="stat"><b>${brandNew.length}</b><span>New Clients</span></div>
+    <div class="stat" style="${dups.length ? 'border-color:var(--orange)' : ''}"><b style="${dups.length ? 'color:var(--orange)' : ''}">${dups.length}</b><span>Duplicates Found</span></div>
+    ${intraMerged ? `<div class="stat"><b>${intraMerged}</b><span>Merged Within File</span></div>` : ''}
+  `;
+  const dupSection = document.getElementById('dupSection');
+  const dupList = document.getElementById('dupList');
+  if (dups.length === 0) {
+    dupSection.style.display = 'none';
+  } else {
+    dupSection.style.display = '';
+    dupList.innerHTML = dups.map((d, i) => `
+      <div class="dup-row">
+        <div class="dup-name">${d.name}<span class="dup-sub">Already exists in ${PORTFOLIOS[pk].name} — choose what to do</span></div>
+        <select onchange="setDupAction(${i}, this.value)" style="width:220px">
+          <option value="replace" ${d.action === 'replace' ? 'selected' : ''}>🔄 Replace existing with new data</option>
+          <option value="skip" ${d.action === 'skip' ? 'selected' : ''}>⏭️ Skip — keep existing as-is</option>
+          <option value="both" ${d.action === 'both' ? 'selected' : ''}>➕ Keep both (add as new)</option>
+        </select>
+      </div>`).join('');
+  }
+}
+
+function setDupAction(i, action) { pendingImport.result.dups[i].action = action; }
+
+function backToMapping() {
+  document.getElementById('duplicatesModal').classList.remove('open');
+  renderMappingModal();
+  document.getElementById('mappingModal').classList.add('open');
+}
+
+function closeDuplicatesModal() {
+  document.getElementById('duplicatesModal').classList.remove('open');
+  if (pendingImport && pendingImport.inputEl) pendingImport.inputEl.value = '';
+  pendingImport = null;
+}
+
+function applyImport() {
+  const { pk, fileName } = pendingImport;
+  const { brandNew, dups } = pendingImport.result;
+  let clients = getClients(pk).slice();
+  let replaced = 0, skipped = 0, added = 0, keptBoth = 0;
+
+  dups.forEach(d => {
+    if (d.action === 'replace') { clients[d.existingIndex] = d.incoming; replaced++; }
+    else if (d.action === 'both') { clients.push(d.incoming); keptBoth++; }
+    else skipped++;
+  });
+  brandNew.forEach(c => { clients.push(c); added++; });
+
+  PORTFOLIOS[pk].clients = clients;
+  clearSheetsUrl(pk);
+  persistAndRebuild(pk);
+
+  const parts = [];
+  if (added) parts.push(`${added} added`);
+  if (replaced) parts.push(`${replaced} replaced`);
+  if (keptBoth) parts.push(`${keptBoth} added as new`);
+  if (skipped) parts.push(`${skipped} skipped`);
+  showUploadFeedback(`${fileName} → ${PORTFOLIOS[pk].name} · ${parts.join(', ') || 'no changes'} · Saved`, false);
+
+  closeDuplicatesModal();
 }
 
 function toCsvExportUrl(url) {
@@ -2144,7 +3729,7 @@ async function connectSheets() {
     if (newClients === null) throw new Error('Could not find a "Business Name" / "Client Name" column. Check your column headers.');
 
     PORTFOLIOS[pk].clients = newClients;
-    saveSheetsUrl(pk, url);
+    await saveSheetsUrl(pk, url);
     persistAndRebuild(pk);
     const statusMsg = newClients.length === 0
       ? `✅ Connected to ${PORTFOLIOS[pk].name} — sheet is empty (no data rows yet). Will auto-populate when you add clients.`
@@ -2198,11 +3783,16 @@ async function autoRefreshSheets() {
 }
 
 // Add a "Clear saved data" button utility (exposed globally for easy access from console or a UI button)
-function clearAllSavedData() {
-  if (!confirm('This will clear all saved client data and Sheets connections from this browser. Are you sure?')) return;
+async function clearAllSavedData() {
+  if (!confirm('This will clear ALL client data from Supabase for everyone. Are you sure?')) return;
+  try {
+    await Promise.all([
+      sbDelete('portfolio_clients', 'portfolio=in.(smb,whitelabel,support)'),
+      sbDelete('sheets_connections', 'portfolio=in.(smb,whitelabel,support)'),
+    ]);
+  } catch(e) { console.warn('Supabase clear failed:', e); }
   localStorage.removeItem(STORAGE_KEY);
   localStorage.removeItem(SHEETS_KEY);
-  // Reset to sample data
   ['smb', 'whitelabel', 'support'].forEach(pk => {
     PORTFOLIOS[pk].clients = JSON.parse(JSON.stringify(
       pk === 'smb' ? SMB_SAMPLE_CLIENTS : pk === 'whitelabel' ? WL_SAMPLE_CLIENTS : SUPPORT_SAMPLE_CLIENTS
@@ -2213,14 +3803,17 @@ function clearAllSavedData() {
   });
   rebuildAll();
   updateDataSourcePill();
-  alert('✅ All saved data cleared. Showing sample data.');
+  alert('✅ All data cleared from Supabase. Showing sample data.');
 }
 
-function openSheetsModal() {
-  // Pre-fill URL if already connected for the active portfolio
-  const urls = getSavedSheetsUrls();
-  const existing = urls[activePortfolio] || '';
-  document.getElementById('sheetsUrl').value = existing;
+async function openSheetsModal() {
+  if (!requirePermission('upload')) return;
+  try {
+    const urls = await getSavedSheetsUrls();
+    document.getElementById('sheetsUrl').value = urls[activePortfolio] || '';
+  } catch(e) {
+    document.getElementById('sheetsUrl').value = '';
+  }
   document.getElementById('sheetsModal').classList.add('open');
 }
 function closeSheetsModal() {
@@ -2243,6 +3836,7 @@ function switchManagePortfolio(pk) {
 }
 
 function addProduct() {
+  if (!requirePermission('admin')) return;
   const pk = activeManagePortfolio;
   const nameEl = document.getElementById('newProductName');
   const iconEl = document.getElementById('newProductIcon');
@@ -2408,10 +4002,9 @@ function rebuildClientsDirectory() {
       <td style="padding-left:14px;color:var(--text);font-weight:600">${row.displayName}</td>
       <td>${chips}</td>
       <td><span class="pc-badge pc-${Math.min(total,6)}">${total}</span></td>
-      <td>
+      <td>${canEdit() ? `
         <button class="row-action-btn" onclick="openEditClientModal('${safe}')">✏️ Edit</button>
-        <button class="row-action-btn danger" onclick="openDeleteClientModal('${safe}')">🗑️ Remove</button>
-      </td></tr>`;
+        <button class="row-action-btn danger" onclick="openDeleteClientModal('${safe}')">🗑️ Remove</button>` : `<span style="font-size:11px;color:var(--text3)">View only</span>`}</td></tr>`;
   });
   filterClientsDirectory();
 }
@@ -2443,6 +4036,7 @@ function filterClientsByPortfolio(p, btn) {
 
 let editingClientName = null;
 function openEditClientModal(name) {
+  if (!requirePermission('edit')) return;
   editingClientName = name;
   const entry = buildMergedClients()[name.trim().toLowerCase()];
   if (!entry) return;
@@ -2473,13 +4067,17 @@ function saveEditClient() {
     if (pe) pe.client[cb.dataset.key] = cb.checked;
   });
   closeEditClientModal();
-  saveToLocalStorage();
   rebuildAll();
+  // Determine which portfolios were edited and save each
+  Object.keys(entry.portfolios).forEach(pk => {
+    saveClientsToSupabase(pk).catch(e => console.warn('Save failed:', e));
+  });
   showUploadFeedback(`Updated "${entry.displayName}" · Saved`, false);
 }
 
 let deletingClientName = null;
 function openDeleteClientModal(name) {
+  if (!requirePermission('edit')) return;
   deletingClientName = name;
   const entry = buildMergedClients()[name.trim().toLowerCase()];
   if (!entry) return;
@@ -2500,15 +4098,129 @@ function confirmDeleteClient() {
   });
   const removedName = deletingClientName;
   closeDeleteClientModal();
-  saveToLocalStorage();
   rebuildAll();
+  ['smb','whitelabel','support'].forEach(pk => {
+    saveClientsToSupabase(pk).catch(e => console.warn('Save failed:', e));
+  });
   showUploadFeedback(`Removed "${removedName}" · Saved`, false);
 }
 
+function updateDataSourcePill() {
+  const pill = document.getElementById('dataSourcePill');
+  if (!pill) return;
+  const totalClients = ['smb','whitelabel','support'].reduce((n,pk) => n + getClients(pk).length, 0);
+  const hasRealData = totalClients > 89;
+  pill.innerHTML = `<span class="dot" style="background:${hasRealData ? 'var(--green)' : ''}"></span> ${hasRealData ? 'Supabase · Live' : 'Sample Data'}`;
+  pill.style.color = hasRealData ? 'var(--green)' : '';
+}
+
+async function autoRefreshSheets(urls) {
+  if (!urls) {
+    try { const rows = await sbSelect('sheets_connections'); urls = {}; rows.forEach(r => urls[r.portfolio] = r.url); }
+    catch(e) { try { urls = JSON.parse(localStorage.getItem(SHEETS_KEY)||'{}'); } catch(e2) { urls = {}; } }
+  }
+  const portfolios = Object.keys(urls).filter(pk => urls[pk]);
+  if (portfolios.length === 0) return;
+  showUploadFeedback('Refreshing Google Sheets…', false);
+  const results = await Promise.allSettled(portfolios.map(async pk => {
+    const csvUrl = toCsvExportUrl(urls[pk]);
+    const res = await fetch(csvUrl);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = await res.text();
+    if (/<html/i.test(text.slice(0,200))) throw new Error('Not a CSV');
+    const rows = parseCSV(text);
+    const newClients = parseRowsToClients(rows, pk);
+    if (!newClients) throw new Error('No valid rows');
+    PORTFOLIOS[pk].clients = newClients;
+    await saveClientsToSupabase(pk);
+    return { pk, count: newClients.length };
+  }));
+  saveToLocalStorage();
+  rebuildAll();
+  const anyFailed = results.some(r => r.status === 'rejected');
+  showUploadFeedback(anyFailed ? 'Sheets refresh: some failed' : `Google Sheets · ${portfolios.map(pk => PORTFOLIOS[pk].name).join(', ')} · live`, anyFailed);
+}
+
+async function clearAllSavedData() {
+  if (!confirm('This will clear ALL client data from Supabase for everyone. Are you sure?')) return;
+  try {
+    await sbDelete('portfolio_clients', 'id=neq.00000000-0000-0000-0000-000000000000');
+    await sbDelete('sheets_connections', 'portfolio=in.(smb,whitelabel,support)');
+  } catch(e) { console.warn('Supabase clear failed:', e); }
+  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(SHEETS_KEY);
+  ['smb','whitelabel','support'].forEach(pk => {
+    PORTFOLIOS[pk].clients = JSON.parse(JSON.stringify(pk==='smb'?SMB_SAMPLE_CLIENTS:pk==='whitelabel'?WL_SAMPLE_CLIENTS:SUPPORT_SAMPLE_CLIENTS));
+    PORTFOLIOS[pk].catalog = JSON.parse(JSON.stringify(pk==='smb'?SMB_CATALOG:pk==='whitelabel'?WL_CATALOG:SUPPORT_CATALOG));
+  });
+  rebuildAll();
+  updateDataSourcePill();
+  alert('✅ All data cleared. Showing sample data.');
+}
+
 // ════════════════════════════════════════════════════════════════════════
-// INITIAL RENDER — builds all 3 portfolios with sample data on page load
+// BOOT — Supabase first, localStorage cache fallback, then sample data
 // ════════════════════════════════════════════════════════════════════════
-rebuildAll();
+(async function init() {
+  // Apply cached role instantly so upload/edit controls are correct before network calls finish
+  applyPermissionsToUI();
+
+  // Show cached version instantly while Supabase loads
+  const cachedLoaded = loadFromLocalStorage();
+  rebuildAll();
+  if (cachedLoaded) {
+    updateDataSourcePill();
+    showUploadFeedback('Connecting to database…', false);
+  }
+
+  try {
+    // Load latest from Supabase
+    const loaded = await loadFromSupabase();
+    rebuildAll();
+    updateDataSourcePill();
+
+    // Team & permissions
+    await loadTeamMembers();
+    applyPermissionsToUI();
+    if (!getCurrentUser()) openUserSwitchModal();
+
+    // Call Ad Spend Management
+    await loadAdSpendBusinesses();
+
+    // Collections
+    await loadCollectionsAccounts();
+
+    // Auto-refresh any connected Google Sheets
+    let sheetsUrls = {};
+    try {
+      const rows = await sbSelect('sheets_connections');
+      rows.forEach(r => sheetsUrls[r.portfolio] = r.url);
+    } catch(e) {
+      try { sheetsUrls = JSON.parse(localStorage.getItem(SHEETS_KEY)||'{}'); } catch(e2) {}
+    }
+    const hasSheets = Object.keys(sheetsUrls).some(pk => sheetsUrls[pk]);
+    if (hasSheets) await autoRefreshSheets(sheetsUrls);
+
+    const pill = document.getElementById('dataSourcePill');
+    if (pill && !hasSheets) {
+      const totalClients = ['smb','whitelabel','support'].reduce((n,pk) => n + getClients(pk).length, 0);
+      if (totalClients > 89) {
+        pill.innerHTML = '<span class="dot"></span> Supabase · Live';
+        pill.style.color = 'var(--green)';
+      }
+    }
+  } catch(e) {
+    console.warn('Supabase load failed:', e);
+    if (!cachedLoaded) rebuildAll();
+    const pill = document.getElementById('dataSourcePill');
+    if (pill) { pill.innerHTML = '<span class="dot" style="background:var(--red)"></span> Database offline · using cache'; pill.style.color = 'var(--red)'; }
+    await loadTeamMembers();
+    applyPermissionsToUI();
+    if (!getCurrentUser()) openUserSwitchModal();
+    await loadAdSpendBusinesses();
+    await loadCollectionsAccounts();
+  }
+})();
 
 </script>
 </body>
