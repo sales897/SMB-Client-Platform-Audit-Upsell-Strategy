@@ -1862,13 +1862,29 @@ function rebuildActionPlan() {
 // ════════════════════════════════════════════════════════════════════════
 
 function buildHeaderMap(pk) {
-  const map = { 'business name': 'name', 'client name': 'name', 'company': 'name', 'name': 'name' };
+  const map = {
+    'business name': 'name', 'client name': 'name', 'company': 'name', 'name': 'name',
+    'businessname': 'name', 'clientname': 'name', // no-space variants
+    'business_name': 'name', 'client_name': 'name',
+  };
   getCatalog(pk).forEach(p => {
     map[p.key] = p.key;
     map[p.label.toLowerCase()] = p.key;
     map[p.label.toLowerCase().replace(/\s+/g, '_')] = p.key;
+    map[p.label.toLowerCase().replace(/\s+/g, '')] = p.key; // no spaces
   });
   return map;
+}
+
+// Aggressively normalize a header string for matching
+function normalizeHeader(h) {
+  return h
+    .replace(/^\uFEFF/, '')   // BOM
+    .replace(/[\u200B-\u200D\uFEFF]/g, '') // zero-width chars
+    .replace(/[\u2018\u2019]/g, "'") // smart single quotes
+    .replace(/[\u201C\u201D]/g, '"') // smart double quotes
+    .trim()
+    .toLowerCase();
 }
 
 function truthy(v) {
@@ -1884,11 +1900,14 @@ function parseRowsToClients(rows, pk) {
   const firstRowKeys = Object.keys(rows[0]);
   const keyMap = {};
   firstRowKeys.forEach(k => {
-    const norm = k.trim().toLowerCase();
+    const norm = normalizeHeader(k);
     if (HEADER_MAP[norm]) keyMap[k] = HEADER_MAP[norm];
   });
   if (!Object.values(keyMap).includes('name')) {
-    return null; // signal that headers are unrecognized (not just empty)
+    // Debug: log what headers were found vs what we expected
+    console.warn('Header mismatch. Found:', firstRowKeys.map(k => JSON.stringify(k) + ' -> ' + normalizeHeader(k)));
+    console.warn('Expected one of: business name, client name, company, name');
+    return null;
   }
   const parsed = rows.map(row => {
     const client = {};
@@ -1905,8 +1924,10 @@ function parseRowsToClients(rows, pk) {
 }
 
 function parseCSV(text) {
+  // Strip BOM (byte order mark) that Excel/Sheets sometimes adds at the start
+  text = text.replace(/^\uFEFF/, '');
   const lines = text.replace(/\r/g, '').split('\n').filter(l => l.trim().length);
-  if (lines.length < 2) return [];
+  if (lines.length < 1) return [];
   const splitLine = (line) => {
     const out = []; let cur = ''; let inQuotes = false;
     for (let i = 0; i < line.length; i++) {
@@ -1916,9 +1937,12 @@ function parseCSV(text) {
       else { cur += ch; }
     }
     out.push(cur);
-    return out.map(s => s.trim());
+    return out.map(s => s.trim().replace(/^["\u201C\u201D]+|["\u201C\u201D]+$/g, ''));
   };
-  const headers = splitLine(lines[0]);
+  const headers = splitLine(lines[0]).map(h =>
+    h.replace(/^\uFEFF/, '').trim() // strip BOM from first header specifically
+  );
+  if (lines.length < 2) return []; // headers only, no data rows — return empty (not null)
   return lines.slice(1).map(line => {
     const cells = splitLine(line);
     const obj = {};
