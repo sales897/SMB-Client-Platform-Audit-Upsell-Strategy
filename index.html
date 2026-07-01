@@ -10,17 +10,17 @@
 /* ─── RESET & BASE ─────────────────────────────────────────────────────── */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 :root {
-  --bg:       #0a0a0a;
-  --bg2:      #141110;
-  --bg3:      #1c1714;
-  --bg4:      #251f1a;
-  --border:   #2e2622;
+  --bg:       #000000;
+  --bg2:      #0a0a0a;
+  --bg3:      #141414;
+  --bg4:      #1c1c1c;
+  --border:   #272727;
   --orange:   #e2541f;
   --orange2:  #f2772e;
-  --orange-dim: rgba(226,84,31,.12);
-  --text:     #e8eaf0;
-  --text2:    #a39a92;
-  --text3:    #6b6258;
+  --orange-dim: rgba(226,84,31,.14);
+  --text:     #f0f0f0;
+  --text2:    #a3a3a3;
+  --text3:    #6b6b6b;
   --green:    #22c55e;
   --red:      #ef4444;
   --yellow:   #f59e0b;
@@ -28,7 +28,28 @@
   --purple:   #a855f7;
   --sidebar:  220px;
   --radius:   12px;
-  --shadow:   0 4px 24px rgba(0,0,0,.4);
+  --shadow:   0 4px 24px rgba(0,0,0,.5);
+}
+html[data-theme="light"] {
+  --bg:       #f7f6f4;
+  --bg2:      #ffffff;
+  --bg3:      #f1efec;
+  --bg4:      #e7e4df;
+  --border:   #e0dcd5;
+  --orange:   #e2541f;
+  --orange2:  #cc4718;
+  --orange-dim: rgba(226,84,31,.08);
+  --text:     #1a1714;
+  --text2:    #5c554d;
+  --text3:    #8c8378;
+  --green:    #16a34a;
+  --red:      #dc2626;
+  --yellow:   #d97706;
+  --blue:     #2563eb;
+  --purple:   #9333ea;
+  --sidebar:  220px;
+  --radius:   12px;
+  --shadow:   0 4px 24px rgba(0,0,0,.08);
 }
 html { scroll-behavior: smooth; }
 body {
@@ -38,6 +59,7 @@ body {
   display: flex;
   min-height: 100vh;
   overflow-x: hidden;
+  transition: background-color .2s ease, color .2s ease;
 }
 
 /* ─── SIDEBAR ──────────────────────────────────────────────────────────── */
@@ -493,12 +515,13 @@ tr.hidden-row { display: none; }
   transition: border-color .2s;
 }
 .modal select:focus { border-color: var(--orange); }
-.modal-scroll { max-height: 46vh; overflow-y: auto; margin-bottom: 16px; border: 1px solid var(--border); border-radius: 10px; }
-.map-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.modal-scroll { max-height: 46vh; overflow-y: auto; overflow-x: auto; margin-bottom: 16px; border: 1px solid var(--border); border-radius: 10px; }
+.map-table { width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; }
 .map-table th { text-align: left; padding: 8px 12px; background: var(--bg3); color: var(--text3); font-size: 10px; text-transform: uppercase; letter-spacing: .04em; position: sticky; top: 0; }
-.map-table td { padding: 6px 12px; border-top: 1px solid var(--border); vertical-align: middle; }
-.map-table .col-header { font-weight: 700; color: var(--text); }
-.map-table .col-sample { color: var(--text3); font-size: 11px; }
+.map-table td { padding: 6px 12px; border-top: 1px solid var(--border); vertical-align: middle; overflow: hidden; }
+.map-table .col-header { font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.map-table .col-sample { color: var(--text3); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.map-table select { min-width: 160px; }
 .dup-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-top: 1px solid var(--border); }
 .dup-row:first-child { border-top: none; }
 .dup-name { flex: 1; font-weight: 700; color: var(--text); font-size: 12px; }
@@ -515,6 +538,14 @@ tr.hidden-row { display: none; }
   transition: border-color .15s;
 }
 .user-badge:hover { border-color: var(--orange); }
+.theme-toggle {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--bg3); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 15px; flex-shrink: 0;
+  transition: border-color .15s, transform .15s;
+}
+.theme-toggle:hover { border-color: var(--orange); transform: rotate(15deg); }
 .user-avatar {
   width: 22px; height: 22px; border-radius: 50%; background: var(--orange);
   color: #fff; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
@@ -707,6 +738,7 @@ tr.hidden-row { display: none; }
       <div class="data-source-pill" id="dataSourcePill">
         <span class="dot"></span> Sample Data
       </div>
+      <div class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Switch light/dark mode">🌙</div>
       <div class="user-badge" id="userBadge" onclick="openUserSwitchModal()" title="Switch user / role">
         <span class="user-avatar" id="userAvatar">?</span>
         <span id="userBadgeName">Guest</span>
@@ -1923,11 +1955,47 @@ function destroyChart(key) {
   if (chartRegistry[key]) { chartRegistry[key].destroy(); delete chartRegistry[key]; }
 }
 
-const C = {
-  grid: 'rgba(46,38,34,.8)', tick: '#6b6258', text: '#a39a92',
+let C = {
+  grid: 'rgba(39,39,39,.8)', tick: '#6b6b6b', text: '#a3a3a3',
   orange: '#e2541f', orange2: '#f2772e', red: '#ef4444', green: '#22c55e',
   blue: '#3b82f6', yellow: '#f59e0b', purple: '#a855f7',
+  tooltipBg: '#0a0a0a', tooltipBorder: '#272727', tooltipTitle: '#f0f0f0', axisLabel: '#a3a3a3',
 };
+
+function refreshChartColors() {
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  if (isLight) {
+    C.grid = 'rgba(224,220,213,.9)'; C.tick = '#8c8378'; C.text = '#5c554d';
+    C.tooltipBg = '#1a1714'; C.tooltipBorder = '#3a352f'; C.tooltipTitle = '#f7f6f4'; C.axisLabel = '#5c554d';
+  } else {
+    C.grid = 'rgba(39,39,39,.8)'; C.tick = '#6b6b6b'; C.text = '#a3a3a3';
+    C.tooltipBg = '#0a0a0a'; C.tooltipBorder = '#272727'; C.tooltipTitle = '#f0f0f0'; C.axisLabel = '#a3a3a3';
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// THEME — light mode / deep black dark mode toggle
+// ════════════════════════════════════════════════════════════════════════
+const THEME_KEY = 'csh_theme_v1';
+
+function getSavedTheme() {
+  try { return localStorage.getItem(THEME_KEY) || 'dark'; }
+  catch(e) { return 'dark'; }
+}
+
+function applyTheme(theme, redrawCharts) {
+  document.documentElement.setAttribute('data-theme', theme);
+  try { localStorage.setItem(THEME_KEY, theme); } catch(e) {}
+  const btn = document.getElementById('themeToggle');
+  if (btn) { btn.textContent = theme === 'light' ? '☀️' : '🌙'; btn.title = theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'; }
+  refreshChartColors();
+  if (redrawCharts && typeof rebuildAll === 'function') rebuildAll();
+}
+
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || 'dark';
+  applyTheme(current === 'light' ? 'dark' : 'light', true);
+}
 
 const prioMeta = {
   high:   { ptag: 'prio-high', plbl: '🔥 High Priority' },
@@ -2065,7 +2133,7 @@ function rebuildAdoptionBar(pk) {
       chart.getDatasetMeta(0).data.forEach((bar, i) => {
         const v = p[i];
         if (!v) return;
-        ctx.fillStyle = '#a39a92'; ctx.font = 'bold 10px Segoe UI'; ctx.textAlign = 'center';
+        ctx.fillStyle = C.axisLabel; ctx.font = 'bold 10px Segoe UI'; ctx.textAlign = 'center';
         ctx.fillText(v + '%', bar.x, bar.y - 5);
       });
       ctx.restore();
@@ -2085,7 +2153,7 @@ function rebuildAdoptionBar(pk) {
     options: {
       responsive: true, maintainAspectRatio: false, layout: { padding: { top: 20 } },
       plugins: { legend: { display: false },
-        tooltip: { backgroundColor: '#141110', borderColor: '#2e2622', borderWidth: 1, titleColor: '#e8eaf0', bodyColor: C.orange, padding: 12, cornerRadius: 8,
+        tooltip: { backgroundColor: C.tooltipBg, borderColor: C.tooltipBorder, borderWidth: 1, titleColor: C.tooltipTitle, bodyColor: C.orange, padding: 12, cornerRadius: 8,
           callbacks: { label: c => ` ${c.parsed.y}% — ${counts[c.dataIndex]} of ${total} clients` } } },
       scales: {
         y: { beginAtZero: true, max: 100, grid: { color: C.grid }, ticks: { callback: v => v + '%', color: C.tick, font: { size: 11 } }, border: { display: false } },
@@ -2125,12 +2193,12 @@ function rebuildDistDonut(pk) {
 
   chartRegistry[chartKey] = new Chart(canvas, {
     type: 'doughnut',
-    data: { labels, datasets: [{ data: dist, backgroundColor: colors, borderWidth: 3, borderColor: '#141110', hoverOffset: 8 }] },
+    data: { labels, datasets: [{ data: dist, backgroundColor: colors, borderWidth: 3, borderColor: C.tooltipBg, hoverOffset: 8 }] },
     options: {
       responsive: true, maintainAspectRatio: false, cutout: '68%',
       plugins: {
         legend: { position: 'right', labels: { color: C.text, font: { size: 11, weight: '600' }, padding: 12, usePointStyle: true, pointStyleWidth: 10 } },
-        tooltip: { backgroundColor: '#141110', borderColor: '#2e2622', borderWidth: 1, titleColor: '#e8eaf0', bodyColor: C.orange, padding: 12, cornerRadius: 8,
+        tooltip: { backgroundColor: C.tooltipBg, borderColor: C.tooltipBorder, borderWidth: 1, titleColor: C.tooltipTitle, bodyColor: C.orange, padding: 12, cornerRadius: 8,
           callbacks: { label: ctx => ` ${ctx.parsed} clients` } }
       }
     }
@@ -2188,7 +2256,7 @@ function rebuildGapBar(pk) {
     options: {
       indexAxis: 'y', responsive: true, maintainAspectRatio: false, layout: { padding: { right: 16 } },
       plugins: { legend: { display: false },
-        tooltip: { backgroundColor: '#141110', borderColor: '#2e2622', borderWidth: 1, titleColor: '#e8eaf0', bodyColor: C.orange, padding: 12, cornerRadius: 8,
+        tooltip: { backgroundColor: C.tooltipBg, borderColor: C.tooltipBorder, borderWidth: 1, titleColor: C.tooltipTitle, bodyColor: C.orange, padding: 12, cornerRadius: 8,
           callbacks: { label: ctx => ` ${ctx.parsed.x} clients to upsell (${Math.round(ctx.parsed.x/total*100)}%)` } } },
       scales: {
         x: { beginAtZero: true, max: total, grid: { color: C.grid }, ticks: { color: C.tick, font: { size: 11 } }, border: { display: false } },
@@ -4455,6 +4523,9 @@ async function clearAllSavedData() {
 // BOOT — Supabase first, localStorage cache fallback, then sample data
 // ════════════════════════════════════════════════════════════════════════
 (async function init() {
+  // Apply saved theme before anything renders, so charts draw with correct colors from the start
+  applyTheme(getSavedTheme(), false);
+
   // Apply cached role instantly so upload/edit controls are correct before network calls finish
   applyPermissionsToUI();
 
