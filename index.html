@@ -699,6 +699,7 @@ tr.hidden-row { display: none; }
     <div class="nav-label">Ad Spend</div>
     <div class="nav-item" onclick="showPage('adspend')">
       <span class="icon">💰</span> Ad Spend Management
+      <span class="badge" id="navAdSpendBadge">0</span>
     </div>
   </div>
 
@@ -1455,7 +1456,7 @@ tr.hidden-row { display: none; }
           <input type="file" id="colFileUpload" accept=".xlsx,.xls,.csv" onchange="handleCollectionsFileUpload(event)">
         </label>
       </div>
-      <div style="display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr auto;gap:10px;align-items:end">
+      <div style="display:grid;grid-template-columns:1.3fr 0.85fr 0.85fr 0.85fr 0.85fr auto;gap:10px;align-items:end">
         <div>
           <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Business Name</label>
           <input type="text" id="colName" placeholder="e.g. Summit Roofing Co." style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
@@ -1467,6 +1468,10 @@ tr.hidden-row { display: none; }
         <div>
           <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px" id="colDateLabel">Due Date</label>
           <input type="date" id="colDate" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Resolved Date</label>
+          <input type="date" id="colResolvedDate" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
         </div>
         <div>
           <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Status</label>
@@ -1487,12 +1492,13 @@ tr.hidden-row { display: none; }
       <div style="overflow-x:auto">
         <table>
           <thead><tr>
-            <th style="width:24%">Business</th>
-            <th style="width:12%">Amount</th>
-            <th style="width:14%" id="colDateHeader">Due Date</th>
-            <th style="width:16%">Status</th>
+            <th style="width:19%">Business</th>
+            <th style="width:10%">Amount</th>
+            <th style="width:11%" id="colDateHeader">Due Date</th>
+            <th style="width:11%">Resolved Date</th>
+            <th style="width:14%">Status</th>
             <th style="width:24%">Latest Note</th>
-            <th style="width:10%">Actions</th>
+            <th style="width:11%">Actions</th>
           </tr></thead>
           <tbody id="colTableBody"></tbody>
         </table>
@@ -2877,7 +2883,7 @@ function setAdSpendFilter(val, btn) {
   rebuildAdSpendTable();
 }
 
-function fmtMoney(n) { return '$' + Number(n || 0).toLocaleString('en-US'); }
+function fmtMoney(n) { return '$' + Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 function fmtDate(d) {
   if (!d) return '—';
   const dt = new Date(d + 'T00:00:00');
@@ -2893,6 +2899,7 @@ function rebuildAdSpendPage() {
   set('as-promo', AD_SPEND_BUSINESSES.filter(b => b.promo === 'Yes').length);
   set('as-using', AD_SPEND_BUSINESSES.filter(b => b.promo === 'Already Using').length);
   set('asCountSub', `${AD_SPEND_BUSINESSES.length} business${AD_SPEND_BUSINESSES.length === 1 ? '' : 'es'}`);
+  set('navAdSpendBadge', AD_SPEND_BUSINESSES.length);
 
   // View is open to everyone; the add form is only useful for Super user/Admin
   const addCard = document.getElementById('asAddCard');
@@ -3188,7 +3195,7 @@ async function loadCollectionsAccounts() {
     const rows = await sbSelect('collections_accounts', 'order=name.asc');
     COLLECTIONS_ACCOUNTS = rows.map(r => ({
       id: r.id, type: r.type || 'outstanding', name: r.name, amount: r.amount || 0,
-      date: r.record_date || '', status: r.status || 'pending',
+      date: r.record_date || '', resolvedDate: r.resolved_date || '', status: r.status || 'pending',
       notes: Array.isArray(r.notes) ? r.notes : [],
     }));
     localStorage.setItem(COLLECTIONS_CACHE_KEY, JSON.stringify(COLLECTIONS_ACCOUNTS));
@@ -3206,7 +3213,7 @@ async function persistCollectionsAccount(a) {
   try {
     await sbUpsert('collections_accounts', {
       id: a.id, type: a.type, name: a.name, amount: a.amount,
-      record_date: a.date || null, status: a.status, notes: a.notes,
+      record_date: a.date || null, resolved_date: a.resolvedDate || null, status: a.status, notes: a.notes,
     });
   } catch(e) { console.warn('Could not save collections account to Supabase (table may not exist yet):', e.message); }
 }
@@ -3251,12 +3258,13 @@ function addCollectionsAccount() {
     type: activeCollectionsType, name,
     amount: Number(document.getElementById('colAmount').value) || 0,
     date: document.getElementById('colDate').value || '',
+    resolvedDate: document.getElementById('colResolvedDate').value || '',
     status: document.getElementById('colStatus').value || 'pending',
     notes: [],
   };
   COLLECTIONS_ACCOUNTS.push(a);
   persistCollectionsAccount(a);
-  ['colName','colAmount','colDate'].forEach(id => document.getElementById(id).value = '');
+  ['colName','colAmount','colDate','colResolvedDate'].forEach(id => document.getElementById(id).value = '');
   rebuildCollectionsPage();
 }
 
@@ -3266,6 +3274,7 @@ function updateCollectionsStatus(id, status) {
   if (!a) return;
   const prevLabel = statusMeta(a.status).label;
   a.status = status;
+  if (status === 'resolved' && !a.resolvedDate) a.resolvedDate = new Date().toISOString().slice(0,10);
   const user = getCurrentUser();
   a.notes = a.notes || [];
   a.notes.unshift({ author: user ? user.name : 'Guest', text: `Status changed: ${prevLabel} → ${statusMeta(status).label}`, ts: new Date().toISOString(), system: true });
@@ -3369,7 +3378,7 @@ function rebuildCollectionsTable() {
 
   if (rows.length === 0) {
     const totalForType = COLLECTIONS_ACCOUNTS.filter(a => a.type === activeCollectionsType).length;
-    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text3)">${totalForType === 0 ? 'No accounts yet — add one above or upload a list.' : 'No matches.'}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text3)">${totalForType === 0 ? 'No accounts yet — add one above or upload a list.' : 'No matches.'}</td></tr>`;
     return;
   }
 
@@ -3387,6 +3396,7 @@ function rebuildCollectionsTable() {
       <td style="font-weight:600;color:var(--text)">${a.name}</td>
       <td>${fmtMoney(a.amount)}</td>
       <td>${fmtDate(a.date)}</td>
+      <td>${a.resolvedDate ? fmtDate(a.resolvedDate) : '<span style="color:var(--text3)">—</span>'}</td>
       <td>${statusCell}</td>
       <td title="${(latestNote || '').replace(/"/g,'&quot;')}" style="color:var(--text2)">${noteShort}</td>
       <td>
@@ -3436,6 +3446,7 @@ function guessCollectionsColumn(header) {
   const h = normalizeHeader(header);
   if (/business|client|company|^name$/.test(h)) return 'name';
   if (/amount|balance|owed|total|charge|price/.test(h)) return 'amount';
+  if (/resolved|closed/.test(h)) return 'resolvedDate';
   if (/date|due|attempt|failed/.test(h)) return 'date';
   if (/status/.test(h)) return 'status';
   return '';
@@ -3481,6 +3492,7 @@ function renderCollectionsMappingModal() {
     <option value="name" ${selected === 'name' ? 'selected' : ''}>👤 Business Name</option>
     <option value="amount" ${selected === 'amount' ? 'selected' : ''}>💰 Amount</option>
     <option value="date" ${selected === 'date' ? 'selected' : ''}>📅 ${type === 'outstanding' ? 'Due Date' : 'Last Attempt'}</option>
+    <option value="resolvedDate" ${selected === 'resolvedDate' ? 'selected' : ''}>✅ Resolved Date</option>
     <option value="status" ${selected === 'status' ? 'selected' : ''}>🏷️ Status</option>`;
   const body = document.getElementById('colMappingTableBody');
   body.innerHTML = headers.map((h,i) => {
@@ -3512,7 +3524,7 @@ function confirmCollectionsMapping() {
     return;
   }
   const built = rows.map(row => {
-    const rec = { name: '', amount: 0, date: '', status: 'pending' };
+    const rec = { name: '', amount: 0, date: '', resolvedDate: '', status: 'pending' };
     headers.forEach((h,i) => {
       const target = mapping[i];
       if (!target) return;
@@ -3520,6 +3532,7 @@ function confirmCollectionsMapping() {
       if (target === 'name') { if (!rec.name) rec.name = String(val ?? '').trim(); }
       else if (target === 'amount') rec.amount = Number(String(val).replace(/[^0-9.-]/g,'')) || 0;
       else if (target === 'date') rec.date = normalizeDateValue(val);
+      else if (target === 'resolvedDate') rec.resolvedDate = normalizeDateValue(val);
       else if (target === 'status') rec.status = guessStatusValue(val);
     });
     return rec;
@@ -3603,13 +3616,14 @@ function applyCollectionsImport() {
     if (d.action === 'replace') {
       d.existing.amount = d.incoming.amount;
       d.existing.date = d.incoming.date;
+      if (d.incoming.resolvedDate) d.existing.resolvedDate = d.incoming.resolvedDate;
       if (d.incoming.status) d.existing.status = d.incoming.status;
       d.existing.notes = d.existing.notes || [];
       d.existing.notes.unshift({ author: authorName, text: `Updated via import: ${fileName}`, ts: new Date().toISOString(), system: true });
       persistCollectionsAccount(d.existing);
       replaced++;
     } else if (d.action === 'both') {
-      const rec = { id: (crypto.randomUUID ? crypto.randomUUID() : 'c_' + Date.now() + Math.random().toString(16).slice(2)), type, name: d.incoming.name, amount: d.incoming.amount, date: d.incoming.date, status: d.incoming.status || 'pending', notes: [] };
+      const rec = { id: (crypto.randomUUID ? crypto.randomUUID() : 'c_' + Date.now() + Math.random().toString(16).slice(2)), type, name: d.incoming.name, amount: d.incoming.amount, date: d.incoming.date, resolvedDate: d.incoming.resolvedDate || '', status: d.incoming.status || 'pending', notes: [] };
       COLLECTIONS_ACCOUNTS.push(rec);
       persistCollectionsAccount(rec);
       keptBoth++;
@@ -3617,7 +3631,7 @@ function applyCollectionsImport() {
   });
 
   brandNew.forEach(r => {
-    const rec = { id: (crypto.randomUUID ? crypto.randomUUID() : 'c_' + Date.now() + Math.random().toString(16).slice(2)), type, name: r.name, amount: r.amount, date: r.date, status: r.status || 'pending', notes: [] };
+    const rec = { id: (crypto.randomUUID ? crypto.randomUUID() : 'c_' + Date.now() + Math.random().toString(16).slice(2)), type, name: r.name, amount: r.amount, date: r.date, resolvedDate: r.resolvedDate || '', status: r.status || 'pending', notes: [] };
     COLLECTIONS_ACCOUNTS.push(rec);
     persistCollectionsAccount(rec);
     added++;
