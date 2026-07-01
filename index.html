@@ -1600,7 +1600,16 @@ tr.hidden-row { display: none; }
 <div class="modal-overlay" id="userSwitchModal">
   <div class="modal">
     <h3>👋 Who's using the Hub?</h3>
-    <p>Pick your name to load the right permissions. Ask an Admin to add you under Team &amp; Permissions if you're not listed.</p>
+    <p id="userSwitchIntro">Pick your name to load the right permissions. Ask an Admin to add you under Team &amp; Permissions if you're not listed.</p>
+
+    <div id="firstRunBlock" style="display:none;background:var(--orange-dim);border:1px solid rgba(226,84,31,.25);border-radius:10px;padding:14px;margin-bottom:14px">
+      <div style="font-size:12px;font-weight:700;color:var(--orange);margin-bottom:8px">🎉 No one's set up yet — you're first!</div>
+      <div style="font-size:11px;color:var(--text2);margin-bottom:12px;line-height:1.5">Add yourself as the first Admin so you can manage the team, upload data, and edit clients. You can add everyone else afterward under Team &amp; Permissions.</div>
+      <input type="text" id="firstRunName" placeholder="Your name" style="margin-bottom:8px">
+      <input type="text" id="firstRunEmail" placeholder="Your email (optional)" style="margin-bottom:8px">
+      <button class="btn btn-primary" style="width:100%" onclick="becomeFirstAdmin()">👑 Set Me Up as Admin</button>
+    </div>
+
     <div class="modal-scroll" id="userSwitchList" style="max-height:280px"></div>
     <div class="modal-btns" style="justify-content:space-between;align-items:center">
       <span style="font-size:11px;color:var(--text3)">Not listed? Continue as a view-only guest.</span>
@@ -2595,9 +2604,13 @@ function renderTeamUI() {
 
   // Also refresh the "who's using the Hub" switcher list
   const switchList = document.getElementById('userSwitchList');
+  const firstRun = document.getElementById('firstRunBlock');
+  const intro = document.getElementById('userSwitchIntro');
+  if (firstRun) firstRun.style.display = TEAM_MEMBERS.length === 0 ? '' : 'none';
+  if (intro) intro.style.display = TEAM_MEMBERS.length === 0 ? 'none' : '';
   if (switchList) {
     switchList.innerHTML = TEAM_MEMBERS.length === 0
-      ? `<div style="font-size:12px;color:var(--text3);padding:12px">No team members added yet. Continue as a guest below, or ask an Admin to add you.</div>`
+      ? ''
       : TEAM_MEMBERS.map(m => `
         <div class="team-row" style="cursor:pointer" onclick="selectCurrentUser('${m.id}')">
           <span class="user-avatar">${initials(m.name)}</span>
@@ -2605,6 +2618,18 @@ function renderTeamUI() {
           <span class="role-pill ${m.role}">${m.role === 'admin' ? 'Admin' : m.role === 'superuser' ? 'Super user' : 'User'}</span>
         </div>`).join('');
   }
+}
+
+function becomeFirstAdmin() {
+  const nameEl = document.getElementById('firstRunName');
+  const emailEl = document.getElementById('firstRunEmail');
+  const name = nameEl.value.trim();
+  if (!name) { alert('Please enter your name.'); nameEl.focus(); return; }
+  const member = { id: (crypto.randomUUID ? crypto.randomUUID() : 'm_' + Date.now()), name, email: emailEl.value.trim(), role: 'admin' };
+  TEAM_MEMBERS.push(member);
+  persistTeamMember(member);
+  setCurrentUser({ id: member.id, name: member.name, role: 'admin' });
+  closeUserSwitchModal();
 }
 
 function selectCurrentUser(id) {
