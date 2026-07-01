@@ -3815,8 +3815,9 @@ function showUploadFeedback(msg, isError) {
   }
 }
 
-function updateDataSourcePill() {
-  const urls = getSavedSheetsUrls();
+async function updateDataSourcePill() {
+  let urls = {};
+  try { urls = await getSavedSheetsUrls(); } catch(e) {}
   const connectedPortfolios = Object.keys(urls).filter(pk => urls[pk]);
   const hasLocal = !!localStorage.getItem(STORAGE_KEY);
 
@@ -4478,15 +4479,6 @@ function confirmDeleteClient() {
     saveClientsToSupabase(pk).catch(e => console.warn('Save failed:', e));
   });
   showUploadFeedback(`Removed "${removedName}" · Saved`, false);
-}
-
-function updateDataSourcePill() {
-  const pill = document.getElementById('dataSourcePill');
-  if (!pill) return;
-  const totalClients = ['smb','whitelabel','support'].reduce((n,pk) => n + getClients(pk).length, 0);
-  const hasRealData = totalClients > 89;
-  pill.innerHTML = `<span class="dot" style="background:${hasRealData ? 'var(--green)' : ''}"></span> ${hasRealData ? 'Supabase · Live' : 'Sample Data'}`;
-  pill.style.color = hasRealData ? 'var(--green)' : '';
 }
 
 async function autoRefreshSheets(urls) {
