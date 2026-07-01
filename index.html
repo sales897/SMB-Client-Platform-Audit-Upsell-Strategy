@@ -85,6 +85,10 @@ body {
 .sidebar-logo-text { line-height: 1.2; }
 .sidebar-logo-text .brand { font-size: 13px; font-weight: 800; color: var(--text); letter-spacing: .3px; }
 .sidebar-logo-text .sub { font-size: 10px; color: var(--orange); font-weight: 600; letter-spacing: .5px; text-transform: uppercase; }
+.sidebar-nav { flex: 1; overflow-y: auto; overflow-x: hidden; min-height: 0; }
+.sidebar-nav::-webkit-scrollbar { width: 6px; }
+.sidebar-nav::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+.sidebar-nav::-webkit-scrollbar-track { background: transparent; }
 
 .nav-section { padding: 16px 10px 4px; }
 .nav-label { font-size: 9.5px; font-weight: 700; color: var(--text3); letter-spacing: 1.5px; text-transform: uppercase; padding: 0 8px; margin-bottom: 6px; }
@@ -651,6 +655,7 @@ tr.hidden-row { display: none; }
     </div>
   </div>
 
+  <nav class="sidebar-nav">
   <div class="nav-section">
     <div class="nav-label">Overview</div>
     <div class="nav-item" onclick="showPage('clients')">
@@ -717,6 +722,7 @@ tr.hidden-row { display: none; }
       <span class="icon">🔐</span> Team &amp; Permissions
     </div>
   </div>
+  </nav>
 
   <div class="sidebar-footer">
     <div>Last updated: <strong>June 29, 2025</strong></div>
