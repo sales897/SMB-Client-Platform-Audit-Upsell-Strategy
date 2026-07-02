@@ -664,15 +664,15 @@ tr.hidden-row { display: none; }
     </div>
     <div class="nav-item active" onclick="showPage('smb')">
       <span class="icon">📊</span> SMB Dashboard
-      <span class="badge">63</span>
+      <span class="badge" id="navSmbBadge">63</span>
     </div>
     <div class="nav-item" onclick="showPage('whitelabel')">
       <span class="icon">🏷️</span> White Label
-      <span class="badge green">12</span>
+      <span class="badge green" id="navWhitelabelBadge">12</span>
     </div>
     <div class="nav-item" onclick="showPage('support')">
       <span class="icon">📊</span> Support Dashboard
-      <span class="badge red">8</span>
+      <span class="badge red" id="navSupportBadge">8</span>
     </div>
   </div>
 
@@ -2137,6 +2137,10 @@ function rebuildKPIs(pk) {
 
   if (totalEl) totalEl.textContent = total;
   if (prodEl) prodEl.textContent = cat.length;
+
+  const navBadgeIds = { smb: 'navSmbBadge', whitelabel: 'navWhitelabelBadge', support: 'navSupportBadge' };
+  const navBadgeEl = document.getElementById(navBadgeIds[pk]);
+  if (navBadgeEl) navBadgeEl.textContent = total;
 
   if (total === 0 || cat.length === 0) {
     if (avgEl) avgEl.textContent = '0';
