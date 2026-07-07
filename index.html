@@ -278,6 +278,14 @@ body {
   outline: none;
   transition: border-color .2s;
 }
+.table-controls select {
+  padding: 8px 14px; background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text); font-size: 13px; outline: none;
+  transition: border-color .2s; cursor: pointer;
+}
+.table-controls select:focus, .table-controls select:hover { border-color: var(--orange); }
+.cell-note { font-size: 10px; cursor: help; opacity: .75; margin-left: 2px; }
+.cell-note:hover { opacity: 1; }
 .search-box:focus { border-color: var(--orange); }
 .search-box::placeholder { color: var(--text3); }
 .filter-pill {
@@ -884,9 +892,13 @@ tr.hidden-row { display: none; }
     <!-- Client Matrix -->
     <div class="section-hd"><div class="section-num">3</div><h2>Full SMB Client Platform Matrix</h2></div>
     <div class="section-div"></div>
+    <div class="card" id="orgRollup-smb" style="display:none;margin-bottom:16px"></div>
     <div class="card">
       <div class="table-controls">
         <input type="text" class="search-box" id="clientSearch-smb" placeholder="Search clients..." oninput="filterTable('smb')">
+        <select id="orgFilter-smb" onchange="filterByOrg('smb', this.value)" style="width:auto;max-width:240px">
+          <option value="">🏢 All Businesses</option>
+        </select>
         <div style="display:flex;gap:6px;flex-wrap:wrap" id="filterPills-smb">
           <button class="filter-pill active" onclick="filterByProduct('smb','all',this)">All</button>
         </div>
@@ -986,9 +998,13 @@ tr.hidden-row { display: none; }
     <!-- Client Matrix -->
     <div class="section-hd"><div class="section-num">2</div><h2>Full White Label Partner Matrix</h2></div>
     <div class="section-div"></div>
+    <div class="card" id="orgRollup-whitelabel" style="display:none;margin-bottom:16px"></div>
     <div class="card">
       <div class="table-controls">
         <input type="text" class="search-box" id="clientSearch-whitelabel" placeholder="Search clients..." oninput="filterTable('whitelabel')">
+        <select id="orgFilter-whitelabel" onchange="filterByOrg('whitelabel', this.value)" style="width:auto;max-width:240px">
+          <option value="">🏢 All Businesses</option>
+        </select>
         <div style="display:flex;gap:6px;flex-wrap:wrap" id="filterPills-whitelabel">
           <button class="filter-pill active" onclick="filterByProduct('whitelabel','all',this)">All</button>
         </div>
@@ -1161,9 +1177,13 @@ tr.hidden-row { display: none; }
     <!-- Client Matrix -->
     <div class="section-hd"><div class="section-num">4</div><h2>Full Support Client Matrix</h2></div>
     <div class="section-div"></div>
+    <div class="card" id="orgRollup-support" style="display:none;margin-bottom:16px"></div>
     <div class="card">
       <div class="table-controls">
         <input type="text" class="search-box" id="clientSearch-support" placeholder="Search clients..." oninput="filterTable('support')">
+        <select id="orgFilter-support" onchange="filterByOrg('support', this.value)" style="width:auto;max-width:240px">
+          <option value="">🏢 All Businesses</option>
+        </select>
         <div style="display:flex;gap:6px;flex-wrap:wrap" id="filterPills-support">
           <button class="filter-pill active" onclick="filterByProduct('support','all',this)">All</button>
         </div>
@@ -2099,7 +2119,7 @@ function rebuildAll() {
 function rebuildTableHeaders(pk) {
   const headRow = document.getElementById('tableHead-' + pk);
   if (!headRow) return;
-  let html = '<th>Client Name</th>';
+  let html = '<th>Client Name</th><th>Organization</th>';
   getCatalog(pk).forEach(p => html += `<th>${p.label}</th>`);
   html += '<th># Prods</th>';
   headRow.innerHTML = html;
@@ -2332,6 +2352,8 @@ function rebuildGapBar(pk) {
 }
 
 // ─── CLIENT TABLE ─────────────────────────────────────────────────────────────
+function escAttr(s) { return String(s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
 function rebuildClientTable(pk) {
   const cat = getCatalog(pk);
   const cl = getClients(pk);
@@ -2342,20 +2364,71 @@ function rebuildClientTable(pk) {
   cl.forEach(c => {
     const pc = keys.filter(k => c[k]).length;
     const attrs = keys.map(k => `data-${k}="${!!c[k]}"`).join(' ');
-    let row = `<tr data-name="${(c.name||'').toLowerCase()}" data-count="${pc}" ${attrs}>`;
-    row += `<td>${c.name || '—'}</td>`;
+    const orgAttr = `data-org="${escAttr((c.org || '').toLowerCase())}"`;
+    let row = `<tr data-name="${(c.name||'').toLowerCase()}" data-count="${pc}" ${orgAttr} ${attrs}>`;
+    const nameNote = c.cellNotes && c.cellNotes.name;
+    row += `<td>${c.name || '—'}${nameNote ? ` <span class="cell-note" title="${escAttr(nameNote)}">💬</span>` : ''}</td>`;
+    row += `<td>${c.org ? `<span class="portfolio-chip chip-addon">🏢 ${escAttr(c.org)}</span>` : '<span style="color:var(--text3)">—</span>'}</td>`;
     keys.forEach(k => {
-      row += `<td><span class="dot ${c[k] ? 'dot-yes' : 'dot-no'}">${c[k] ? '✓' : '○'}</span></td>`;
+      const note = c.cellNotes && c.cellNotes[k];
+      row += `<td><span class="dot ${c[k] ? 'dot-yes' : 'dot-no'}">${c[k] ? '✓' : '○'}</span>${note ? ` <span class="cell-note" title="${escAttr(note)}">💬</span>` : ''}</td>`;
     });
     row += `<td><span class="pc-badge pc-${Math.min(pc,6)}">${pc}</span></td></tr>`;
     tbody.innerHTML += row;
   });
+
+  rebuildOrgFilter(pk);
 
   const searchEl = document.getElementById('clientSearch-' + pk);
   if (searchEl) searchEl.value = '';
   document.querySelectorAll(`#filterPills-${pk} .filter-pill`).forEach((b,i) => b.classList.toggle('active', i===0));
   activeFilters[pk] = 'all';
   filterTable(pk);
+}
+
+// ─── ORGANIZATION GROUPING (multi-location clients) ───────────────────────────
+let activeOrgFilters = { smb: '', whitelabel: '', support: '' };
+
+function rebuildOrgFilter(pk) {
+  const sel = document.getElementById('orgFilter-' + pk);
+  if (!sel) return;
+  const cl = getClients(pk);
+  const orgCounts = {};
+  cl.forEach(c => { if (c.org) orgCounts[c.org] = (orgCounts[c.org] || 0) + 1; });
+  const orgs = Object.keys(orgCounts).filter(o => orgCounts[o] >= 2).sort();
+  const prevVal = activeOrgFilters[pk] || '';
+  sel.innerHTML = `<option value="">🏢 All Businesses</option>` +
+    orgs.map(o => `<option value="${escAttr(o)}">${escAttr(o)} (${orgCounts[o]} locations)</option>`).join('');
+  if (orgs.includes(prevVal)) sel.value = prevVal;
+  else { activeOrgFilters[pk] = ''; sel.value = ''; }
+  renderOrgRollup(pk);
+}
+
+function filterByOrg(pk, orgVal) {
+  activeOrgFilters[pk] = orgVal;
+  filterTable(pk);
+  renderOrgRollup(pk);
+}
+
+function renderOrgRollup(pk) {
+  const wrap = document.getElementById('orgRollup-' + pk);
+  if (!wrap) return;
+  const orgVal = activeOrgFilters[pk];
+  if (!orgVal) { wrap.style.display = 'none'; wrap.innerHTML = ''; return; }
+  const cl = getClients(pk).filter(c => (c.org || '').toLowerCase() === orgVal.toLowerCase());
+  if (cl.length === 0) { wrap.style.display = 'none'; wrap.innerHTML = ''; return; }
+  const cat = getCatalog(pk);
+  const keys = getProdKeys(pk);
+  const stats = keys.map(k => ({ label: (cat.find(p => p.key === k) || {}).label || k, count: cl.filter(c => c[k]).length }));
+  wrap.style.display = '';
+  wrap.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+      <span style="font-size:15px;font-weight:700;color:var(--text)">🏢 ${escAttr(cl[0].org)}</span>
+      <span class="portfolio-chip chip-addon">${cl.length} locations</span>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      ${stats.map(s => `<span class="portfolio-chip ${s.count > 0 ? 'chip-whitelabel' : 'chip-support'}">${escAttr(s.label)}: ${s.count}/${cl.length}</span>`).join('')}
+    </div>`;
 }
 
 // ─── TABLE FILTER / SEARCH (per portfolio) ────────────────────────────────────
@@ -2365,11 +2438,14 @@ function filterTable(pk) {
   const searchEl = document.getElementById('clientSearch-' + pk);
   const q = searchEl ? searchEl.value.toLowerCase() : '';
   const filter = activeFilters[pk] || 'all';
+  const orgVal = (activeOrgFilters[pk] || '').toLowerCase();
   let n = 0;
   document.querySelectorAll('#clientTableBody-' + pk + ' tr').forEach(row => {
     const name = row.dataset.name || '';
     const cnt = parseInt(row.dataset.count || 0);
+    const rowOrg = row.dataset.org || '';
     let show = name.includes(q);
+    if (show && orgVal) show = rowOrg === orgVal;
     if (show && filter !== 'all') {
       if (filter === 'multi') show = cnt >= 3;
       else show = row.dataset[filter] === 'false';
@@ -2483,6 +2559,8 @@ function buildHeaderMap(pk) {
     'business name': 'name', 'client name': 'name', 'company': 'name', 'name': 'name',
     'businessname': 'name', 'clientname': 'name', // no-space variants
     'business_name': 'name', 'client_name': 'name',
+    'organization': 'org', 'org': 'org', 'parent company': 'org', 'parent': 'org',
+    'parent org': 'org', 'parent_company': 'org', 'account': 'org',
   };
   getCatalog(pk).forEach(p => {
     map[p.key] = p.key;
@@ -3731,6 +3809,8 @@ async function saveClientsToSupabase(pk) {
     const rows = clients.map(c => ({
       portfolio: pk,
       name: c.name,
+      organization: c.org || null,
+      cell_notes: c.cellNotes || null,
       products: Object.fromEntries(
         getProdKeys(pk).map(k => [k, !!c[k]])
       ),
@@ -3827,6 +3907,8 @@ async function loadFromSupabase() {
       if (pkClients.length > 0) {
         PORTFOLIOS[pk].clients = pkClients.map(r => ({
           name: r.name,
+          org: r.organization || '',
+          cellNotes: r.cell_notes || undefined,
           ...r.products,
         }));
         loadedClients = true;
@@ -3931,6 +4013,7 @@ function handleFileUpload(e) {
   reader.onload = function(ev) {
     try {
       let rows;
+      let rowComments = null;
       if (isCSV) {
         rows = parseCSV(ev.target.result);
       } else {
@@ -3939,9 +4022,10 @@ function handleFileUpload(e) {
         const sheetName = wb.SheetNames.find(n => preferredName.test(n)) || wb.SheetNames[0];
         const sheet = wb.Sheets[sheetName];
         rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+        rowComments = extractCellComments(sheet, rows);
       }
       if (!rows || rows.length === 0) throw new Error('No data rows found in this file.');
-      startImportWizard(rows, file.name, pk, inputEl);
+      startImportWizard(rows, file.name, pk, inputEl, rowComments);
     } catch (err) {
       showUploadFeedback('Upload failed: ' + err.message, true);
       alert('⚠️ Could not process file: ' + err.message);
@@ -3954,24 +4038,60 @@ function handleFileUpload(e) {
   else reader.readAsBinaryString(file);
 }
 
-function startImportWizard(rows, fileName, pk, inputEl) {
+// Reads cell comments/notes (Excel "Notes", not to be confused with cell values) from an
+// XLSX worksheet and maps them back to { headerName: commentText } per data row.
+// CSV files carry no such metadata, so this is only ever called for .xlsx/.xls uploads.
+function extractCellComments(sheet, rows) {
+  try {
+    if (!sheet['!ref']) return null;
+    const range = XLSX.utils.decode_range(sheet['!ref']);
+    const headerRowIdx = range.s.r;
+    const headerByCol = {};
+    for (let col = range.s.c; col <= range.e.c; col++) {
+      const cell = sheet[XLSX.utils.encode_cell({ r: headerRowIdx, c: col })];
+      if (cell && cell.v != null) headerByCol[col] = String(cell.v).trim();
+    }
+    const perRow = [];
+    let anyFound = false;
+    for (let i = 0; i < rows.length; i++) {
+      const r = headerRowIdx + 1 + i;
+      const notes = {};
+      for (let col = range.s.c; col <= range.e.c; col++) {
+        const cell = sheet[XLSX.utils.encode_cell({ r, c: col })];
+        if (cell && cell.c && cell.c.length && headerByCol[col]) {
+          notes[headerByCol[col]] = cell.c.map(cm => cm.t).join(' / ');
+          anyFound = true;
+        }
+      }
+      perRow.push(notes);
+    }
+    return anyFound ? perRow : null;
+  } catch(e) {
+    console.warn('Cell comment extraction failed:', e);
+    return null;
+  }
+}
+
+function startImportWizard(rows, fileName, pk, inputEl, rowComments) {
   const headers = Object.keys(rows[0]);
   const HEADER_MAP = buildHeaderMap(pk);
   const mapping = {};
   headers.forEach((h, i) => { mapping[i] = HEADER_MAP[normalizeHeader(h)] || ''; });
-  pendingImport = { pk, fileName, rows, headers, mapping, result: null, inputEl };
+  pendingImport = { pk, fileName, rows, headers, mapping, result: null, inputEl, rowComments: rowComments || null };
   renderMappingModal();
   document.getElementById('mappingModal').classList.add('open');
 }
 
 function renderMappingModal() {
-  const { pk, rows, headers, mapping, fileName } = pendingImport;
+  const { pk, rows, headers, mapping, fileName, rowComments } = pendingImport;
+  const commentNote = rowComments ? ` · <span style="color:var(--orange)">💬 cell comments detected — they'll carry over automatically</span>` : '';
   document.getElementById('mappingFileLabel').innerHTML =
-    `<strong style="color:var(--text)">${fileName}</strong> → ${PORTFOLIOS[pk].name} · ${rows.length} row${rows.length === 1 ? '' : 's'} detected. We auto-matched columns where we could — fix anything that looks wrong, then continue.`;
+    `<strong style="color:var(--text)">${fileName}</strong> → ${PORTFOLIOS[pk].name} · ${rows.length} row${rows.length === 1 ? '' : 's'} detected. We auto-matched columns where we could — fix anything that looks wrong, then continue.${commentNote}`;
   const catalog = getCatalog(pk);
   const options = (selected) => {
     let opts = `<option value="">— Ignore this column —</option>`;
     opts += `<option value="name" ${selected === 'name' ? 'selected' : ''}>👤 Client Name</option>`;
+    opts += `<option value="org" ${selected === 'org' ? 'selected' : ''}>🏢 Organization</option>`;
     catalog.forEach(p => {
       const iconText = (typeof p.icon === 'string' && p.icon.startsWith('logo:')) ? '' : (p.icon || '');
       opts += `<option value="${p.key}" ${selected === p.key ? 'selected' : ''}>${iconText ? iconText + ' ' : ''}${p.label}</option>`;
@@ -4002,7 +4122,7 @@ function closeMappingModal() {
 }
 
 function confirmMapping() {
-  const { pk, rows, headers, mapping } = pendingImport;
+  const { pk, rows, headers, mapping, rowComments } = pendingImport;
   const nameCols = headers.filter((h, i) => mapping[i] === 'name');
   if (nameCols.length === 0) {
     document.getElementById('mappingWarning').style.display = 'block';
@@ -4010,15 +4130,20 @@ function confirmMapping() {
   }
   const prodKeys = getProdKeys(pk);
 
-  const built = rows.map(row => {
+  const built = rows.map((row, rowIdx) => {
     const client = {};
     prodKeys.forEach(k => client[k] = false);
+    const rc = rowComments && rowComments[rowIdx];
+    const notes = {};
     headers.forEach((h, i) => {
       const target = mapping[i];
       if (!target) return;
       if (target === 'name') { if (!client.name) client.name = String(row[h] ?? '').trim(); }
+      else if (target === 'org') { client.org = String(row[h] ?? '').trim(); }
       else client[target] = truthy(row[h]);
+      if (rc && rc[h]) notes[target] = rc[h];
     });
+    if (Object.keys(notes).length) client.cellNotes = notes;
     return client;
   }).filter(c => c.name && c.name.length > 0 && !/^\d{1,3}$/.test(c.name.trim()));
 
@@ -4030,6 +4155,8 @@ function confirmMapping() {
     if (byName.has(key)) {
       const existing = byName.get(key);
       prodKeys.forEach(k => existing[k] = existing[k] || c[k]);
+      if (!existing.org && c.org) existing.org = c.org;
+      if (c.cellNotes) existing.cellNotes = { ...(existing.cellNotes || {}), ...c.cellNotes };
       intraMerged++;
     } else {
       byName.set(key, { ...c });
