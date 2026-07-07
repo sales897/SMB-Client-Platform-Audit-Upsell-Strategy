@@ -284,8 +284,58 @@ body {
   transition: border-color .2s; cursor: pointer;
 }
 .table-controls select:focus, .table-controls select:hover { border-color: var(--orange); }
-.cell-note { font-size: 10px; cursor: help; opacity: .75; margin-left: 2px; }
+.cell-note {
+  position: relative;
+  display: inline-flex;
+  font-size: 12px;
+  cursor: pointer;
+  opacity: .8;
+  margin-left: 3px;
+  vertical-align: middle;
+}
 .cell-note:hover { opacity: 1; }
+.cell-note::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 9px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg4);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.45;
+  white-space: normal;
+  width: max-content;
+  max-width: 260px;
+  box-shadow: var(--shadow);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .12s ease;
+  z-index: 500;
+  text-align: left;
+}
+.cell-note::before {
+  content: '';
+  position: absolute;
+  bottom: calc(100% + 3px);
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: var(--bg4);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .12s ease;
+  z-index: 500;
+}
+.cell-note:hover::after, .cell-note:hover::before {
+  opacity: 1;
+  visibility: visible;
+}
 .search-box:focus { border-color: var(--orange); }
 .search-box::placeholder { color: var(--text3); }
 .filter-pill {
@@ -2360,22 +2410,22 @@ function rebuildClientTable(pk) {
   const keys = getProdKeys(pk);
   const tbody = document.getElementById('clientTableBody-' + pk);
   if (!tbody) return;
-  tbody.innerHTML = '';
-  cl.forEach(c => {
+  const rowsHtml = cl.map(c => {
     const pc = keys.filter(k => c[k]).length;
     const attrs = keys.map(k => `data-${k}="${!!c[k]}"`).join(' ');
     const orgAttr = `data-org="${escAttr((c.org || '').toLowerCase())}"`;
     let row = `<tr data-name="${(c.name||'').toLowerCase()}" data-count="${pc}" ${orgAttr} ${attrs}>`;
     const nameNote = c.cellNotes && c.cellNotes.name;
-    row += `<td>${c.name || '—'}${nameNote ? ` <span class="cell-note" title="${escAttr(nameNote)}">💬</span>` : ''}</td>`;
+    row += `<td>${c.name || '—'}${nameNote ? ` <span class="cell-note" data-tooltip="${escAttr(nameNote)}">💬</span>` : ''}</td>`;
     row += `<td>${c.org ? `<span class="portfolio-chip chip-addon">🏢 ${escAttr(c.org)}</span>` : '<span style="color:var(--text3)">—</span>'}</td>`;
     keys.forEach(k => {
       const note = c.cellNotes && c.cellNotes[k];
-      row += `<td><span class="dot ${c[k] ? 'dot-yes' : 'dot-no'}">${c[k] ? '✓' : '○'}</span>${note ? ` <span class="cell-note" title="${escAttr(note)}">💬</span>` : ''}</td>`;
+      row += `<td><span class="dot ${c[k] ? 'dot-yes' : 'dot-no'}">${c[k] ? '✓' : '○'}</span>${note ? ` <span class="cell-note" data-tooltip="${escAttr(note)}">💬</span>` : ''}</td>`;
     });
     row += `<td><span class="pc-badge pc-${Math.min(pc,6)}">${pc}</span></td></tr>`;
-    tbody.innerHTML += row;
+    return row;
   });
+  tbody.innerHTML = rowsHtml.join('');
 
   rebuildOrgFilter(pk);
 
@@ -4561,15 +4611,14 @@ function rebuildClientsDirectory() {
   set('navClientsBadge', rows.length);
   const tbody = document.getElementById('clientsDirectoryBody');
   if (!tbody) return;
-  tbody.innerHTML = '';
-  rows.forEach(row => {
+  const rowsHtml = rows.map(row => {
     const pks = Object.keys(row.portfolios);
     let total = 0;
     pks.forEach(pk => { total += getProdKeys(pk).filter(k => row.portfolios[pk].client[k]).length; });
     const chips = pks.map(pk => `<span class="portfolio-chip chip-${pk}">${PORTFOLIO_ICONS[pk]} ${PORTFOLIO_LABELS[pk]}</span>`).join('');
     const safe = row.displayName.replace(/'/g,"\\'");
     const attrs = pks.map(pk => `data-has-${pk}="true"`).join(' ');
-    tbody.innerHTML += `<tr data-name="${row.displayName.toLowerCase()}" data-portfolio-count="${pks.length}" ${attrs}>
+    return `<tr data-name="${row.displayName.toLowerCase()}" data-portfolio-count="${pks.length}" ${attrs}>
       <td style="padding-left:14px;color:var(--text);font-weight:600">${row.displayName}</td>
       <td>${chips}</td>
       <td><span class="pc-badge pc-${Math.min(total,6)}">${total}</span></td>
@@ -4577,6 +4626,7 @@ function rebuildClientsDirectory() {
         <button class="row-action-btn" onclick="openEditClientModal('${safe}')">✏️ Edit</button>
         <button class="row-action-btn danger" onclick="openDeleteClientModal('${safe}')">🗑️ Remove</button>` : `<span style="font-size:11px;color:var(--text3)">View only</span>`}</td></tr>`;
   });
+  tbody.innerHTML = rowsHtml.join('');
   filterClientsDirectory();
 }
 
