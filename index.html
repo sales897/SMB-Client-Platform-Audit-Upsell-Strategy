@@ -383,13 +383,37 @@ body {
 .tbl-scroll {
   max-height: 460px;
   overflow-y: auto;
-  overflow-x: hidden;
+  overflow-x: auto;
   border-radius: 10px;
   border: 1px solid var(--border);
 }
-.tbl-scroll::-webkit-scrollbar { width: 5px; }
+.tbl-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
 .tbl-scroll::-webkit-scrollbar-track { background: var(--bg3); }
 .tbl-scroll::-webkit-scrollbar-thumb { background: var(--orange); border-radius: 3px; }
+
+/* ─── RESIZABLE / REORDERABLE COLUMN HEADERS ──────────────────────────────── */
+.resizable-table { table-layout: fixed; }
+.resizable-table th {
+  position: relative;
+  cursor: grab;
+  user-select: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.resizable-table th.col-dragging { opacity: .4; }
+.resizable-table th.col-drop-target { background: var(--orange-dim); }
+.col-resize-handle {
+  position: absolute; top: 0; right: 0; bottom: 0;
+  width: 8px; cursor: col-resize; z-index: 5;
+}
+.col-resize-handle:hover, .col-resize-handle.resizing { background: rgba(226,84,31,.4); }
+.reset-columns-btn {
+  font-size: 10.5px; padding: 5px 11px; border-radius: 6px; cursor: pointer;
+  border: 1px solid var(--border); background: var(--bg3); color: var(--text3);
+  transition: all .15s; white-space: nowrap;
+}
+.reset-columns-btn:hover { border-color: var(--orange); color: var(--orange); }
 
 table { width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; }
 thead { position: sticky; top: 0; z-index: 2; }
@@ -1014,9 +1038,10 @@ tr.hidden-row { display: none; }
           <button class="filter-pill active" onclick="filterByProduct('smb','all',this)">All</button>
         </div>
         <span class="row-count" id="rowCount-smb">0 clients</span>
+        <button class="reset-columns-btn" onclick="resetColumnPrefs('client-smb'); rebuildPortfolio('smb')" title="Reset column order and widths back to default">↺ Columns</button>
       </div>
       <div class="tbl-scroll">
-        <table>
+        <table class="resizable-table" id="clientTable-smb">
           <thead><tr id="tableHead-smb">
             <th>Client Name</th><th># Prods</th>
           </tr></thead>
@@ -1120,9 +1145,10 @@ tr.hidden-row { display: none; }
           <button class="filter-pill active" onclick="filterByProduct('whitelabel','all',this)">All</button>
         </div>
         <span class="row-count" id="rowCount-whitelabel">0 clients</span>
+        <button class="reset-columns-btn" onclick="resetColumnPrefs('client-whitelabel'); rebuildPortfolio('whitelabel')" title="Reset column order and widths back to default">↺ Columns</button>
       </div>
       <div class="tbl-scroll">
-        <table>
+        <table class="resizable-table" id="clientTable-whitelabel">
           <thead><tr id="tableHead-whitelabel">
             <th>Client Name</th><th># Prods</th>
           </tr></thead>
@@ -1299,9 +1325,10 @@ tr.hidden-row { display: none; }
           <button class="filter-pill active" onclick="filterByProduct('support','all',this)">All</button>
         </div>
         <span class="row-count" id="rowCount-support">0 clients</span>
+        <button class="reset-columns-btn" onclick="resetColumnPrefs('client-support'); rebuildPortfolio('support')" title="Reset column order and widths back to default">↺ Columns</button>
       </div>
       <div class="tbl-scroll">
-        <table>
+        <table class="resizable-table" id="clientTable-support">
           <thead><tr id="tableHead-support">
             <th>Client Name</th><th># Prods</th>
           </tr></thead>
@@ -1470,19 +1497,11 @@ tr.hidden-row { display: none; }
           <button class="filter-pill" onclick="setAdSpendFilter('No',this)">Not Eligible</button>
           <button class="filter-pill" onclick="setAdSpendFilter('Already Using',this)">Already Using</button>
         </div>
+        <button class="reset-columns-btn" onclick="resetColumnPrefs('adspend'); rebuildAdSpendPage()" title="Reset column order and widths back to default">↺ Columns</button>
       </div>
       <div style="overflow-x:auto">
-        <table>
-          <thead><tr>
-            <th style="width:16%">Business</th>
-            <th style="width:10%">Budget</th>
-            <th style="width:10%">Watermark</th>
-            <th style="width:16%">Add-Ons</th>
-            <th style="width:10%">Start Date</th>
-            <th style="width:12%">Promo Eligible</th>
-            <th style="width:16%">Recommendations</th>
-            <th style="width:10%">Actions</th>
-          </tr></thead>
+        <table class="resizable-table" id="adSpendTable">
+          <thead><tr id="asTableHead"></tr></thead>
           <tbody id="asTableBody"></tbody>
         </table>
       </div>
@@ -1626,18 +1645,11 @@ tr.hidden-row { display: none; }
       <div class="table-controls">
         <input type="text" class="search-box" id="colSearch" placeholder="Search accounts..." oninput="rebuildCollectionsTable()">
         <div style="display:flex;gap:6px;flex-wrap:wrap" id="colFilterPills"></div>
+        <button class="reset-columns-btn" onclick="resetColumnPrefs('collections'); rebuildCollectionsPage()" title="Reset column order and widths back to default">↺ Columns</button>
       </div>
       <div style="overflow-x:auto">
-        <table>
-          <thead><tr>
-            <th style="width:19%">Business</th>
-            <th style="width:10%">Amount</th>
-            <th style="width:11%" id="colDateHeader">Due Date</th>
-            <th style="width:11%">Resolved Date</th>
-            <th style="width:14%">Status</th>
-            <th style="width:24%">Latest Note</th>
-            <th style="width:11%">Actions</th>
-          </tr></thead>
+        <table class="resizable-table" id="collectionsTable">
+          <thead><tr id="colTableHead"></tr></thead>
           <tbody id="colTableBody"></tbody>
         </table>
       </div>
@@ -2298,13 +2310,31 @@ function renderHomeActivityList() {
 }
 
 // ─── TABLE HEADERS ────────────────────────────────────────────────────────────
+// Stable, ordered column definitions for a portfolio's client matrix table.
+// Index in this array is the "original" column index used for saved order/width prefs.
+function getClientColumns(pk) {
+  const cols = [
+    { key: 'name', label: 'Client Name' },
+    { key: 'org', label: 'Organization' },
+  ];
+  getCatalog(pk).forEach(p => cols.push({ key: p.key, label: p.label }));
+  cols.push({ key: '__count', label: '# Prods' });
+  return cols;
+}
+
 function rebuildTableHeaders(pk) {
   const headRow = document.getElementById('tableHead-' + pk);
   if (!headRow) return;
-  let html = '<th>Client Name</th><th>Organization</th>';
-  getCatalog(pk).forEach(p => html += `<th>${p.label}</th>`);
-  html += '<th># Prods</th>';
-  headRow.innerHTML = html;
+  const tableId = 'client-' + pk;
+  const cols = getClientColumns(pk);
+  const order = getColumnOrder(tableId, cols.length);
+  const widths = getColumnWidths(tableId);
+  headRow.innerHTML = order.map(origIdx => {
+    const c = cols[origIdx];
+    const w = widths[origIdx];
+    return `<th draggable="true" data-orig-idx="${origIdx}" style="${w ? `width:${w}px;` : ''}">${escAttr(c.label)}<span class="col-resize-handle"></span></th>`;
+  }).join('');
+  makeColumnsInteractive(headRow, tableId, () => rebuildPortfolio(pk));
 }
 
 // ─── FILTER PILLS ─────────────────────────────────────────────────────────────
@@ -2536,29 +2566,144 @@ function rebuildGapBar(pk) {
 // ─── CLIENT TABLE ─────────────────────────────────────────────────────────────
 function escAttr(s) { return String(s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
 
+// ════════════════════════════════════════════════════════════════════════
+// RESIZABLE / REORDERABLE COLUMNS — generic, reusable across any data table.
+// Column order and widths persist per-browser (localStorage), keyed by a
+// stable tableId string unique to each table.
+// ════════════════════════════════════════════════════════════════════════
+const COLUMN_PREFS_KEY = 'csh_column_prefs_v1';
+let COLUMN_PREFS = {};
+(function loadColumnPrefsFromStorage() {
+  try { COLUMN_PREFS = JSON.parse(localStorage.getItem(COLUMN_PREFS_KEY) || '{}'); }
+  catch(e) { COLUMN_PREFS = {}; }
+})();
+function saveColumnPrefsToStorage() {
+  try { localStorage.setItem(COLUMN_PREFS_KEY, JSON.stringify(COLUMN_PREFS)); } catch(e) {}
+}
+// Returns an array mapping display position -> original column index.
+// Falls back to natural order if no valid saved preference exists (e.g. the
+// column count changed since — a product was added/removed from the catalog).
+function getColumnOrder(tableId, count) {
+  const pref = COLUMN_PREFS[tableId];
+  let order = pref && Array.isArray(pref.order) ? pref.order.slice() : null;
+  const valid = order && order.length === count && order.every(i => i >= 0 && i < count) && new Set(order).size === count;
+  if (!valid) order = Array.from({ length: count }, (_, i) => i);
+  return order;
+}
+function getColumnWidths(tableId) {
+  const pref = COLUMN_PREFS[tableId];
+  return (pref && pref.widths) ? pref.widths : {};
+}
+function setColumnOrderPref(tableId, order) {
+  if (!COLUMN_PREFS[tableId]) COLUMN_PREFS[tableId] = {};
+  COLUMN_PREFS[tableId].order = order;
+  saveColumnPrefsToStorage();
+}
+function setColumnWidthPref(tableId, origIdx, px) {
+  if (!COLUMN_PREFS[tableId]) COLUMN_PREFS[tableId] = {};
+  if (!COLUMN_PREFS[tableId].widths) COLUMN_PREFS[tableId].widths = {};
+  COLUMN_PREFS[tableId].widths[origIdx] = px;
+  saveColumnPrefsToStorage();
+}
+function resetColumnPrefs(tableId) {
+  delete COLUMN_PREFS[tableId];
+  saveColumnPrefsToStorage();
+}
+
+// Attaches drag-to-reorder and drag-to-resize behavior to a header row's <th> cells.
+// Each <th> must carry data-orig-idx (its position in the natural/default column
+// order) and, for resizing, a nested .col-resize-handle element.
+// onChange is called after any reorder/resize commits, so the caller can re-render.
+function makeColumnsInteractive(headRowEl, tableId, onChange) {
+  if (!headRowEl) return;
+  let dragSrcIdx = null;
+
+  headRowEl.querySelectorAll('th').forEach(th => {
+    th.addEventListener('dragstart', (e) => {
+      dragSrcIdx = parseInt(th.dataset.origIdx, 10);
+      e.dataTransfer.effectAllowed = 'move';
+      th.classList.add('col-dragging');
+    });
+    th.addEventListener('dragend', () => th.classList.remove('col-dragging'));
+    th.addEventListener('dragover', (e) => { e.preventDefault(); th.classList.add('col-drop-target'); });
+    th.addEventListener('dragleave', () => th.classList.remove('col-drop-target'));
+    th.addEventListener('drop', (e) => {
+      e.preventDefault();
+      th.classList.remove('col-drop-target');
+      const targetIdx = parseInt(th.dataset.origIdx, 10);
+      if (dragSrcIdx === null || targetIdx === dragSrcIdx) return;
+      const count = headRowEl.querySelectorAll('th').length;
+      const order = getColumnOrder(tableId, count);
+      const fromPos = order.indexOf(dragSrcIdx);
+      const toPos = order.indexOf(targetIdx);
+      if (fromPos === -1 || toPos === -1) return;
+      order.splice(fromPos, 1);
+      order.splice(toPos, 0, dragSrcIdx);
+      setColumnOrderPref(tableId, order);
+      onChange();
+    });
+
+    const handle = th.querySelector('.col-resize-handle');
+    if (!handle) return;
+    handle.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const startX = e.clientX;
+      const startWidth = th.getBoundingClientRect().width;
+      const origIdx = parseInt(th.dataset.origIdx, 10);
+      handle.classList.add('resizing');
+      function onMove(ev) {
+        const newWidth = Math.max(70, Math.round(startWidth + (ev.clientX - startX)));
+        th.style.width = newWidth + 'px';
+      }
+      function onUp() {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        handle.classList.remove('resizing');
+        setColumnWidthPref(tableId, origIdx, Math.round(th.getBoundingClientRect().width));
+        onChange();
+      }
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+  });
+}
+
 function rebuildClientTable(pk) {
-  const cat = getCatalog(pk);
   const cl = getClients(pk);
   const keys = getProdKeys(pk);
   const tbody = document.getElementById('clientTableBody-' + pk);
   if (!tbody) return;
+  const tableId = 'client-' + pk;
+  const cols = getClientColumns(pk);
+  const order = getColumnOrder(tableId, cols.length);
+
   const rowsHtml = cl.map(c => {
     const pc = keys.filter(k => c[k]).length;
     const attrs = keys.map(k => `data-${k}="${!!c[k]}"`).join(' ');
     const orgAttr = `data-org="${escAttr((c.org || '').toLowerCase())}"`;
-    let row = `<tr data-name="${(c.name||'').toLowerCase()}" data-count="${pc}" ${orgAttr} ${attrs}>`;
-    const nameNote = c.cellNotes && c.cellNotes.name;
-    row += `<td>${c.name || '—'}${nameNote ? ` <span class="cell-note" data-tooltip="${escAttr(nameNote)}">💬</span>` : ''}</td>`;
-    row += `<td>${c.org ? `<span class="portfolio-chip chip-addon">🏢 ${escAttr(c.org)}</span>` : '<span style="color:var(--text3)">—</span>'}</td>`;
-    keys.forEach(k => {
+
+    const cellByIdx = cols.map(col => {
+      if (col.key === 'name') {
+        const nameNote = c.cellNotes && c.cellNotes.name;
+        return `<td>${c.name || '—'}${nameNote ? ` <span class="cell-note" data-tooltip="${escAttr(nameNote)}">💬</span>` : ''}</td>`;
+      }
+      if (col.key === 'org') {
+        return `<td>${c.org ? `<span class="portfolio-chip chip-addon">🏢 ${escAttr(c.org)}</span>` : '<span style="color:var(--text3)">—</span>'}</td>`;
+      }
+      if (col.key === '__count') {
+        return `<td><span class="pc-badge pc-${Math.min(pc,6)}">${pc}</span></td>`;
+      }
+      const k = col.key;
       const note = c.cellNotes && c.cellNotes[k];
       const dotIcon = c[k]
         ? `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`
         : `<svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="9"/></svg>`;
-      row += `<td><span class="dot ${c[k] ? 'dot-yes' : 'dot-no'}">${dotIcon}</span>${note ? ` <span class="cell-note" data-tooltip="${escAttr(note)}">💬</span>` : ''}</td>`;
+      return `<td><span class="dot ${c[k] ? 'dot-yes' : 'dot-no'}">${dotIcon}</span>${note ? ` <span class="cell-note" data-tooltip="${escAttr(note)}">💬</span>` : ''}</td>`;
     });
-    row += `<td><span class="pc-badge pc-${Math.min(pc,6)}">${pc}</span></td></tr>`;
-    return row;
+
+    const orderedCells = order.map(i => cellByIdx[i]).join('');
+    return `<tr data-name="${(c.name||'').toLowerCase()}" data-count="${pc}" ${orgAttr} ${attrs}>${orderedCells}</tr>`;
   });
   tbody.innerHTML = rowsHtml.join('');
 
@@ -3238,8 +3383,34 @@ function rebuildAdSpendPage() {
   const addCard = document.getElementById('asAddCard');
   if (addCard) addCard.style.display = canEdit() ? '' : 'none';
 
+  rebuildAdSpendTableHeaders();
   rebuildAdSpendTable();
   rebuildHomePage();
+}
+
+const AD_SPEND_COLUMNS = [
+  { key: 'name', label: 'Business' },
+  { key: 'budget', label: 'Budget' },
+  { key: 'watermark', label: 'Watermark' },
+  { key: 'addons', label: 'Add-Ons' },
+  { key: 'startDate', label: 'Start Date' },
+  { key: 'promo', label: 'Promo Eligible' },
+  { key: 'recs', label: 'Recommendations' },
+  { key: 'actions', label: 'Actions' },
+];
+
+function rebuildAdSpendTableHeaders() {
+  const headRow = document.getElementById('asTableHead');
+  if (!headRow) return;
+  const tableId = 'adspend';
+  const order = getColumnOrder(tableId, AD_SPEND_COLUMNS.length);
+  const widths = getColumnWidths(tableId);
+  headRow.innerHTML = order.map(origIdx => {
+    const c = AD_SPEND_COLUMNS[origIdx];
+    const w = widths[origIdx];
+    return `<th draggable="true" data-orig-idx="${origIdx}" style="${w ? `width:${w}px;` : ''}">${escAttr(c.label)}<span class="col-resize-handle"></span></th>`;
+  }).join('');
+  makeColumnsInteractive(headRow, tableId, () => { rebuildAdSpendTableHeaders(); rebuildAdSpendTable(); });
 }
 
 function rebuildAdSpendTable() {
@@ -3250,8 +3421,11 @@ function rebuildAdSpendTable() {
     .filter(b => adSpendFilter === 'all' || b.promo === adSpendFilter)
     .filter(b => !q || b.name.toLowerCase().includes(q));
 
+  const tableId = 'adspend';
+  const order = getColumnOrder(tableId, AD_SPEND_COLUMNS.length);
+
   if (rows.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--text3)">${AD_SPEND_BUSINESSES.length === 0 ? 'No businesses yet — add one above.' : 'No matches.'}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="${AD_SPEND_COLUMNS.length}" style="text-align:center;padding:24px;color:var(--text3)">${AD_SPEND_BUSINESSES.length === 0 ? 'No businesses yet — add one above.' : 'No matches.'}</td></tr>`;
     return;
   }
 
@@ -3261,18 +3435,19 @@ function rebuildAdSpendTable() {
       : '<span style="color:var(--text3)">—</span>';
     const recsShort = b.recs ? (b.recs.length > 50 ? b.recs.slice(0, 50) + '…' : b.recs) : '—';
     const safeId = b.id;
-    return `<tr>
-      <td style="font-weight:600;color:var(--text)">${b.name}</td>
-      <td>${fmtMoney(b.budget)}</td>
-      <td>${fmtMoney(b.watermark)}</td>
-      <td>${addonsHtml}</td>
-      <td>${fmtDate(b.startDate)}</td>
-      <td><span class="promo-pill ${promoPillClass(b.promo)}">${b.promo}</span></td>
-      <td title="${(b.recs || '').replace(/"/g, '&quot;')}" style="color:var(--text2)">${recsShort}</td>
-      <td>${canEdit() ? `
+    const cellByIdx = [
+      `<td style="font-weight:600;color:var(--text)">${b.name}</td>`,
+      `<td>${fmtMoney(b.budget)}</td>`,
+      `<td>${fmtMoney(b.watermark)}</td>`,
+      `<td>${addonsHtml}</td>`,
+      `<td>${fmtDate(b.startDate)}</td>`,
+      `<td><span class="promo-pill ${promoPillClass(b.promo)}">${b.promo}</span></td>`,
+      `<td title="${(b.recs || '').replace(/"/g, '&quot;')}" style="color:var(--text2)">${recsShort}</td>`,
+      `<td>${canEdit() ? `
         <button class="row-action-btn" onclick="openEditAdSpendModal('${safeId}')">✏️</button>
-        <button class="row-action-btn danger" onclick="removeAdSpendBusiness('${safeId}')">🗑️</button>` : `<span style="font-size:11px;color:var(--text3)">View only</span>`}</td>
-    </tr>`;
+        <button class="row-action-btn danger" onclick="removeAdSpendBusiness('${safeId}')">🗑️</button>` : `<span style="font-size:11px;color:var(--text3)">View only</span>`}</td>`,
+    ];
+    return `<tr>${order.map(i => cellByIdx[i]).join('')}</tr>`;
   }).join('');
 }
 
@@ -3581,7 +3756,6 @@ function switchCollectionsType(type) {
   document.getElementById('col-total-lbl').textContent = isOutstanding ? 'Outstanding Accounts' : 'Failed Charges';
   document.getElementById('col-amount-lbl').textContent = isOutstanding ? 'Total Owed' : 'Total Failed Amount';
   document.getElementById('colDateLabel').textContent = isOutstanding ? 'Due Date' : 'Last Attempt';
-  document.getElementById('colDateHeader').textContent = isOutstanding ? 'Due Date' : 'Last Attempt';
   collectionsFilter = 'all';
   document.querySelectorAll('#colFilterPills .filter-pill').forEach((p,i) => p.classList.toggle('active', i===0));
   rebuildCollectionsPage();
@@ -3703,8 +3877,37 @@ function rebuildCollectionsPage() {
   const addCard = document.getElementById('colAddCard');
   if (addCard) addCard.style.display = canEdit() ? '' : 'none';
 
+  rebuildCollectionsTableHeaders();
   rebuildCollectionsTable();
   rebuildHomePage();
+}
+
+function getCollectionsColumns() {
+  const isOutstanding = activeCollectionsType === 'outstanding';
+  return [
+    { key: 'name', label: 'Business' },
+    { key: 'amount', label: 'Amount' },
+    { key: 'date', label: isOutstanding ? 'Due Date' : 'Last Attempt' },
+    { key: 'resolvedDate', label: 'Resolved Date' },
+    { key: 'status', label: 'Status' },
+    { key: 'note', label: 'Latest Note' },
+    { key: 'actions', label: 'Actions' },
+  ];
+}
+
+function rebuildCollectionsTableHeaders() {
+  const headRow = document.getElementById('colTableHead');
+  if (!headRow) return;
+  const tableId = 'collections';
+  const cols = getCollectionsColumns();
+  const order = getColumnOrder(tableId, cols.length);
+  const widths = getColumnWidths(tableId);
+  headRow.innerHTML = order.map(origIdx => {
+    const c = cols[origIdx];
+    const w = widths[origIdx];
+    return `<th draggable="true" data-orig-idx="${origIdx}" style="${w ? `width:${w}px;` : ''}">${escAttr(c.label)}<span class="col-resize-handle"></span></th>`;
+  }).join('');
+  makeColumnsInteractive(headRow, tableId, () => { rebuildCollectionsTableHeaders(); rebuildCollectionsTable(); });
 }
 
 function rebuildCollectionsTable() {
@@ -3716,9 +3919,13 @@ function rebuildCollectionsTable() {
     .filter(a => collectionsFilter === 'all' || a.status === collectionsFilter)
     .filter(a => !q || a.name.toLowerCase().includes(q));
 
+  const tableId = 'collections';
+  const cols = getCollectionsColumns();
+  const order = getColumnOrder(tableId, cols.length);
+
   if (rows.length === 0) {
     const totalForType = COLLECTIONS_ACCOUNTS.filter(a => a.type === activeCollectionsType).length;
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text3)">${totalForType === 0 ? 'No accounts yet — add one above or upload a list.' : 'No matches.'}</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="${cols.length}" style="text-align:center;padding:24px;color:var(--text3)">${totalForType === 0 ? 'No accounts yet — add one above or upload a list.' : 'No matches.'}</td></tr>`;
     return;
   }
 
@@ -3732,18 +3939,19 @@ function rebuildCollectionsTable() {
           ${COLLECTIONS_STATUSES.map(s => `<option value="${s.key}" ${s.key === a.status ? 'selected' : ''}>${s.label}</option>`).join('')}
         </select>`
       : `<span class="status-pill" style="background:${meta.bg};color:${meta.color}">${meta.label}</span>`;
-    return `<tr>
-      <td style="font-weight:600;color:var(--text)">${a.name}</td>
-      <td>${fmtMoney(a.amount)}</td>
-      <td>${fmtDate(a.date)}</td>
-      <td>${a.resolvedDate ? fmtDate(a.resolvedDate) : '<span style="color:var(--text3)">—</span>'}</td>
-      <td>${statusCell}</td>
-      <td title="${(latestNote || '').replace(/"/g,'&quot;')}" style="color:var(--text2)">${noteShort}</td>
-      <td>
+    const cellByIdx = [
+      `<td style="font-weight:600;color:var(--text)">${a.name}</td>`,
+      `<td>${fmtMoney(a.amount)}</td>`,
+      `<td>${fmtDate(a.date)}</td>`,
+      `<td>${a.resolvedDate ? fmtDate(a.resolvedDate) : '<span style="color:var(--text3)">—</span>'}</td>`,
+      `<td>${statusCell}</td>`,
+      `<td title="${(latestNote || '').replace(/"/g,'&quot;')}" style="color:var(--text2)">${noteShort}</td>`,
+      `<td>
         <button class="row-action-btn" onclick="openCollectionsNotesModal('${a.id}')">📝 ${a.notes ? a.notes.length : 0}</button>
         ${editable ? `<button class="row-action-btn danger" onclick="removeCollectionsAccount('${a.id}')">🗑️</button>` : ''}
-      </td>
-    </tr>`;
+      </td>`,
+    ];
+    return `<tr>${order.map(i => cellByIdx[i]).join('')}</tr>`;
   }).join('');
 }
 
