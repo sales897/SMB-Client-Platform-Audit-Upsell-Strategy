@@ -414,6 +414,34 @@ body {
   transition: all .15s; white-space: nowrap;
 }
 .reset-columns-btn:hover { border-color: var(--orange); color: var(--orange); }
+.export-csv-btn {
+  font-size: 10.5px; padding: 5px 11px; border-radius: 6px; cursor: pointer;
+  border: 1px solid var(--border); background: var(--bg3); color: var(--text2);
+  transition: all .15s; white-space: nowrap; font-weight: 700;
+}
+.export-csv-btn:hover { border-color: var(--green); color: var(--green); }
+
+/* ─── EMPTY STATES ─────────────────────────────────────────────────────────── */
+.empty-state {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 52px 24px; text-align: center; gap: 5px;
+}
+.empty-state-icon { font-size: 34px; margin-bottom: 8px; opacity: .75; }
+.empty-state-title { font-size: 14px; font-weight: 700; color: var(--text2); }
+.empty-state-sub { font-size: 12px; color: var(--text3); max-width: 360px; line-height: 1.55; }
+.empty-state-action { margin-top: 14px; }
+
+/* ─── SKELETON LOADING PLACEHOLDERS ────────────────────────────────────────── */
+.skeleton-row td { padding: 14px 12px !important; }
+.skeleton-bar {
+  height: 14px; border-radius: 5px;
+  background: linear-gradient(90deg, var(--bg3) 25%, var(--bg4) 50%, var(--bg3) 75%);
+  background-size: 200% 100%;
+  animation: skeletonShine 1.4s ease-in-out infinite;
+}
+@keyframes skeletonShine { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+.skeleton-kpi-val { height: 30px; width: 70px; border-radius: 6px; margin-bottom: 6px; }
+.skeleton-kpi-lbl { height: 11px; width: 100px; border-radius: 4px; }
 
 table { width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; }
 thead { position: sticky; top: 0; z-index: 2; }
@@ -597,6 +625,36 @@ tr.hidden-row { display: none; }
 .btn-primary:hover { background: var(--orange2); }
 .btn-ghost { background: var(--bg3); color: var(--text2); border: 1px solid var(--border); }
 .btn-ghost:hover { border-color: var(--orange); color: var(--orange); }
+.btn-danger { background: var(--red); color: white; }
+.btn-danger:hover { background: #d63a3a; }
+
+/* ─── TOAST NOTIFICATIONS ──────────────────────────────────────────────────── */
+.toast-container {
+  position: fixed; top: 20px; right: 20px; z-index: 3000;
+  display: flex; flex-direction: column; gap: 10px;
+  max-width: 380px; width: calc(100% - 40px);
+}
+.toast {
+  background: var(--bg2); border: 1px solid var(--border); border-left: 4px solid var(--text3);
+  border-radius: 10px; padding: 13px 14px; box-shadow: var(--shadow);
+  display: flex; align-items: flex-start; gap: 10px;
+  font-size: 13px; color: var(--text);
+  animation: toastIn .25s ease;
+}
+.toast.success { border-left-color: var(--green); }
+.toast.error { border-left-color: var(--red); }
+.toast.warning { border-left-color: var(--yellow); }
+.toast.info { border-left-color: var(--blue); }
+.toast .toast-icon { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+.toast .toast-msg { flex: 1; line-height: 1.5; white-space: pre-wrap; }
+.toast .toast-close { cursor: pointer; color: var(--text3); font-size: 13px; flex-shrink: 0; padding: 0 2px; }
+.toast .toast-close:hover { color: var(--text); }
+.toast.toast-out { animation: toastOut .18s ease forwards; }
+@keyframes toastIn { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes toastOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(24px); } }
+@media (max-width: 600px) {
+  .toast-container { top: auto; bottom: 16px; right: 16px; left: 16px; max-width: none; width: auto; }
+}
 .btn-sm { padding: 6px 12px; font-size: 11px; }
 .btn:disabled { opacity: .4; cursor: not-allowed; }
 .modal.wide { width: 820px; }
@@ -843,6 +901,21 @@ tr.hidden-row { display: none; }
 </aside>
 <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
+<!-- TOAST NOTIFICATIONS -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- GENERIC CONFIRM DIALOG -->
+<div class="modal-overlay" id="confirmDialogModal">
+  <div class="modal">
+    <h3 id="confirmDialogTitle">⚠️ Are you sure?</h3>
+    <p id="confirmDialogMessage" style="white-space:pre-wrap"></p>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" id="confirmDialogCancelBtn">Cancel</button>
+      <button class="btn btn-primary" id="confirmDialogConfirmBtn">Confirm</button>
+    </div>
+  </div>
+</div>
+
 <!-- MAIN -->
 <div class="main">
 
@@ -898,9 +971,10 @@ tr.hidden-row { display: none; }
           <button class="filter-pill" onclick="filterClientsByPortfolio('multi',this)">🔗 2+ Portfolios</button>
         </div>
         <span class="row-count" id="clientsRowCount">0 clients</span>
+        <button class="export-csv-btn" onclick="exportAllClientsTable()" title="Download the currently visible rows as a CSV file">⬇ Export CSV</button>
       </div>
       <div class="tbl-scroll" style="max-height:560px">
-        <table style="table-layout:auto">
+        <table style="table-layout:auto" id="allClientsTable">
           <thead><tr>
             <th style="text-align:left;padding-left:14px;width:24%">Client Name</th>
             <th style="width:30%">Portfolios</th>
@@ -922,7 +996,7 @@ tr.hidden-row { display: none; }
     <div class="home-greeting-sub" id="homeGreetingSub">Here's what's happening across the Hub today.</div>
 
     <div class="kpi-row">
-      <div class="kpi"><div class="kpi-icon">👥</div><div class="kpi-val orange" id="home-total-clients">0</div><div class="kpi-lbl">Total Clients</div><div class="kpi-sub">Across SMB, White Label, Support</div></div>
+      <div class="kpi"><div class="kpi-icon">👥</div><div class="kpi-val orange" id="home-total-clients">0</div><div class="kpi-lbl">Unique Clients</div><div class="kpi-sub">Across SMB, White Label, Support</div></div>
       <div class="kpi"><div class="kpi-icon">💰</div><div class="kpi-val" id="home-ad-budget">$0</div><div class="kpi-lbl">Total Ad Spend Budget</div></div>
       <div class="kpi"><div class="kpi-icon">🧾</div><div class="kpi-val" id="home-collections-owed">$0</div><div class="kpi-lbl">Outstanding + Card Fails</div></div>
       <div class="kpi"><div class="kpi-icon">⚠️</div><div class="kpi-val red" id="home-needs-attention">0</div><div class="kpi-lbl">Need Attention Today</div></div>
@@ -1045,6 +1119,7 @@ tr.hidden-row { display: none; }
         </div>
         <span class="row-count" id="rowCount-smb">0 clients</span>
         <button class="reset-columns-btn" onclick="resetColumnPrefs('client-smb'); rebuildPortfolio('smb')" title="Reset column order and widths back to default">↺ Columns</button>
+        <button class="export-csv-btn" onclick="exportClientTable('smb')" title="Download the currently visible rows as a CSV file">⬇ Export CSV</button>
       </div>
       <div class="tbl-scroll">
         <table class="resizable-table" id="clientTable-smb">
@@ -1152,6 +1227,7 @@ tr.hidden-row { display: none; }
         </div>
         <span class="row-count" id="rowCount-whitelabel">0 clients</span>
         <button class="reset-columns-btn" onclick="resetColumnPrefs('client-whitelabel'); rebuildPortfolio('whitelabel')" title="Reset column order and widths back to default">↺ Columns</button>
+        <button class="export-csv-btn" onclick="exportClientTable('whitelabel')" title="Download the currently visible rows as a CSV file">⬇ Export CSV</button>
       </div>
       <div class="tbl-scroll">
         <table class="resizable-table" id="clientTable-whitelabel">
@@ -1332,6 +1408,7 @@ tr.hidden-row { display: none; }
         </div>
         <span class="row-count" id="rowCount-support">0 clients</span>
         <button class="reset-columns-btn" onclick="resetColumnPrefs('client-support'); rebuildPortfolio('support')" title="Reset column order and widths back to default">↺ Columns</button>
+        <button class="export-csv-btn" onclick="exportClientTable('support')" title="Download the currently visible rows as a CSV file">⬇ Export CSV</button>
       </div>
       <div class="tbl-scroll">
         <table class="resizable-table" id="clientTable-support">
@@ -1504,6 +1581,7 @@ tr.hidden-row { display: none; }
           <button class="filter-pill" onclick="setAdSpendFilter('Already Using',this)">Already Using</button>
         </div>
         <button class="reset-columns-btn" onclick="resetColumnPrefs('adspend'); rebuildAdSpendPage()" title="Reset column order and widths back to default">↺ Columns</button>
+        <button class="export-csv-btn" onclick="exportAdSpendTable_()" title="Download the currently visible rows as a CSV file">⬇ Export CSV</button>
       </div>
       <div style="overflow-x:auto">
         <table class="resizable-table" id="adSpendTable">
@@ -1652,6 +1730,7 @@ tr.hidden-row { display: none; }
         <input type="text" class="search-box" id="colSearch" placeholder="Search accounts..." oninput="rebuildCollectionsTable()">
         <div style="display:flex;gap:6px;flex-wrap:wrap" id="colFilterPills"></div>
         <button class="reset-columns-btn" onclick="resetColumnPrefs('collections'); rebuildCollectionsPage()" title="Reset column order and widths back to default">↺ Columns</button>
+        <button class="export-csv-btn" onclick="exportCollectionsTable_()" title="Download the currently visible rows as a CSV file">⬇ Export CSV</button>
       </div>
       <div style="overflow-x:auto">
         <table class="resizable-table" id="collectionsTable">
@@ -2225,7 +2304,7 @@ function renderHomeGreeting() {
 }
 
 function renderHomeKPIs() {
-  const totalClients = ['smb', 'whitelabel', 'support'].reduce((n, pk) => n + getClients(pk).length, 0);
+  const totalClients = Object.keys(buildMergedClients()).length;
   const adBudget = AD_SPEND_BUSINESSES.reduce((s, b) => s + (b.budget || 0), 0);
   const collectionsOwed = COLLECTIONS_ACCOUNTS.reduce((s, a) => s + (a.amount || 0), 0);
   const needsAttention = COLLECTIONS_ACCOUNTS.filter(a => ['pending', 'inreview', 'escalated'].includes(a.status)).length
@@ -2275,7 +2354,7 @@ function renderHomeAttentionList() {
     .sort((a, b) => (b.amount || 0) - (a.amount || 0))
     .slice(0, 8);
   if (items.length === 0) {
-    wrap.innerHTML = `<div class="home-empty">✅ Nothing needs attention right now.</div>`;
+    wrap.innerHTML = emptyStateHTML({ icon: '✅', title: 'All caught up', sub: 'Nothing in Collections needs attention right now.' });
     return;
   }
   wrap.innerHTML = items.map(a => {
@@ -2302,7 +2381,7 @@ function renderHomeActivityList() {
   entries.sort((a, b) => new Date(b.ts) - new Date(a.ts));
   const top = entries.slice(0, 8);
   if (top.length === 0) {
-    wrap.innerHTML = `<div class="home-empty">No recent activity yet.</div>`;
+    wrap.innerHTML = emptyStateHTML({ icon: '🕒', title: 'No recent activity', sub: 'Notes and status changes across Collections will show up here.' });
     return;
   }
   wrap.innerHTML = top.map(n => `
@@ -2573,6 +2652,170 @@ function rebuildGapBar(pk) {
 function escAttr(s) { return String(s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
 
 // ════════════════════════════════════════════════════════════════════════
+// EMPTY STATES & SKELETON LOADING — shared components for a consistent,
+// polished "no data yet" and "still loading" experience across every table.
+// ════════════════════════════════════════════════════════════════════════
+function emptyStateHTML(opts = {}) {
+  const { icon = '📭', title = 'Nothing here yet', sub = '', actionLabel, actionOnClick } = opts;
+  return `<div class="empty-state">
+    <div class="empty-state-icon">${icon}</div>
+    <div class="empty-state-title">${escAttr(title)}</div>
+    ${sub ? `<div class="empty-state-sub">${escAttr(sub)}</div>` : ''}
+    ${actionLabel ? `<button class="btn btn-primary btn-sm empty-state-action" onclick="${actionOnClick}">${escAttr(actionLabel)}</button>` : ''}
+  </div>`;
+}
+function emptyStateRow(colspan, opts) {
+  return `<tr><td colspan="${colspan}" style="padding:0">${emptyStateHTML(opts)}</td></tr>`;
+}
+function skeletonRows(colspan, count = 5) {
+  let html = '';
+  for (let i = 0; i < count; i++) {
+    let cells = '';
+    for (let c = 0; c < colspan; c++) {
+      const w = 35 + Math.round(Math.random() * 45);
+      cells += `<td><div class="skeleton-bar" style="width:${w}%"></div></td>`;
+    }
+    html += `<tr class="skeleton-row">${cells}</tr>`;
+  }
+  return html;
+}
+function showInitialSkeletons() {
+  const specs = [
+    ['clientTableBody-smb', 13], ['clientTableBody-whitelabel', 13], ['clientTableBody-support', 13],
+    ['asTableBody', 8], ['colTableBody', 7], ['clientsDirectoryBody', 4],
+  ];
+  specs.forEach(([id, cols]) => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = skeletonRows(cols, 5);
+  });
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// TOAST NOTIFICATIONS & CONFIRM DIALOG — replaces native alert()/confirm()
+// ════════════════════════════════════════════════════════════════════════
+const TOAST_ICONS = { success: '✅', error: '⚠️', warning: '⚠️', info: 'ℹ️' };
+
+function showToast(message, type = 'info', duration = 5000) {
+  const container = document.getElementById('toastContainer');
+  if (!container) { console.warn('Toast:', message); return; }
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  const icon = document.createElement('span');
+  icon.className = 'toast-icon';
+  icon.textContent = TOAST_ICONS[type] || TOAST_ICONS.info;
+  const msg = document.createElement('span');
+  msg.className = 'toast-msg';
+  msg.textContent = message;
+  const close = document.createElement('span');
+  close.className = 'toast-close';
+  close.textContent = '✕';
+  el.appendChild(icon); el.appendChild(msg); el.appendChild(close);
+
+  const remove = () => { el.classList.add('toast-out'); setTimeout(() => el.remove(), 180); };
+  close.addEventListener('click', remove);
+  container.appendChild(el);
+  if (duration > 0) setTimeout(remove, duration);
+  return el;
+}
+
+// Promise-based replacement for window.confirm(). Usage: if (!(await showConfirmDialog('...'))) return;
+function showConfirmDialog(message, opts = {}) {
+  return new Promise((resolve) => {
+    const modal = document.getElementById('confirmDialogModal');
+    const titleEl = document.getElementById('confirmDialogTitle');
+    const msgEl = document.getElementById('confirmDialogMessage');
+    const confirmBtn = document.getElementById('confirmDialogConfirmBtn');
+    const cancelBtn = document.getElementById('confirmDialogCancelBtn');
+    titleEl.textContent = opts.title || (opts.danger ? '⚠️ Confirm removal' : '⚠️ Are you sure?');
+    msgEl.textContent = message;
+    confirmBtn.textContent = opts.confirmLabel || (opts.danger ? 'Remove' : 'Confirm');
+    confirmBtn.className = 'btn ' + (opts.danger ? 'btn-danger' : 'btn-primary');
+    modal.classList.add('open');
+
+    function cleanup(result) {
+      modal.classList.remove('open');
+      confirmBtn.removeEventListener('click', onConfirm);
+      cancelBtn.removeEventListener('click', onCancel);
+      resolve(result);
+    }
+    function onConfirm() { cleanup(true); }
+    function onCancel() { cleanup(false); }
+    confirmBtn.addEventListener('click', onConfirm);
+    cancelBtn.addEventListener('click', onCancel);
+  });
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// CSV EXPORT — generic, reads directly from the rendered table so it
+// automatically respects whatever's currently visible: search, filters,
+// and (for tables with resizable/reorderable columns) the current column order.
+// ════════════════════════════════════════════════════════════════════════
+function downloadCSV(filename, headers, rows) {
+  const escapeCsv = (val) => {
+    const s = String(val ?? '');
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  };
+  const lines = [headers.map(escapeCsv).join(',')];
+  rows.forEach(row => lines.push(row.map(escapeCsv).join(',')));
+  const csv = lines.join('\r\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' }); // BOM so Excel reads UTF-8 correctly
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function headerToExportText(th) {
+  const clone = th.cloneNode(true);
+  clone.querySelectorAll('.col-resize-handle').forEach(el => el.remove());
+  return clone.textContent.trim().replace(/\s+/g, ' ');
+}
+
+function cellToExportText(td) {
+  const select = td.querySelector('select');
+  if (select) return (select.options[select.selectedIndex] || {}).text?.trim() || '';
+  const dot = td.querySelector('.dot');
+  if (dot) return dot.classList.contains('dot-yes') ? 'Yes' : 'No';
+  const clone = td.cloneNode(true);
+  clone.querySelectorAll('button, .cell-note, .col-resize-handle').forEach(el => el.remove());
+  return clone.textContent.trim().replace(/\s+/g, ' ');
+}
+
+// Exports exactly what's currently visible in the table — hidden/filtered-out
+// rows are skipped, and columns export in whatever order they're currently in.
+function exportTableToCSV(tableEl, filename) {
+  if (!tableEl) { showToast('Nothing to export.', 'warning'); return; }
+  const headers = Array.from(tableEl.querySelectorAll('thead th')).map(headerToExportText);
+  const bodyRows = Array.from(tableEl.querySelectorAll('tbody tr')).filter(tr =>
+    !tr.classList.contains('hidden-row') && getComputedStyle(tr).display !== 'none'
+  );
+  if (bodyRows.length === 0) { showToast('No visible rows to export.', 'warning'); return; }
+  const rows = bodyRows.map(tr => Array.from(tr.children).map(cellToExportText));
+  downloadCSV(filename, headers, rows);
+  showToast(`Exported ${rows.length} row${rows.length === 1 ? '' : 's'} to ${filename}`, 'success');
+}
+
+function csvDateStamp() { return new Date().toISOString().slice(0, 10); }
+
+function exportClientTable(pk) {
+  exportTableToCSV(document.getElementById('clientTable-' + pk), `${PORTFOLIOS[pk].name.replace(/\s+/g,'_')}_Clients_${csvDateStamp()}.csv`);
+}
+function exportAllClientsTable() {
+  exportTableToCSV(document.getElementById('allClientsTable'), `All_Clients_${csvDateStamp()}.csv`);
+}
+function exportAdSpendTable_() {
+  exportTableToCSV(document.getElementById('adSpendTable'), `Ad_Spend_Management_${csvDateStamp()}.csv`);
+}
+function exportCollectionsTable_() {
+  const typeLabel = activeCollectionsType === 'outstanding' ? 'Outstanding' : 'CardFails';
+  exportTableToCSV(document.getElementById('collectionsTable'), `Collections_${typeLabel}_${csvDateStamp()}.csv`);
+}
+
+// ════════════════════════════════════════════════════════════════════════
 // RESIZABLE / REORDERABLE COLUMNS — generic, reusable across any data table.
 // Column order and widths persist per-browser (localStorage), keyed by a
 // stable tableId string unique to each table.
@@ -2711,7 +2954,11 @@ function rebuildClientTable(pk) {
     const orderedCells = order.map(i => cellByIdx[i]).join('');
     return `<tr data-name="${(c.name||'').toLowerCase()}" data-count="${pc}" ${orgAttr} ${attrs}>${orderedCells}</tr>`;
   });
-  tbody.innerHTML = rowsHtml.join('');
+  tbody.innerHTML = rowsHtml.length > 0 ? rowsHtml.join('') : emptyStateRow(cols.length, {
+    icon: '📋',
+    title: `No clients in ${PORTFOLIOS[pk].name} yet`,
+    sub: canEdit() ? 'Upload a spreadsheet or connect a Google Sheet using the buttons in the top right to get started.' : 'Ask an Admin or Super user to upload client data for this dashboard.',
+  });
 
   rebuildOrgFilter(pk);
 
@@ -3072,7 +3319,7 @@ function requirePermission(kind) {
   const need = kind === 'admin' ? 'admin' : kind === 'edit' || kind === 'upload' ? 'superuser' : 'user';
   if (hasRole(need)) return true;
   const label = need === 'admin' ? 'an Admin' : 'a Super user or Admin';
-  alert(`🔒 You need to be ${label} to do that.\n\nCurrently signed in as: ${(getCurrentUser()||{}).name || 'Guest'} (${(getCurrentUser()||{}).role || 'user'}).\nSwitch users from the badge in the top bar, or ask an Admin to change your role under Team & Permissions.`);
+  showToast(`🔒 You need to be ${label} to do that. Currently signed in as ${(getCurrentUser()||{}).name || 'Guest'} (${(getCurrentUser()||{}).role || 'user'}). Switch users from the badge in the top bar.`, 'warning');
   return false;
 }
 
@@ -3150,7 +3397,7 @@ function addTeamMember() {
   const emailEl = document.getElementById('newMemberEmail');
   const roleEl = document.getElementById('newMemberRole');
   const name = nameEl.value.trim();
-  if (!name) { alert('Please enter a name.'); nameEl.focus(); return; }
+  if (!name) { showToast('Please enter a name.', 'warning'); nameEl.focus(); return; }
   const member = { id: (crypto.randomUUID ? crypto.randomUUID() : 'm_' + Date.now()), name, email: emailEl.value.trim(), role: roleEl.value };
   TEAM_MEMBERS.push(member);
   persistTeamMember(member);
@@ -3173,7 +3420,7 @@ async function removeTeamMember(id) {
   if (!requirePermission('admin')) return;
   const m = TEAM_MEMBERS.find(x => x.id === id);
   if (!m) return;
-  if (!confirm(`Remove ${m.name} from the team?`)) return;
+  if (!(await showConfirmDialog(`Remove ${m.name} from the team?`, { danger: true, confirmLabel: 'Remove' }))) return;
   TEAM_MEMBERS = TEAM_MEMBERS.filter(x => x.id !== id);
   localStorage.setItem(TEAM_CACHE_KEY, JSON.stringify(TEAM_MEMBERS));
   try { await sbDelete('team_members', `id=eq.${id}`); } catch(e) {}
@@ -3186,7 +3433,7 @@ function renderTeamUI() {
   if (countSub) countSub.textContent = `${TEAM_MEMBERS.length} ${TEAM_MEMBERS.length === 1 ? 'person' : 'people'}`;
   if (list) {
     list.innerHTML = TEAM_MEMBERS.length === 0
-      ? `<div style="font-size:12px;color:var(--text3);padding:12px">No team members yet — add one above.</div>`
+      ? emptyStateHTML({ icon: '🧑‍🤝‍🧑', title: 'No team members yet', sub: 'Add your first teammate above to start assigning roles.' })
       : TEAM_MEMBERS.map(m => `
         <div class="team-row">
           <span class="user-avatar">${initials(m.name)}</span>
@@ -3222,7 +3469,7 @@ function becomeFirstAdmin() {
   const nameEl = document.getElementById('firstRunName');
   const emailEl = document.getElementById('firstRunEmail');
   const name = nameEl.value.trim();
-  if (!name) { alert('Please enter your name.'); nameEl.focus(); return; }
+  if (!name) { showToast('Please enter your name.', 'warning'); nameEl.focus(); return; }
   const member = { id: (crypto.randomUUID ? crypto.randomUUID() : 'm_' + Date.now()), name, email: emailEl.value.trim(), role: 'admin' };
   TEAM_MEMBERS.push(member);
   persistTeamMember(member);
@@ -3294,7 +3541,7 @@ function addAdSpendBusiness() {
   if (!requirePermission('edit')) return;
   const nameEl = document.getElementById('asName');
   const name = nameEl.value.trim();
-  if (!name) { alert('Please enter a business name.'); nameEl.focus(); return; }
+  if (!name) { showToast('Please enter a business name.', 'warning'); nameEl.focus(); return; }
   const b = {
     id: (crypto.randomUUID ? crypto.randomUUID() : 'b_' + Date.now()),
     name,
@@ -3336,7 +3583,7 @@ function saveAdSpendEdit() {
   if (!b) return;
   const nameEl = document.getElementById('asEditName');
   const name = nameEl.value.trim();
-  if (!name) { alert('Please enter a business name.'); nameEl.focus(); return; }
+  if (!name) { showToast('Please enter a business name.', 'warning'); nameEl.focus(); return; }
   b.name = name;
   b.budget = Number(document.getElementById('asEditBudget').value) || 0;
   b.watermark = Number(document.getElementById('asEditWatermark').value) || 0;
@@ -3353,7 +3600,7 @@ async function removeAdSpendBusiness(id) {
   if (!requirePermission('edit')) return;
   const b = AD_SPEND_BUSINESSES.find(x => x.id === id);
   if (!b) return;
-  if (!confirm(`Remove "${b.name}" from Ad Spend Management?`)) return;
+  if (!(await showConfirmDialog(`Remove "${b.name}" from Ad Spend Management?`, { danger: true, confirmLabel: 'Remove' }))) return;
   AD_SPEND_BUSINESSES = AD_SPEND_BUSINESSES.filter(x => x.id !== id);
   localStorage.setItem(ADSPEND_CACHE_KEY, JSON.stringify(AD_SPEND_BUSINESSES));
   try { await sbDelete('ad_spend_businesses', `id=eq.${id}`); } catch(e) {}
@@ -3431,7 +3678,17 @@ function rebuildAdSpendTable() {
   const order = getColumnOrder(tableId, AD_SPEND_COLUMNS.length);
 
   if (rows.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="${AD_SPEND_COLUMNS.length}" style="text-align:center;padding:24px;color:var(--text3)">${AD_SPEND_BUSINESSES.length === 0 ? 'No businesses yet — add one above.' : 'No matches.'}</td></tr>`;
+    tbody.innerHTML = AD_SPEND_BUSINESSES.length === 0
+      ? emptyStateRow(AD_SPEND_COLUMNS.length, {
+          icon: '💰',
+          title: 'No businesses tracked yet',
+          sub: canEdit() ? 'Add a business above, or upload a spreadsheet to bring in a whole list at once.' : 'Ask an Admin or Super user to add businesses here.',
+        })
+      : emptyStateRow(AD_SPEND_COLUMNS.length, {
+          icon: '🔍',
+          title: 'No matches',
+          sub: 'Try a different search term or filter.',
+        });
     return;
   }
 
@@ -3481,7 +3738,7 @@ function handleAdSpendFileUpload(e) {
       startAdSpendImport(rows, file.name, inputEl);
     } catch (err) {
       showUploadFeedback('Upload failed: ' + err.message, true);
-      alert('⚠️ Could not process file: ' + err.message);
+      showToast('Could not process file: ' + err.message, 'error');
       inputEl.value = '';
     }
   };
@@ -3771,7 +4028,7 @@ function addCollectionsAccount() {
   if (!requirePermission('edit')) return;
   const nameEl = document.getElementById('colName');
   const name = nameEl.value.trim();
-  if (!name) { alert('Please enter a business name.'); nameEl.focus(); return; }
+  if (!name) { showToast('Please enter a business name.', 'warning'); nameEl.focus(); return; }
   const a = {
     id: (crypto.randomUUID ? crypto.randomUUID() : 'c_' + Date.now()),
     type: activeCollectionsType, name,
@@ -3805,7 +4062,7 @@ async function removeCollectionsAccount(id) {
   if (!requirePermission('edit')) return;
   const a = COLLECTIONS_ACCOUNTS.find(x => x.id === id);
   if (!a) return;
-  if (!confirm(`Remove "${a.name}" from Collections?`)) return;
+  if (!(await showConfirmDialog(`Remove "${a.name}" from Collections?`, { danger: true, confirmLabel: 'Remove' }))) return;
   COLLECTIONS_ACCOUNTS = COLLECTIONS_ACCOUNTS.filter(x => x.id !== id);
   localStorage.setItem(COLLECTIONS_CACHE_KEY, JSON.stringify(COLLECTIONS_ACCOUNTS));
   try { await sbDelete('collections_accounts', `id=eq.${id}`); } catch(e) {}
@@ -3931,7 +4188,18 @@ function rebuildCollectionsTable() {
 
   if (rows.length === 0) {
     const totalForType = COLLECTIONS_ACCOUNTS.filter(a => a.type === activeCollectionsType).length;
-    tbody.innerHTML = `<tr><td colspan="${cols.length}" style="text-align:center;padding:24px;color:var(--text3)">${totalForType === 0 ? 'No accounts yet — add one above or upload a list.' : 'No matches.'}</td></tr>`;
+    const typeLabel = activeCollectionsType === 'outstanding' ? 'outstanding balances' : 'card fails';
+    tbody.innerHTML = totalForType === 0
+      ? emptyStateRow(cols.length, {
+          icon: '📋',
+          title: `No ${typeLabel} yet`,
+          sub: canEdit() ? 'Add an account above, or upload a list to bring in several at once.' : 'Ask an Admin or Super user to add accounts here.',
+        })
+      : emptyStateRow(cols.length, {
+          icon: '🔍',
+          title: 'No matches',
+          sub: 'Try a different search term or status filter.',
+        });
     return;
   }
 
@@ -3986,7 +4254,7 @@ function handleCollectionsFileUpload(e) {
       startCollectionsImport(rows, file.name, type, inputEl);
     } catch (err) {
       showUploadFeedback('Upload failed: ' + err.message, true);
-      alert('⚠️ Could not process file: ' + err.message);
+      showToast('Could not process file: ' + err.message, 'error');
       inputEl.value = '';
     }
   };
@@ -4447,7 +4715,7 @@ function handleFileUpload(e) {
       startImportWizard(rows, file.name, pk, inputEl, rowComments);
     } catch (err) {
       showUploadFeedback('Upload failed: ' + err.message, true);
-      alert('⚠️ Could not process file: ' + err.message);
+      showToast('Could not process file: ' + err.message, 'error');
       inputEl.value = '';
     }
   };
@@ -4775,7 +5043,7 @@ async function autoRefreshSheets() {
 
 // Add a "Clear saved data" button utility (exposed globally for easy access from console or a UI button)
 async function clearAllSavedData() {
-  if (!confirm('This will clear ALL client data from Supabase for everyone. Are you sure?')) return;
+  if (!(await showConfirmDialog('This will clear ALL client data from Supabase for everyone. Are you sure?', { danger: true, confirmLabel: 'Clear Everything' }))) return;
   try {
     await Promise.all([
       sbDelete('portfolio_clients', 'portfolio=in.(smb,whitelabel,support)'),
@@ -4794,7 +5062,7 @@ async function clearAllSavedData() {
   });
   rebuildAll();
   updateDataSourcePill();
-  alert('✅ All data cleared from Supabase. Showing sample data.');
+  showToast('All data cleared from Supabase. Showing sample data.', 'success');
 }
 
 async function openSheetsModal() {
@@ -4835,12 +5103,12 @@ function addProduct() {
   const descEl = document.getElementById('newProductDesc');
 
   const label = nameEl.value.trim();
-  if (!label) { alert('Please enter a product name.'); nameEl.focus(); return; }
+  if (!label) { showToast('Please enter a product name.', 'warning'); nameEl.focus(); return; }
 
   const key = slugify(label);
-  if (!key) { alert('Please enter a valid product name.'); return; }
+  if (!key) { showToast('Please enter a valid product name.', 'warning'); return; }
   if (getCatalog(pk).find(p => p.key === key)) {
-    alert(`"${label}" already exists in the ${PORTFOLIOS[pk].name} catalog.`);
+    showToast(`"${label}" already exists in the ${PORTFOLIOS[pk].name} catalog.`, 'warning');
     return;
   }
 
@@ -4996,7 +5264,11 @@ function rebuildClientsDirectory() {
         <button class="row-action-btn" onclick="openEditClientModal('${safe}')">✏️ Edit</button>
         <button class="row-action-btn danger" onclick="openDeleteClientModal('${safe}')">🗑️ Remove</button>` : `<span style="font-size:11px;color:var(--text3)">View only</span>`}</td></tr>`;
   });
-  tbody.innerHTML = rowsHtml.join('');
+  tbody.innerHTML = rowsHtml.length > 0 ? rowsHtml.join('') : emptyStateRow(4, {
+    icon: '👥',
+    title: 'No clients yet',
+    sub: 'Once clients are uploaded to any portfolio, they\'ll show up here in one unified directory.',
+  });
   filterClientsDirectory();
 }
 
@@ -5123,27 +5395,13 @@ async function autoRefreshSheets(urls) {
   showUploadFeedback(anyFailed ? 'Sheets refresh: some failed' : `Google Sheets · ${portfolios.map(pk => PORTFOLIOS[pk].name).join(', ')} · live`, anyFailed);
 }
 
-async function clearAllSavedData() {
-  if (!confirm('This will clear ALL client data from Supabase for everyone. Are you sure?')) return;
-  try {
-    await sbDelete('portfolio_clients', 'id=neq.00000000-0000-0000-0000-000000000000');
-    await sbDelete('sheets_connections', 'portfolio=in.(smb,whitelabel,support)');
-  } catch(e) { console.warn('Supabase clear failed:', e); }
-  localStorage.removeItem(STORAGE_KEY);
-  localStorage.removeItem(SHEETS_KEY);
-  ['smb','whitelabel','support'].forEach(pk => {
-    PORTFOLIOS[pk].clients = JSON.parse(JSON.stringify(pk==='smb'?SMB_SAMPLE_CLIENTS:pk==='whitelabel'?WL_SAMPLE_CLIENTS:SUPPORT_SAMPLE_CLIENTS));
-    PORTFOLIOS[pk].catalog = JSON.parse(JSON.stringify(pk==='smb'?SMB_CATALOG:pk==='whitelabel'?WL_CATALOG:SUPPORT_CATALOG));
-  });
-  rebuildAll();
-  updateDataSourcePill();
-  alert('✅ All data cleared. Showing sample data.');
-}
-
 // ════════════════════════════════════════════════════════════════════════
 // BOOT — Supabase first, localStorage cache fallback, then sample data
 // ════════════════════════════════════════════════════════════════════════
 (async function init() {
+  // Show skeleton placeholders immediately, before anything else runs
+  showInitialSkeletons();
+
   // Apply saved theme before anything renders, so charts draw with correct colors from the start
   applyTheme(getSavedTheme(), false);
 
