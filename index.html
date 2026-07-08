@@ -2848,9 +2848,20 @@ const SB_HEADERS = {
 
 // Supabase REST API helpers
 async function sbSelect(table, params = '') {
-  const res = await fetch(`${API}/${table}?${params}`, { headers: SB_HEADERS });
-  if (!res.ok) throw new Error(`Supabase GET ${table} failed: ${res.status}`);
-  return res.json();
+  const pageSize = 1000;
+  let offset = 0;
+  let allRows = [];
+  while (true) {
+    const sep = params ? '&' : '';
+    const url = `${API}/${table}?${params}${sep}limit=${pageSize}&offset=${offset}`;
+    const res = await fetch(url, { headers: SB_HEADERS });
+    if (!res.ok) throw new Error(`Supabase GET ${table} failed: ${res.status}`);
+    const page = await res.json();
+    allRows = allRows.concat(page);
+    if (page.length < pageSize) break; // last page was partial (or empty) — we're done
+    offset += pageSize;
+  }
+  return allRows;
 }
 
 async function sbUpsert(table, data) {
