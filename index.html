@@ -655,6 +655,24 @@ tr.hidden-row { display: none; }
   margin-bottom: 8px; transition: border-color .2s;
 }
 .support-item:hover { border-color: var(--orange); }
+.home-greeting { font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 4px; }
+.home-greeting-sub { font-size: 13px; color: var(--text3); margin-bottom: 24px; }
+.quick-links-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; }
+.quick-link-card {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
+  padding: 18px; cursor: pointer; transition: border-color .2s, transform .15s;
+  position: relative;
+}
+.quick-link-card:hover { border-color: var(--orange); transform: translateY(-2px); }
+.quick-link-icon { font-size: 22px; margin-bottom: 10px; }
+.quick-link-label { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.quick-link-count { font-size: 24px; font-weight: 800; color: var(--orange); }
+.quick-link-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+.quick-link-flag {
+  position: absolute; top: 14px; right: 14px; background: var(--red); color: #fff;
+  font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 10px;
+}
+.home-empty { padding: 24px; text-align: center; font-size: 12px; color: var(--text3); }
 .support-avatar {
   width: 36px; height: 36px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
@@ -715,12 +733,18 @@ tr.hidden-row { display: none; }
 
   <nav class="sidebar-nav">
   <div class="nav-section">
+    <div class="nav-item active" onclick="showPage('home')" style="font-weight:700">
+      <span class="icon">🏠</span> Home
+    </div>
+  </div>
+
+  <div class="nav-section">
     <div class="nav-label">Overview</div>
     <div class="nav-item" onclick="showPage('clients')">
       <span class="icon">👥</span> All Clients
       <span class="badge" id="navClientsBadge">0</span>
     </div>
-    <div class="nav-item active" onclick="showPage('smb')">
+    <div class="nav-item" onclick="showPage('smb')">
       <span class="icon">📊</span> SMB Dashboard
       <span class="badge" id="navSmbBadge">63</span>
     </div>
@@ -796,8 +820,8 @@ tr.hidden-row { display: none; }
   <div class="topbar">
     <button class="hamburger" onclick="toggleSidebar()">☰</button>
     <div>
-      <div class="topbar-title" id="topbarTitle">SMB Dashboard</div>
-      <div class="topbar-sub" id="topbarSub">Platform audit · 63 active clients</div>
+      <div class="topbar-title" id="topbarTitle">Home</div>
+      <div class="topbar-sub" id="topbarSub">Your daily snapshot across the Hub</div>
     </div>
     <div class="topbar-right">
       <div class="data-source-pill" id="dataSourcePill">
@@ -810,11 +834,11 @@ tr.hidden-row { display: none; }
         <span id="userBadgeName">Guest</span>
         <span class="role-pill user" id="userBadgeRole">User</span>
       </div>
-      <label class="upload-btn" id="uploadBtnLabel" title="Uploads into the currently open dashboard">
+      <label class="upload-btn" id="uploadBtnLabel" title="Uploads into the currently open dashboard" style="display:none">
         📁 Upload File
         <input type="file" id="fileUpload" accept=".xlsx,.xls,.csv" onchange="handleFileUpload(event)">
       </label>
-      <button class="sheets-btn" id="sheetsConnectTopBtn" onclick="openSheetsModal()" title="Connects a sheet into the currently open dashboard">
+      <button class="sheets-btn" id="sheetsConnectTopBtn" onclick="openSheetsModal()" title="Connects a sheet into the currently open dashboard" style="display:none">
         📋 Connect Sheets
       </button>
     </div>
@@ -862,9 +886,47 @@ tr.hidden-row { display: none; }
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════════
+       PAGE 0: HOME — daily overview & quick access (default landing page)
+  ════════════════════════════════════════════════════════════════════════ -->
+  <div class="page active" id="page-home">
+    <div class="home-greeting" id="homeGreeting">Good morning 👋</div>
+    <div class="home-greeting-sub" id="homeGreetingSub">Here's what's happening across the Hub today.</div>
+
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-icon">👥</div><div class="kpi-val orange" id="home-total-clients">0</div><div class="kpi-lbl">Total Clients</div><div class="kpi-sub">Across SMB, White Label, Support</div></div>
+      <div class="kpi"><div class="kpi-icon">💰</div><div class="kpi-val" id="home-ad-budget">$0</div><div class="kpi-lbl">Total Ad Spend Budget</div></div>
+      <div class="kpi"><div class="kpi-icon">🧾</div><div class="kpi-val" id="home-collections-owed">$0</div><div class="kpi-lbl">Outstanding + Card Fails</div></div>
+      <div class="kpi"><div class="kpi-icon">⚠️</div><div class="kpi-val red" id="home-needs-attention">0</div><div class="kpi-lbl">Need Attention Today</div></div>
+    </div>
+
+    <div class="section-hd" style="margin-top:8px"><div class="section-num">1</div><h2>Quick Access</h2></div>
+    <div class="section-div"></div>
+    <div class="quick-links-grid" id="homeQuickLinks" style="margin-bottom:28px"></div>
+
+    <div class="section-hd"><div class="section-num">2</div><h2>Today's Focus</h2></div>
+    <div class="section-div"></div>
+    <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:20px;align-items:start">
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">⚠️ Needs Attention</div><div class="card-sub">Collections accounts that are pending, in review, or escalated</div></div>
+        </div>
+        <div id="homeAttentionList"></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">🕒 Recent Activity</div><div class="card-sub">Latest notes and status changes across Collections</div></div>
+        </div>
+        <div id="homeActivityList"></div>
+      </div>
+    </div>
+
+    <div class="page-footer">Client Success Hub · Niche Inc. · Home</div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
        PAGE 1: SMB CLIENTS
   ════════════════════════════════════════════════════════════════════════ -->
-  <div class="page active" id="page-smb">
+  <div class="page" id="page-smb">
 
     <!-- KPIs -->
     <div class="kpi-row">
@@ -1814,6 +1876,7 @@ tr.hidden-row { display: none; }
 // NAVIGATION
 // ════════════════════════════════════════════════════════════════════════
 const pageMeta = {
+  home:       { title: 'Home',                 sub: 'Your daily snapshot across the Hub' },
   clients:    { title: 'All Clients',          sub: 'Unified directory across every portfolio' },
   smb:        { title: 'SMB Dashboard',       sub: 'Platform audit · 63 active clients' },
   whitelabel: { title: 'White Label',          sub: 'Partner accounts' },
@@ -1855,6 +1918,8 @@ function showPage(id) {
     const cleanBtn = document.getElementById('cleanSampleBtn');
     if (cleanBtn) cleanBtn.style.display = 'none';
   }
+
+  if (id === 'home') rebuildHomePage();
 
   closeSidebar();
 }
@@ -2044,7 +2109,9 @@ function countSampleNamesPresent(pk) {
 function updateCleanSampleButton() {
   const btn = document.getElementById('cleanSampleBtn');
   if (!btn) return;
-  if (!['smb', 'whitelabel', 'support'].includes(activePortfolio)) { btn.style.display = 'none'; return; }
+  const pageEl = document.getElementById('page-' + activePortfolio);
+  const isCurrentlyViewingPortfolio = ['smb', 'whitelabel', 'support'].includes(activePortfolio) && pageEl && pageEl.classList.contains('active');
+  if (!isCurrentlyViewingPortfolio) { btn.style.display = 'none'; return; }
   const n = countSampleNamesPresent(activePortfolio);
   if (n > 0 && canEdit()) {
     btn.textContent = `🧹 Remove ${n} Sample Client${n === 1 ? '' : 's'}`;
@@ -2163,6 +2230,117 @@ function rebuildAll() {
   rebuildUpsellCards();   // SMB-only report page
   rebuildActionPlan();    // static 90-day execution guide
   rebuildProductCatalogPage(); // Manage Products page (uses activeManagePortfolio)
+  rebuildHomePage();
+}
+
+// ─── HOME — daily overview & quick access ────────────────────────────────────
+function rebuildHomePage() {
+  if (!document.getElementById('page-home')) return;
+  renderHomeGreeting();
+  renderHomeKPIs();
+  renderHomeQuickLinks();
+  renderHomeAttentionList();
+  renderHomeActivityList();
+}
+
+function renderHomeGreeting() {
+  const user = getCurrentUser();
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+  const name = user && user.name && user.name !== 'Guest' ? `, ${user.name.split(' ')[0]}` : '';
+  const el = document.getElementById('homeGreeting');
+  if (el) el.textContent = `${greeting}${name} 👋`;
+}
+
+function renderHomeKPIs() {
+  const totalClients = ['smb', 'whitelabel', 'support'].reduce((n, pk) => n + getClients(pk).length, 0);
+  const adBudget = AD_SPEND_BUSINESSES.reduce((s, b) => s + (b.budget || 0), 0);
+  const collectionsOwed = COLLECTIONS_ACCOUNTS.reduce((s, a) => s + (a.amount || 0), 0);
+  const needsAttention = COLLECTIONS_ACCOUNTS.filter(a => ['pending', 'inreview', 'escalated'].includes(a.status)).length
+    + AD_SPEND_BUSINESSES.filter(b => b.promo === 'Yes').length;
+
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  set('home-total-clients', totalClients);
+  set('home-ad-budget', fmtMoney(adBudget));
+  set('home-collections-owed', fmtMoney(collectionsOwed));
+  set('home-needs-attention', needsAttention);
+}
+
+function renderHomeQuickLinks() {
+  const wrap = document.getElementById('homeQuickLinks');
+  if (!wrap) return;
+  const smbCt = getClients('smb').length;
+  const wlCt = getClients('whitelabel').length;
+  const supCt = getClients('support').length;
+  const adCt = AD_SPEND_BUSINESSES.length;
+  const adFlag = AD_SPEND_BUSINESSES.filter(b => b.promo === 'Yes').length;
+  const colCt = COLLECTIONS_ACCOUNTS.length;
+  const colFlag = COLLECTIONS_ACCOUNTS.filter(a => ['pending', 'inreview', 'escalated'].includes(a.status)).length;
+
+  const cards = [
+    { id: 'smb', icon: '📊', label: 'SMB Dashboard', count: smbCt, sub: `${smbCt} client${smbCt === 1 ? '' : 's'}`, flag: 0 },
+    { id: 'whitelabel', icon: '🏷️', label: 'White Label', count: wlCt, sub: `${wlCt} client${wlCt === 1 ? '' : 's'}`, flag: 0 },
+    { id: 'support', icon: '📊', label: 'Support Dashboard', count: supCt, sub: `${supCt} client${supCt === 1 ? '' : 's'}`, flag: 0 },
+    { id: 'adspend', icon: '💰', label: 'Ad Spend Management', count: adCt, sub: `${adCt} business${adCt === 1 ? '' : 'es'}`, flag: adFlag },
+    { id: 'collections', icon: '📋', label: 'Collections', count: colCt, sub: `${colCt} account${colCt === 1 ? '' : 's'}`, flag: colFlag },
+  ];
+
+  wrap.innerHTML = cards.map(c => `
+    <div class="quick-link-card" onclick="showPage('${c.id}')">
+      ${c.flag > 0 ? `<span class="quick-link-flag">${c.flag}</span>` : ''}
+      <div class="quick-link-icon">${c.icon}</div>
+      <div class="quick-link-label">${c.label}</div>
+      <div class="quick-link-count">${c.count}</div>
+      <div class="quick-link-sub">${c.sub}</div>
+    </div>`).join('');
+}
+
+function renderHomeAttentionList() {
+  const wrap = document.getElementById('homeAttentionList');
+  if (!wrap) return;
+  const items = COLLECTIONS_ACCOUNTS
+    .filter(a => ['pending', 'inreview', 'escalated'].includes(a.status))
+    .sort((a, b) => (b.amount || 0) - (a.amount || 0))
+    .slice(0, 8);
+  if (items.length === 0) {
+    wrap.innerHTML = `<div class="home-empty">✅ Nothing needs attention right now.</div>`;
+    return;
+  }
+  wrap.innerHTML = items.map(a => {
+    const meta = statusMeta(a.status);
+    const typeLabel = a.type === 'outstanding' ? 'Outstanding' : 'Card Fail';
+    return `<div class="support-item" style="cursor:pointer" onclick="showPage('collections')">
+      <div class="support-avatar" style="background:${meta.bg};color:${meta.color}">${a.type === 'outstanding' ? '💵' : '💳'}</div>
+      <div class="support-info">
+        <div class="support-name">${escAttr(a.name)}</div>
+        <div class="support-detail">${typeLabel} · ${fmtMoney(a.amount)}</div>
+      </div>
+      <span class="status-pill" style="background:${meta.bg};color:${meta.color}">${meta.label}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderHomeActivityList() {
+  const wrap = document.getElementById('homeActivityList');
+  if (!wrap) return;
+  const entries = [];
+  COLLECTIONS_ACCOUNTS.forEach(a => {
+    (a.notes || []).forEach(n => entries.push({ ...n, accountName: a.name }));
+  });
+  entries.sort((a, b) => new Date(b.ts) - new Date(a.ts));
+  const top = entries.slice(0, 8);
+  if (top.length === 0) {
+    wrap.innerHTML = `<div class="home-empty">No recent activity yet.</div>`;
+    return;
+  }
+  wrap.innerHTML = top.map(n => `
+    <div class="support-item">
+      <div class="support-avatar" style="background:var(--bg4);color:var(--text2)">${initials(n.author)}</div>
+      <div class="support-info">
+        <div class="support-name">${escAttr(n.accountName)}</div>
+        <div class="support-detail">${escAttr(n.text)} · ${fmtNoteTime(n.ts)}</div>
+      </div>
+    </div>`).join('');
 }
 
 // ─── TABLE HEADERS ────────────────────────────────────────────────────────────
@@ -3096,6 +3274,7 @@ function rebuildAdSpendPage() {
   if (addCard) addCard.style.display = canEdit() ? '' : 'none';
 
   rebuildAdSpendTable();
+  rebuildHomePage();
 }
 
 function rebuildAdSpendTable() {
@@ -3555,6 +3734,7 @@ function rebuildCollectionsPage() {
   if (addCard) addCard.style.display = canEdit() ? '' : 'none';
 
   rebuildCollectionsTable();
+  rebuildHomePage();
 }
 
 function rebuildCollectionsTable() {
@@ -4037,6 +4217,7 @@ function persistAndRebuild(pk) {
   if (pk === 'smb') rebuildUpsellCards();
   updateDataSourcePill();
   if (pk === activePortfolio) updateCleanSampleButton();
+  rebuildHomePage();
   // Save to Supabase in the background
   saveClientsToSupabase(pk).catch(e => console.warn('Background Supabase save failed:', e));
 }
