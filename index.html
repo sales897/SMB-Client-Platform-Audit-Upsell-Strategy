@@ -445,6 +445,12 @@ tr.hidden-row { display: none; }
   border-radius: 50%; align-items: center; justify-content: center;
   font-size: 10px; font-weight: 700;
 }
+.dot-wrap { position: relative; display: inline-flex; }
+.dot-wrap .cell-note {
+  position: absolute; top: -6px; right: -8px; margin-left: 0;
+  background: var(--bg2); border-radius: 50%; padding: 1px;
+  font-size: 9px; line-height: 1;
+}
 .dot-yes { background: rgba(34,197,94,.15); color: var(--green); border: 1px solid rgba(34,197,94,.3); }
 .dot-no { background: var(--bg3); color: var(--text3); border: 1px solid var(--border); }
 
@@ -2699,7 +2705,7 @@ function rebuildClientTable(pk) {
       const dotIcon = c[k]
         ? `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`
         : `<svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="9"/></svg>`;
-      return `<td><span class="dot ${c[k] ? 'dot-yes' : 'dot-no'}">${dotIcon}</span>${note ? ` <span class="cell-note" data-tooltip="${escAttr(note)}">💬</span>` : ''}</td>`;
+      return `<td><span class="dot-wrap"><span class="dot ${c[k] ? 'dot-yes' : 'dot-no'}">${dotIcon}</span>${note ? `<span class="cell-note" data-tooltip="${escAttr(note)}">💬</span>` : ''}</span></td>`;
     });
 
     const orderedCells = order.map(i => cellByIdx[i]).join('');
