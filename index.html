@@ -6,6 +6,7 @@
 <title>Client Success Hub — Niche Inc.</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 /* ─── RESET & BASE ─────────────────────────────────────────────────────── */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -421,6 +422,42 @@ body {
 }
 .export-csv-btn:hover { border-color: var(--green); color: var(--green); }
 
+/* ─── LOGIN GATE ───────────────────────────────────────────────────────────── */
+.login-gate {
+  position: fixed; inset: 0; z-index: 5000;
+  background: var(--bg); display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.login-card {
+  width: 100%; max-width: 380px; background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 16px; padding: 34px 28px; box-shadow: var(--shadow);
+}
+.login-logo { font-size: 40px; text-align: center; margin-bottom: 8px; }
+.login-title { font-size: 19px; font-weight: 800; color: var(--text); text-align: center; }
+.login-sub { font-size: 12px; color: var(--text3); text-align: center; margin-bottom: 26px; }
+.google-btn {
+  width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;
+  background: #fff; color: #1f1f1f; border: 1px solid #dadce0; border-radius: 8px;
+  padding: 10px 16px; font-size: 13px; font-weight: 600; cursor: pointer; transition: box-shadow .15s;
+}
+.google-btn:hover { box-shadow: 0 1px 8px rgba(0,0,0,.35); }
+.login-divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; color: var(--text3); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; }
+.login-divider::before, .login-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.login-error {
+  background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.3); color: var(--red);
+  border-radius: 8px; padding: 10px 12px; font-size: 12px; margin-bottom: 14px; line-height: 1.5;
+}
+.login-label { font-size: 11px; color: var(--text3); display: block; margin-bottom: 5px; margin-top: 12px; }
+.login-input {
+  width: 100%; padding: 10px 14px; background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text); font-size: 13px; outline: none; transition: border-color .2s;
+}
+.login-input:focus { border-color: var(--orange); }
+.login-toggle { text-align: center; font-size: 12px; color: var(--text3); margin-top: 16px; }
+.login-toggle a { color: var(--orange); text-decoration: none; font-weight: 600; cursor: pointer; }
+.login-toggle a:hover { text-decoration: underline; }
+.login-footnote { text-align: center; font-size: 10.5px; color: var(--text3); margin-top: 22px; line-height: 1.5; }
+
 /* ─── EMPTY STATES ─────────────────────────────────────────────────────────── */
 .empty-state {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -809,6 +846,38 @@ tr.hidden-row { display: none; }
 </head>
 <body>
 
+<!-- LOGIN GATE — visible until a Supabase Auth session is verified against the team_members allowlist -->
+<div id="loginGate" class="login-gate">
+  <div class="login-card">
+    <div class="login-logo">🦊</div>
+    <div class="login-title">Client Success Hub</div>
+    <div class="login-sub">Niche Inc. — sign in to continue</div>
+
+    <button class="google-btn" id="googleSignInBtn" onclick="signInWithGoogle()">
+      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.9 32.7 29.4 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.1 8 3l5.7-5.7C34.5 6.1 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20c11 0 19.6-8 19.6-20 0-1.3-.1-2.3-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 15.9 18.9 13 24 13c3.1 0 5.8 1.1 8 3l5.7-5.7C34.5 6.1 29.5 4 24 4c-7.5 0-14 4.2-17.7 10.7z"/><path fill="#4CAF50" d="M24 44c5.3 0 10.1-2 13.7-5.4l-6.3-5.3C29.4 35 26.8 36 24 36c-5.3 0-9.8-3.3-11.4-8l-6.6 5.1C9.9 39.6 16.4 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.7 2-2 3.7-3.7 5l6.3 5.3C39.4 37 44 31.5 44 24c0-1.3-.1-2.3-.4-3.5z"/></svg>
+      Sign in with Google
+    </button>
+
+    <div class="login-divider"><span>or</span></div>
+
+    <div id="loginFormError" class="login-error" style="display:none"></div>
+
+    <label class="login-label">Email</label>
+    <input type="email" id="loginEmail" class="login-input" placeholder="you@getniche.ai" autocomplete="username">
+    <label class="login-label">Password</label>
+    <input type="password" id="loginPassword" class="login-input" placeholder="••••••••" autocomplete="current-password">
+
+    <button class="btn btn-primary" id="loginSubmitBtn" style="width:100%;margin-top:14px" onclick="submitLoginForm()">Sign In</button>
+
+    <div class="login-toggle" id="loginModeToggle">
+      First time here? <a href="#" onclick="toggleLoginMode(event)">Create your password</a>
+    </div>
+
+    <div class="login-footnote">Access is invite-only — ask an Admin if you don't have an account yet.</div>
+  </div>
+</div>
+
+
 <!-- SIDEBAR -->
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-logo">
@@ -931,7 +1000,7 @@ tr.hidden-row { display: none; }
         <span class="dot"></span> Sample Data
       </div>
       <div class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Switch light/dark mode">🌙</div>
-      <div class="user-badge" id="userBadge" onclick="openUserSwitchModal()" title="Switch user / role">
+      <div class="user-badge" id="userBadge" onclick="confirmSignOut()" title="Sign out">
         <span class="user-avatar" id="userAvatar">?</span>
         <span id="userBadgeName">Guest</span>
         <span class="role-pill user" id="userBadgeRole">User</span>
@@ -1798,16 +1867,16 @@ tr.hidden-row { display: none; }
   <div class="page" id="page-team">
     <div class="card" style="margin-bottom:20px">
       <div class="card-header">
-        <div><div class="card-title">Add Team Member</div><div class="card-sub">Controls what they can see and edit across the Hub</div></div>
+        <div><div class="card-title">Authorize a Teammate</div><div class="card-sub">This email will be able to sign in with Google, or by creating a password</div></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 160px 120px;gap:10px;align-items:end">
         <div>
-          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Name</label>
-          <input type="text" id="newMemberName" placeholder="e.g. Jordan Lee" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Email <span style="color:var(--orange)">(required — this is their login)</span></label>
+          <input type="text" id="newMemberEmail" placeholder="jordan@getniche.ai" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
         </div>
         <div>
-          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Email <span style="color:var(--text3)">(optional)</span></label>
-          <input type="text" id="newMemberEmail" placeholder="jordan@getniche.ai" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Name <span style="color:var(--text3)">(optional — fills in automatically on first sign-in)</span></label>
+          <input type="text" id="newMemberName" placeholder="e.g. Jordan Lee" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
         </div>
         <div>
           <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Role</label>
@@ -1817,7 +1886,10 @@ tr.hidden-row { display: none; }
             <option value="admin">Admin — full access</option>
           </select>
         </div>
-        <button class="btn btn-primary" onclick="addTeamMember()">＋ Add</button>
+        <button class="btn btn-primary" onclick="addTeamMember()">＋ Authorize</button>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:12px;line-height:1.6">
+        This app is invite-only — only emails added here can sign in. Once added, tell them to go to the Hub and either click <b>Sign in with Google</b> (if that email is a Google account), or use <b>"First time here? Create your password"</b> under Email/Password to set one up.
       </div>
     </div>
     <div class="card" style="margin-bottom:20px">
@@ -1905,28 +1977,6 @@ tr.hidden-row { display: none; }
     <div class="modal-btns">
       <button class="btn btn-ghost" onclick="closeSheetsModal()">Cancel</button>
       <button class="btn btn-primary" id="sheetsConnectBtn" onclick="connectSheets()">Connect Sheet</button>
-    </div>
-  </div>
-</div>
-
-<!-- USER SWITCH / ROLE MODAL -->
-<div class="modal-overlay" id="userSwitchModal">
-  <div class="modal">
-    <h3>👋 Who's using the Hub?</h3>
-    <p id="userSwitchIntro">Pick your name to load the right permissions. Ask an Admin to add you under Team &amp; Permissions if you're not listed.</p>
-
-    <div id="firstRunBlock" style="display:none;background:var(--orange-dim);border:1px solid rgba(226,84,31,.25);border-radius:10px;padding:14px;margin-bottom:14px">
-      <div style="font-size:12px;font-weight:700;color:var(--orange);margin-bottom:8px">🎉 No one's set up yet — you're first!</div>
-      <div style="font-size:11px;color:var(--text2);margin-bottom:12px;line-height:1.5">Add yourself as the first Admin so you can manage the team, upload data, and edit clients. You can add everyone else afterward under Team &amp; Permissions.</div>
-      <input type="text" id="firstRunName" placeholder="Your name" style="margin-bottom:8px">
-      <input type="text" id="firstRunEmail" placeholder="Your email (optional)" style="margin-bottom:8px">
-      <button class="btn btn-primary" style="width:100%" onclick="becomeFirstAdmin()">👑 Set Me Up as Admin</button>
-    </div>
-
-    <div class="modal-scroll" id="userSwitchList" style="max-height:280px"></div>
-    <div class="modal-btns" style="justify-content:space-between;align-items:center">
-      <span style="font-size:11px;color:var(--text3)">Not listed? Continue as a view-only guest.</span>
-      <button class="btn btn-ghost" onclick="continueAsGuest()">Continue as Guest</button>
     </div>
   </div>
 </div>
@@ -3290,36 +3340,38 @@ async function sbDelete(table, filter) {
 // CREATE TABLE snippet noted alongside this build).
 // Roles: admin > superuser > user
 // ════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════
+// ROLES & PERMISSIONS + AUTHENTICATION
+// Real sign-in via Supabase Auth (Google OAuth or Email/Password). Access is
+// invite-only: an Admin pre-authorizes an email under Team & Permissions
+// (stored in the "team_members" table) — only a matching email gets in.
+// Roles: admin > superuser > user
+// ════════════════════════════════════════════════════════════════════════
 const ROLE_RANK = { user: 1, superuser: 2, admin: 3 };
-const CURRENT_USER_KEY = 'csh_current_user_v1';
 const TEAM_CACHE_KEY = 'csh_team_members_v1';
 let TEAM_MEMBERS = [];
+let CURRENT_AUTH_USER = null; // { id, name, email, role, authId } — set once a session is authorized
+let loginMode = 'signin'; // 'signin' | 'signup'
 
-function getCurrentUser() {
-  try { return JSON.parse(localStorage.getItem(CURRENT_USER_KEY) || 'null'); }
-  catch(e) { return null; }
-}
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-function setCurrentUser(user) {
-  try { localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user)); } catch(e) {}
-  applyPermissionsToUI();
-}
+function getCurrentUser() { return CURRENT_AUTH_USER; }
 
 function hasRole(minRole) {
   const u = getCurrentUser();
-  const rank = u ? (ROLE_RANK[u.role] || 1) : 1; // guests default to 'user' rank
+  const rank = u ? (ROLE_RANK[u.role] || 1) : 1;
   return rank >= ROLE_RANK[minRole];
 }
 function isAdmin()   { return hasRole('admin'); }
-function canEdit()   { return hasRole('superuser'); }   // edit/merge/delete clients
-function canUpload() { return hasRole('superuser'); }   // upload files / connect Sheets
+function canEdit()   { return hasRole('superuser'); }
+function canUpload() { return hasRole('superuser'); }
 
-// Central gate used by action handlers — shows a friendly nudge instead of failing silently
 function requirePermission(kind) {
   const need = kind === 'admin' ? 'admin' : kind === 'edit' || kind === 'upload' ? 'superuser' : 'user';
   if (hasRole(need)) return true;
   const label = need === 'admin' ? 'an Admin' : 'a Super user or Admin';
-  showToast(`🔒 You need to be ${label} to do that. Currently signed in as ${(getCurrentUser()||{}).name || 'Guest'} (${(getCurrentUser()||{}).role || 'user'}). Switch users from the badge in the top bar.`, 'warning');
+  const u = getCurrentUser();
+  showToast(`🔒 You need to be ${label} to do that. Signed in as ${u ? u.name : 'Guest'} (${u ? u.role : 'user'}).`, 'warning');
   return false;
 }
 
@@ -3331,7 +3383,6 @@ function applyPermissionsToUI() {
   const u = getCurrentUser();
   const role = u ? u.role : 'user';
 
-  // Top bar badge
   const nameEl = document.getElementById('userBadgeName');
   const roleEl = document.getElementById('userBadgeRole');
   const avEl = document.getElementById('userAvatar');
@@ -3342,7 +3393,6 @@ function applyPermissionsToUI() {
     roleEl.className = 'role-pill ' + role;
   }
 
-  // Upload / Connect Sheets — superuser+
   const uploadBtn = document.getElementById('uploadBtnLabel');
   const sheetsBtn = document.getElementById('sheetsConnectTopBtn');
   const uploadAllowed = canUpload();
@@ -3351,15 +3401,12 @@ function applyPermissionsToUI() {
   if (sheetsBtn) sheetsBtn.disabled = !uploadAllowed;
   if (sheetsBtn) sheetsBtn.style.opacity = uploadAllowed ? '' : '.4';
 
-  // Admin-only nav (Team & Permissions)
   const teamSection = document.getElementById('navTeamSection');
   if (teamSection) teamSection.style.display = isAdmin() ? '' : 'none';
 
-  // Manage Products nav — admin only (catalog structure)
   const productsNav = document.getElementById('navProductsItem');
   if (productsNav) productsNav.style.opacity = isAdmin() ? '' : '.4';
 
-  // Refresh anything currently rendered that depends on role
   if (typeof rebuildClientsDirectory === 'function' && document.getElementById('clientsDirectoryBody')) {
     try { rebuildClientsDirectory(); } catch(e) {}
   }
@@ -3371,7 +3418,7 @@ function applyPermissionsToUI() {
   }
 }
 
-// ─── Team member persistence (Supabase, with localStorage fallback) ───────────
+// ─── Team member / allowlist persistence (Supabase, with localStorage fallback) ──
 async function loadTeamMembers() {
   try {
     const rows = await sbSelect('team_members', 'order=name.asc');
@@ -3396,13 +3443,20 @@ function addTeamMember() {
   const nameEl = document.getElementById('newMemberName');
   const emailEl = document.getElementById('newMemberEmail');
   const roleEl = document.getElementById('newMemberRole');
+  const email = emailEl.value.trim();
   const name = nameEl.value.trim();
-  if (!name) { showToast('Please enter a name.', 'warning'); nameEl.focus(); return; }
-  const member = { id: (crypto.randomUUID ? crypto.randomUUID() : 'm_' + Date.now()), name, email: emailEl.value.trim(), role: roleEl.value };
+  if (!email) { showToast("Please enter the email they'll sign in with — this is what actually authorizes access.", 'warning'); emailEl.focus(); return; }
+  if (TEAM_MEMBERS.some(m => (m.email||'').toLowerCase() === email.toLowerCase())) {
+    showToast('That email is already on the team list.', 'warning');
+    return;
+  }
+  const roleLabel = roleEl.value === 'admin' ? 'Admin' : roleEl.value === 'superuser' ? 'Super user' : 'User';
+  const member = { id: (crypto.randomUUID ? crypto.randomUUID() : 'm_' + Date.now()), name: name || email.split('@')[0], email, role: roleEl.value };
   TEAM_MEMBERS.push(member);
   persistTeamMember(member);
   nameEl.value = ''; emailEl.value = ''; roleEl.value = 'user';
   renderTeamUI();
+  showToast(`${email} can now sign in (${roleLabel} access).`, 'success');
 }
 
 async function updateTeamMemberRole(id, role) {
@@ -3411,16 +3465,15 @@ async function updateTeamMemberRole(id, role) {
   if (!m) return;
   m.role = role;
   persistTeamMember(m);
-  // If the change was to the currently signed-in user, refresh their session too
   const cur = getCurrentUser();
-  if (cur && cur.id === id) setCurrentUser({ ...cur, role });
+  if (cur && cur.id === id) { cur.role = role; applyPermissionsToUI(); }
 }
 
 async function removeTeamMember(id) {
   if (!requirePermission('admin')) return;
   const m = TEAM_MEMBERS.find(x => x.id === id);
   if (!m) return;
-  if (!(await showConfirmDialog(`Remove ${m.name} from the team?`, { danger: true, confirmLabel: 'Remove' }))) return;
+  if (!(await showConfirmDialog(`Remove ${m.name} (${m.email}) from the team? They will no longer be able to sign in.`, { danger: true, confirmLabel: 'Remove' }))) return;
   TEAM_MEMBERS = TEAM_MEMBERS.filter(x => x.id !== id);
   localStorage.setItem(TEAM_CACHE_KEY, JSON.stringify(TEAM_MEMBERS));
   try { await sbDelete('team_members', `id=eq.${id}`); } catch(e) {}
@@ -3433,11 +3486,11 @@ function renderTeamUI() {
   if (countSub) countSub.textContent = `${TEAM_MEMBERS.length} ${TEAM_MEMBERS.length === 1 ? 'person' : 'people'}`;
   if (list) {
     list.innerHTML = TEAM_MEMBERS.length === 0
-      ? emptyStateHTML({ icon: '🧑‍🤝‍🧑', title: 'No team members yet', sub: 'Add your first teammate above to start assigning roles.' })
+      ? emptyStateHTML({ icon: '🧑‍🤝‍🧑', title: 'No one authorized yet', sub: "Add a teammate's email above — they'll be able to sign in with Google or by creating a password." })
       : TEAM_MEMBERS.map(m => `
         <div class="team-row">
           <span class="user-avatar">${initials(m.name)}</span>
-          <div class="team-name">${m.name}${m.email ? `<div class="team-email">${m.email}</div>` : ''}</div>
+          <div class="team-name">${m.name}<div class="team-email">${m.email}</div></div>
           <select onchange="updateTeamMemberRole('${m.id}', this.value)" style="width:170px;padding:6px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:11px">
             <option value="user" ${m.role==='user'?'selected':''}>User — view only</option>
             <option value="superuser" ${m.role==='superuser'?'selected':''}>Super user</option>
@@ -3446,55 +3499,119 @@ function renderTeamUI() {
           <button class="row-action-btn danger" onclick="removeTeamMember('${m.id}')">🗑️ Remove</button>
         </div>`).join('');
   }
+}
 
-  // Also refresh the "who's using the Hub" switcher list
-  const switchList = document.getElementById('userSwitchList');
-  const firstRun = document.getElementById('firstRunBlock');
-  const intro = document.getElementById('userSwitchIntro');
-  if (firstRun) firstRun.style.display = TEAM_MEMBERS.length === 0 ? '' : 'none';
-  if (intro) intro.style.display = TEAM_MEMBERS.length === 0 ? 'none' : '';
-  if (switchList) {
-    switchList.innerHTML = TEAM_MEMBERS.length === 0
-      ? ''
-      : TEAM_MEMBERS.map(m => `
-        <div class="team-row" style="cursor:pointer" onclick="selectCurrentUser('${m.id}')">
-          <span class="user-avatar">${initials(m.name)}</span>
-          <div class="team-name">${m.name}${m.email ? `<div class="team-email">${m.email}</div>` : ''}</div>
-          <span class="role-pill ${m.role}">${m.role === 'admin' ? 'Admin' : m.role === 'superuser' ? 'Super user' : 'User'}</span>
-        </div>`).join('');
+// ─── Authentication (Supabase Auth: Google OAuth + Email/Password) ─────────────
+function toggleLoginMode(e) {
+  if (e) e.preventDefault();
+  loginMode = loginMode === 'signin' ? 'signup' : 'signin';
+  const submitBtn = document.getElementById('loginSubmitBtn');
+  const toggle = document.getElementById('loginModeToggle');
+  hideLoginError();
+  if (loginMode === 'signup') {
+    submitBtn.textContent = 'Create Password & Sign In';
+    toggle.innerHTML = `Already set up? <a href="#" onclick="toggleLoginMode(event)">Sign in instead</a>`;
+  } else {
+    submitBtn.textContent = 'Sign In';
+    toggle.innerHTML = `First time here? <a href="#" onclick="toggleLoginMode(event)">Create your password</a>`;
   }
 }
 
-function becomeFirstAdmin() {
-  const nameEl = document.getElementById('firstRunName');
-  const emailEl = document.getElementById('firstRunEmail');
-  const name = nameEl.value.trim();
-  if (!name) { showToast('Please enter your name.', 'warning'); nameEl.focus(); return; }
-  const member = { id: (crypto.randomUUID ? crypto.randomUUID() : 'm_' + Date.now()), name, email: emailEl.value.trim(), role: 'admin' };
-  TEAM_MEMBERS.push(member);
-  persistTeamMember(member);
-  setCurrentUser({ id: member.id, name: member.name, role: 'admin' });
-  closeUserSwitchModal();
+function showLoginError(msg) {
+  const el = document.getElementById('loginFormError');
+  if (el) { el.textContent = msg; el.style.display = ''; }
+}
+function hideLoginError() {
+  const el = document.getElementById('loginFormError');
+  if (el) el.style.display = 'none';
 }
 
-function selectCurrentUser(id) {
-  const m = TEAM_MEMBERS.find(x => x.id === id);
-  if (!m) return;
-  setCurrentUser({ id: m.id, name: m.name, role: m.role });
-  closeUserSwitchModal();
+async function submitLoginForm() {
+  const email = (document.getElementById('loginEmail').value || '').trim();
+  const password = document.getElementById('loginPassword').value || '';
+  if (!email || !password) { showLoginError('Please enter both email and password.'); return; }
+  hideLoginError();
+  const btn = document.getElementById('loginSubmitBtn');
+  btn.disabled = true;
+  try {
+    const { error } = loginMode === 'signup'
+      ? await supabaseClient.auth.signUp({ email, password })
+      : await supabaseClient.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    // supabase.auth.onAuthStateChange picks up the new session from here
+  } catch (e) {
+    showLoginError(e.message || 'Sign in failed. Please try again.');
+  } finally {
+    btn.disabled = false;
+  }
 }
 
-function continueAsGuest() {
-  setCurrentUser({ id: null, name: 'Guest', role: 'user' });
-  closeUserSwitchModal();
+async function signInWithGoogle() {
+  hideLoginError();
+  try {
+    const { error } = await supabaseClient.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.href.split('#')[0] },
+    });
+    if (error) throw error;
+  } catch (e) {
+    showLoginError(e.message || 'Google sign-in failed.');
+  }
 }
 
-function openUserSwitchModal() {
-  renderTeamUI();
-  document.getElementById('userSwitchModal').classList.add('open');
+async function signOutUser() {
+  try { await supabaseClient.auth.signOut(); } catch(e) {}
+  CURRENT_AUTH_USER = null;
+  location.reload();
 }
-function closeUserSwitchModal() {
-  document.getElementById('userSwitchModal').classList.remove('open');
+
+async function confirmSignOut() {
+  const u = getCurrentUser();
+  if (!(await showConfirmDialog(`Sign out of ${u ? u.email : 'the Hub'}?`, { confirmLabel: 'Sign Out' }))) return;
+  signOutUser();
+}
+
+function showLoginGate() { const gate = document.getElementById('loginGate'); if (gate) gate.style.display = 'flex'; }
+function hideLoginGate() { const gate = document.getElementById('loginGate'); if (gate) gate.style.display = 'none'; }
+
+// Runs whenever Supabase confirms a valid session (fresh sign-in, OAuth redirect
+// return, or an existing session restored from a previous visit). Checks the
+// team_members allowlist; only a match gets into the app.
+async function authorizeSession(session) {
+  const email = session.user.email;
+  const displayName = session.user.user_metadata?.full_name || session.user.user_metadata?.name || email.split('@')[0];
+
+  // Use the real access token for all subsequent Supabase REST calls
+  SB_HEADERS['Authorization'] = 'Bearer ' + session.access_token;
+
+  await loadTeamMembers();
+
+  let match = TEAM_MEMBERS.find(m => (m.email || '').toLowerCase() === email.toLowerCase());
+
+  if (!match && TEAM_MEMBERS.length === 0) {
+    // Nobody's been set up yet — this person becomes the first Admin automatically
+    match = { id: session.user.id, name: displayName, email, role: 'admin' };
+    TEAM_MEMBERS.push(match);
+    persistTeamMember(match);
+  }
+
+  if (!match) {
+    showLoginError(`${email} hasn't been invited to this Hub yet. Ask an Admin to add you under Team & Permissions, then sign in again.`);
+    await supabaseClient.auth.signOut();
+    CURRENT_AUTH_USER = null;
+    showLoginGate();
+    return;
+  }
+
+  if (displayName && match.name !== displayName && (!match.name || match.name === match.email.split('@')[0])) {
+    match.name = displayName;
+    persistTeamMember(match);
+  }
+
+  CURRENT_AUTH_USER = { id: match.id, name: match.name, email: match.email, role: match.role, authId: session.user.id };
+  hideLoginGate();
+  applyPermissionsToUI();
+  bootApp();
 }
 
 // ════════════════════════════════════════════════════════════════════════
@@ -5398,10 +5515,7 @@ async function autoRefreshSheets(urls) {
 // ════════════════════════════════════════════════════════════════════════
 // BOOT — Supabase first, localStorage cache fallback, then sample data
 // ════════════════════════════════════════════════════════════════════════
-(async function init() {
-  // Show skeleton placeholders immediately, before anything else runs
-  showInitialSkeletons();
-
+async function bootApp() {
   // Apply saved theme before anything renders, so charts draw with correct colors from the start
   applyTheme(getSavedTheme(), false);
 
@@ -5422,11 +5536,6 @@ async function autoRefreshSheets(urls) {
     rebuildAll();
     updateDataSourcePill();
 
-    // Team & permissions
-    await loadTeamMembers();
-    applyPermissionsToUI();
-    if (!getCurrentUser()) openUserSwitchModal();
-
     // Call Ad Spend Management
     await loadAdSpendBusinesses();
 
@@ -5443,26 +5552,39 @@ async function autoRefreshSheets(urls) {
     }
     const hasSheets = Object.keys(sheetsUrls).some(pk => sheetsUrls[pk]);
     if (hasSheets) await autoRefreshSheets(sheetsUrls);
-
-    const pill = document.getElementById('dataSourcePill');
-    if (pill && !hasSheets) {
-      const totalClients = ['smb','whitelabel','support'].reduce((n,pk) => n + getClients(pk).length, 0);
-      if (totalClients > 89) {
-        pill.innerHTML = '<span class="dot"></span> Supabase · Live';
-        pill.style.color = 'var(--green)';
-      }
-    }
   } catch(e) {
     console.warn('Supabase load failed:', e);
     if (!cachedLoaded) rebuildAll();
     const pill = document.getElementById('dataSourcePill');
     if (pill) { pill.innerHTML = '<span class="dot" style="background:var(--red)"></span> Database offline · using cache'; pill.style.color = 'var(--red)'; }
-    await loadTeamMembers();
-    applyPermissionsToUI();
-    if (!getCurrentUser()) openUserSwitchModal();
     await loadAdSpendBusinesses();
     await loadCollectionsAccounts();
   }
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// AUTH BOOT — the login gate controls everything below it; bootApp() only
+// ever runs after a session is verified against the team_members allowlist.
+// ════════════════════════════════════════════════════════════════════════
+(function initAuthListener() {
+  showInitialSkeletons();
+  let hasBootedApp = false;
+  supabaseClient.auth.onAuthStateChange((event, session) => {
+    if (session) {
+      if (event === 'TOKEN_REFRESHED' && hasBootedApp) {
+        SB_HEADERS['Authorization'] = 'Bearer ' + session.access_token;
+        return;
+      }
+      if (!hasBootedApp) {
+        hasBootedApp = true;
+        authorizeSession(session);
+      }
+    } else {
+      hasBootedApp = false;
+      CURRENT_AUTH_USER = null;
+      showLoginGate();
+    }
+  });
 })();
 
 </script>
