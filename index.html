@@ -860,6 +860,8 @@ tr.hidden-row { display: none; }
 .mention-item:hover, .mention-item.highlighted { background: var(--bg3); }
 .mention-item .mention-email { font-size: 10px; color: var(--text3); }
 .note-mention { color: var(--orange); font-weight: 600; }
+.cnt-section-title { font-size: 13px; font-weight: 800; color: var(--text); margin-bottom: 10px; }
+.cnt-divider { height: 1px; background: var(--border); margin: 20px 0; }
 
 .team-row { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; background: var(--bg3); }
 .team-row .team-name { flex: 1; font-weight: 700; font-size: 13px; color: var(--text); }
@@ -1098,54 +1100,66 @@ tr.hidden-row { display: none; }
 <!-- CLIENT NOTES & TASKS MODAL -->
 <div class="modal-overlay" id="clientNotesTasksModal">
   <div class="modal wide">
-    <h3 id="cntTitle">📝 Notes &amp; Tasks</h3>
-    <div style="display:flex;gap:8px;margin-bottom:18px" id="cntTabs">
-      <button class="pm-tab active" onclick="switchCntTab('notes')">📝 Notes</button>
-      <button class="pm-tab" onclick="switchCntTab('tasks')">✅ Tasks</button>
-      <button class="pm-tab" onclick="switchCntTab('contact')">👤 Contact Info</button>
-    </div>
+    <h3 id="cntTitle">👤 Client Profile</h3>
 
-    <div id="cntNotesPane">
-      <div class="notes-thread" id="cntNotesThread" style="max-height:220px"></div>
-      <label class="field-label">Add a Note</label>
-      <div style="position:relative;margin-bottom:14px">
-        <textarea id="cntNewNoteText" rows="2" placeholder="What's happening with this client? Type @ to tag a teammate" class="field-input" style="margin-bottom:0;resize:vertical;font-family:inherit" oninput="handleNoteMentionInput(event)" onkeydown="handleNoteMentionKeydown(event)"></textarea>
-        <div id="cntMentionDropdown" class="mention-dropdown" style="display:none"></div>
-      </div>
-      <label class="field-label">Tag teammates <span style="color:var(--text3);font-weight:400">(optional — they'll be notified instantly)</span></label>
-      <div id="cntTagPicker" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px"></div>
-    </div>
+    <div style="max-height:66vh;overflow-y:auto;padding-right:8px;margin-top:6px">
 
-    <div id="cntTasksPane" style="display:none">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <span style="font-size:11px;color:var(--text3)">Tasks with a due date can sync straight to Google Calendar</span>
-        <span id="gcalStatusPill"></span>
+      <div class="cnt-section">
+        <div class="cnt-section-title">👤 Contact Info</div>
+        <div style="font-size:11px;color:var(--text3);margin-bottom:14px">Primary point of contact for this client — visible to everyone, editable by Super users and Admins</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px">
+          <div><label class="field-label">Contact Name</label><input type="text" id="cntContactName" class="field-input" style="height:38px" placeholder="e.g. Jamie Rivera"></div>
+          <div><label class="field-label">Title</label><input type="text" id="cntContactTitle" class="field-input" style="height:38px" placeholder="e.g. Owner / Office Manager"></div>
+          <div><label class="field-label">Email</label><input type="email" id="cntContactEmail" class="field-input" style="height:38px" placeholder="e.g. jamie@business.com"></div>
+          <div><label class="field-label">Phone</label><input type="tel" id="cntContactPhone" class="field-input" style="height:38px" placeholder="e.g. (555) 123-4567"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div id="cntContactSavedNote" style="font-size:11px;color:var(--text3)"></div>
+          <button class="btn btn-primary btn-sm" id="cntContactSubmitBtn" onclick="saveClientContactInfo()">💾 Save Contact Info</button>
+        </div>
       </div>
-      <div id="cntTasksList" style="margin-bottom:18px"></div>
-      <label class="field-label" style="margin-bottom:8px">Add a Task</label>
-      <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:10px;align-items:start">
-        <div><label class="field-label">Task</label><input type="text" id="cntNewTaskTitle" class="field-input" style="height:38px" placeholder="e.g. Follow up about renewal"></div>
-        <div><label class="field-label">Assign to</label><select id="cntNewTaskAssignee" class="field-select" style="height:38px"></select></div>
-        <div><label class="field-label">Due Date &amp; Time</label><input type="datetime-local" id="cntNewTaskDue" class="field-input" style="height:38px"></div>
-      </div>
-    </div>
 
-    <div id="cntContactPane" style="display:none">
-      <div style="font-size:11px;color:var(--text3);margin-bottom:16px">Primary point of contact for this client — visible to everyone, editable by Super users and Admins</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
-        <div><label class="field-label">Contact Name</label><input type="text" id="cntContactName" class="field-input" style="height:38px" placeholder="e.g. Jamie Rivera"></div>
-        <div><label class="field-label">Title</label><input type="text" id="cntContactTitle" class="field-input" style="height:38px" placeholder="e.g. Owner / Office Manager"></div>
-        <div><label class="field-label">Email</label><input type="email" id="cntContactEmail" class="field-input" style="height:38px" placeholder="e.g. jamie@business.com"></div>
-        <div><label class="field-label">Phone</label><input type="tel" id="cntContactPhone" class="field-input" style="height:38px" placeholder="e.g. (555) 123-4567"></div>
+      <div class="cnt-divider"></div>
+
+      <div class="cnt-section">
+        <div class="cnt-section-title">📝 Notes</div>
+        <div class="notes-thread" id="cntNotesThread" style="max-height:200px"></div>
+        <label class="field-label">Add a Note</label>
+        <div style="position:relative;margin-bottom:14px">
+          <textarea id="cntNewNoteText" rows="2" placeholder="What's happening with this client? Type @ to tag a teammate" class="field-input" style="margin-bottom:0;resize:vertical;font-family:inherit" oninput="handleNoteMentionInput(event)" onkeydown="handleNoteMentionKeydown(event)"></textarea>
+          <div id="cntMentionDropdown" class="mention-dropdown" style="display:none"></div>
+        </div>
+        <label class="field-label">Tag teammates <span style="color:var(--text3);font-weight:400">(optional — they'll be notified instantly)</span></label>
+        <div id="cntTagPicker" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
+        <div style="display:flex;justify-content:flex-end">
+          <button class="btn btn-primary btn-sm" id="cntNotesSubmitBtn" onclick="addClientNote()">Add Note</button>
+        </div>
       </div>
-      <div id="cntContactSavedNote" style="font-size:11px;color:var(--text3)"></div>
+
+      <div class="cnt-divider"></div>
+
+      <div class="cnt-section">
+        <div class="cnt-section-title">✅ Tasks</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <span style="font-size:11px;color:var(--text3)">Tasks with a due date can sync straight to Google Calendar</span>
+          <span id="gcalStatusPill"></span>
+        </div>
+        <div id="cntTasksList" style="margin-bottom:16px"></div>
+        <label class="field-label" style="margin-bottom:8px">Add a Task</label>
+        <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:10px;align-items:start;margin-bottom:10px">
+          <div><label class="field-label">Task</label><input type="text" id="cntNewTaskTitle" class="field-input" style="height:38px" placeholder="e.g. Follow up about renewal"></div>
+          <div><label class="field-label">Assign to</label><select id="cntNewTaskAssignee" class="field-select" style="height:38px"></select></div>
+          <div><label class="field-label">Due Date &amp; Time</label><input type="datetime-local" id="cntNewTaskDue" class="field-input" style="height:38px"></div>
+        </div>
+        <div style="display:flex;justify-content:flex-end">
+          <button class="btn btn-primary btn-sm" id="cntTasksSubmitBtn" onclick="addClientTask()">＋ Add Task</button>
+        </div>
+      </div>
+
     </div>
 
     <div class="modal-btns" style="margin-top:18px">
       <button class="btn btn-ghost" onclick="closeClientNotesTasksModal()">Close</button>
-      <button class="btn btn-primary" id="cntNotesSubmitBtn" onclick="addClientNote()">Add Note</button>
-      <button class="btn btn-primary" id="cntTasksSubmitBtn" style="display:none" onclick="addClientTask()">＋ Add Task</button>
-      <button class="btn btn-primary" id="cntContactSubmitBtn" style="display:none" onclick="saveClientContactInfo()">💾 Save Contact Info</button>
     </div>
   </div>
 </div>
@@ -6146,33 +6160,22 @@ function showDesktopNotification(title, body) {
 // ─── Client Notes & Tasks modal ────────────────────────────────────────────
 function openClientNotesTasksModal(clientName) {
   cntActiveClientName = clientName;
-  document.getElementById('cntTitle').textContent = `📝 ${clientName}`;
+  document.getElementById('cntTitle').textContent = `👤 ${clientName}`;
   cntTaggedEmails = [];
   renderCntTagPicker();
   populateCntTaskAssigneeSelect();
   renderClientContactInfo();
-  switchCntTab('notes');
   renderClientNotesThread();
   renderClientTasksList();
+  renderGoogleCalendarStatus();
+  const contactBtn = document.getElementById('cntContactSubmitBtn');
+  if (contactBtn) contactBtn.style.display = canEdit() ? '' : 'none';
   document.getElementById('clientNotesTasksModal').classList.add('open');
 }
 function closeClientNotesTasksModal() {
   document.getElementById('clientNotesTasksModal').classList.remove('open');
   cntActiveClientName = null;
   cntTaggedEmails = [];
-}
-const CNT_TABS = ['notes', 'tasks', 'contact'];
-function switchCntTab(tab) {
-  const panes = { notes: 'cntNotesPane', tasks: 'cntTasksPane', contact: 'cntContactPane' };
-  const btns = { notes: 'cntNotesSubmitBtn', tasks: 'cntTasksSubmitBtn', contact: 'cntContactSubmitBtn' };
-  CNT_TABS.forEach(t => {
-    const pane = document.getElementById(panes[t]);
-    if (pane) pane.style.display = t === tab ? '' : 'none';
-    const btn = document.getElementById(btns[t]);
-    if (btn) btn.style.display = (t === tab && (t !== 'contact' || canEdit())) ? '' : 'none';
-  });
-  document.querySelectorAll('#cntTabs .pm-tab').forEach((b, i) => b.classList.toggle('active', CNT_TABS[i] === tab));
-  if (tab === 'tasks') renderGoogleCalendarStatus();
 }
 
 function renderCntTagPicker() {
