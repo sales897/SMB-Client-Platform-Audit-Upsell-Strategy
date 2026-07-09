@@ -747,9 +747,23 @@ tr.hidden-row { display: none; }
 }
 .theme-toggle:hover { border-color: var(--orange); transform: rotate(15deg); }
 .user-avatar {
-  width: 22px; height: 22px; border-radius: 50%; background: var(--orange);
+  width: 22px; height: 22px; border-radius: 50%; background: var(--orange); overflow: hidden;
   color: #fff; font-size: 10px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
+.user-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+.profile-menu {
+  position: absolute; top: calc(100% + 8px); right: 0; z-index: 200;
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
+  box-shadow: var(--shadow); width: 240px; padding: 8px;
+}
+.profile-menu-header { display: flex; align-items: center; gap: 10px; padding: 10px 8px 14px; border-bottom: 1px solid var(--border); margin-bottom: 6px; }
+.profile-menu-header .user-avatar { width: 40px; height: 40px; font-size: 15px; }
+.profile-menu-name { font-size: 13px; font-weight: 700; color: var(--text); }
+.profile-menu-email { font-size: 11px; color: var(--text3); word-break: break-all; }
+.profile-menu-item { display: flex; align-items: center; gap: 8px; padding: 9px 10px; border-radius: 8px; font-size: 12.5px; color: var(--text2); cursor: pointer; transition: background .15s; }
+.profile-menu-item:hover { background: var(--bg3); color: var(--text); }
+.profile-menu-item.danger:hover { background: rgba(239,68,68,.1); color: var(--red); }
+.profile-menu-divider { height: 1px; background: var(--border); margin: 6px 4px; }
 .role-pill { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; padding: 2px 7px; border-radius: 10px; }
 .role-pill.admin { background: rgba(226,84,31,.18); color: var(--orange2); }
 .role-pill.superuser { background: rgba(59,130,246,.18); color: var(--blue); }
@@ -1013,10 +1027,27 @@ tr.hidden-row { display: none; }
         <span class="dot"></span> Sample Data
       </div>
       <div class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Switch light/dark mode">🌙</div>
-      <div class="user-badge" id="userBadge" onclick="confirmSignOut()" title="Sign out">
-        <span class="user-avatar" id="userAvatar">?</span>
-        <span id="userBadgeName">Guest</span>
-        <span class="role-pill user" id="userBadgeRole">User</span>
+      <div style="position:relative">
+        <div class="user-badge" id="userBadge" onclick="toggleProfileMenu()" title="Account">
+          <span class="user-avatar" id="userAvatar">?</span>
+          <span id="userBadgeName">Guest</span>
+          <span class="role-pill user" id="userBadgeRole">User</span>
+        </div>
+        <div class="profile-menu" id="profileMenu" style="display:none">
+          <div class="profile-menu-header">
+            <span class="user-avatar" id="profileMenuAvatar">?</span>
+            <div>
+              <div class="profile-menu-name" id="profileMenuName">Guest</div>
+              <div class="profile-menu-email" id="profileMenuEmail"></div>
+            </div>
+          </div>
+          <label class="profile-menu-item" style="cursor:pointer">
+            📷 Change Profile Picture
+            <input type="file" accept="image/*" style="display:none" onchange="handleAvatarUpload(event)">
+          </label>
+          <div class="profile-menu-divider"></div>
+          <div class="profile-menu-item danger" onclick="confirmSignOut()">🚪 Sign Out</div>
+        </div>
       </div>
       <label class="upload-btn" id="uploadBtnLabel" title="Uploads into the currently open dashboard" style="display:none">
         📁 Upload File
@@ -1329,42 +1360,35 @@ tr.hidden-row { display: none; }
   ════════════════════════════════════════════════════════════════════════ -->
   <div class="page" id="page-voice">
     <div class="kpi-row">
-      <div class="kpi"><div class="kpi-icon">🎙️</div><div class="kpi-val green">48</div><div class="kpi-lbl">Clients with Voice Agent</div><div class="kpi-sub">76.2% of all clients</div></div>
-      <div class="kpi"><div class="kpi-icon">📞</div><div class="kpi-val red">31</div><div class="kpi-lbl">Zero Calls Logged</div><div class="kpi-sub">Needs CSM outreach</div></div>
-      <div class="kpi"><div class="kpi-icon">📥</div><div class="kpi-val">15</div><div class="kpi-sub">Clients NOT on Voice Agent</div><div class="kpi-lbl">Upsell targets</div></div>
-      <div class="kpi"><div class="kpi-icon">⚡</div><div class="kpi-val orange">17</div><div class="kpi-lbl">Active Callers</div><div class="kpi-sub">Calls logged this period</div></div>
+      <div class="kpi"><div class="kpi-icon">🎙️</div><div class="kpi-val green" id="va-using">0</div><div class="kpi-lbl">Clients with Voice Agent</div><div class="kpi-sub" id="va-using-pct">0% of all clients</div></div>
+      <div class="kpi"><div class="kpi-icon">📥</div><div class="kpi-val red" id="va-not-using">0</div><div class="kpi-lbl">Clients NOT on Voice Agent</div><div class="kpi-sub">Upsell targets</div></div>
+      <div class="kpi"><div class="kpi-icon">📊</div><div class="kpi-val orange" id="va-adoption-pct">0%</div><div class="kpi-lbl">Adoption Rate</div><div class="kpi-sub">Across SMB, White Label, Support</div></div>
+      <div class="kpi"><div class="kpi-icon">⚠️</div><div class="kpi-val" style="color:var(--yellow)" id="va-flagged">0</div><div class="kpi-lbl">Flagged for Review</div><div class="kpi-sub">Have a note attached</div></div>
     </div>
 
-    <div class="grid-2">
-      <div class="card">
-        <div class="card-header"><div class="card-title">Call Volume Distribution</div><div class="card-sub">Active vs zero-call clients</div></div>
-        <div class="chart-wrap h260"><canvas id="voiceDonut"></canvas></div>
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header">
+        <div><div class="card-title">Voice Agent Adoption by Portfolio</div><div class="card-sub">How many clients in each portfolio use Voice Agent, vs. don't</div></div>
       </div>
-      <div class="card">
-        <div class="card-header"><div class="card-title">Inbound vs Outbound</div><div class="card-sub">Agent type breakdown</div></div>
-        <div class="chart-wrap h260"><canvas id="voiceBar"></canvas></div>
-      </div>
+      <div class="chart-wrap h260"><canvas id="voiceBar"></canvas></div>
     </div>
 
-    <div class="section-hd" style="margin-top:8px"><div class="section-num" style="background:var(--red)">⚠</div><h2 style="color:var(--yellow)">Clients Flagged for Low or No Activity</h2></div>
+    <div class="section-hd" style="margin-top:8px"><div class="section-num" style="background:var(--yellow)">⚠</div><h2 style="color:var(--yellow)">Clients Flagged for Review</h2></div>
     <div class="section-div" style="background:linear-gradient(90deg,var(--yellow),transparent)"></div>
-
-    <div class="notes-card">
-      <h3>⚠ Voice Agent Activity Flags</h3>
-      <ul>
-        <li>
-          <span class="note-flag">🔴 No Calls Logged — 31 Voice Agent Clients</span>
-          Armadillo Painting, CA Fleming Electric, Foundation Strategies, Green Dome Construction, Hansen Pool, Home Quality Remodeling, HVAC Hunters, Impressive Restoration, Integrity Plumbing, JBG Heating &amp; Air, j carrillo plumbing, JT's Overhead Doors, Maverick Electric, MVB Flood and Restoration, Mystic Luxury Limo, OB Gate &amp; Fences, Option One Solar, Orbit Electric, Paragon Roofing, Pro Grout, Purpose Plumbing, Rabbit Heating &amp; Air, Remodeling Heroes, SD Platinum Sprinters, Straight Shooter, Stay Cool Heating &amp; Air, Sugared by Janee, Texas Elite Gutters, Titan Roofing, Sol-Up (Ventura Blvd), Sol-Up Reno
-          <br><span class="note-action">→ CSM outreach needed — confirm agent is configured correctly</span>
-        </li>
-        <li><span class="note-flag">🟡 Renovo Restoration Pros</span>Inbound Agent — 3 calls total, last June 9th. Very low engagement.<br><span class="note-action">→ Schedule check-in call</span></li>
-        <li><span class="note-flag">🟡 Save The Day Restoration</span>Inbound Agent — 1 call ever, June 22nd.<br><span class="note-action">→ Confirm setup and promote agent usage</span></li>
-        <li><span class="note-flag">🔵 Simba Plumbing Solutions</span>Inbound Agent — 1 call June 26th. New activity, monitor closely.<br><span class="note-action">→ Monitor over next 2 weeks</span></li>
-        <li><span class="note-flag">🟡 Hansen Pool Construction, Inc.</span>Inbound Agent — last call June 3rd. No activity since.<br><span class="note-action">→ Reach out to re-engage</span></li>
-        <li><span class="note-flag">🟡 Matteo Allieri</span>Inbound Agent — last call June 2nd. Only call ever.<br><span class="note-action">→ Confirm agent is live and receiving calls</span></li>
-        <li><span class="note-flag">🟢 American Mains and Drains</span>Outbound Agent — last call June 23rd. Active but low frequency.<br><span class="note-action">→ Review outbound list and targets</span></li>
-        <li><span class="note-flag">⚠️ Up &amp; Above Heating and Cooling — Account Review Needed</span>Messages show "Pasquale and Airvin" as clients — may indicate account misconfiguration.<br><span class="note-action">→ Internal review required</span></li>
-      </ul>
+    <div class="card">
+      <div class="card-header">
+        <div><div class="card-title">Voice Agent Notes</div><div class="card-sub" id="va-flagged-sub">Pulled from comments attached to the Voice Agent column during upload</div></div>
+      </div>
+      <div class="table-controls">
+        <input type="text" class="search-box" id="vaFlagSearch" placeholder="Search flagged clients..." oninput="rebuildVoiceAgentFlagged()">
+        <div style="display:flex;gap:6px;flex-wrap:wrap" id="vaFlagPills">
+          <button class="filter-pill active" onclick="setVoiceAgentPortfolioFilter('all',this)">All Portfolios</button>
+          <button class="filter-pill" onclick="setVoiceAgentPortfolioFilter('smb',this)">📊 SMB</button>
+          <button class="filter-pill" onclick="setVoiceAgentPortfolioFilter('whitelabel',this)">🏷️ White Label</button>
+          <button class="filter-pill" onclick="setVoiceAgentPortfolioFilter('support',this)">📊 Support</button>
+        </div>
+      </div>
+      <div id="vaFlaggedList"></div>
     </div>
     <div class="page-footer">Client Success Hub · Niche Inc. · Voice Agent Performance</div>
   </div>
@@ -1374,27 +1398,38 @@ tr.hidden-row { display: none; }
   ════════════════════════════════════════════════════════════════════════ -->
   <div class="page" id="page-textagent">
     <div class="kpi-row">
-      <div class="kpi"><div class="kpi-icon">💬</div><div class="kpi-val">—</div><div class="kpi-lbl">Clients with Text Agent</div><div class="kpi-sub">Awaiting data</div></div>
-      <div class="kpi"><div class="kpi-icon">📨</div><div class="kpi-val">—</div><div class="kpi-lbl">Messages Sent</div><div class="kpi-sub">This period</div></div>
-      <div class="kpi"><div class="kpi-icon">✅</div><div class="kpi-val">—</div><div class="kpi-lbl">Response Rate</div><div class="kpi-sub">Awaiting data</div></div>
-      <div class="kpi"><div class="kpi-icon">⚡</div><div class="kpi-val">—</div><div class="kpi-lbl">Avg Response Time</div><div class="kpi-sub">Awaiting data</div></div>
+      <div class="kpi"><div class="kpi-icon">⭐</div><div class="kpi-val" id="ta-yelp">0</div><div class="kpi-lbl">Using Yelp</div><div class="kpi-sub">Across all portfolios</div></div>
+      <div class="kpi"><div class="kpi-icon">🔍</div><div class="kpi-val" id="ta-lsa">0</div><div class="kpi-lbl">Using Google LSA</div><div class="kpi-sub">Across all portfolios</div></div>
+      <div class="kpi"><div class="kpi-icon">📌</div><div class="kpi-val" id="ta-thumbtack">0</div><div class="kpi-lbl">Using Thumbtack</div><div class="kpi-sub">Across all portfolios</div></div>
+      <div class="kpi"><div class="kpi-icon">📊</div><div class="kpi-val orange" id="ta-any">0</div><div class="kpi-lbl">Using At Least One</div><div class="kpi-sub">Yelp, Google LSA, or Thumbtack</div></div>
     </div>
 
-    <div class="card" style="background:rgba(226,84,31,.06);border-color:rgba(226,84,31,.2)">
-      <div style="text-align:center;padding:40px 20px;color:var(--text3)">
-        <div style="font-size:38px;margin-bottom:14px">💬</div>
-        <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px">Text Agent Dashboard — Coming Soon</div>
-        <div style="font-size:13px;margin-bottom:20px;max-width:420px;margin-left:auto;margin-right:auto;line-height:1.6">This section is ready to receive data. Upload a sheet or connect Google Sheets with your Text Agent metrics and this page will populate automatically.</div>
-        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
-          <label class="btn btn-primary" style="cursor:pointer">
-            📁 Upload Sheet
-            <input type="file" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFileUpload(event)">
-          </label>
-          <button class="btn btn-ghost" onclick="openSheetsModal()">📋 Connect Google Sheets</button>
-        </div>
+    <div class="card">
+      <div class="card-header">
+        <div><div class="card-title">Breakdown by Product &amp; Portfolio</div><div class="card-sub">How many clients use each product, split by dashboard — click a number to see who</div></div>
+      </div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr>
+            <th style="text-align:left;padding-left:14px">Product</th>
+            <th>📊 SMB</th>
+            <th>🏷️ White Label</th>
+            <th>📊 Support</th>
+            <th>Total</th>
+          </tr></thead>
+          <tbody id="taBreakdownBody"></tbody>
+        </table>
       </div>
     </div>
-    <div class="page-footer">Client Success Hub · Niche Inc. · Text Agent Performance</div>
+
+    <div class="card" style="margin-top:20px;display:none" id="taClientListCard">
+      <div class="card-header">
+        <div><div class="card-title" id="taClientListTitle">Clients</div><div class="card-sub" id="taClientListSub"></div></div>
+        <button class="btn btn-ghost btn-sm" onclick="closeTextAgentClientList()">✕ Close</button>
+      </div>
+      <div id="taClientList"></div>
+    </div>
+    <div class="page-footer">Client Success Hub · Niche Inc. · Yelp / Google LSA / Thumbtack Adoption</div>
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════════
@@ -2109,6 +2144,8 @@ function showPage(id) {
   }
 
   if (id === 'home') rebuildHomePage();
+  if (id === 'voice') rebuildVoicePage();
+  if (id === 'textagent') rebuildTextAgentPage();
 
   closeSidebar();
 }
@@ -2378,6 +2415,8 @@ function rebuildAll() {
   rebuildActionPlan();    // static 90-day execution guide
   rebuildProductCatalogPage(); // Manage Products page (uses activeManagePortfolio)
   rebuildHomePage();
+  rebuildVoicePage();
+  rebuildTextAgentPage();
 }
 
 // ─── HOME — daily overview & quick access ────────────────────────────────────
@@ -2465,6 +2504,173 @@ function renderHomeAttentionList() {
       <span class="status-pill" style="background:${meta.bg};color:${meta.color}">${meta.label}</span>
     </div>`;
   }).join('');
+}
+
+// ─── VOICE AGENT PAGE — real cross-portfolio adoption + comment-driven flags ──
+let voiceAgentPortfolioFilter = 'all';
+
+function getAllClientsWithPortfolio() {
+  const out = [];
+  ['smb', 'whitelabel', 'support'].forEach(pk => {
+    getClients(pk).forEach(c => out.push({ client: c, pk }));
+  });
+  return out;
+}
+
+function rebuildVoicePage() {
+  if (!document.getElementById('page-voice')) return;
+  const all = getAllClientsWithPortfolio();
+  const totalClients = all.length;
+  const using = all.filter(x => x.client.voice_agent);
+  const notUsing = all.filter(x => !x.client.voice_agent);
+  const flagged = using.filter(x => x.client.cellNotes && x.client.cellNotes.voice_agent);
+  const pct = totalClients ? Math.round(using.length / totalClients * 100) : 0;
+
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  set('va-using', using.length);
+  set('va-using-pct', `${pct}% of all clients`);
+  set('va-not-using', notUsing.length);
+  set('va-adoption-pct', `${pct}%`);
+  set('va-flagged', flagged.length);
+
+  const portfolios = ['smb', 'whitelabel', 'support'];
+  const labels = portfolios.map(pk => PORTFOLIOS[pk].name);
+  const usingCounts = portfolios.map(pk => getClients(pk).filter(c => c.voice_agent).length);
+  const notUsingCounts = portfolios.map(pk => getClients(pk).filter(c => !c.voice_agent).length);
+
+  destroyChart('voiceBar');
+  const ctx = document.getElementById('voiceBar');
+  if (ctx) {
+    chartRegistry['voiceBar'] = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          { label: 'Using Voice Agent', data: usingCounts, backgroundColor: C.green, borderRadius: 6 },
+          { label: 'Not Using', data: notUsingCounts, backgroundColor: 'rgba(239,68,68,.55)', borderRadius: 6 },
+        ],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { labels: { color: C.text } },
+          tooltip: { backgroundColor: C.tooltipBg, borderColor: C.tooltipBorder, borderWidth: 1, titleColor: C.tooltipTitle, padding: 12, cornerRadius: 8 },
+        },
+        scales: {
+          x: { grid: { color: C.grid }, ticks: { color: C.tick } },
+          y: { grid: { color: C.grid }, ticks: { color: C.tick }, beginAtZero: true },
+        },
+      },
+    });
+  }
+
+  rebuildVoiceAgentFlagged();
+}
+
+function setVoiceAgentPortfolioFilter(pk, btn) {
+  voiceAgentPortfolioFilter = pk;
+  document.querySelectorAll('#vaFlagPills .filter-pill').forEach(p => p.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  rebuildVoiceAgentFlagged();
+}
+
+function rebuildVoiceAgentFlagged() {
+  const wrap = document.getElementById('vaFlaggedList');
+  if (!wrap) return;
+  const q = (document.getElementById('vaFlagSearch') || {}).value?.toLowerCase().trim() || '';
+  let flagged = getAllClientsWithPortfolio().filter(x => x.client.cellNotes && x.client.cellNotes.voice_agent);
+  if (voiceAgentPortfolioFilter !== 'all') flagged = flagged.filter(x => x.pk === voiceAgentPortfolioFilter);
+  if (q) flagged = flagged.filter(x => (x.client.name || '').toLowerCase().includes(q));
+
+  const portfolioMeta = { smb: { label: 'SMB', chip: 'chip-smb' }, whitelabel: { label: 'White Label', chip: 'chip-whitelabel' }, support: { label: 'Support', chip: 'chip-support' } };
+
+  if (flagged.length === 0) {
+    wrap.innerHTML = emptyStateHTML({
+      icon: '📝',
+      title: 'No flagged clients',
+      sub: 'Clients show up here automatically when a comment is attached to their Voice Agent column during an Excel upload (e.g. a cell note).',
+    });
+    return;
+  }
+
+  wrap.innerHTML = flagged.map(({ client: c, pk }) => {
+    const meta = portfolioMeta[pk];
+    return `<div class="support-item">
+      <div class="support-avatar" style="background:var(--bg4);color:var(--yellow)">⚠️</div>
+      <div class="support-info">
+        <div class="support-name">${escAttr(c.name)}</div>
+        <div class="support-detail">${escAttr(c.cellNotes.voice_agent)}</div>
+      </div>
+      <span class="portfolio-chip ${meta.chip}">${meta.label}</span>
+    </div>`;
+  }).join('');
+}
+
+// ─── TEXT AGENT PAGE — Yelp / Google LSA / Thumbtack breakdown by portfolio ───
+const TEXT_AGENT_PRODUCTS = [
+  { key: 'yelp', label: 'Yelp', icon: '⭐' },
+  { key: 'google_lsa', label: 'Google LSA', icon: '🔍' },
+  { key: 'thumbtack', label: 'Thumbtack', icon: '📌' },
+];
+const TA_PORTFOLIO_META = {
+  smb: { label: 'SMB', chip: 'chip-smb' },
+  whitelabel: { label: 'White Label', chip: 'chip-whitelabel' },
+  support: { label: 'Support', chip: 'chip-support' },
+};
+
+function rebuildTextAgentPage() {
+  if (!document.getElementById('page-textagent')) return;
+  const portfolios = ['smb', 'whitelabel', 'support'];
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+
+  const totals = {};
+  TEXT_AGENT_PRODUCTS.forEach(p => {
+    totals[p.key] = portfolios.reduce((n, pk) => n + getClients(pk).filter(c => c[p.key]).length, 0);
+  });
+  set('ta-yelp', totals.yelp);
+  set('ta-lsa', totals.google_lsa);
+  set('ta-thumbtack', totals.thumbtack);
+
+  const anyCount = getAllClientsWithPortfolio().filter(x => x.client.yelp || x.client.google_lsa || x.client.thumbtack).length;
+  set('ta-any', anyCount);
+
+  const tbody = document.getElementById('taBreakdownBody');
+  if (tbody) {
+    tbody.innerHTML = TEXT_AGENT_PRODUCTS.map(p => {
+      const counts = portfolios.map(pk => getClients(pk).filter(c => c[p.key]).length);
+      const total = counts.reduce((a, b) => a + b, 0);
+      const cell = (count, pk) => count > 0
+        ? `<td><span class="pc-badge pc-${Math.min(count,6)}" style="cursor:pointer" onclick="showTextAgentClientList('${p.key}','${pk}')">${count}</span></td>`
+        : `<td><span style="color:var(--text3)">0</span></td>`;
+      return `<tr>
+        <td style="padding-left:14px;font-weight:600;color:var(--text)">${p.icon} ${p.label}</td>
+        ${cell(counts[0], 'smb')}
+        ${cell(counts[1], 'whitelabel')}
+        ${cell(counts[2], 'support')}
+        <td><span class="pc-badge pc-${Math.min(total,6)}">${total}</span></td>
+      </tr>`;
+    }).join('');
+  }
+}
+
+function showTextAgentClientList(productKey, pk) {
+  const product = TEXT_AGENT_PRODUCTS.find(p => p.key === productKey);
+  const meta = TA_PORTFOLIO_META[pk];
+  const clients = getClients(pk).filter(c => c[productKey]);
+
+  document.getElementById('taClientListTitle').textContent = `${product.icon} ${product.label} — ${meta.label}`;
+  document.getElementById('taClientListSub').textContent = `${clients.length} client${clients.length === 1 ? '' : 's'}`;
+  document.getElementById('taClientList').innerHTML = clients.map(c => `
+    <div class="support-item">
+      <div class="support-avatar" style="background:var(--bg4);color:var(--text2)">${(c.name||'?').charAt(0).toUpperCase()}</div>
+      <div class="support-info"><div class="support-name">${escAttr(c.name)}</div></div>
+      <span class="portfolio-chip ${meta.chip}">${meta.label}</span>
+    </div>`).join('');
+  document.getElementById('taClientListCard').style.display = '';
+  document.getElementById('taClientListCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+function closeTextAgentClientList() {
+  document.getElementById('taClientListCard').style.display = 'none';
 }
 
 function renderHomeActivityList() {
@@ -3425,6 +3631,12 @@ function initials(name) {
   return (name || '?').trim().split(/\s+/).slice(0,2).map(w => w[0]).join('').toUpperCase() || '?';
 }
 
+function renderAvatarInto(el, name, avatarUrl) {
+  if (!el) return;
+  el.innerHTML = avatarUrl ? `<img src="${avatarUrl}" alt="">` : '';
+  if (!avatarUrl) el.textContent = initials(name);
+}
+
 function applyPermissionsToUI() {
   const u = getCurrentUser();
   const role = u ? u.role : 'user';
@@ -3432,8 +3644,14 @@ function applyPermissionsToUI() {
   const nameEl = document.getElementById('userBadgeName');
   const roleEl = document.getElementById('userBadgeRole');
   const avEl = document.getElementById('userAvatar');
+  const menuNameEl = document.getElementById('profileMenuName');
+  const menuEmailEl = document.getElementById('profileMenuEmail');
+  const menuAvEl = document.getElementById('profileMenuAvatar');
   if (nameEl) nameEl.textContent = u ? u.name : 'Guest';
-  if (avEl) avEl.textContent = initials(u ? u.name : 'Guest');
+  renderAvatarInto(avEl, u ? u.name : 'Guest', u ? u.avatar : '');
+  renderAvatarInto(menuAvEl, u ? u.name : 'Guest', u ? u.avatar : '');
+  if (menuNameEl) menuNameEl.textContent = u ? u.name : 'Guest';
+  if (menuEmailEl) menuEmailEl.textContent = u ? u.email : '';
   if (roleEl) {
     roleEl.textContent = role === 'admin' ? 'Admin' : role === 'superuser' ? 'Super user' : 'User';
     roleEl.className = 'role-pill ' + role;
@@ -3464,11 +3682,64 @@ function applyPermissionsToUI() {
   }
 }
 
+// ─── Profile menu (avatar dropdown: change picture, sign out) ─────────────────
+function toggleProfileMenu() {
+  const menu = document.getElementById('profileMenu');
+  if (!menu) return;
+  menu.style.display = menu.style.display === 'none' ? '' : 'none';
+}
+document.addEventListener('click', (e) => {
+  const menu = document.getElementById('profileMenu');
+  const badge = document.getElementById('userBadge');
+  if (!menu || menu.style.display === 'none') return;
+  if (!menu.contains(e.target) && !badge.contains(e.target)) menu.style.display = 'none';
+});
+
+function handleAvatarUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) { showToast('Please choose an image file.', 'warning'); return; }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = async () => {
+      const size = 160;
+      const canvas = document.createElement('canvas');
+      canvas.width = size; canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      const scale = Math.max(size / img.width, size / img.height);
+      const w = img.width * scale, h = img.height * scale;
+      ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+      const u = getCurrentUser();
+      if (!u) return;
+      let saved = false;
+      try {
+        const { error } = await supabaseClient.rpc('update_my_avatar', { new_avatar: dataUrl });
+        saved = !error;
+        if (error) console.warn('update_my_avatar RPC failed:', error.message);
+      } catch(e) { console.warn('update_my_avatar RPC failed:', e.message); }
+      if (!saved) { showToast('Could not save your new picture. Check your connection and try again.', 'error'); return; }
+      const member = TEAM_MEMBERS.find(m => m.id === u.id);
+      if (member) member.avatar = dataUrl;
+      u.avatar = dataUrl;
+      localStorage.setItem(TEAM_CACHE_KEY, JSON.stringify(TEAM_MEMBERS));
+      applyPermissionsToUI();
+      renderTeamUI();
+      showToast('Profile picture updated.', 'success');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+  event.target.value = '';
+}
+
 // ─── Team member / allowlist persistence (Supabase, with localStorage fallback) ──
 async function loadTeamMembers() {
   try {
     const rows = await sbSelect('team_members', 'order=name.asc');
-    TEAM_MEMBERS = rows.map(r => ({ id: r.id, name: r.name, email: r.email || '', role: r.role }));
+    TEAM_MEMBERS = rows.map(r => ({ id: r.id, name: r.name, email: r.email || '', role: r.role, avatar: r.avatar || '' }));
     localStorage.setItem(TEAM_CACHE_KEY, JSON.stringify(TEAM_MEMBERS));
   } catch(e) {
     console.warn('team_members table unavailable, using local cache:', e.message);
@@ -3552,7 +3823,7 @@ function renderTeamUI() {
       ? emptyStateHTML({ icon: '🧑‍🤝‍🧑', title: 'No one authorized yet', sub: "Add a teammate's email above — they'll be able to sign in with Google or by creating a password." })
       : TEAM_MEMBERS.map(m => `
         <div class="team-row">
-          <span class="user-avatar">${initials(m.name)}</span>
+          <span class="user-avatar">${m.avatar ? `<img src="${m.avatar}" alt="">` : initials(m.name)}</span>
           <div class="team-name">${m.name}<div class="team-email">${m.email}</div></div>
           <select onchange="updateTeamMemberRole('${m.id}', this.value)" style="width:170px;padding:6px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:11px">
             <option value="user" ${m.role==='user'?'selected':''}>User — view only</option>
@@ -3678,7 +3949,7 @@ async function authorizeSession(session) {
     persistTeamMember(match);
   }
 
-  CURRENT_AUTH_USER = { id: match.id, name: match.name, email: match.email, role: match.role, authId: session.user.id };
+  CURRENT_AUTH_USER = { id: match.id, name: match.name, email: match.email, role: match.role, avatar: match.avatar || '', authId: session.user.id };
   hideLoginGate();
   applyPermissionsToUI();
   bootApp();
