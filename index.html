@@ -491,6 +491,8 @@ body {
 .empty-state-title { font-size: 14px; font-weight: 700; color: var(--text2); }
 .empty-state-sub { font-size: 12px; color: var(--text3); max-width: 360px; line-height: 1.55; }
 .empty-state-action { margin-top: 14px; }
+.empty-state-compact { padding: 22px 20px; gap: 3px; }
+.empty-state-compact .empty-state-icon { font-size: 24px; margin-bottom: 4px; }
 
 /* ─── SKELETON LOADING PLACEHOLDERS ────────────────────────────────────────── */
 .skeleton-row td { padding: 14px 12px !important; }
@@ -1072,24 +1074,22 @@ tr.hidden-row { display: none; }
       <label class="field-label">Add a Note</label>
       <textarea id="cntNewNoteText" rows="2" placeholder="What's happening with this client?" class="field-input" style="margin-bottom:10px;resize:vertical;font-family:inherit"></textarea>
       <label class="field-label">Tag teammates (optional — they'll be notified)</label>
-      <div id="cntTagPicker" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px"></div>
-      <div class="modal-btns" style="justify-content:flex-end;margin-bottom:0">
-        <button class="btn btn-primary" onclick="addClientNote()">Add Note</button>
-      </div>
+      <div id="cntTagPicker" style="display:flex;gap:6px;flex-wrap:wrap"></div>
     </div>
 
     <div id="cntTasksPane" style="display:none">
       <div id="cntTasksList" style="margin-bottom:16px"></div>
-      <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr auto;gap:10px;align-items:end">
+      <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:10px;align-items:end">
         <div><label class="field-label">Task</label><input type="text" id="cntNewTaskTitle" class="field-input" placeholder="e.g. Follow up about renewal"></div>
         <div><label class="field-label">Assign to</label><select id="cntNewTaskAssignee" class="field-select"></select></div>
         <div><label class="field-label">Due Date</label><input type="date" id="cntNewTaskDue" class="field-input"></div>
-        <button class="btn btn-primary" onclick="addClientTask()">＋ Add</button>
       </div>
     </div>
 
     <div class="modal-btns">
       <button class="btn btn-ghost" onclick="closeClientNotesTasksModal()">Close</button>
+      <button class="btn btn-primary" id="cntNotesSubmitBtn" onclick="addClientNote()">Add Note</button>
+      <button class="btn btn-primary" id="cntTasksSubmitBtn" style="display:none" onclick="addClientTask()">＋ Add Task</button>
     </div>
   </div>
 </div>
@@ -1211,7 +1211,7 @@ tr.hidden-row { display: none; }
       <div class="kpi"><div class="kpi-icon">🧾</div><div class="kpi-val" id="home-collections-owed">$0</div><div class="kpi-lbl">Outstanding + Card Fails</div></div>
       <div class="kpi kpi-glow-green"><div class="kpi-icon">✅</div><div class="kpi-val green" id="home-collected">$0</div><div class="kpi-lbl">Amount Collected</div><div class="kpi-sub">Payment Plan &amp; Resolved · Outstanding + Card Fails combined</div></div>
       <div class="kpi"><div class="kpi-icon">⚠️</div><div class="kpi-val red" id="home-needs-attention">0</div><div class="kpi-lbl">Need Attention Today</div></div>
-      <div class="kpi"><div class="kpi-icon">⏰</div><div class="kpi-val" style="color:var(--yellow)" id="home-stale-leads">0</div><div class="kpi-lbl">Stale Leads</div><div class="kpi-sub">Yelp/LSA/Thumbtack, 7 days–6 months</div></div>
+      <div class="kpi"><div class="kpi-icon">⚠️</div><div class="kpi-val" style="color:var(--yellow)" id="home-stale-leads">0</div><div class="kpi-lbl">Stale Leads</div><div class="kpi-sub">Yelp/LSA/Thumbtack, 7 days–6 months</div></div>
     </div>
 
     <div class="section-hd" style="margin-top:8px"><div class="section-num">1</div><h2>Quick Access</h2></div>
@@ -1236,7 +1236,7 @@ tr.hidden-row { display: none; }
       </div>
       <div class="card">
         <div class="card-header">
-          <div><div class="card-title">🕒 Recent Activity</div><div class="card-sub">Latest notes and status changes across Collections</div></div>
+          <div><div class="card-title">🕒 Recent Activity</div><div class="card-sub">Latest notes on any client, across the whole Hub</div></div>
         </div>
         <div id="homeActivityList"></div>
       </div>
@@ -1508,7 +1508,7 @@ tr.hidden-row { display: none; }
       <div class="kpi"><div class="kpi-icon" id="ta-lsa-icon">🔍</div><div class="kpi-val" id="ta-lsa">0</div><div class="kpi-lbl">Using Google LSA</div><div class="kpi-sub">Across all portfolios</div></div>
       <div class="kpi"><div class="kpi-icon" id="ta-thumbtack-icon">📌</div><div class="kpi-val" id="ta-thumbtack">0</div><div class="kpi-lbl">Using Thumbtack</div><div class="kpi-sub">Across all portfolios</div></div>
       <div class="kpi"><div class="kpi-icon">📊</div><div class="kpi-val orange" id="ta-any">0</div><div class="kpi-lbl">Using At Least One</div><div class="kpi-sub">Yelp, Google LSA, or Thumbtack</div></div>
-      <div class="kpi"><div class="kpi-icon">⏰</div><div class="kpi-val" style="color:var(--yellow)" id="ta-stale">0</div><div class="kpi-lbl">Flagged for Review</div><div class="kpi-sub">Stale leads: 7 days–6 months</div></div>
+      <div class="kpi"><div class="kpi-icon">⚠️</div><div class="kpi-val" style="color:var(--yellow)" id="ta-stale">0</div><div class="kpi-lbl">Flagged for Review</div><div class="kpi-sub">Stale leads: 7 days–6 months</div></div>
     </div>
 
     <div class="card" style="margin-bottom:20px">
@@ -1536,7 +1536,7 @@ tr.hidden-row { display: none; }
       </div>
     </div>
 
-    <div class="section-hd" style="margin-top:8px"><div class="section-num" style="background:var(--yellow)">⏰</div><h2 style="color:var(--yellow)">Flagged for Review — Stale Leads</h2></div>
+    <div class="section-hd" style="margin-top:8px"><div class="section-num" style="background:var(--yellow)">⚠</div><h2 style="color:var(--yellow)">Flagged for Review — Stale Leads</h2></div>
     <div class="section-div" style="background:linear-gradient(90deg,var(--yellow),transparent)"></div>
     <div class="card" style="margin-bottom:20px">
       <div class="card-header">
@@ -2015,20 +2015,6 @@ tr.hidden-row { display: none; }
       </div>
     </div>
     <div class="page-footer">Client Success Hub · Niche Inc. · Collections</div>
-  </div>
-
-  <!-- COLLECTIONS: NOTES MODAL -->
-  <div class="modal-overlay" id="collectionsNotesModal">
-    <div class="modal wide">
-      <h3 id="colNotesTitle">📝 Notes</h3>
-      <p id="colNotesSub">Running history of updates on this account.</p>
-      <div class="notes-thread" id="colNotesThread"></div>
-      <textarea id="colNewNoteText" rows="2" placeholder="Add a quick note about progress or a status change..." style="width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;margin-bottom:14px;resize:vertical;font-family:inherit"></textarea>
-      <div class="modal-btns">
-        <button class="btn btn-ghost" onclick="closeCollectionsNotesModal()">Close</button>
-        <button class="btn btn-primary" onclick="addCollectionsNote()">Add Note</button>
-      </div>
-    </div>
   </div>
 
   <!-- COLLECTIONS: EDIT ACCOUNT MODAL -->
@@ -3029,7 +3015,7 @@ function rebuildTextAgentStale() {
     const product = TEXT_AGENT_PRODUCTS.find(p => p.key === e.productKey);
     const daysLabel = e.days >= 30 ? `${Math.round(e.days / 30)} mo ago` : `${e.days}d ago`;
     return `<div class="support-item">
-      <div class="support-avatar" style="background:var(--bg4);color:var(--yellow)">⏰</div>
+      <div class="support-avatar" style="background:var(--bg4);color:var(--yellow)">⚠️</div>
       <div class="support-info">
         <div class="support-name">${escAttr(e.name)}</div>
         <div class="support-detail">${renderProductIcon(product.icon, 14)} ${product.label} · ${escAttr(e.note)}</div>
@@ -3120,22 +3106,17 @@ function closeTextAgentClientList() {
 function renderHomeActivityList() {
   const wrap = document.getElementById('homeActivityList');
   if (!wrap) return;
-  const entries = [];
-  COLLECTIONS_ACCOUNTS.forEach(a => {
-    (a.notes || []).forEach(n => entries.push({ ...n, accountName: a.name }));
-  });
-  entries.sort((a, b) => new Date(b.ts) - new Date(a.ts));
-  const top = entries.slice(0, 8);
+  const top = [...CLIENT_NOTES].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 8);
   if (top.length === 0) {
-    wrap.innerHTML = emptyStateHTML({ icon: '🕒', title: 'No recent activity', sub: 'Notes and status changes across Collections will show up here.' });
+    wrap.innerHTML = emptyStateHTML({ icon: '🕒', title: 'No recent activity', sub: 'Notes and status changes on any client will show up here.' });
     return;
   }
   wrap.innerHTML = top.map(n => `
-    <div class="support-item">
-      <div class="support-avatar" style="background:var(--bg4);color:var(--text2)">${initials(n.author)}</div>
+    <div class="support-item" style="cursor:pointer" onclick="openClientNotesTasksModal('${(n.client_name || '').replace(/'/g,"\\'")}')">
+      <div class="support-avatar" style="background:var(--bg4);color:var(--text2)">${initials(n.author_name)}</div>
       <div class="support-info">
-        <div class="support-name">${escAttr(n.accountName)}</div>
-        <div class="support-detail">${escAttr(n.text)} · ${fmtNoteTime(n.ts)}</div>
+        <div class="support-name">${escAttr(n.client_name)}</div>
+        <div class="support-detail">${escAttr(n.text)} · ${fmtNoteTime(n.created_at)}</div>
       </div>
     </div>`).join('');
 }
@@ -3402,8 +3383,8 @@ function escAttr(s) { return String(s || '').replace(/&/g,'&amp;').replace(/"/g,
 // polished "no data yet" and "still loading" experience across every table.
 // ════════════════════════════════════════════════════════════════════════
 function emptyStateHTML(opts = {}) {
-  const { icon = '📭', title = 'Nothing here yet', sub = '', actionLabel, actionOnClick } = opts;
-  return `<div class="empty-state">
+  const { icon = '📭', title = 'Nothing here yet', sub = '', actionLabel, actionOnClick, compact = false } = opts;
+  return `<div class="empty-state${compact ? ' empty-state-compact' : ''}">
     <div class="empty-state-icon">${icon}</div>
     <div class="empty-state-title">${escAttr(title)}</div>
     ${sub ? `<div class="empty-state-sub">${escAttr(sub)}</div>` : ''}
@@ -5013,9 +4994,7 @@ function updateCollectionsStatus(id, status) {
   const prevLabel = statusMeta(a.status).label;
   a.status = status;
   if (status === 'resolved' && !a.resolvedDate) a.resolvedDate = new Date().toISOString().slice(0,10);
-  const user = getCurrentUser();
-  a.notes = a.notes || [];
-  a.notes.unshift({ author: user ? user.name : 'Guest', text: `Status changed: ${prevLabel} → ${statusMeta(status).label}`, ts: new Date().toISOString(), system: true });
+  addSystemClientNote(a.name, `Status changed: ${prevLabel} → ${statusMeta(status).label}`);
   persistCollectionsAccount(a);
   rebuildCollectionsPage();
 }
@@ -5062,9 +5041,7 @@ function saveCollectionsEdit() {
   if (!name) { showToast('Please enter a business name.', 'warning'); nameEl.focus(); return; }
   const newStatus = document.getElementById('colEditStatus').value;
   if (newStatus !== a.status) {
-    const user = getCurrentUser();
-    a.notes = a.notes || [];
-    a.notes.unshift({ author: user ? user.name : 'Guest', text: `Status changed: ${statusMeta(a.status).label} → ${statusMeta(newStatus).label}`, ts: new Date().toISOString(), system: true });
+    addSystemClientNote(a.name, `Status changed: ${statusMeta(a.status).label} → ${statusMeta(newStatus).label}`);
   }
   a.name = name;
   a.amount = Number(document.getElementById('colEditAmount').value) || 0;
@@ -5077,49 +5054,10 @@ function saveCollectionsEdit() {
   rebuildCollectionsPage();
 }
 
-let openNotesAccountId = null;
-function openCollectionsNotesModal(id) {
-  const a = COLLECTIONS_ACCOUNTS.find(x => x.id === id);
-  if (!a) return;
-  openNotesAccountId = id;
-  document.getElementById('colNotesTitle').textContent = `📝 ${a.name}`;
-  document.getElementById('colNotesSub').textContent = `${a.type === 'outstanding' ? 'Outstanding balance' : 'Card fail'} · ${fmtMoney(a.amount)}`;
-  renderNotesThread(a);
-  document.getElementById('colNewNoteText').value = '';
-  document.getElementById('collectionsNotesModal').classList.add('open');
-}
-function closeCollectionsNotesModal() {
-  document.getElementById('collectionsNotesModal').classList.remove('open');
-  openNotesAccountId = null;
-}
-function renderNotesThread(a) {
-  const wrap = document.getElementById('colNotesThread');
-  if (!a.notes || a.notes.length === 0) { wrap.innerHTML = `<div class="note-empty">No notes yet — add the first update below.</div>`; return; }
-  wrap.innerHTML = a.notes.map(n => `
-    <div class="note-entry">
-      <div class="note-meta"><b>${n.author}</b> · ${fmtNoteTime(n.ts)}${n.system ? ' · <span style="color:var(--text3)">auto</span>' : ''}</div>
-      <div class="note-text">${(n.text || '').replace(/</g,'&lt;')}</div>
-    </div>`).join('');
-}
 function fmtNoteTime(ts) {
   const d = new Date(ts);
   if (isNaN(d)) return '';
   return d.toLocaleDateString('en-US', { month:'short', day:'numeric' }) + ' at ' + d.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' });
-}
-function addCollectionsNote() {
-  if (!requirePermission('edit')) return;
-  const a = COLLECTIONS_ACCOUNTS.find(x => x.id === openNotesAccountId);
-  if (!a) return;
-  const ta = document.getElementById('colNewNoteText');
-  const text = ta.value.trim();
-  if (!text) { ta.focus(); return; }
-  const user = getCurrentUser();
-  a.notes = a.notes || [];
-  a.notes.unshift({ author: user ? user.name : 'Guest', text, ts: new Date().toISOString() });
-  persistCollectionsAccount(a);
-  ta.value = '';
-  renderNotesThread(a);
-  rebuildCollectionsTable();
 }
 
 function setCollectionsFilter(key, btn) {
@@ -5216,13 +5154,15 @@ function rebuildCollectionsTable() {
   const editable = canEdit();
   tbody.innerHTML = rows.map(a => {
     const meta = statusMeta(a.status);
-    const latestNote = (a.notes && a.notes[0]) ? a.notes[0].text : '';
+    const accountNotes = getClientNotes(a.name);
+    const latestNote = accountNotes[0] ? accountNotes[0].text : '';
     const noteShort = latestNote ? (latestNote.length > 44 ? latestNote.slice(0,44) + '…' : latestNote) : '<span style="color:var(--text3)">No notes yet</span>';
     const statusCell = editable
       ? `<select class="status-select" style="background:${meta.bg};color:${meta.color}" onchange="updateCollectionsStatus('${a.id}', this.value)">
           ${COLLECTIONS_STATUSES.map(s => `<option value="${s.key}" ${s.key === a.status ? 'selected' : ''}>${s.label}</option>`).join('')}
         </select>`
       : `<span class="status-pill" style="background:${meta.bg};color:${meta.color}">${meta.label}</span>`;
+    const safeName = a.name.replace(/'/g,"\\'");
     const cellByIdx = [
       `<td style="font-weight:600;color:var(--text)">${a.name}</td>`,
       `<td>${fmtMoney(a.amount)}</td>`,
@@ -5230,8 +5170,8 @@ function rebuildCollectionsTable() {
       `<td>${a.resolvedDate ? fmtDate(a.resolvedDate) : '<span style="color:var(--text3)">—</span>'}</td>`,
       `<td>${statusCell}</td>`,
       `<td title="${(latestNote || '').replace(/"/g,'&quot;')}" style="color:var(--text2)">${noteShort}</td>`,
-      `<td>
-        <button class="row-action-btn" onclick="openCollectionsNotesModal('${a.id}')">📝 ${a.notes ? a.notes.length : 0}</button>
+      `<td style="white-space:nowrap">
+        <button class="row-action-btn" onclick="openClientNotesTasksModal('${safeName}')">📝 ${accountNotes.length}</button>
         ${editable ? `<button class="row-action-btn" onclick="openEditCollectionsModal('${a.id}')">✏️</button>` : ''}
         ${editable ? `<button class="row-action-btn danger" onclick="removeCollectionsAccount('${a.id}')">🗑️</button>` : ''}
       </td>`,
@@ -5624,6 +5564,10 @@ function switchCntTab(tab) {
   if (notesPane) notesPane.style.display = tab === 'notes' ? '' : 'none';
   if (tasksPane) tasksPane.style.display = tab === 'tasks' ? '' : 'none';
   document.querySelectorAll('#cntTabs .pm-tab').forEach((b, i) => b.classList.toggle('active', (tab === 'notes' && i === 0) || (tab === 'tasks' && i === 1)));
+  const notesBtn = document.getElementById('cntNotesSubmitBtn');
+  const tasksBtn = document.getElementById('cntTasksSubmitBtn');
+  if (notesBtn) notesBtn.style.display = tab === 'notes' ? '' : 'none';
+  if (tasksBtn) tasksBtn.style.display = tab === 'tasks' ? '' : 'none';
 }
 
 function renderCntTagPicker() {
@@ -5638,6 +5582,62 @@ function toggleCntTag(el, email) {
   el.classList.toggle('active');
   if (cntTaggedEmails.includes(email)) cntTaggedEmails = cntTaggedEmails.filter(e => e !== email);
   else cntTaggedEmails.push(email);
+}
+
+function getClientNotes(clientName) {
+  return CLIENT_NOTES.filter(n => n.client_name === clientName);
+}
+
+async function addSystemClientNote(clientName, text) {
+  const u = getCurrentUser();
+  const note = {
+    id: (crypto.randomUUID ? crypto.randomUUID() : 'n_' + Date.now() + Math.random().toString(16).slice(2)),
+    client_name: clientName,
+    author_email: u ? u.email : '',
+    author_name: u ? u.name : 'Guest',
+    text,
+    tagged_emails: [],
+    created_at: new Date().toISOString(),
+    system: true,
+  };
+  CLIENT_NOTES.unshift(note);
+  localStorage.setItem(CLIENT_NOTES_CACHE_KEY, JSON.stringify(CLIENT_NOTES));
+  try { await sbUpsert('client_notes', note); } catch(e) { console.warn('Could not save system note:', e.message); }
+  return note;
+}
+
+// One-time migration: Collections used to keep its own notes array directly on
+// each account row. This copies any of those into the unified client_notes
+// system (skipping any that look already migrated) so nothing is lost, and
+// everything going forward lives in one place with proper edit/delete support.
+function migrateOldCollectionsNotes() {
+  let migratedAny = false;
+  COLLECTIONS_ACCOUNTS.forEach(a => {
+    if (!a.notes || !a.notes.length) return;
+    a.notes.forEach(oldNote => {
+      const already = CLIENT_NOTES.some(n => n.client_name === a.name && n.text === oldNote.text && n.created_at === oldNote.ts);
+      if (already) return;
+      const note = {
+        id: (crypto.randomUUID ? crypto.randomUUID() : 'n_' + Date.now() + Math.random().toString(16).slice(2)),
+        client_name: a.name,
+        author_email: '',
+        author_name: oldNote.author || 'Guest',
+        text: oldNote.text,
+        tagged_emails: [],
+        created_at: oldNote.ts || new Date().toISOString(),
+        system: !!oldNote.system,
+      };
+      CLIENT_NOTES.push(note);
+      sbUpsert('client_notes', note).catch(e => console.warn('Could not migrate a note:', e.message));
+      migratedAny = true;
+    });
+  });
+  if (migratedAny) {
+    CLIENT_NOTES.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    localStorage.setItem(CLIENT_NOTES_CACHE_KEY, JSON.stringify(CLIENT_NOTES));
+  }
+  if (typeof rebuildCollectionsPage === 'function') rebuildCollectionsPage();
+  if (typeof rebuildHomePage === 'function') rebuildHomePage();
 }
 
 async function addClientNote() {
@@ -5674,7 +5674,7 @@ function renderClientNotesThread() {
   if (!wrap) return;
   const notes = CLIENT_NOTES.filter(n => n.client_name === cntActiveClientName);
   if (notes.length === 0) {
-    wrap.innerHTML = emptyStateHTML({ icon: '📝', title: 'No notes yet', sub: 'Add the first note about this client below.' });
+    wrap.innerHTML = emptyStateHTML({ icon: '📝', title: 'No notes yet', sub: 'Add the first note about this client below.', compact: true });
     return;
   }
   const u = getCurrentUser();
@@ -5770,7 +5770,7 @@ function renderClientTasksList() {
   if (!wrap) return;
   const tasks = CLIENT_TASKS.filter(t => t.client_name === cntActiveClientName);
   if (tasks.length === 0) {
-    wrap.innerHTML = emptyStateHTML({ icon: '✅', title: 'No tasks yet', sub: 'Create a task below and assign it to yourself or a teammate.' });
+    wrap.innerHTML = emptyStateHTML({ icon: '✅', title: 'No tasks yet', sub: 'Create a task below and assign it to yourself or a teammate.', compact: true });
     return;
   }
   wrap.innerHTML = tasks.map(t => `
@@ -6789,6 +6789,7 @@ async function bootApp() {
 
     // Client Notes & Tasks
     await loadClientNotesTasks();
+    migrateOldCollectionsNotes();
 
     // Auto-refresh any connected Google Sheets
     let sheetsUrls = {};
@@ -6808,6 +6809,7 @@ async function bootApp() {
     await loadAdSpendBusinesses();
     await loadCollectionsAccounts();
     await loadClientNotesTasks();
+    migrateOldCollectionsNotes();
   }
 }
 
