@@ -694,6 +694,33 @@ tr.hidden-row { display: none; }
 .kpi-log-row { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
 @media (max-width: 900px) { .kpi-sop-grid { grid-template-columns: 1fr; } .kpi-log-row { grid-template-columns: 1fr; } }
 
+/* ─── CLIENT SPOTLIGHT ─────────────────────────────────────────────────── */
+.spotlight-card {
+  background: linear-gradient(135deg, rgba(226,84,31,.07), rgba(226,84,31,.02));
+  border: 1px solid rgba(226,84,31,.25); border-radius: var(--radius); padding: 22px;
+}
+.spotlight-hd { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+.spotlight-title { font-size: 13px; font-weight: 800; color: var(--orange); text-transform: uppercase; letter-spacing: .04em; display: flex; align-items: center; gap: 8px; }
+.spotlight-name-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+.spotlight-name { font-size: 22px; font-weight: 800; color: var(--text); }
+.spotlight-org { font-size: 12px; color: var(--text3); margin-top: 2px; }
+.spotlight-worked-badge { font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 12px; white-space: nowrap; }
+.spotlight-worked-yes { background: rgba(34,197,94,.15); color: var(--green); }
+.spotlight-worked-no { background: rgba(245,158,11,.15); color: var(--yellow); }
+.spotlight-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+.spotlight-block-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--text3); margin-bottom: 8px; }
+.spotlight-block { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+.spotlight-empty-line { font-size: 12px; color: var(--text3); }
+.spotlight-note-line { font-size: 12px; color: var(--text2); line-height: 1.5; margin-bottom: 8px; }
+.spotlight-note-line:last-child { margin-bottom: 0; }
+.spotlight-note-line b { color: var(--text); }
+.spotlight-task-line { font-size: 12px; color: var(--text2); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+.spotlight-task-line:last-child { margin-bottom: 0; }
+.spotlight-flag-line { font-size: 12px; color: var(--text2); margin-bottom: 6px; }
+.spotlight-flag-line:last-child { margin-bottom: 0; }
+.spotlight-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+@media (max-width: 900px) { .spotlight-grid { grid-template-columns: 1fr; } }
+
 /* ─── VOICE AGENT PAGE ─────────────────────────────────────────────────── */
 .flag-table { width: 100%; border-collapse: collapse; }
 .flag-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--text2); vertical-align: top; }
@@ -901,6 +928,10 @@ tr.hidden-row { display: none; }
 .note-mention { color: var(--orange); font-weight: 600; }
 .cnt-section-title { font-size: 13px; font-weight: 800; color: var(--text); margin-bottom: 10px; }
 .cnt-divider { height: 1px; background: var(--border); margin: 20px 0; }
+.smart-paste-box {
+  background: rgba(226,84,31,.05); border: 1px dashed rgba(226,84,31,.35); border-radius: 10px;
+  padding: 12px 14px; margin-bottom: 16px;
+}
 
 .team-row { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; background: var(--bg3); }
 .team-row .team-name { flex: 1; font-weight: 700; font-size: 13px; color: var(--text); }
@@ -1146,6 +1177,10 @@ tr.hidden-row { display: none; }
       <div class="cnt-section">
         <div class="cnt-section-title">👤 Contact Info</div>
         <div style="font-size:11px;color:var(--text3);margin-bottom:14px">Primary point of contact for this client — visible to everyone, editable by Super users and Admins</div>
+        <div class="smart-paste-box">
+          <label class="field-label">📋 Smart Paste <span style="color:var(--text3);font-weight:400">— paste a signature, business card text, or a spreadsheet row and it'll auto-fill the fields below</span></label>
+          <input type="text" id="cntSmartPaste" class="field-input" style="height:38px" placeholder="Paste here…" onpaste="setTimeout(() => handleSmartPaste('cnt', this.value), 0)">
+        </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px">
           <div><label class="field-label">Contact Name</label><input type="text" id="cntContactName" class="field-input" style="height:38px" placeholder="e.g. Jamie Rivera"></div>
           <div><label class="field-label">Title</label><input type="text" id="cntContactTitle" class="field-input" style="height:38px" placeholder="e.g. Owner / Office Manager"></div>
@@ -1403,6 +1438,9 @@ tr.hidden-row { display: none; }
       </div>
     </div>
 
+    <!-- Client Spotlight -->
+    <div id="spotlight-smb" style="margin-bottom:20px"></div>
+
     <!-- Charts Row 1 -->
     <div class="grid-2" style="margin-bottom:20px">
       <div class="card">
@@ -1516,6 +1554,9 @@ tr.hidden-row { display: none; }
         <div class="kpi-sub">Highest adoption product</div>
       </div>
     </div>
+
+    <!-- Client Spotlight -->
+    <div id="spotlight-whitelabel" style="margin-bottom:20px"></div>
 
     <!-- Charts Row 1 -->
     <div class="grid-2" style="margin-bottom:20px">
@@ -1751,6 +1792,9 @@ tr.hidden-row { display: none; }
         <div class="kpi-sub">Highest adoption product</div>
       </div>
     </div>
+
+    <!-- Client Spotlight -->
+    <div id="spotlight-support" style="margin-bottom:20px"></div>
 
     <!-- Charts Row 1 -->
     <div class="grid-2" style="margin-bottom:20px">
@@ -2377,6 +2421,10 @@ tr.hidden-row { display: none; }
     <div class="cnt-divider"></div>
 
     <div style="font-size:11px;color:var(--text3);margin-bottom:12px">Primary contact (optional)</div>
+    <div class="smart-paste-box">
+      <label class="field-label">📋 Smart Paste <span style="color:var(--text3);font-weight:400">— paste a signature, business card text, or a spreadsheet row and it'll auto-fill the fields below</span></label>
+      <input type="text" id="acSmartPaste" class="field-input" style="height:38px" placeholder="Paste here…" onpaste="setTimeout(() => handleSmartPaste('ac', this.value), 0)">
+    </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
       <div><label class="field-label">Contact Name</label><input type="text" id="acContactName" class="field-input" style="height:38px" placeholder="e.g. Jamie Rivera"></div>
       <div><label class="field-label">Title</label><input type="text" id="acContactTitle" class="field-input" style="height:38px" placeholder="e.g. Owner / Office Manager"></div>
@@ -2863,6 +2911,169 @@ function genericSteps(label) {
 // ════════════════════════════════════════════════════════════════════════
 // MASTER REBUILD — rebuilds ONE portfolio's dashboard (table/charts/KPIs)
 // ════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════
+// CLIENT SPOTLIGHT — one focus client per portfolio per day, pulling together
+// everything the Hub knows about them (products, contact, notes, tasks,
+// Collections, Ad Spend) so the team has one clear place to start each day.
+// Skips anyone already worked today (i.e. someone logged a note for them
+// today) so a fresh client surfaces instead of repeating one already covered.
+// Shared across the team via Supabase, so everyone sees the same pick.
+// ════════════════════════════════════════════════════════════════════════
+const CLIENT_SPOTLIGHT_CACHE_KEY = 'csh_client_spotlight_v1';
+let CLIENT_SPOTLIGHT = {}; // keyed by `${pk}_${date}` -> { id, portfolio, date, client_name, updated_at }
+
+async function loadClientSpotlight() {
+  try {
+    const rows = await sbSelect('client_spotlight');
+    CLIENT_SPOTLIGHT = {};
+    rows.forEach(r => { CLIENT_SPOTLIGHT[r.id] = r; });
+    localStorage.setItem(CLIENT_SPOTLIGHT_CACHE_KEY, JSON.stringify(CLIENT_SPOTLIGHT));
+  } catch(e) {
+    console.warn('client_spotlight table unavailable, using local cache:', e.message);
+    try { CLIENT_SPOTLIGHT = JSON.parse(localStorage.getItem(CLIENT_SPOTLIGHT_CACHE_KEY) || '{}'); } catch(e2) { CLIENT_SPOTLIGHT = {}; }
+  }
+}
+
+async function persistSpotlight(entry) {
+  CLIENT_SPOTLIGHT[entry.id] = entry;
+  localStorage.setItem(CLIENT_SPOTLIGHT_CACHE_KEY, JSON.stringify(CLIENT_SPOTLIGHT));
+  try { await sbUpsert('client_spotlight', entry); } catch(e) { console.warn('Could not save spotlight pick:', e.message); }
+}
+
+function todayStr() { return new Date().toISOString().slice(0, 10); }
+
+// "Worked today" = someone logged a note for this client today — a signal the
+// Hub already tracks natively, so no separate tracking mechanism is needed.
+function getWorkedTodayNames() {
+  const today = todayStr();
+  const names = new Set();
+  CLIENT_NOTES.forEach(n => {
+    if ((n.created_at || '').slice(0, 10) === today) names.add((n.client_name || '').trim().toLowerCase());
+  });
+  return names;
+}
+
+function getEligibleSpotlightClients(pk, excludeName) {
+  const worked = getWorkedTodayNames();
+  const all = getClients(pk).filter(c => c.name && c.name.trim());
+  let eligible = all.filter(c => !worked.has(c.name.trim().toLowerCase()) && (!excludeName || c.name !== excludeName));
+  if (eligible.length === 0) eligible = all.filter(c => !excludeName || c.name !== excludeName); // everyone's been worked — fall back to anyone else
+  if (eligible.length === 0) eligible = all; // only one client total
+  return eligible;
+}
+
+async function ensureSpotlightForToday(pk) {
+  const today = todayStr();
+  const id = `${pk}_${today}`;
+  let entry = CLIENT_SPOTLIGHT[id];
+  const clients = getClients(pk);
+  const stillExists = entry && clients.some(c => c.name === entry.client_name);
+  if (!entry || !stillExists) {
+    const eligible = getEligibleSpotlightClients(pk);
+    if (eligible.length === 0) return null;
+    const pick = eligible[Math.floor(Math.random() * eligible.length)];
+    entry = { id, portfolio: pk, date: today, client_name: pick.name, updated_at: new Date().toISOString() };
+    await persistSpotlight(entry);
+  }
+  return entry;
+}
+
+async function shuffleSpotlightClient(pk) {
+  const today = todayStr();
+  const id = `${pk}_${today}`;
+  const current = CLIENT_SPOTLIGHT[id];
+  const eligible = getEligibleSpotlightClients(pk, current ? current.client_name : null);
+  if (eligible.length === 0) { showToast('No other clients available to spotlight right now.', 'info'); return; }
+  const pick = eligible[Math.floor(Math.random() * eligible.length)];
+  const entry = { id, portfolio: pk, date: today, client_name: pick.name, updated_at: new Date().toISOString() };
+  await persistSpotlight(entry);
+  await renderClientSpotlight(pk);
+  showToast(`Spotlight switched to ${pick.name}.`, 'success');
+}
+
+async function renderClientSpotlight(pk) {
+  const el = document.getElementById('spotlight-' + pk);
+  if (!el) return;
+  const entry = await ensureSpotlightForToday(pk);
+  if (!entry) {
+    el.innerHTML = `<div class="card">${emptyStateHTML({ icon: '🔦', title: 'No clients yet', sub: `Upload ${PORTFOLIOS[pk].name} clients to see a daily spotlight here.`, compact: true })}</div>`;
+    return;
+  }
+  const client = getClients(pk).find(c => c.name === entry.client_name);
+  if (!client) { el.innerHTML = ''; return; }
+
+  const cat = getCatalog(pk);
+  const using = cat.filter(p => client[p.key]);
+  const notUsing = cat.filter(p => !client[p.key]);
+  const contact = getClientContact(client.name);
+  const notes = getClientNotes(client.name).slice(0, 3);
+  const tasks = CLIENT_TASKS.filter(t => t.client_name === client.name && t.status !== 'done');
+  const normName = client.name.trim().toLowerCase();
+  const collectionsEntry = (typeof COLLECTIONS_ACCOUNTS !== 'undefined' ? COLLECTIONS_ACCOUNTS : []).find(a => (a.name || '').trim().toLowerCase() === normName);
+  const adSpendEntry = (typeof AD_SPEND_BUSINESSES !== 'undefined' ? AD_SPEND_BUSINESSES : []).find(b => (b.name || '').trim().toLowerCase() === normName);
+  const workedToday = getWorkedTodayNames().has(normName);
+  const safe = client.name.replace(/'/g, "\\'");
+
+  const usingHtml = using.length
+    ? `<div class="product-icon-row">${using.map(p => `<span class="product-icon-chip" title="${escAttr(p.label)}">${renderProductIcon(p.icon, 14)}</span>`).join('')}</div>`
+    : `<div class="spotlight-empty-line">Not using any products yet</div>`;
+  const notUsingHtml = notUsing.length
+    ? `<div class="product-icon-row">${notUsing.map(p => `<span class="product-icon-chip" title="${escAttr(p.label)}">${renderProductIcon(p.icon, 14)}</span>`).join('')}</div>`
+    : `<div class="spotlight-empty-line">Using everything in the catalog 🎉</div>`;
+
+  const contactHtml = contact && (contact.contact_name || contact.email || contact.phone)
+    ? `${contact.contact_name ? `<div class="spotlight-note-line"><b>${escAttr(contact.contact_name)}</b>${contact.title ? ' — ' + escAttr(contact.title) : ''}</div>` : ''}
+       ${contact.email ? `<div class="spotlight-note-line">✉️ ${escAttr(contact.email)}</div>` : ''}
+       ${contact.phone ? `<div class="spotlight-note-line">📞 ${escAttr(contact.phone)}</div>` : ''}`
+    : `<div class="spotlight-empty-line">No contact info on file yet</div>`;
+
+  const flagLines = [];
+  if (collectionsEntry) {
+    const meta = statusMeta(collectionsEntry.status);
+    flagLines.push(`<div class="spotlight-flag-line">🧾 ${collectionsEntry.type === 'outstanding' ? 'Outstanding balance' : 'Card fail'}: ${fmtMoney(collectionsEntry.amount)} · <span style="color:${meta.color}">${meta.label}</span></div>`);
+  }
+  if (adSpendEntry) {
+    flagLines.push(`<div class="spotlight-flag-line">💰 Ad spend: ${fmtMoney(adSpendEntry.budget)}/mo · <span class="promo-pill ${promoPillClass(adSpendEntry.promo)}" style="font-size:9px">${adSpendEntry.promo}</span></div>`);
+  }
+  const flagsHtml = flagLines.length ? flagLines.join('') : `<div class="spotlight-empty-line">Nothing flagged in Collections or Ad Spend</div>`;
+
+  const notesHtml = notes.length
+    ? notes.map(n => `<div class="spotlight-note-line"><b>${escAttr(n.author_name)}</b> · ${fmtNoteTime(n.created_at)}<br>${renderNoteTextWithMentions(n.text)}</div>`).join('')
+    : `<div class="spotlight-empty-line">No notes logged yet — be the first</div>`;
+
+  const tasksHtml = tasks.length
+    ? tasks.map(t => `<div class="spotlight-task-line">☐ ${escAttr(t.title)}${t.due_date ? ` · Due ${fmtDateTime(t.due_date)}` : ''}</div>`).join('')
+    : `<div class="spotlight-empty-line">No open tasks</div>`;
+
+  el.innerHTML = `
+    <div class="spotlight-card">
+      <div class="spotlight-hd">
+        <div class="spotlight-title">🔦 Today's Client Spotlight</div>
+        <div class="spotlight-actions">
+          <button class="btn btn-ghost btn-sm" onclick="shuffleSpotlightClient('${pk}')">🔀 Show a Different Client</button>
+          <button class="btn btn-primary btn-sm" onclick="openClientNotesTasksModal('${safe}')">👤 Open Full Profile</button>
+        </div>
+      </div>
+      <div class="spotlight-name-row">
+        <div>
+          <div class="spotlight-name">${escAttr(client.name)}</div>
+          ${client.org ? `<div class="spotlight-org">🏢 ${escAttr(client.org)}</div>` : ''}
+        </div>
+        <span class="spotlight-worked-badge ${workedToday ? 'spotlight-worked-yes' : 'spotlight-worked-no'}">${workedToday ? '✅ Worked today' : '⏳ Not touched yet today'}</span>
+      </div>
+      <div class="spotlight-grid">
+        <div class="spotlight-block"><div class="spotlight-block-label">✅ Using (${using.length})</div>${usingHtml}</div>
+        <div class="spotlight-block"><div class="spotlight-block-label">🎯 Upsell Opportunity (${notUsing.length})</div>${notUsingHtml}</div>
+        <div class="spotlight-block"><div class="spotlight-block-label">👤 Contact</div>${contactHtml}</div>
+      </div>
+      <div class="spotlight-grid">
+        <div class="spotlight-block"><div class="spotlight-block-label">📝 Recent Notes</div>${notesHtml}</div>
+        <div class="spotlight-block"><div class="spotlight-block-label">✅ Open Tasks</div>${tasksHtml}</div>
+        <div class="spotlight-block"><div class="spotlight-block-label">⚠️ Billing &amp; Ad Spend</div>${flagsHtml}</div>
+      </div>
+    </div>`;
+}
+
 function rebuildPortfolio(pk) {
   rebuildTableHeaders(pk);
   rebuildFilterPills(pk);
@@ -2871,6 +3082,7 @@ function rebuildPortfolio(pk) {
   rebuildDistDonut(pk);
   rebuildGapBar(pk);
   rebuildClientTable(pk);
+  renderClientSpotlight(pk);
   console.log(`✅ ${PORTFOLIOS[pk].name} rebuilt — ${getClients(pk).length} clients, ${getCatalog(pk).length} products`);
 }
 
@@ -6362,6 +6574,95 @@ async function loadClientNotesTasks() {
 }
 
 // ─── Client Contact Info (name/title/email/phone) ──────────────────────────
+// ════════════════════════════════════════════════════════════════════════
+// SMART PASTE — paste a signature block, business card text, or a spreadsheet
+// row into one box, and it auto-fills Name / Title / Email / Phone / Org.
+// Best-effort heuristics, not guaranteed-perfect — always double-check before
+// saving. Never overwrites a field the person already typed something into.
+// ════════════════════════════════════════════════════════════════════════
+function parseSmartPaste(text) {
+  const result = { name: '', title: '', org: '', email: '', phone: '' };
+  if (!text || !text.trim()) return result;
+  text = text.trim();
+
+  const emailRe = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
+  const phoneRe = /(\+?\d{1,2}[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}(\s*(ext|x)\.?\s*\d+)?/i;
+  const orgRe = /\b(inc|llc|corp|co\.?|company|group|roofing|plumbing|hvac|electric(al)?|construction|contracting|services?|solutions|enterprises|partners|holdings|agency|marketing|media)\b/i;
+  const titleRe = /\b(owner|manager|director|ceo|coo|cfo|president|vp|vice president|coordinator|specialist|representative|rep\.?|sales|account|customer|success|founder|partner|admin(istrator)?|supervisor)\b/i;
+
+  const emailMatch = text.match(emailRe);
+  if (emailMatch) result.email = emailMatch[0];
+  const phoneMatch = text.match(phoneRe);
+  if (phoneMatch) result.phone = phoneMatch[0].trim();
+
+  // Structured single-line paste: tab-separated (spreadsheet copy) or comma-separated
+  let fields = null;
+  if (text.includes('\t')) fields = text.split('\t').map(f => f.trim()).filter(Boolean);
+  else {
+    const commaCount = (text.match(/,/g) || []).length;
+    const singleLine = text.split('\n').filter(Boolean).length === 1;
+    if (commaCount >= 2 && singleLine) fields = text.split(',').map(f => f.trim()).filter(Boolean);
+  }
+
+  if (fields && fields.length > 1) {
+    const leftover = [];
+    fields.forEach(f => {
+      if (emailRe.test(f)) return; // this field is the email — already captured above, just skip it
+      if (phoneRe.test(f)) return; // this field is the phone — already captured above, just skip it
+      if (!result.org && orgRe.test(f)) { result.org = f; return; }
+      if (!result.title && titleRe.test(f)) { result.title = f; return; }
+      leftover.push(f);
+    });
+    if (!result.name && leftover.length) result.name = leftover.shift();
+    if (!result.title && leftover.length) result.title = leftover.shift();
+    if (!result.org && leftover.length) result.org = leftover.shift();
+    return result;
+  }
+
+  // Unstructured blob (e.g. an email signature) — line-by-line heuristics
+  let lines = text.split('\n').map(l => l.trim()).filter(Boolean)
+    .map(l => l.replace(emailRe, '').replace(phoneRe, '').trim())
+    .filter(Boolean);
+  // Expand "Title | Company" style single lines into separate parts before classifying
+  lines = lines.flatMap(l => l.includes('|') ? l.split('|').map(p => p.trim()).filter(Boolean) : [l]);
+  const remaining = [];
+  lines.forEach(l => {
+    if (!result.org && orgRe.test(l)) { result.org = l; return; }
+    if (!result.title && titleRe.test(l)) { result.title = l; return; }
+    remaining.push(l);
+  });
+  if (!result.name && remaining.length) result.name = remaining.shift();
+  if (!result.title && remaining.length) result.title = remaining.shift();
+  if (!result.org && remaining.length) result.org = remaining.shift();
+
+  return result;
+}
+
+// `prefix` is 'ac' (Add Client modal) or 'cnt' (client profile Contact Info section)
+function handleSmartPaste(prefix, rawText) {
+  const parsed = parseSmartPaste(rawText);
+  const fillIfEmpty = (id, val) => {
+    if (!val) return false;
+    const el = document.getElementById(id);
+    if (el && !el.disabled && !el.value.trim()) { el.value = val; return true; }
+    return false;
+  };
+  let filled = 0;
+  if (fillIfEmpty(prefix + 'ContactName', parsed.name)) filled++;
+  if (fillIfEmpty(prefix + 'ContactTitle', parsed.title)) filled++;
+  if (fillIfEmpty(prefix + 'ContactEmail', parsed.email)) filled++;
+  if (fillIfEmpty(prefix + 'ContactPhone', parsed.phone)) filled++;
+  // "Organization" (groups multi-location businesses) only exists on the Add Client modal —
+  // only fill it from a detected company name if it's still empty, never overwrite.
+  if (prefix === 'ac' && fillIfEmpty('acOrg', parsed.org)) filled++;
+
+  const box = document.getElementById(prefix + 'SmartPaste');
+  if (box) box.value = '';
+
+  if (filled > 0) showToast(`Smart Paste filled in ${filled} field${filled === 1 ? '' : 's'} — double-check before saving.`, 'success');
+  else showToast("Couldn't detect any contact info in that paste — try a different format or fill in manually.", 'warning');
+}
+
 function getClientContact(clientName) {
   const norm = (clientName || '').trim().toLowerCase();
   return CLIENT_CONTACTS.find(c => (c.client_name || '').trim().toLowerCase() === norm) || null;
@@ -6375,6 +6676,8 @@ function renderClientContactInfo() {
   set('cntContactTitle', contact.title);
   set('cntContactEmail', contact.email);
   set('cntContactPhone', contact.phone);
+  const pasteEl = document.getElementById('cntSmartPaste');
+  if (pasteEl) { pasteEl.value = ''; pasteEl.disabled = !editable; }
   const note = document.getElementById('cntContactSavedNote');
   if (note) {
     note.textContent = contact.updated_at
@@ -8050,6 +8353,14 @@ async function bootApp() {
     // Client Success KPIs (Anticipating Needs / Preempting Risks / Solving Problems)
     await loadKpiHistory();
 
+    // Client Spotlight (daily focus client per portfolio)
+    await loadClientSpotlight();
+
+    // Final pass now that every data source (notes, contacts, collections, ad
+    // spend) has loaded — ensures cards like the Client Spotlight, which pull
+    // from all of the above, render with full context instead of partial data.
+    rebuildAll();
+
     // Auto-refresh any connected Google Sheets
     let sheetsUrls = {};
     try {
@@ -8070,6 +8381,8 @@ async function bootApp() {
     await loadClientNotesTasks();
     migrateOldCollectionsNotes();
     await loadKpiHistory();
+    await loadClientSpotlight();
+    rebuildAll();
   }
 }
 
