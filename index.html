@@ -450,7 +450,13 @@ body {
   width: 100%; max-width: 380px; background: var(--bg2); border: 1px solid var(--border);
   border-radius: 16px; padding: 34px 28px; box-shadow: var(--shadow);
 }
-.login-logo { font-size: 40px; text-align: center; margin-bottom: 8px; }
+.login-logo-img { height: 52px; width: auto; display: block; margin: 0 auto 14px; }
+.password-toggle-btn {
+  position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; cursor: pointer; font-size: 14px;
+  padding: 6px 8px; opacity: .6; transition: opacity .15s;
+}
+.password-toggle-btn:hover { opacity: 1; }
 .login-title { font-size: 19px; font-weight: 800; color: var(--text); text-align: center; }
 .login-sub { font-size: 12px; color: var(--text3); text-align: center; margin-bottom: 26px; }
 .google-btn {
@@ -881,7 +887,7 @@ tr.hidden-row { display: none; }
 <!-- LOGIN GATE — visible until a Supabase Auth session is verified against the team_members allowlist -->
 <div id="loginGate" class="login-gate">
   <div class="login-card">
-    <div class="login-logo">🦊</div>
+    <img id="loginLogoImg" alt="Client Success Hub" class="login-logo-img">
     <div class="login-title">Client Success Hub</div>
     <div class="login-sub">Niche Inc. — sign in to continue</div>
 
@@ -897,7 +903,10 @@ tr.hidden-row { display: none; }
     <label class="login-label">Email</label>
     <input type="email" id="loginEmail" class="login-input" placeholder="you@getniche.ai" autocomplete="username">
     <label class="login-label">Password</label>
-    <input type="password" id="loginPassword" class="login-input" placeholder="••••••••" autocomplete="current-password">
+    <div style="position:relative">
+      <input type="password" id="loginPassword" class="login-input" placeholder="••••••••" autocomplete="current-password" style="padding-right:40px">
+      <button type="button" class="password-toggle-btn" id="passwordToggleBtn" onclick="togglePasswordVisibility()" title="Show password" tabindex="-1">👁️</button>
+    </div>
 
     <button class="btn btn-primary" id="loginSubmitBtn" style="width:100%;margin-top:14px" onclick="submitLoginForm()">Sign In</button>
 
@@ -1117,8 +1126,9 @@ tr.hidden-row { display: none; }
       <div class="kpi"><div class="kpi-icon">👥</div><div class="kpi-val orange" id="home-total-clients">0</div><div class="kpi-lbl">Unique Clients</div><div class="kpi-sub">Across SMB, White Label, Support</div></div>
       <div class="kpi"><div class="kpi-icon">💰</div><div class="kpi-val" id="home-ad-budget">$0</div><div class="kpi-lbl">Total Ad Spend Budget</div></div>
       <div class="kpi"><div class="kpi-icon">🧾</div><div class="kpi-val" id="home-collections-owed">$0</div><div class="kpi-lbl">Outstanding + Card Fails</div></div>
-      <div class="kpi kpi-glow-green"><div class="kpi-icon">✅</div><div class="kpi-val green" id="home-collected">$0</div><div class="kpi-lbl">Amount Collected</div><div class="kpi-sub">Payment Plan &amp; Resolved, all Collections</div></div>
+      <div class="kpi kpi-glow-green"><div class="kpi-icon">✅</div><div class="kpi-val green" id="home-collected">$0</div><div class="kpi-lbl">Amount Collected</div><div class="kpi-sub">Payment Plan &amp; Resolved · Outstanding + Card Fails combined</div></div>
       <div class="kpi"><div class="kpi-icon">⚠️</div><div class="kpi-val red" id="home-needs-attention">0</div><div class="kpi-lbl">Need Attention Today</div></div>
+      <div class="kpi"><div class="kpi-icon">⏰</div><div class="kpi-val" style="color:var(--yellow)" id="home-stale-leads">0</div><div class="kpi-lbl">Stale Leads</div><div class="kpi-sub">Yelp/LSA/Thumbtack, 7 days–6 months</div></div>
     </div>
 
     <div class="section-hd" style="margin-top:8px"><div class="section-num">1</div><h2>Quick Access</h2></div>
@@ -1404,10 +1414,18 @@ tr.hidden-row { display: none; }
   ════════════════════════════════════════════════════════════════════════ -->
   <div class="page" id="page-textagent">
     <div class="kpi-row">
-      <div class="kpi"><div class="kpi-icon">⭐</div><div class="kpi-val" id="ta-yelp">0</div><div class="kpi-lbl">Using Yelp</div><div class="kpi-sub">Across all portfolios</div></div>
-      <div class="kpi"><div class="kpi-icon">🔍</div><div class="kpi-val" id="ta-lsa">0</div><div class="kpi-lbl">Using Google LSA</div><div class="kpi-sub">Across all portfolios</div></div>
-      <div class="kpi"><div class="kpi-icon">📌</div><div class="kpi-val" id="ta-thumbtack">0</div><div class="kpi-lbl">Using Thumbtack</div><div class="kpi-sub">Across all portfolios</div></div>
+      <div class="kpi"><div class="kpi-icon" id="ta-yelp-icon">⭐</div><div class="kpi-val" id="ta-yelp">0</div><div class="kpi-lbl">Using Yelp</div><div class="kpi-sub">Across all portfolios</div></div>
+      <div class="kpi"><div class="kpi-icon" id="ta-lsa-icon">🔍</div><div class="kpi-val" id="ta-lsa">0</div><div class="kpi-lbl">Using Google LSA</div><div class="kpi-sub">Across all portfolios</div></div>
+      <div class="kpi"><div class="kpi-icon" id="ta-thumbtack-icon">📌</div><div class="kpi-val" id="ta-thumbtack">0</div><div class="kpi-lbl">Using Thumbtack</div><div class="kpi-sub">Across all portfolios</div></div>
       <div class="kpi"><div class="kpi-icon">📊</div><div class="kpi-val orange" id="ta-any">0</div><div class="kpi-lbl">Using At Least One</div><div class="kpi-sub">Yelp, Google LSA, or Thumbtack</div></div>
+      <div class="kpi"><div class="kpi-icon">⏰</div><div class="kpi-val" style="color:var(--yellow)" id="ta-stale">0</div><div class="kpi-lbl">Flagged for Review</div><div class="kpi-sub">Stale leads: 7 days–6 months</div></div>
+    </div>
+
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header">
+        <div><div class="card-title">Adoption Rate by Product &amp; Portfolio</div><div class="card-sub">% of each portfolio's clients using each product</div></div>
+      </div>
+      <div class="chart-wrap h260"><canvas id="textAgentAdoptionChart"></canvas></div>
     </div>
 
     <div class="card">
@@ -1428,6 +1446,24 @@ tr.hidden-row { display: none; }
       </div>
     </div>
 
+    <div class="section-hd" style="margin-top:8px"><div class="section-num" style="background:var(--yellow)">⏰</div><h2 style="color:var(--yellow)">Flagged for Review — Stale Leads</h2></div>
+    <div class="section-div" style="background:linear-gradient(90deg,var(--yellow),transparent)"></div>
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header">
+        <div><div class="card-title">Businesses with a Stale Last Lead</div><div class="card-sub">Automatically detected from comments mentioning when the last lead was handled — flagged when that's anywhere from 7 days to 6 months ago</div></div>
+      </div>
+      <div class="table-controls">
+        <input type="text" class="search-box" id="taStaleSearch" placeholder="Search clients..." oninput="rebuildTextAgentStale()">
+        <div style="display:flex;gap:6px;flex-wrap:wrap" id="taStalePortfolioPills">
+          <button class="filter-pill active" onclick="setTextAgentStaleFilter('all',this)">All Portfolios</button>
+          <button class="filter-pill" onclick="setTextAgentStaleFilter('smb',this)">📊 SMB</button>
+          <button class="filter-pill" onclick="setTextAgentStaleFilter('whitelabel',this)">🏷️ White Label</button>
+          <button class="filter-pill" onclick="setTextAgentStaleFilter('support',this)">📊 Support</button>
+        </div>
+      </div>
+      <div id="taStaleList"></div>
+    </div>
+
     <div class="section-hd" style="margin-top:8px"><div class="section-num" style="background:var(--blue)">💬</div><h2 style="color:var(--blue)">Client Activity &amp; Notes</h2></div>
     <div class="section-div" style="background:linear-gradient(90deg,var(--blue),transparent)"></div>
     <div class="card">
@@ -1438,9 +1474,9 @@ tr.hidden-row { display: none; }
         <input type="text" class="search-box" id="taNotesSearch" placeholder="Search clients..." oninput="rebuildTextAgentNotes()">
         <div style="display:flex;gap:6px;flex-wrap:wrap" id="taNotesProductPills">
           <button class="filter-pill active" onclick="setTextAgentProductFilter('all',this)">All Products</button>
-          <button class="filter-pill" onclick="setTextAgentProductFilter('yelp',this)">⭐ Yelp</button>
-          <button class="filter-pill" onclick="setTextAgentProductFilter('google_lsa',this)">🔍 Google LSA</button>
-          <button class="filter-pill" onclick="setTextAgentProductFilter('thumbtack',this)">📌 Thumbtack</button>
+          <button class="filter-pill" id="taPillYelp" onclick="setTextAgentProductFilter('yelp',this)">⭐ Yelp</button>
+          <button class="filter-pill" id="taPillLsa" onclick="setTextAgentProductFilter('google_lsa',this)">🔍 Google LSA</button>
+          <button class="filter-pill" id="taPillThumbtack" onclick="setTextAgentProductFilter('thumbtack',this)">📌 Thumbtack</button>
         </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap" id="taNotesPortfolioPills">
           <button class="filter-pill active" onclick="setTextAgentPortfolioFilter('all',this)">All Portfolios</button>
@@ -1832,7 +1868,7 @@ tr.hidden-row { display: none; }
     <div class="kpi-row">
       <div class="kpi"><div class="kpi-icon">🧾</div><div class="kpi-val orange" id="col-total">0</div><div class="kpi-lbl" id="col-total-lbl">Accounts</div></div>
       <div class="kpi"><div class="kpi-icon">💰</div><div class="kpi-val" id="col-amount">$0</div><div class="kpi-lbl" id="col-amount-lbl">Total Owed</div></div>
-      <div class="kpi kpi-glow-green"><div class="kpi-icon">✅</div><div class="kpi-val green" id="col-collected">$0</div><div class="kpi-lbl">Amount Collected</div><div class="kpi-sub">From Payment Plan &amp; Resolved accounts</div></div>
+      <div class="kpi kpi-glow-green"><div class="kpi-icon">✅</div><div class="kpi-val green" id="col-collected">$0</div><div class="kpi-lbl">Amount Collected</div><div class="kpi-sub" id="col-collected-sub">Payment Plan &amp; Resolved · this tab only</div></div>
       <div class="kpi"><div class="kpi-icon">⚠️</div><div class="kpi-val red" id="col-needs">0</div><div class="kpi-lbl">Needs Attention</div><div class="kpi-sub">Pending, In Review, or Escalated</div></div>
       <div class="kpi"><div class="kpi-icon">✅</div><div class="kpi-val green" id="col-resolved">0</div><div class="kpi-lbl">Resolved</div></div>
     </div>
@@ -2301,6 +2337,7 @@ const PRODUCT_LOGOS = {
   builder_prime: 'data:image/png;base64,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',
   ghl: 'data:image/png;base64,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',
   housecall_pro: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHgAAAB4CAYAAAA5ZDbSAAAYeklEQVR42u1da5Ac1XX+zrnd0z2j2ScWEsISQiASIUJAyEhItpEUO7LLrxB7N4rLDsGOsQuTCiDkVUG5RlMuXKxlYSp+UH4EhzLlkFkTklj4UanSChwID/EwQYJYQjIo5hEZaR+zM93Tfe/Jj+4ZjcRK7KKZ2dllTlXvlnZGM7fv19+53zn3cQjTwoSQA2P3TkJ2bXj8q7Mzz6aLRX++RfpckHW2GL2IiOYI5EwAHQRyBOICZMWfFxLIE4gPYJhAvxOR14jVfkh4IBS1L5l0Dh7KXpB/Q1MygxaWrhH0wgAkzd5z1NRt68kxenqAXtLVL3RsfmYRSJaR6EsBuRjAuRA5AyrhkLLi2xJADCACEQFgAKm+awYRAUQAceX/iA4BXfJB9AqAfQA9JaQeg9CTw7deuP+YFuZEYWAAGOg1OPrpLYBPapkMA2u4mqmnbXquzajCaiF+P0TWArKUEukEmAETQsIAMCFgtIDIHCW+UAwcHXO3FShIAAGoiokiDFYEtkCWDbAFGAMp5UsA7QbRIIn5D9aph17fumT0GGZjp0E2a1oAjwusMPYMEAZ6I7Zevcvunu2sNTrsEch6tpz5UDagS5DQB4zRAAkIhOgn1fB+BAIBxb8hBGZFlgOoBKADmNA/SKBfsrIGDh/yB/G95QEAoCencH6PIEumBXAZWADlDunY/MwiovBTAG0glVgCZUECDwhLBiADCEdgUoPbLjHYcRusBJPtAjqE6NJzgNwjYt1dcePH3dfbD+BMhrFnaYWx7ZuffBcRf5EgH6fErDRCHxJ4MahgELi5dB9MPLAz2S7DciClsbyA7hUx3x65ddnjRxm9W6bKdU8BwLEijoVT95d2rTSsNoFwBSVSJP4YYEwYMZWaC9QTkzt6EJktcmZBSgWB4D42euvhry1/pCLIpkB5NxbgnpwqM7Z745Pni2PdLGI+SbYL8fOAiI6YSoRpaSIQGBApctKQwAMR/5j88JbD25btOb4PZg7AIoSBAUZvr+7+20fadZvbR0LXUcJNiTdS6RTMJIsfVnLbSUpeQUhuV6Ne/+FvrhxBLqfQ02OOUe/TFuCqJ7az78mPgdVWclKLxRuJlPBMA3Y8oJkVue0Qv7AXRm8a6l/2b41ic30BzgxayK4N26//RTe7c7aScj4D0ZDAC0FQ09cVvyXXrcl2LZCCaP9O4722aeQbHzhc7qPpBbAIYQsIWTIdGx9ZR07yu2QnzxVvREOEpo14qocYIxJy25UExX3iFz8/vG3lDmSEsQVSD5dde4AzwuXYr71v12ZWiVuIiCPWlnPBb3MTCcl2LRExRpduHulffuvxfdecAPeIwgDp2dcMpoPOzu9TIr1BisNRMvjtytqTs5ko2UFSyt9jDw197tB31ubLfVirr6ldp2cGLQyQ7ur71YKgs3sH2ekNUhgK41xvU4HL1ASjPxEDAikMhWSnNwSd3Tu6+n61AAOko7x2MzE4FgqdfY/8sbD7U7ac+eLlQ3BzuWQigImQ9zWYANfi5pgCMhKSm7ZM6B8k431kqH/lr2slvrhW4KZvfHg1VHIHszVf/FHdbOAqJgRacLgQ4t2L2vDl9WdCMTUHwEyW+KOa2ZoPldyRvvHh1ciuDWvBZK4Jczc9fLmVmPULAN0SFDWImya2VbEvHiqE6E5Z+NpHF2D71efhoxd0IdBS0ymoU3MvrCQoagDdVmLWLzo3PXx5LUDmUwW364aHVsFO/5SANAK/aTJSTNE16msYAT572WzsuHYJblw3F67NGPF080XhRAqBbwhIw07/tOuGh1adKshvDeCenEJ2bdh5439dKO6s7QDaJPANmKdcTFHsjv1QMOobvOecNvzLZxfju39xNs55h4NACyR+T1MaM0vgGwBt4s7a3nnjf12I7NoQPTnVGIAzwhjo1V03PDBfbPd+IqsLoa+bAVzFBCPAkWKIeR02vvWJs/CzL/wB/uS8dhgBjETvafr0GTMj9DWR1SW2e3/XDQ/Mx0Cvrswx1w1giZa+nJHZlRKn7T623HdKUAyn2i2X3fGIp6GY8HfvnYvBa5fg6lWnI6EIRqTynmljREqCYsiW+05x2u47I7MrVY1BfQDeslMhS6bgyQ/JabtEvPyUZqeIIkYWA4OxksH6P+zAz75wHm67YgHO7ExAm8gd83RNeRNZ4uVDctouKXjyQ2TJYMtOVR+AY1HVsenRPk529kphaErjXMUEbQRDhRCLZ7v4h788G//+ufOw4qw0jABSA3dcWXQ5watuIVRhKORkZ2/Hpkf7Jiu6JtaseFqrc+Oj74WTHITRBhJOyWxQ2c2OeBqnzbJw9arTcd2auehOWXHO4OSuuPz6Yy+OYf0dz1c64fh4WABoM4koWQBmqtMwIAKyNFgx/OLaoW0rHpzoVOObNyeTYWALOvB0O/nmKVKJhRJ4ptHpx3IWaqykQQA+ekEXbv7TM/FH85JADMZElPFEAWYC2l1rQoBJ/P68r+EFUp/HXsSQ7bLo0m/F4YuHcdEIsAVvttZrAlRfw8hSiE2P3U6proVT4ZoVE0qhQaGkccmCWdj8vnm44sKuCFiJxplahT1EQCkULOhKIHfVYnSnLBhzctCMALYi3LT9IH6063V0uGpy7J9Yw1hKXkipzoVSOHI7ttJfR676VADO5RR614Zdfbs+hMSsK8UbaSi4TAQRwVAxxLx2Gzevn4drVs9Bm6sg0ZJ1qBqzpcxmiwkLuhJodyeuadIOx7so6jgeeyMhu21XdvXtGjiSXX5/hNGJXbV10pBoC2R25tl0UPS+RSYQiOFGDLtldzzqayQU4a/eNRub33cGzjvdPcYd17MlgojJEgs2msC4rhuR2BbDMIGI4FuzM88+cGj30kK8iEImp6LjkCgsFG+iVMdCCXxd73G3nIUKQsFwMcSqhWnc+5nFuPOTZ+O8090o7JHGZaEmq6KpMY1iCXxNqY6FYaF405uFTtYJs1VZ6PbNT5wrUNfDGzXRGqr6qmMj0aTAwtMcXL9mLv7mstlwLEZ5OGt0erGc/RI5Cl7DgDw5E5R4owbKvr598xN3jmSXvXCi1SDjM3LPAAEkrPUt5CRdGC31DIkIQN43EADXvGcOdly7BF98zxw4FkNPURaKACTtKOxRfDRb1hwpEyIYLeQkXdb6FoAkwmwiDI7jq/ZNjy6H5XxCvNG6zhARAaEWrFkczdG+e1FbZZxlpsp0X6PBDYxgz6seulKqaowVzG1LoDOpIJhisIkiFlvOJ9o3Pbp8ZOuKXePFxm8E+PweiV39l8l2WLxS3ebVCIAxgGMxtn5sAS6cl0JoELNmarqvHPL832iAP7/zN2BQZfbpSCHE7X++AFetmA1tBNZxbWz4sygiZDuKdOnLAD5Wxu7ELronp5Al6eh77GJS9ofFzzdkflfR0fGuWSYFjETZsqFiiOH4GimEKIUnlsqFkmksq4mU+HlDyv5wR99jFyNLcvy04nEAxxGC0A2USHG8g67+D+JxachmMYsJljp6saJxWVr+06hnon81ch2QwFAiyRC6AYDEGI4DcCbD6O3VXX27FoD54+KPCkhm9raSN/WAb7zeTE80fiwWJX5ewPzxrr5dC9Dbq6P08hsYvIYBQAhXstuehBH99tlaMp2NCEY0u+1JIVxZjWU1wITsGo3MswkY+TQC7+RJkJY1mzECDzDyaWSeTSC7RqNy1AwA5HIMkHT4pfdSIrU4mi1qATx9SAyWwDOUSC3u8EvvBUgiTCss7YndudkAZcfnULRsmqFsoGwhMRuqMWVACL2k52x8epZAPihBkYC3t7iappJQSVAkgXxwzsanZ0VHZAgxchGLi3a4mu3UPIQlE50Q1rJpprUIYcmwnZpXtMPV0dALjo4HBMBCH4Sy0XLP095NR1gCwO6dxJF6zrCIWQddAiAtcTV93TRDlyBi1iGTYWTX6Eg9h1ecRcRLJPTR2sc7rd00S+iDiJd0+B9aCFDEVgn8d5GbtqPjAVt2Uo40+/myxmhy0zbAl1TCJIa6ND5xVVoQntgUA6kEx6Fn09JYQAwyWHE0DiZcBBMC02DbztQxN5oeTDtNPoIRKMbyIgDgKP7FYgmD6Cjdlk1vFy3CEgYQYPGcjU/P4gDeWSQyN0K9ReAZILQAE4JE5gbwzmJj8TmwnES07qrlomcCxDBaYDkJY/E5DPAiUhaOOSm9ZdOdxSYqbcCLWITObhF3ZhJZhM5mgpnbpPUkWnZqagsEM5eFeB6MmfTO8ZY1tZImGAMhnseA6QBa+mqmuecIU9PBJHBFDCqlZ1o2EyhMIgYkcFkApzUGz8wxWACHQWS1PPQM9dBEVis1OcONIRKOe0hFy6azd45ZLCET4Lf8c408Y1N1I4EAn4XgUWsuuCbmh9Is+4eFiCEEjwEeRstH14S5w8Vop61MeV+WfTQPM4l5GcxoRJGmljXsiRMwg8S8zAJ+tTUGz8xYScCvMpEcaLnnmSmlieQAA2a/6LC1XGdGYSssOgRg9jOH5gWEfgmsWkprplCXFSH0SxyaF9iG+6IQvQq2psGKspZNgL0AWxCiV224L/Jr2y4aI2AvWXZr2c7MUNCGLBsE7H1t20VjHJP66YjBLRc9Axy0xFg+DcQL3w30Y2jNCc8UhAliIkzLAJPtPC5ePgBza+P3BIa4pjZmJV4+INt5PAZYaNi670UR8xxZTlQVs2XjeL7oiGPH5mZ++gxZDkTMc8PWfS9GO/wzOxWyWUPEO6ASaG0APzFzLUVoi/cmNecmEDJQCRDxDmSzBpmdirF0jQCAIfk5dIDWBvBp/RgydBBhCQBL1wijNzquMBlYD5mg8DKsRJ3PpW9ZnVyMwEqwCQovJwPrIQBALwxHZyqJiuJh+jnZSQGotRF8+gXAmuykEOjnr227aAw5UZUd/sBALLD5HuiAWm562rpnEuJ7qjGNgOztNYDQsJN4UEqFvWS7DTtptmU1kfhRTaVSYe+wk3gwOvus1xwFGJBITV9QAtOPYLtR/qNl08UMbBdg+hGyF5SQ2aniyK76PMqdBgBIcJfxRopgUq3Zh2kSwDEp440USXBXNZbHApzNGuRy6kj/8pdgzL3kpAnSElvNjy9pctIEY+490r/8JeRyqrrc3bFiKhqXCSS3SanYOnF2WohncISV3AaAYgxxAoB7NTJCw/2XPiU62E5OmiHSYnHzemdNTppFB9uH+y99Chmh46uuvJGhcf0dEfMVCfzWwaRNzV4iCXwjYr5Sjd3JAR7o1ejJqZGtK3Yh9H9CbluLxc3KXreNEfo/OVHNpPEBBuLaSUJGqZvFL3rReq36KupmlOtMBMXHXtQk6IIViV/0jFI3A0Lj1Uw6McBZMsjsVCO3XrKPdPCNiMWoG4sJUe2kcvHJJulCjPq6UjOpfIWmCRoo0OS2MengGyO3XrIvymGMPwt44vKyW9ZoQNjC7q8GheG/JNs5Kx6Ta6qsiaIycnnfVKqdlcvaTUmVGkRlYpM2Y+XCNGxFlY0gRoDTZtmV903Rk2fIdpQUhn9rp5JfRUYYW6CRHf/t1kl6XpDL8aHe3nxX365rwfZ2UKBrmacud1xoBFf/8wF87rLZ+OzK2Ug70cISLdLw2oXlWoqnt1n4yWfOrbRlHH3zhntpiPchNmDbIipdeyh7QR65nAL1njDreHKwens1MoPWkf7l9xtv9C5y2y0YCWs99ioiHHjdx8Z/fQnrvvU87n789wj0UXCnwiuKAF4QDRnRIUTjA1j+mxcYjJU0uJ6ZAyMhue2W8UbvOtK//H5kBq2TVf9+c4DLaa+MMFL2deKP/JYSrlXrZT0CwLUInUkL//1KAZ/9pwP4wB3P46fPDsVi52htw0az+fjrZA9EdZ3hurjmhGuJP/JbpOzrkBGuTkm+dYCzWYM9AzScvXgIQXiliBiwZWrtkIxEY2/KZqQdxn8eyGPDXftwxQ/24lcvjFaKVk4F0M2hmi0jIgZBeOVw9uIh7Bmg6pTkKTC4nOEatIa2rXhQguJN5KateqnqMoDphIJjEbbvPoKPfv83uOrH+/HMy4UK0I1Q3EYE2kzwqmdjBJrctCVB8aahbSseRGbQGi/mfesAA0B2bYjMoDW8dUW/KQ7lKNVZ8/H4+M4VATqSkQ68+/Hf4/3ffh7X/8tL2P+6H8WkdQSaCGhzFFRcgfT4eLh8lV9rc1R9qqcaCSnVaZniUG5464p+ZAYtZNdOuN+tSX1ZHDql8MRVRX/0HHLTl4ifD0Fk1QtobaJjETqSFrxQ8M1fvYp7f30Yf3PZbHx+9emY02bXNLSSeMwvlgy27x5CR1LBmBOPvyLRa15oMOobMFHtkjYiIblpS/zRJ1IuXTX8JiHRicK+yVlGGFkyXTc8MN847Q8z2++UoKgbUUiaADATSqFBITBY/A4X17xnDv7q0negw1UVoE9WPbxchPqxF8ew/o7nK587HiiTTWrUNNMloslOKmOC/2V/ZNWR2y4/WO77SWXjJv3FWTLoyakjt11+kALvQyLhEViOgjF1XwEiMYCWihT3waESbrjvRbz/21WhFVPFxZ+q2UyTumoGrjEGlqNEwiMUeB86ctvlB+Pq7JPu47cWtZVF19cve4a8sQ8DGCXb4UaAXHaL2ggSFqEjaeHZVwr4zD8dwPo7nsf9u8uhFUUxrJzaAzWZq1bgku0wgFHyxj489PXLnpmMqKoNwFWi68htqx9GkP+IAHnYTkNnnspAJ21Gm8N4+EAePT/ciz/7wV48+MIoqBJayfQIrUQ0bIcFyCPIf+TIbasfnqyoqh3AVSAPbV31QFga+wCAw2QnFaSxBbbKodWsBCNpM362Zwgf+d7/4Mq79+Pp/y2AiRoWWr11cI0mO6kAHA5LYx8Y2rrqgVMF99QBrgI5//VVD0EX1xkTHiSnTdUzhHozoNtdBSbCj5/4Pdbf8Tyuv+8l7Pu9F4c2TQi0kZCcNmVMeBC6uC7/9VUP1QLc2gBczeT+lb9mM/pu0aXHKdVpQSScipWZOvbHHUkLfij4+wdexbpvPo+v/PJ3eHm4VIlfpx5jEUgU54ouPc5m9N1D/St/XStw31qYdDLrEYUB0rOvGUwHnZ3fp0R6gxSHBSIyVUUvq0OrsZLBOe9wceO6uVh0mou/+Md9UfxMU7DgQMSAiCjZQVLK32MPDX3u0HfW5st9WMv7r61VxWrtfbs2s0rcQkQsgVfXhMhEMlNMhGJgEGrBWd0ODo9FE/gNX3UmEpLtWiJijC7dPNK//Nbj+655AY5ugLAFhCyZjo2PrCMn+V2yk+eKN6IhQlNZwracAynFMTM1nrVCbruSoLhP/OLnh7et3BFP2ks9jpPkOtFFomU/g9bwtpU7TPGVFVIau5PslIr2PU3N2FwtxGzVSHDjsdZ2meyUktLYnab4yooI3EELWTL1Oiu0/vdYtdqvs+/Jj4HVVnJSi8UbAYxpSIpzymNbZkVuO8Qv7IXRm4b6l/3b8X1TTw3SiJskDAwwent1998+0q7b3D4Suo4Sbkq8EYHAzDigRTQITG47SckrCMntatTrP/zNlSPI5RR6ekwjTvhtrLyoemK7Nz55vjjWzSLmk2S7ED9f6ZTpWwZVKg8rOWlI4IGIf0x+eMvhbcv2NIq1Uwdw1AmEHBi9USjQ/aVdKw2rTSBcQYkUiT8GGBMCwlMpxiYtnkAGzBY5syClgkBwHxu99fDXlj8CAMiJio7LaOy53FPHlEyGsWdpZS9N++Yn30XEXyTIxykxK43QhwSeiU/94abbCBdtkDeAMNkuw3IgpbG8gO4VMd8euXXZ4xXGnr9bJrK8ZmYBXB03AyjHfx2bn1lEFH4KoA2kEkugLEjgAWEpBls4qjfRaDcuEh31GLfBSjDZLqBDiC49B8g9Itbdw7deuH+8+5qy+L9pGJERxp6Bo7vjrt5ld8921hod9ghkPVvOfCgb0CVI6EcKHCQgEKKfVMP7icCk+DeEwKzIcgCVAHQAE/oHCfRLVtbA4UP+IL63PDjK2B6ZamCbD+Bq1401XJ2LPW3Tc21GFVYL8fshshaQpZRIJ8AMmBASBoAJAaPlmBNzRSher0HH3G1lFCQB5Nh6FSIMVgS2QJYNsAUYAynlSwDtBtEgifkP1qmHXt+6ZPRouwctYKeZKlc8fQCubltPjtHTg7IgK1vH5mcWgWQZib4UkIsBnAuRM6ASTlT5Ol6EIybOMUg8XFbfNUe7E4iAqKxQRFwdArrkg+gVAPsAekpIPQahJyvut2w5URgYAAZ6DZr0MPVpEo7Eynv3ThpvlmV25tl0sejPt0ifC7LOFqMXEdEcgZwJoINAjkBcoJwLl5BAnkB8AMME+p2IvEas9kPCA6Gofcmkc/BQ9oL8Gz3MoIWla2QqFPFbsf8HutxYvmkVePAAAAAASUVORK5CYII=',
+  thumbtack: 'data:image/png;base64,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',
 };
 
 // Renders a product's icon as either an emoji string or an <img> if it's a real logo
@@ -2317,7 +2354,7 @@ const SMB_CATALOG = [
   { key: 'yelp',          label: 'Yelp',           icon: 'logo:yelp', priority: 'high',   desc: 'not yet on Yelp — solid baseline to close' },
   { key: 'google_lsa',    label: 'Google LSA',      icon: 'logo:google_lsa', priority: 'high',   desc: 'not using — highest upsell potential' },
   { key: 'voice_agent',   label: 'Voice Agent',     icon: '🎙️', priority: 'medium', desc: 'not using — solid penetration already' },
-  { key: 'thumbtack',     label: 'Thumbtack',       icon: '📌', priority: 'medium', desc: 'not using — only 2 active users' },
+  { key: 'thumbtack',     label: 'Thumbtack',       icon: 'logo:thumbtack', priority: 'medium', desc: 'not using — only 2 active users' },
   { key: 'chat_widget',   label: 'Chat Widget',     icon: '💬', priority: 'high',   desc: 'not using — only 2 active users' },
   { key: 'contact_form',  label: 'Contact Form',    icon: '📝', priority: 'high',   desc: 'not using — only 1 active user (Up & Above)' },
   { key: 'acculynx',      label: 'Acculynx',        icon: 'logo:acculynx', priority: 'medium', desc: '0% adoption — completely untapped' },
@@ -2476,6 +2513,7 @@ function renderHomeKPIs() {
   const collected = COLLECTIONS_ACCOUNTS.filter(a => ['paymentplan', 'resolved'].includes(a.status)).reduce((s, a) => s + (a.amount || 0), 0);
   const needsAttention = COLLECTIONS_ACCOUNTS.filter(a => ['pending', 'inreview', 'escalated'].includes(a.status)).length
     + AD_SPEND_BUSINESSES.filter(b => b.promo === 'Yes').length;
+  const staleLeads = getTextAgentStaleLeads().length;
 
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
   set('home-total-clients', totalClients);
@@ -2483,6 +2521,7 @@ function renderHomeKPIs() {
   set('home-collections-owed', fmtMoney(collectionsOwed));
   set('home-collected', fmtMoney(collected));
   set('home-needs-attention', needsAttention);
+  set('home-stale-leads', staleLeads);
 }
 
 function renderHomeQuickLinks() {
@@ -2556,7 +2595,7 @@ function rebuildVoicePage() {
   const totalClients = all.length;
   const using = all.filter(x => x.client.voice_agent);
   const notUsing = all.filter(x => !x.client.voice_agent);
-  const flagged = using.filter(x => x.client.cellNotes && x.client.cellNotes.voice_agent);
+  const flagged = all.filter(x => x.client.cellNotes && x.client.cellNotes.voice_agent);
   const pct = totalClients ? Math.round(using.length / totalClients * 100) : 0;
 
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
@@ -2642,9 +2681,9 @@ function rebuildVoiceAgentFlagged() {
 
 // ─── TEXT AGENT PAGE — Yelp / Google LSA / Thumbtack breakdown by portfolio ───
 const TEXT_AGENT_PRODUCTS = [
-  { key: 'yelp', label: 'Yelp', icon: '⭐' },
-  { key: 'google_lsa', label: 'Google LSA', icon: '🔍' },
-  { key: 'thumbtack', label: 'Thumbtack', icon: '📌' },
+  { key: 'yelp', label: 'Yelp', icon: 'logo:yelp' },
+  { key: 'google_lsa', label: 'Google LSA', icon: 'logo:google_lsa' },
+  { key: 'thumbtack', label: 'Thumbtack', icon: 'logo:thumbtack' },
 ];
 const TA_PORTFOLIO_META = {
   smb: { label: 'SMB', chip: 'chip-smb' },
@@ -2652,10 +2691,50 @@ const TA_PORTFOLIO_META = {
   support: { label: 'Support', chip: 'chip-support' },
 };
 
+// Extracts a day count from free text like "last lead handled 3 weeks ago" or
+// "last lead 45 days ago". Returns null if no recognizable pattern is found.
+function parseDaysAgoFromText(text) {
+  if (!text) return null;
+  const m = String(text).match(/(\d+)\s*(day|days|week|weeks|month|months)\s*ago/i);
+  if (!m) return null;
+  const n = parseInt(m[1], 10);
+  const unit = m[2].toLowerCase();
+  if (unit.startsWith('day')) return n;
+  if (unit.startsWith('week')) return n * 7;
+  if (unit.startsWith('month')) return n * 30;
+  return null;
+}
+
+// Gathers every client (any of the 3 products, any portfolio) whose comment
+// indicates their last lead was handled somewhere between 7 days and ~6 months ago.
+function getTextAgentStaleLeads() {
+  const out = [];
+  getAllClientsWithPortfolio().forEach(({ client: c, pk }) => {
+    if (!c.cellNotes) return;
+    TEXT_AGENT_PRODUCTS.forEach(p => {
+      const note = c.cellNotes[p.key];
+      if (!note) return;
+      const days = parseDaysAgoFromText(note);
+      if (days !== null && days >= 7 && days <= 180) {
+        out.push({ name: c.name, pk, productKey: p.key, note, days });
+      }
+    });
+  });
+  return out;
+}
+
 function rebuildTextAgentPage() {
   if (!document.getElementById('page-textagent')) return;
   const portfolios = ['smb', 'whitelabel', 'support'];
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  const setHTML = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
+
+  setHTML('ta-yelp-icon', renderProductIcon('logo:yelp', 22));
+  setHTML('ta-lsa-icon', renderProductIcon('logo:google_lsa', 22));
+  setHTML('ta-thumbtack-icon', renderProductIcon('logo:thumbtack', 22));
+  setHTML('taPillYelp', `${renderProductIcon('logo:yelp', 14)} Yelp`);
+  setHTML('taPillLsa', `${renderProductIcon('logo:google_lsa', 14)} Google LSA`);
+  setHTML('taPillThumbtack', `${renderProductIcon('logo:thumbtack', 14)} Thumbtack`);
 
   const totals = {};
   TEXT_AGENT_PRODUCTS.forEach(p => {
@@ -2664,29 +2743,121 @@ function rebuildTextAgentPage() {
   set('ta-yelp', totals.yelp);
   set('ta-lsa', totals.google_lsa);
   set('ta-thumbtack', totals.thumbtack);
+  const setIcon = (id, iconRef) => { const el = document.getElementById(id); if (el) el.innerHTML = renderProductIcon(iconRef, 22); };
+  setIcon('ta-yelp-icon', 'logo:yelp');
+  setIcon('ta-lsa-icon', 'logo:google_lsa');
+  setIcon('ta-thumbtack-icon', 'logo:thumbtack');
+  const setPillIcon = (id, iconRef, label) => { const el = document.getElementById(id); if (el) el.innerHTML = renderProductIcon(iconRef, 12) + ' ' + label; };
+  setPillIcon('taPillYelp', 'logo:yelp', 'Yelp');
+  setPillIcon('taPillLsa', 'logo:google_lsa', 'Google LSA');
+  setPillIcon('taPillThumbtack', 'logo:thumbtack', 'Thumbtack');
 
   const anyCount = getAllClientsWithPortfolio().filter(x => x.client.yelp || x.client.google_lsa || x.client.thumbtack).length;
   set('ta-any', anyCount);
+  set('ta-stale', getTextAgentStaleLeads().length);
+
+  const portfolioClientCounts = portfolios.map(pk => getClients(pk).length);
 
   const tbody = document.getElementById('taBreakdownBody');
   if (tbody) {
     tbody.innerHTML = TEXT_AGENT_PRODUCTS.map(p => {
       const counts = portfolios.map(pk => getClients(pk).filter(c => c[p.key]).length);
       const total = counts.reduce((a, b) => a + b, 0);
-      const cell = (count, pk) => count > 0
-        ? `<td><span class="pc-badge pc-${Math.min(count,6)}" style="cursor:pointer" onclick="showTextAgentClientList('${p.key}','${pk}')">${count}</span></td>`
-        : `<td><span style="color:var(--text3)">0</span></td>`;
+      const totalClients = portfolioClientCounts.reduce((a, b) => a + b, 0);
+      const cell = (count, pk, idx) => {
+        const pct = portfolioClientCounts[idx] ? Math.round(count / portfolioClientCounts[idx] * 100) : 0;
+        return count > 0
+          ? `<td><span class="pc-badge pc-${Math.min(count,6)}" style="cursor:pointer" onclick="showTextAgentClientList('${p.key}','${pk}')">${count}</span> <span style="color:var(--text3);font-size:11px">(${pct}%)</span></td>`
+          : `<td><span style="color:var(--text3)">0 (0%)</span></td>`;
+      };
+      const totalPct = totalClients ? Math.round(total / totalClients * 100) : 0;
       return `<tr>
-        <td style="padding-left:14px;font-weight:600;color:var(--text)">${p.icon} ${p.label}</td>
-        ${cell(counts[0], 'smb')}
-        ${cell(counts[1], 'whitelabel')}
-        ${cell(counts[2], 'support')}
-        <td><span class="pc-badge pc-${Math.min(total,6)}">${total}</span></td>
+        <td style="padding-left:14px;font-weight:600;color:var(--text)">${renderProductIcon(p.icon, 16)} ${p.label}</td>
+        ${cell(counts[0], 'smb', 0)}
+        ${cell(counts[1], 'whitelabel', 1)}
+        ${cell(counts[2], 'support', 2)}
+        <td><span class="pc-badge pc-${Math.min(total,6)}">${total}</span> <span style="color:var(--text3);font-size:11px">(${totalPct}%)</span></td>
       </tr>`;
     }).join('');
   }
 
+  const labels = portfolios.map(pk => PORTFOLIOS[pk].name);
+  const pctFor = (key) => portfolios.map((pk, i) => portfolioClientCounts[i] ? Math.round(getClients(pk).filter(c => c[key]).length / portfolioClientCounts[i] * 100) : 0);
+
+  destroyChart('textAgentAdoptionChart');
+  const ctx = document.getElementById('textAgentAdoptionChart');
+  if (ctx) {
+    chartRegistry['textAgentAdoptionChart'] = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          { label: 'Yelp', data: pctFor('yelp'), backgroundColor: C.orange, borderRadius: 6 },
+          { label: 'Google LSA', data: pctFor('google_lsa'), backgroundColor: C.blue, borderRadius: 6 },
+          { label: 'Thumbtack', data: pctFor('thumbtack'), backgroundColor: C.purple, borderRadius: 6 },
+        ],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { labels: { color: C.text } },
+          tooltip: {
+            backgroundColor: C.tooltipBg, borderColor: C.tooltipBorder, borderWidth: 1, titleColor: C.tooltipTitle, padding: 12, cornerRadius: 8,
+            callbacks: { label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y}%` },
+          },
+        },
+        scales: {
+          x: { grid: { color: C.grid }, ticks: { color: C.tick } },
+          y: { grid: { color: C.grid }, ticks: { color: C.tick, callback: (v) => v + '%' }, beginAtZero: true, max: 100 },
+        },
+      },
+    });
+  }
+
   rebuildTextAgentNotes();
+  rebuildTextAgentStale();
+}
+
+let textAgentStaleFilter = 'all';
+function setTextAgentStaleFilter(pk, btn) {
+  textAgentStaleFilter = pk;
+  document.querySelectorAll('#taStalePortfolioPills .filter-pill').forEach(p => p.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  rebuildTextAgentStale();
+}
+
+function rebuildTextAgentStale() {
+  const wrap = document.getElementById('taStaleList');
+  if (!wrap) return;
+  const q = (document.getElementById('taStaleSearch') || {}).value?.toLowerCase().trim() || '';
+  let stale = getTextAgentStaleLeads();
+  if (textAgentStaleFilter !== 'all') stale = stale.filter(x => x.pk === textAgentStaleFilter);
+  if (q) stale = stale.filter(x => (x.name || '').toLowerCase().includes(q));
+  stale.sort((a, b) => b.days - a.days);
+
+  if (stale.length === 0) {
+    wrap.innerHTML = emptyStateHTML({
+      icon: '✅',
+      title: 'No stale leads flagged',
+      sub: 'Businesses show up here when a comment on Yelp, Google LSA, or Thumbtack mentions the last lead was handled 7 days to 6 months ago.',
+    });
+    return;
+  }
+
+  wrap.innerHTML = stale.map(e => {
+    const meta = TA_PORTFOLIO_META[e.pk];
+    const product = TEXT_AGENT_PRODUCTS.find(p => p.key === e.productKey);
+    const daysLabel = e.days >= 30 ? `${Math.round(e.days / 30)} mo ago` : `${e.days}d ago`;
+    return `<div class="support-item">
+      <div class="support-avatar" style="background:var(--bg4);color:var(--yellow)">⏰</div>
+      <div class="support-info">
+        <div class="support-name">${escAttr(e.name)}</div>
+        <div class="support-detail">${renderProductIcon(product.icon, 14)} ${product.label} · ${escAttr(e.note)}</div>
+      </div>
+      <span class="status-pill" style="background:rgba(245,158,11,.15);color:var(--yellow);margin-right:8px">${daysLabel}</span>
+      <span class="portfolio-chip ${meta.chip}">${meta.label}</span>
+    </div>`;
+  }).join('');
 }
 
 let textAgentProductFilter = 'all';
@@ -2736,7 +2907,7 @@ function rebuildTextAgentNotes() {
     const meta = TA_PORTFOLIO_META[e.pk];
     const product = TEXT_AGENT_PRODUCTS.find(p => p.key === e.productKey);
     return `<div class="support-item">
-      <div class="support-avatar" style="background:var(--bg4);color:var(--blue)">${product.icon}</div>
+      <div class="support-avatar" style="background:var(--bg4);color:var(--blue)">${renderProductIcon(product.icon, 18)}</div>
       <div class="support-info">
         <div class="support-name">${escAttr(e.name)}</div>
         <div class="support-detail">${product.label} · ${escAttr(e.note)}</div>
@@ -2751,7 +2922,7 @@ function showTextAgentClientList(productKey, pk) {
   const meta = TA_PORTFOLIO_META[pk];
   const clients = getClients(pk).filter(c => c[productKey]);
 
-  document.getElementById('taClientListTitle').textContent = `${product.icon} ${product.label} — ${meta.label}`;
+  document.getElementById('taClientListTitle').innerHTML = `${renderProductIcon(product.icon, 18)} ${product.label} — ${meta.label}`;
   document.getElementById('taClientListSub').textContent = `${clients.length} client${clients.length === 1 ? '' : 's'}`;
   document.getElementById('taClientList').innerHTML = clients.map(c => `
     <div class="support-item">
@@ -2794,11 +2965,11 @@ function renderHomeActivityList() {
 // Index in this array is the "original" column index used for saved order/width prefs.
 function getClientColumns(pk) {
   const cols = [
-    { key: 'name', label: 'Client Name' },
-    { key: 'org', label: 'Organization' },
+    { key: 'name', label: 'Client Name', icon: '' },
+    { key: 'org', label: 'Organization', icon: '' },
   ];
-  getCatalog(pk).forEach(p => cols.push({ key: p.key, label: p.label }));
-  cols.push({ key: '__count', label: '# Prods' });
+  getCatalog(pk).forEach(p => cols.push({ key: p.key, label: p.label, icon: p.icon }));
+  cols.push({ key: '__count', label: '# Prods', icon: '' });
   return cols;
 }
 
@@ -2812,7 +2983,7 @@ function rebuildTableHeaders(pk) {
   headRow.innerHTML = order.map(origIdx => {
     const c = cols[origIdx];
     const w = widths[origIdx];
-    return `<th draggable="true" data-orig-idx="${origIdx}" style="${w ? `width:${w}px;` : ''}">${escAttr(c.label)}<span class="col-resize-handle"></span></th>`;
+    return `<th draggable="true" data-orig-idx="${origIdx}" style="${w ? `width:${w}px;` : ''}">${c.icon ? renderProductIcon(c.icon, 14) + ' ' : ''}${escAttr(c.label)}<span class="col-resize-handle"></span></th>`;
   }).join('');
   makeColumnsInteractive(headRow, tableId, () => rebuildPortfolio(pk));
 }
@@ -3929,6 +4100,16 @@ function renderTeamUI() {
 }
 
 // ─── Authentication (Supabase Auth: Google OAuth + Email/Password) ─────────────
+function togglePasswordVisibility() {
+  const input = document.getElementById('loginPassword');
+  const btn = document.getElementById('passwordToggleBtn');
+  if (!input || !btn) return;
+  const showing = input.type === 'text';
+  input.type = showing ? 'password' : 'text';
+  btn.textContent = showing ? '👁️' : '🙈';
+  btn.title = showing ? 'Show password' : 'Hide password';
+}
+
 function toggleLoginMode(e) {
   if (e) e.preventDefault();
   loginMode = loginMode === 'signin' ? 'signup' : 'signin';
@@ -4724,6 +4905,7 @@ function rebuildCollectionsPage() {
   set('col-total', list.length);
   set('col-amount', fmtMoney(list.reduce((s,a) => s + (a.amount || 0), 0)));
   set('col-collected', fmtMoney(list.filter(a => ['paymentplan','resolved'].includes(a.status)).reduce((s,a) => s + (a.amount || 0), 0)));
+  set('col-collected-sub', `Payment Plan & Resolved · ${activeCollectionsType === 'outstanding' ? 'Outstanding Balances' : 'Card Fails'} only`);
   set('col-needs', list.filter(a => ['pending','inreview','escalated'].includes(a.status)).length);
   set('col-resolved', list.filter(a => a.status === 'resolved').length);
   set('colCountSub', `${list.length} account${list.length === 1 ? '' : 's'}`);
@@ -6050,6 +6232,9 @@ async function bootApp() {
 // ════════════════════════════════════════════════════════════════════════
 (function initAuthListener() {
   showInitialSkeletons();
+  const sidebarLogoImg = document.querySelector('.sidebar-logo img');
+  const loginLogoImg = document.getElementById('loginLogoImg');
+  if (sidebarLogoImg && loginLogoImg) loginLogoImg.src = sidebarLogoImg.src;
   let hasBootedApp = false;
   supabaseClient.auth.onAuthStateChange((event, session) => {
     if (session) {
