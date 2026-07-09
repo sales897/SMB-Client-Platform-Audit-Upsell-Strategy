@@ -1795,6 +1795,30 @@ tr.hidden-row { display: none; }
       <div class="kpi"><div class="kpi-icon">✅</div><div class="kpi-val" style="color:var(--blue)" id="as-using">0</div><div class="kpi-lbl">Already Using</div></div>
     </div>
 
+    <!-- Charts -->
+    <div class="grid-2" style="margin-bottom:20px">
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">Budget by Business</div><div class="card-sub">Top businesses by monthly ad spend</div></div>
+          <span class="card-badge" id="badge-adspend-budget">💰 $0 Total</span>
+        </div>
+        <div class="chart-wrap h300"><canvas id="adSpendBudgetBar"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">Promo Eligibility</div><div class="card-sub">Breakdown across all businesses</div></div>
+          <span class="card-badge" id="badge-adspend-count">🏢 0 Businesses</span>
+        </div>
+        <div class="chart-wrap h300" style="position:relative">
+          <canvas id="adSpendPromoDonut"></canvas>
+          <div style="position:absolute;top:50%;left:36%;transform:translate(-50%,-50%);text-align:center;pointer-events:none">
+            <div id="adSpendPromoCenterNum" style="font-size:26px;font-weight:800;color:var(--text);line-height:1">0</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:2px">businesses</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="card" style="margin-bottom:20px" id="asAddCard">
       <div class="card-header">
         <div><div class="card-title">Add a Business</div><div class="card-sub">Tracks budget, add-ons, promo status, and internal notes per business — add one at a time or upload a list</div></div>
@@ -1962,6 +1986,30 @@ tr.hidden-row { display: none; }
       <div class="kpi kpi-glow-green"><div class="kpi-icon">✅</div><div class="kpi-val green" id="col-collected">$0</div><div class="kpi-lbl">Amount Collected</div><div class="kpi-sub" id="col-collected-sub">Payment Plan &amp; Resolved · this tab only</div></div>
       <div class="kpi"><div class="kpi-icon">⚠️</div><div class="kpi-val red" id="col-needs">0</div><div class="kpi-lbl">Needs Attention</div><div class="kpi-sub">Pending, In Review, or Escalated</div></div>
       <div class="kpi"><div class="kpi-icon">✅</div><div class="kpi-val green" id="col-resolved">0</div><div class="kpi-lbl">Resolved</div></div>
+    </div>
+
+    <!-- Charts -->
+    <div class="grid-2" style="margin-bottom:20px">
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">Accounts by Status</div><div class="card-sub" id="colStatusDonutSub">Breakdown of this tab's accounts</div></div>
+          <span class="card-badge" id="badge-collections-count">🧾 0 Accounts</span>
+        </div>
+        <div class="chart-wrap h300" style="position:relative">
+          <canvas id="collectionsStatusDonut"></canvas>
+          <div style="position:absolute;top:50%;left:36%;transform:translate(-50%,-50%);text-align:center;pointer-events:none">
+            <div id="collectionsStatusCenterNum" style="font-size:26px;font-weight:800;color:var(--text);line-height:1">0</div>
+            <div style="font-size:10px;color:var(--text3);margin-top:2px">accounts</div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">Amount by Status</div><div class="card-sub" id="colAmountBarSub">Dollar total per status</div></div>
+          <span class="card-badge" id="badge-collections-amount">💰 $0 Total</span>
+        </div>
+        <div class="chart-wrap h300"><canvas id="collectionsAmountBar"></canvas></div>
+      </div>
     </div>
 
     <div class="card" style="margin-bottom:20px" id="colAddCard">
@@ -2650,6 +2698,9 @@ function rebuildAll() {
   rebuildHomePage();
   rebuildVoicePage();
   rebuildTextAgentPage();
+  rebuildClientsDirectory(); // All Clients — unified directory across every portfolio
+  if (typeof rebuildAdSpendPage === 'function') rebuildAdSpendPage();
+  if (typeof rebuildCollectionsPage === 'function') rebuildCollectionsPage();
 }
 
 // ─── HOME — daily overview & quick access ────────────────────────────────────
@@ -4581,7 +4632,84 @@ function rebuildAdSpendPage() {
 
   rebuildAdSpendTableHeaders();
   rebuildAdSpendTable();
+  rebuildAdSpendCharts();
   rebuildHomePage();
+}
+
+// ─── AD SPEND CHARTS ───────────────────────────────────────────────────────────
+function rebuildAdSpendCharts() {
+  const businesses = AD_SPEND_BUSINESSES;
+  const totalBudget = businesses.reduce((s, b) => s + (b.budget || 0), 0);
+
+  const budgetBadge = document.getElementById('badge-adspend-budget');
+  if (budgetBadge) budgetBadge.textContent = `💰 ${fmtMoney(totalBudget)} Total`;
+  const countBadge = document.getElementById('badge-adspend-count');
+  if (countBadge) countBadge.textContent = `🏢 ${businesses.length} Business${businesses.length === 1 ? '' : 'es'}`;
+
+  // Budget by Business — horizontal bar, top 12 by budget
+  const chartKey1 = 'adspend-budget';
+  destroyChart(chartKey1);
+  const barCanvas = document.getElementById('adSpendBudgetBar');
+  if (barCanvas) {
+    const top = businesses.filter(b => b.budget > 0).sort((a, b) => b.budget - a.budget).slice(0, 12);
+    if (top.length === 0) {
+      const ctx = barCanvas.getContext('2d');
+      ctx.clearRect(0, 0, barCanvas.width, barCanvas.height);
+    } else {
+      chartRegistry[chartKey1] = new Chart(barCanvas, {
+        type: 'bar',
+        data: {
+          labels: top.map(b => b.name),
+          datasets: [{
+            data: top.map(b => b.budget),
+            backgroundColor: C.orange, borderRadius: { topRight: 6, bottomRight: 6 }, borderSkipped: 'left', barPercentage: 0.65,
+          }],
+        },
+        options: {
+          indexAxis: 'y', responsive: true, maintainAspectRatio: false, layout: { padding: { right: 16 } },
+          plugins: {
+            legend: { display: false },
+            tooltip: { backgroundColor: C.tooltipBg, borderColor: C.tooltipBorder, borderWidth: 1, titleColor: C.tooltipTitle, bodyColor: C.orange, padding: 12, cornerRadius: 8,
+              callbacks: { label: ctx => ` ${fmtMoney(ctx.parsed.x)}/mo` } },
+          },
+          scales: {
+            x: { beginAtZero: true, grid: { color: C.grid }, ticks: { color: C.tick, font: { size: 11 }, callback: v => '$' + v.toLocaleString() }, border: { display: false } },
+            y: { grid: { display: false }, ticks: { color: C.text, font: { size: 11 } }, border: { display: false } },
+          },
+        },
+      });
+    }
+  }
+
+  // Promo Eligibility — doughnut
+  const chartKey2 = 'adspend-promo';
+  destroyChart(chartKey2);
+  const donutCanvas = document.getElementById('adSpendPromoDonut');
+  if (donutCanvas) {
+    const promoGroups = [
+      { key: 'Yes', label: 'Promo Eligible', color: C.green },
+      { key: 'No', label: 'Not Eligible', color: C.red },
+      { key: 'Already Using', label: 'Already Using', color: C.blue },
+    ];
+    const dataVals = promoGroups.map(g => businesses.filter(b => b.promo === g.key).length);
+    chartRegistry[chartKey2] = new Chart(donutCanvas, {
+      type: 'doughnut',
+      data: {
+        labels: promoGroups.map(g => g.label),
+        datasets: [{ data: dataVals, backgroundColor: promoGroups.map(g => g.color), borderWidth: 3, borderColor: C.tooltipBg, hoverOffset: 8 }],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '68%',
+        plugins: {
+          legend: { position: 'right', labels: { color: C.text, font: { size: 11, weight: '600' }, padding: 12, usePointStyle: true, pointStyleWidth: 10 } },
+          tooltip: { backgroundColor: C.tooltipBg, borderColor: C.tooltipBorder, borderWidth: 1, titleColor: C.tooltipTitle, bodyColor: C.orange, padding: 12, cornerRadius: 8,
+            callbacks: { label: ctx => ` ${ctx.parsed} business${ctx.parsed === 1 ? '' : 'es'}` } },
+        },
+      },
+    });
+  }
+  const centerNum = document.getElementById('adSpendPromoCenterNum');
+  if (centerNum) centerNum.textContent = businesses.length;
 }
 
 const AD_SPEND_COLUMNS = [
@@ -5090,7 +5218,87 @@ function rebuildCollectionsPage() {
 
   rebuildCollectionsTableHeaders();
   rebuildCollectionsTable();
+  rebuildCollectionsCharts();
   rebuildHomePage();
+}
+
+// ─── COLLECTIONS CHARTS ────────────────────────────────────────────────────────
+function rebuildCollectionsCharts() {
+  const list = COLLECTIONS_ACCOUNTS.filter(a => a.type === activeCollectionsType);
+  const typeLabel = activeCollectionsType === 'outstanding' ? 'Outstanding Balances' : 'Card Fails';
+  const totalAmount = list.reduce((s, a) => s + (a.amount || 0), 0);
+
+  const subEl1 = document.getElementById('colStatusDonutSub');
+  if (subEl1) subEl1.textContent = `Breakdown of ${typeLabel.toLowerCase()}`;
+  const subEl2 = document.getElementById('colAmountBarSub');
+  if (subEl2) subEl2.textContent = `Dollar total per status — ${typeLabel.toLowerCase()}`;
+  const countBadge = document.getElementById('badge-collections-count');
+  if (countBadge) countBadge.textContent = `🧾 ${list.length} Account${list.length === 1 ? '' : 's'}`;
+  const amountBadge = document.getElementById('badge-collections-amount');
+  if (amountBadge) amountBadge.textContent = `💰 ${fmtMoney(totalAmount)} Total`;
+
+  const statusCounts = COLLECTIONS_STATUSES.map(s => list.filter(a => a.status === s.key).length);
+  const statusAmounts = COLLECTIONS_STATUSES.map(s => list.filter(a => a.status === s.key).reduce((sum, a) => sum + (a.amount || 0), 0));
+
+  // Accounts by Status — doughnut
+  const chartKey1 = 'collections-status-donut';
+  destroyChart(chartKey1);
+  const donutCanvas = document.getElementById('collectionsStatusDonut');
+  if (donutCanvas) {
+    const present = COLLECTIONS_STATUSES.map((s, i) => ({ s, count: statusCounts[i] })).filter(x => x.count > 0);
+    chartRegistry[chartKey1] = new Chart(donutCanvas, {
+      type: 'doughnut',
+      data: {
+        labels: present.map(x => x.s.label),
+        datasets: [{ data: present.map(x => x.count), backgroundColor: present.map(x => x.s.color), borderWidth: 3, borderColor: C.tooltipBg, hoverOffset: 8 }],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '68%',
+        plugins: {
+          legend: { position: 'right', labels: { color: C.text, font: { size: 11, weight: '600' }, padding: 12, usePointStyle: true, pointStyleWidth: 10 } },
+          tooltip: { backgroundColor: C.tooltipBg, borderColor: C.tooltipBorder, borderWidth: 1, titleColor: C.tooltipTitle, bodyColor: C.orange, padding: 12, cornerRadius: 8,
+            callbacks: { label: ctx => ` ${ctx.parsed} account${ctx.parsed === 1 ? '' : 's'}` } },
+        },
+      },
+    });
+  }
+  const centerNum = document.getElementById('collectionsStatusCenterNum');
+  if (centerNum) centerNum.textContent = list.length;
+
+  // Amount by Status — horizontal bar
+  const chartKey2 = 'collections-amount-bar';
+  destroyChart(chartKey2);
+  const barCanvas = document.getElementById('collectionsAmountBar');
+  if (barCanvas) {
+    const present = COLLECTIONS_STATUSES.map((s, i) => ({ s, amount: statusAmounts[i] })).filter(x => x.amount > 0);
+    if (present.length === 0) {
+      const ctx = barCanvas.getContext('2d');
+      ctx.clearRect(0, 0, barCanvas.width, barCanvas.height);
+    } else {
+      chartRegistry[chartKey2] = new Chart(barCanvas, {
+        type: 'bar',
+        data: {
+          labels: present.map(x => x.s.label),
+          datasets: [{
+            data: present.map(x => x.amount),
+            backgroundColor: present.map(x => x.s.color), borderRadius: { topRight: 6, bottomRight: 6 }, borderSkipped: 'left', barPercentage: 0.65,
+          }],
+        },
+        options: {
+          indexAxis: 'y', responsive: true, maintainAspectRatio: false, layout: { padding: { right: 16 } },
+          plugins: {
+            legend: { display: false },
+            tooltip: { backgroundColor: C.tooltipBg, borderColor: C.tooltipBorder, borderWidth: 1, titleColor: C.tooltipTitle, bodyColor: C.orange, padding: 12, cornerRadius: 8,
+              callbacks: { label: ctx => ` ${fmtMoney(ctx.parsed.x)}` } },
+          },
+          scales: {
+            x: { beginAtZero: true, grid: { color: C.grid }, ticks: { color: C.tick, font: { size: 11 }, callback: v => '$' + v.toLocaleString() }, border: { display: false } },
+            y: { grid: { display: false }, ticks: { color: C.text, font: { size: 11 } }, border: { display: false } },
+          },
+        },
+      });
+    }
+  }
 }
 
 function getCollectionsColumns() {
