@@ -8,6 +8,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 /* ─── RESET & BASE ─────────────────────────────────────────────────────── */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -1289,6 +1290,9 @@ tr.hidden-row { display: none; }
           <button class="filter-pill" onclick="filterClientsByPortfolio('support',this)">🎫 Support</button>
           <button class="filter-pill" onclick="filterClientsByPortfolio('multi',this)">🔗 2+ Portfolios</button>
         </div>
+        <select id="clientsProductFilter" onchange="filterClientsByProduct(this.value)" style="width:auto;max-width:200px">
+          <option value="all">📦 All Products</option>
+        </select>
         <span class="row-count" id="clientsRowCount">0 clients</span>
         <button class="export-csv-btn" onclick="exportAllClientsTable()" title="Download the currently visible rows as a CSV file">⬇ Export CSV</button>
       </div>
@@ -7119,7 +7123,7 @@ function handleFileUpload(e) {
   const reader = new FileReader();
   const inputEl = e.target;
 
-  reader.onload = function(ev) {
+  reader.onload = async function(ev) {
     try {
       let rows;
       let rowComments = null;
@@ -7131,7 +7135,8 @@ function handleFileUpload(e) {
         const sheetName = wb.SheetNames.find(n => preferredName.test(n)) || wb.SheetNames[0];
         const sheet = wb.Sheets[sheetName];
         rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
-        rowComments = extractCellComments(sheet, rows);
+        const threadedByCell = await extractThreadedComments(ev.target.result, sheetName);
+        rowComments = extractCellComments(sheet, rows, threadedByCell);
       }
       if (!rows || rows.length === 0) throw new Error('No data rows found in this file.');
       startImportWizard(rows, file.name, pk, inputEl, rowComments);
@@ -7150,7 +7155,9 @@ function handleFileUpload(e) {
 // Reads cell comments/notes (Excel "Notes", not to be confused with cell values) from an
 // XLSX worksheet and maps them back to { headerName: commentText } per data row.
 // CSV files carry no such metadata, so this is only ever called for .xlsx/.xls uploads.
-function extractCellComments(sheet, rows) {
+// `threadedByCell` (optional) is a { "D2": "text", ... } map from extractThreadedComments,
+// merged in alongside legacy Notes since a workbook can — and often does — contain both.
+function extractCellComments(sheet, rows, threadedByCell) {
   try {
     if (!sheet['!ref']) return null;
     const range = XLSX.utils.decode_range(sheet['!ref']);
@@ -7166,11 +7173,11 @@ function extractCellComments(sheet, rows) {
       const r = headerRowIdx + 1 + i;
       const notes = {};
       for (let col = range.s.c; col <= range.e.c; col++) {
-        const cell = sheet[XLSX.utils.encode_cell({ r, c: col })];
-        if (cell && cell.c && cell.c.length && headerByCol[col]) {
-          notes[headerByCol[col]] = cell.c.map(cm => cm.t).join(' / ');
-          anyFound = true;
-        }
+        const addr = XLSX.utils.encode_cell({ r, c: col });
+        const cell = sheet[addr];
+        let text = (cell && cell.c && cell.c.length) ? cell.c.map(cm => cm.t).join(' / ') : '';
+        if (threadedByCell && threadedByCell[addr]) text = text ? text + ' / ' + threadedByCell[addr] : threadedByCell[addr];
+        if (text && headerByCol[col]) { notes[headerByCol[col]] = text; anyFound = true; }
       }
       perRow.push(notes);
     }
@@ -7178,6 +7185,77 @@ function extractCellComments(sheet, rows) {
   } catch(e) {
     console.warn('Cell comment extraction failed:', e);
     return null;
+  }
+}
+
+// Reads Excel's modern "Threaded Comments" (Insert → Comment, with @mentions/replies —
+// distinct from the classic "Notes" feature above). SheetJS/XLSX.js never parses these,
+// since they live in their own XML parts (xl/threadedComments/*.xml), not the cell object
+// itself — so we unzip the raw .xlsx ourselves (it's just a zip file) and read them directly.
+// Returns { "D2": "combined comment text", ... } keyed by cell address, or {} on any failure
+// (never throws — a missing/unsupported comment part should never block the whole import).
+async function extractThreadedComments(fileData, targetSheetName) {
+  if (typeof JSZip === 'undefined') return {};
+  try {
+    const zip = await JSZip.loadAsync(fileData);
+    const decodeXmlEntities = (s) => s
+      .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"')
+      .replace(/&apos;/g, "'").replace(/&#10;/g, ' ').replace(/&#13;/g, ' ').replace(/&amp;/g, '&');
+
+    const workbookXmlFile = zip.file('xl/workbook.xml');
+    if (!workbookXmlFile) return {};
+    const workbookXml = await workbookXmlFile.async('text');
+    const sheetTags = workbookXml.match(/<sheet\b[^>]*\/>/g) || [];
+    let ridForSheet = null;
+    for (const tag of sheetTags) {
+      const nameMatch = tag.match(/name="([^"]+)"/);
+      const ridMatch = tag.match(/r:id="(rId\d+)"/);
+      if (nameMatch && ridMatch && nameMatch[1] === targetSheetName) { ridForSheet = ridMatch[1]; break; }
+    }
+    if (!ridForSheet) return {};
+
+    const workbookRelsFile = zip.file('xl/_rels/workbook.xml.rels');
+    if (!workbookRelsFile) return {};
+    const workbookRelsXml = await workbookRelsFile.async('text');
+    const relTags = workbookRelsXml.match(/<Relationship\b[^>]*\/>/g) || [];
+    const sheetRel = relTags.find(t => t.includes(`Id="${ridForSheet}"`));
+    if (!sheetRel) return {};
+    const sheetTargetMatch = sheetRel.match(/Target="([^"]+)"/);
+    if (!sheetTargetMatch) return {};
+    const sheetFileName = sheetTargetMatch[1].split('/').pop(); // e.g. "sheet1.xml"
+
+    const sheetRelsFile = zip.file(`xl/worksheets/_rels/${sheetFileName}.rels`);
+    if (!sheetRelsFile) return {};
+    const sheetRelsXml = await sheetRelsFile.async('text');
+    const sheetRelTags = sheetRelsXml.match(/<Relationship\b[^>]*\/>/g) || [];
+    const threadRel = sheetRelTags.find(t => t.includes('/threadedComment"'));
+    if (!threadRel) return {};
+    const threadTargetMatch = threadRel.match(/Target="([^"]+)"/);
+    if (!threadTargetMatch) return {};
+    const threadPath = 'xl/' + threadTargetMatch[1].replace(/^\.\.\//, '');
+
+    const threadFile = zip.file(threadPath);
+    if (!threadFile) return {};
+    const threadXml = await threadFile.async('text');
+
+    const perCell = {};
+    let currentRef = null;
+    const entryRe = /<x18tc:threadedComment\b([^>]*)>([\s\S]*?)<\/x18tc:threadedComment>/g;
+    let m;
+    while ((m = entryRe.exec(threadXml))) {
+      const [, attrs, body] = m;
+      const refMatch = attrs.match(/ref="([A-Z]+\d+)"/);
+      if (refMatch) currentRef = refMatch[1]; // replies omit ref — they belong to the last seen thread
+      if (!currentRef) continue;
+      const textMatch = body.match(/<x18tc:text[^>]*>([\s\S]*?)<\/x18tc:text>/);
+      if (!textMatch) continue;
+      const text = decodeXmlEntities(textMatch[1]);
+      perCell[currentRef] = perCell[currentRef] ? perCell[currentRef] + ' / ' + text : text;
+    }
+    return perCell;
+  } catch(e) {
+    console.warn('Threaded comment extraction failed:', e);
+    return {};
   }
 }
 
@@ -7425,43 +7503,8 @@ async function connectSheets() {
   }
 }
 
-// Auto-fetch all saved Google Sheets URLs on page load
-async function autoRefreshSheets() {
-  const urls = getSavedSheetsUrls();
-  const portfolios = Object.keys(urls).filter(pk => urls[pk]);
-  if (portfolios.length === 0) return;
-
-  showUploadFeedback('Refreshing Google Sheets…', false);
-
-  const results = await Promise.allSettled(portfolios.map(async pk => {
-    const csvUrl = toCsvExportUrl(urls[pk]);
-    const res = await fetch(csvUrl);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const text = await res.text();
-    if (/<html/i.test(text.slice(0, 200))) throw new Error('Not a CSV');
-    const rows = parseCSV(text);
-    const newClients = parseRowsToClients(rows, pk);
-    if (!newClients) throw new Error('No valid rows');
-    PORTFOLIOS[pk].clients = newClients;
-    return { pk, count: newClients.length };
-  }));
-
-  let anyFailed = false;
-  results.forEach((r, i) => {
-    if (r.status === 'rejected') {
-      console.warn(`Sheets auto-refresh failed for ${portfolios[i]}:`, r.reason);
-      anyFailed = true;
-    }
-  });
-
-  saveToLocalStorage();
-  rebuildAll();
-  if (anyFailed) {
-    showUploadFeedback('Sheets refresh: some failed, showing saved data', true);
-  } else {
-    showUploadFeedback(`Google Sheets · ${portfolios.map(pk => PORTFOLIOS[pk].name).join(', ')} · live`, false);
-  }
-}
+// Auto-fetch all saved Google Sheets URLs on page load — see the real definition
+// further down (autoRefreshSheets(urls)), which is the one actually used everywhere.
 
 // Add a "Clear saved data" button utility (exposed globally for easy access from console or a UI button)
 async function clearAllSavedData() {
@@ -7644,6 +7687,7 @@ function rebuildProductCatalogPage() {
 const PORTFOLIO_LABELS = { smb: 'SMB', whitelabel: 'White Label', support: 'Support' };
 const PORTFOLIO_ICONS  = { smb: '📊', whitelabel: '🏷️', support: '🎫' };
 let activeClientsFilter = 'all';
+let activeProductFilter = 'all';
 
 function buildMergedClients() {
   const merged = {};
@@ -7671,6 +7715,7 @@ function rebuildClientsDirectory() {
   set('navClientsBadge', rows.length);
   const addBtn = document.getElementById('addClientBtn');
   if (addBtn) addBtn.style.display = canEdit() ? '' : 'none';
+  populateClientsProductFilter();
   const tbody = document.getElementById('clientsDirectoryBody');
   if (!tbody) return;
   const rowsHtml = rows.map(row => {
@@ -7698,7 +7743,7 @@ function rebuildClientsDirectory() {
     const contactHint = contact && (contact.contact_name || contact.email || contact.phone)
       ? `<div style="font-size:11px;color:var(--text3);font-weight:400;margin-top:1px">${escAttr(contact.contact_name || '')}${contact.contact_name && (contact.email || contact.phone) ? ' · ' : ''}${escAttr(contact.phone || contact.email || '')}</div>`
       : '';
-    return `<tr data-name="${row.displayName.toLowerCase()}" data-portfolio-count="${pks.length}" ${attrs}>
+    return `<tr data-name="${row.displayName.toLowerCase()}" data-portfolio-count="${pks.length}" data-products="${Object.keys(activeProducts).join(' ')}" ${attrs}>
       <td style="padding-left:14px;color:var(--text);font-weight:600">
         <a href="#" onclick="openClientNotesTasksModal('${safe}');return false;" style="color:inherit;text-decoration:none" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${row.displayName}</a>
         ${contactHint}
@@ -7720,6 +7765,26 @@ function rebuildClientsDirectory() {
   filterClientsDirectory();
 }
 
+function populateClientsProductFilter() {
+  const sel = document.getElementById('clientsProductFilter');
+  if (!sel) return;
+  const seen = {};
+  ['smb', 'whitelabel', 'support'].forEach(pk => {
+    getCatalog(pk).forEach(p => { if (!seen[p.key]) seen[p.key] = p; });
+  });
+  const products = Object.values(seen);
+  const prevVal = activeProductFilter;
+  sel.innerHTML = `<option value="all">📦 All Products</option>` +
+    products.map(p => `<option value="${escAttr(p.key)}">${escAttr(p.label)}</option>`).join('');
+  if (prevVal === 'all' || products.some(p => p.key === prevVal)) sel.value = prevVal;
+  else { activeProductFilter = 'all'; sel.value = 'all'; }
+}
+
+function filterClientsByProduct(key) {
+  activeProductFilter = key;
+  filterClientsDirectory();
+}
+
 function filterClientsDirectory() {
   const q = (document.getElementById('clientsSearch')||{}).value||'';
   let n = 0;
@@ -7730,6 +7795,10 @@ function filterClientsDirectory() {
     if (show && activeClientsFilter !== 'all') {
       if (activeClientsFilter === 'multi') show = pc >= 2;
       else show = row.dataset['has'+activeClientsFilter[0].toUpperCase()+activeClientsFilter.slice(1)] === 'true';
+    }
+    if (show && activeProductFilter !== 'all') {
+      const products = (row.dataset.products || '').split(' ').filter(Boolean);
+      show = products.includes(activeProductFilter);
     }
     row.style.display = show ? '' : 'none';
     if (show) n++;
