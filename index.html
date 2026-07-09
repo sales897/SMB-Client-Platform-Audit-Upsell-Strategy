@@ -2885,6 +2885,19 @@ function rebuildAll() {
   rebuildClientsDirectory(); // All Clients — unified directory across every portfolio
   if (typeof rebuildAdSpendPage === 'function') rebuildAdSpendPage();
   if (typeof rebuildCollectionsPage === 'function') rebuildCollectionsPage();
+  refreshNavBadges(); // final guaranteed pass — always correct, never a cached/stale number
+}
+
+// Recomputes every sidebar nav badge directly from the live client data, every time.
+// This is intentionally redundant with rebuildKPIs()/rebuildClientsDirectory() above —
+// it's the safety net that keeps counts accurate even if a future code path calls
+// rebuildPortfolio() on its own and forgets to also refresh the unified directory count.
+function refreshNavBadges() {
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  set('navSmbBadge', getClients('smb').length);
+  set('navWhitelabelBadge', getClients('whitelabel').length);
+  set('navSupportBadge', getClients('support').length);
+  set('navClientsBadge', Object.keys(buildMergedClients()).length);
 }
 
 // ─── HOME — daily overview & quick access ────────────────────────────────────
@@ -7100,6 +7113,7 @@ function persistAndRebuild(pk) {
   if (pk === 'smb') rebuildUpsellCards();
   updateDataSourcePill();
   rebuildHomePage();
+  refreshNavBadges();
   // Save to Supabase in the background
   saveClientsToSupabase(pk).catch(e => console.warn('Background Supabase save failed:', e));
 }
