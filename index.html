@@ -685,6 +685,12 @@ tr.hidden-row { display: none; }
   z-index: 999; display: none;
 }
 .modal-overlay.open { display: flex; }
+/* The confirm dialog can be opened from inside another modal (e.g. deleting a
+   note from within Notes & Tasks). It needs to sit strictly above whatever
+   opened it, not tie with it on z-index — a tie means DOM order decides the
+   stack, which was letting the other modal's backdrop swallow the clicks
+   meant for this dialog's Confirm/Cancel buttons. */
+#confirmDialogModal { z-index: 6000; }
 .modal {
   background: var(--bg2); border: 1px solid var(--border);
   border-radius: 16px; padding: 32px; width: 480px; max-width: 95vw;
@@ -1096,6 +1102,7 @@ tr.hidden-row { display: none; }
     <div style="display:flex;gap:8px;margin-bottom:18px" id="cntTabs">
       <button class="pm-tab active" onclick="switchCntTab('notes')">📝 Notes</button>
       <button class="pm-tab" onclick="switchCntTab('tasks')">✅ Tasks</button>
+      <button class="pm-tab" onclick="switchCntTab('contact')">👤 Contact Info</button>
     </div>
 
     <div id="cntNotesPane">
@@ -1123,10 +1130,22 @@ tr.hidden-row { display: none; }
       </div>
     </div>
 
+    <div id="cntContactPane" style="display:none">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:16px">Primary point of contact for this client — visible to everyone, editable by Super users and Admins</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+        <div><label class="field-label">Contact Name</label><input type="text" id="cntContactName" class="field-input" style="height:38px" placeholder="e.g. Jamie Rivera"></div>
+        <div><label class="field-label">Title</label><input type="text" id="cntContactTitle" class="field-input" style="height:38px" placeholder="e.g. Owner / Office Manager"></div>
+        <div><label class="field-label">Email</label><input type="email" id="cntContactEmail" class="field-input" style="height:38px" placeholder="e.g. jamie@business.com"></div>
+        <div><label class="field-label">Phone</label><input type="tel" id="cntContactPhone" class="field-input" style="height:38px" placeholder="e.g. (555) 123-4567"></div>
+      </div>
+      <div id="cntContactSavedNote" style="font-size:11px;color:var(--text3)"></div>
+    </div>
+
     <div class="modal-btns" style="margin-top:18px">
       <button class="btn btn-ghost" onclick="closeClientNotesTasksModal()">Close</button>
       <button class="btn btn-primary" id="cntNotesSubmitBtn" onclick="addClientNote()">Add Note</button>
       <button class="btn btn-primary" id="cntTasksSubmitBtn" style="display:none" onclick="addClientTask()">＋ Add Task</button>
+      <button class="btn btn-primary" id="cntContactSubmitBtn" style="display:none" onclick="saveClientContactInfo()">💾 Save Contact Info</button>
     </div>
   </div>
 </div>
@@ -5922,30 +5941,81 @@ function applyCollectionsImport() {
 // ════════════════════════════════════════════════════════════════════════
 const CLIENT_NOTES_CACHE_KEY = 'csh_client_notes_v1';
 const CLIENT_TASKS_CACHE_KEY = 'csh_client_tasks_v1';
+const CLIENT_CONTACTS_CACHE_KEY = 'csh_client_contacts_v1';
 const NOTIFICATIONS_CACHE_KEY = 'csh_notifications_v1';
 let CLIENT_NOTES = [];
 let CLIENT_TASKS = [];
+let CLIENT_CONTACTS = []; // one row per client: { id, client_name, contact_name, title, email, phone, updated_at }
 let NOTIFICATIONS = [];
 let cntActiveClientName = null;
 let cntTaggedEmails = [];
 
 async function loadClientNotesTasks() {
   try {
-    const [notesRows, taskRows] = await Promise.all([
+    const [notesRows, taskRows, contactRows] = await Promise.all([
       sbSelect('client_notes', 'order=created_at.desc'),
       sbSelect('client_tasks', 'order=created_at.desc'),
+      sbSelect('client_contacts'),
     ]);
     CLIENT_NOTES = notesRows;
     CLIENT_TASKS = taskRows;
+    CLIENT_CONTACTS = contactRows;
     localStorage.setItem(CLIENT_NOTES_CACHE_KEY, JSON.stringify(CLIENT_NOTES));
     localStorage.setItem(CLIENT_TASKS_CACHE_KEY, JSON.stringify(CLIENT_TASKS));
+    localStorage.setItem(CLIENT_CONTACTS_CACHE_KEY, JSON.stringify(CLIENT_CONTACTS));
   } catch(e) {
-    console.warn('client_notes/client_tasks tables unavailable, using local cache:', e.message);
+    console.warn('client_notes/client_tasks/client_contacts tables unavailable, using local cache:', e.message);
     try { CLIENT_NOTES = JSON.parse(localStorage.getItem(CLIENT_NOTES_CACHE_KEY) || '[]'); } catch(e2) { CLIENT_NOTES = []; }
     try { CLIENT_TASKS = JSON.parse(localStorage.getItem(CLIENT_TASKS_CACHE_KEY) || '[]'); } catch(e2) { CLIENT_TASKS = []; }
+    try { CLIENT_CONTACTS = JSON.parse(localStorage.getItem(CLIENT_CONTACTS_CACHE_KEY) || '[]'); } catch(e2) { CLIENT_CONTACTS = []; }
   }
   rebuildHomePage();
   syncMyTasksToGoogleCalendar();
+}
+
+// ─── Client Contact Info (name/title/email/phone) ──────────────────────────
+function getClientContact(clientName) {
+  const norm = (clientName || '').trim().toLowerCase();
+  return CLIENT_CONTACTS.find(c => (c.client_name || '').trim().toLowerCase() === norm) || null;
+}
+
+function renderClientContactInfo() {
+  const contact = getClientContact(cntActiveClientName) || {};
+  const editable = canEdit();
+  const set = (id, val) => { const el = document.getElementById(id); if (el) { el.value = val || ''; el.disabled = !editable; } };
+  set('cntContactName', contact.contact_name);
+  set('cntContactTitle', contact.title);
+  set('cntContactEmail', contact.email);
+  set('cntContactPhone', contact.phone);
+  const note = document.getElementById('cntContactSavedNote');
+  if (note) {
+    note.textContent = contact.updated_at
+      ? `Last updated ${fmtNoteTime(contact.updated_at)}`
+      : (editable ? '' : 'No contact info added yet.');
+  }
+}
+
+async function saveClientContactInfo() {
+  if (!requirePermission('edit')) return;
+  const contact_name = (document.getElementById('cntContactName') || {}).value?.trim() || '';
+  const title = (document.getElementById('cntContactTitle') || {}).value?.trim() || '';
+  const email = (document.getElementById('cntContactEmail') || {}).value?.trim() || '';
+  const phone = (document.getElementById('cntContactPhone') || {}).value?.trim() || '';
+  const norm = (cntActiveClientName || '').trim().toLowerCase();
+  let contact = getClientContact(cntActiveClientName);
+  if (!contact) {
+    contact = { id: (crypto.randomUUID ? crypto.randomUUID() : 'contact_' + Date.now()), client_name: cntActiveClientName };
+    CLIENT_CONTACTS.push(contact);
+  }
+  contact.contact_name = contact_name;
+  contact.title = title;
+  contact.email = email;
+  contact.phone = phone;
+  contact.updated_at = new Date().toISOString();
+  localStorage.setItem(CLIENT_CONTACTS_CACHE_KEY, JSON.stringify(CLIENT_CONTACTS));
+  try { await sbUpsert('client_contacts', contact); } catch(e) { console.warn('Could not save contact info:', e.message); }
+  renderClientContactInfo();
+  showToast('Contact info saved.', 'success');
 }
 
 async function loadNotifications() {
@@ -6080,6 +6150,7 @@ function openClientNotesTasksModal(clientName) {
   cntTaggedEmails = [];
   renderCntTagPicker();
   populateCntTaskAssigneeSelect();
+  renderClientContactInfo();
   switchCntTab('notes');
   renderClientNotesThread();
   renderClientTasksList();
@@ -6090,16 +6161,17 @@ function closeClientNotesTasksModal() {
   cntActiveClientName = null;
   cntTaggedEmails = [];
 }
+const CNT_TABS = ['notes', 'tasks', 'contact'];
 function switchCntTab(tab) {
-  const notesPane = document.getElementById('cntNotesPane');
-  const tasksPane = document.getElementById('cntTasksPane');
-  if (notesPane) notesPane.style.display = tab === 'notes' ? '' : 'none';
-  if (tasksPane) tasksPane.style.display = tab === 'tasks' ? '' : 'none';
-  document.querySelectorAll('#cntTabs .pm-tab').forEach((b, i) => b.classList.toggle('active', (tab === 'notes' && i === 0) || (tab === 'tasks' && i === 1)));
-  const notesBtn = document.getElementById('cntNotesSubmitBtn');
-  const tasksBtn = document.getElementById('cntTasksSubmitBtn');
-  if (notesBtn) notesBtn.style.display = tab === 'notes' ? '' : 'none';
-  if (tasksBtn) tasksBtn.style.display = tab === 'tasks' ? '' : 'none';
+  const panes = { notes: 'cntNotesPane', tasks: 'cntTasksPane', contact: 'cntContactPane' };
+  const btns = { notes: 'cntNotesSubmitBtn', tasks: 'cntTasksSubmitBtn', contact: 'cntContactSubmitBtn' };
+  CNT_TABS.forEach(t => {
+    const pane = document.getElementById(panes[t]);
+    if (pane) pane.style.display = t === tab ? '' : 'none';
+    const btn = document.getElementById(btns[t]);
+    if (btn) btn.style.display = (t === tab && (t !== 'contact' || canEdit())) ? '' : 'none';
+  });
+  document.querySelectorAll('#cntTabs .pm-tab').forEach((b, i) => b.classList.toggle('active', CNT_TABS[i] === tab));
   if (tab === 'tasks') renderGoogleCalendarStatus();
 }
 
@@ -7260,12 +7332,19 @@ function rebuildClientsDirectory() {
           `<span class="product-icon-chip" title="${escAttr(p.label)}">${renderProductIcon(p.icon, 14)}</span>`
         ).join('')}</span>`
       : '';
+    const contact = getClientContact(row.displayName);
+    const contactHint = contact && (contact.contact_name || contact.email || contact.phone)
+      ? `<div style="font-size:11px;color:var(--text3);font-weight:400;margin-top:1px">${escAttr(contact.contact_name || '')}${contact.contact_name && (contact.email || contact.phone) ? ' · ' : ''}${escAttr(contact.phone || contact.email || '')}</div>`
+      : '';
     return `<tr data-name="${row.displayName.toLowerCase()}" data-portfolio-count="${pks.length}" ${attrs}>
-      <td style="padding-left:14px;color:var(--text);font-weight:600">${row.displayName}</td>
+      <td style="padding-left:14px;color:var(--text);font-weight:600">
+        <a href="#" onclick="openClientNotesTasksModal('${safe}');return false;" style="color:inherit;text-decoration:none" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${row.displayName}</a>
+        ${contactHint}
+      </td>
       <td>${chips}</td>
       <td><span class="pc-cell"><span class="pc-badge pc-${Math.min(total,6)}">${total}</span>${iconsHtml}</span></td>
       <td>
-        <button class="row-action-btn" onclick="openClientNotesTasksModal('${safe}')">📝 Notes &amp; Tasks</button>
+        <button class="row-action-btn" onclick="openClientNotesTasksModal('${safe}')">👤 Open Client</button>
         ${canEdit() ? `
         <button class="row-action-btn" onclick="openEditClientModal('${safe}')">✏️ Edit</button>
         <button class="row-action-btn danger" onclick="openDeleteClientModal('${safe}')">🗑️ Remove</button>` : ''}
