@@ -775,6 +775,38 @@ tr.hidden-row { display: none; }
 .profile-menu-item:hover { background: var(--bg3); color: var(--text); }
 .profile-menu-item.danger:hover { background: rgba(239,68,68,.1); color: var(--red); }
 .profile-menu-divider { height: 1px; background: var(--border); margin: 6px 4px; }
+
+.notif-badge {
+  position: absolute; top: -4px; right: -4px;
+  background: var(--red); color: #fff; font-size: 9px; font-weight: 800;
+  min-width: 16px; height: 16px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  padding: 0 3px;
+}
+.notif-panel {
+  position: fixed; top: 70px; right: 24px; z-index: 2500;
+  width: 320px; max-height: 420px; overflow-y: auto;
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
+  box-shadow: var(--shadow); padding: 10px;
+}
+.notif-panel-header { display: flex; justify-content: space-between; align-items: center; padding: 6px 8px 10px; border-bottom: 1px solid var(--border); margin-bottom: 6px; font-size: 13px; font-weight: 700; color: var(--text); }
+.notif-item { padding: 10px 8px; border-radius: 8px; cursor: pointer; margin-bottom: 4px; transition: background .15s; }
+.notif-item:hover { background: var(--bg3); }
+.notif-item.unread { background: rgba(226,84,31,.08); border-left: 3px solid var(--orange); }
+.notif-msg { font-size: 12px; color: var(--text); line-height: 1.4; margin-bottom: 3px; }
+.notif-time { font-size: 10px; color: var(--text3); }
+
+.tag-chip {
+  padding: 5px 10px; border-radius: 16px; font-size: 11px; font-weight: 600; cursor: pointer;
+  background: var(--bg3); border: 1px solid var(--border); color: var(--text2); transition: all .15s;
+}
+.tag-chip.active { background: var(--orange-dim); border-color: var(--orange); color: var(--orange); }
+
+.task-row { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; background: var(--bg3); }
+.task-row.done .task-title { text-decoration: line-through; color: var(--text3); }
+.task-row input[type=checkbox] { width: 16px; height: 16px; cursor: pointer; accent-color: var(--orange); flex-shrink: 0; }
+.task-info { flex: 1; }
+.task-title { font-size: 13px; font-weight: 600; color: var(--text); }
+.task-meta { font-size: 11px; color: var(--text3); margin-top: 2px; }
 .role-pill { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; padding: 2px 7px; border-radius: 10px; }
 .role-pill.admin { background: rgba(226,84,31,.18); color: var(--orange2); }
 .role-pill.superuser { background: rgba(59,130,246,.18); color: var(--blue); }
@@ -1026,6 +1058,51 @@ tr.hidden-row { display: none; }
   </div>
 </div>
 
+<!-- CLIENT NOTES & TASKS MODAL -->
+<div class="modal-overlay" id="clientNotesTasksModal">
+  <div class="modal wide">
+    <h3 id="cntTitle">📝 Notes &amp; Tasks</h3>
+    <div style="display:flex;gap:8px;margin-bottom:16px" id="cntTabs">
+      <button class="pm-tab active" onclick="switchCntTab('notes')">📝 Notes</button>
+      <button class="pm-tab" onclick="switchCntTab('tasks')">✅ Tasks</button>
+    </div>
+
+    <div id="cntNotesPane">
+      <div class="notes-thread" id="cntNotesThread" style="max-height:220px"></div>
+      <label class="field-label">Add a Note</label>
+      <textarea id="cntNewNoteText" rows="2" placeholder="What's happening with this client?" class="field-input" style="margin-bottom:10px;resize:vertical;font-family:inherit"></textarea>
+      <label class="field-label">Tag teammates (optional — they'll be notified)</label>
+      <div id="cntTagPicker" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px"></div>
+      <div class="modal-btns" style="justify-content:flex-end;margin-bottom:0">
+        <button class="btn btn-primary" onclick="addClientNote()">Add Note</button>
+      </div>
+    </div>
+
+    <div id="cntTasksPane" style="display:none">
+      <div id="cntTasksList" style="margin-bottom:16px"></div>
+      <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr auto;gap:10px;align-items:end">
+        <div><label class="field-label">Task</label><input type="text" id="cntNewTaskTitle" class="field-input" placeholder="e.g. Follow up about renewal"></div>
+        <div><label class="field-label">Assign to</label><select id="cntNewTaskAssignee" class="field-select"></select></div>
+        <div><label class="field-label">Due Date</label><input type="date" id="cntNewTaskDue" class="field-input"></div>
+        <button class="btn btn-primary" onclick="addClientTask()">＋ Add</button>
+      </div>
+    </div>
+
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeClientNotesTasksModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- NOTIFICATIONS PANEL -->
+<div class="notif-panel" id="notificationPanel" style="display:none">
+  <div class="notif-panel-header">
+    <span>🔔 Notifications</span>
+    <a href="#" onclick="markAllNotificationsRead(event)" style="font-size:11px;color:var(--orange);text-decoration:none">Mark all read</a>
+  </div>
+  <div id="notificationList"></div>
+</div>
+
 <!-- MAIN -->
 <div class="main">
 
@@ -1039,6 +1116,12 @@ tr.hidden-row { display: none; }
     <div class="topbar-right">
       <div class="data-source-pill" id="dataSourcePill">
         <span class="dot"></span> Sample Data
+      </div>
+      <div style="position:relative">
+        <div class="theme-toggle" id="notifBellBtn" onclick="toggleNotificationPanel()" title="Notifications">
+          🔔
+          <span class="notif-badge" id="notifBadge" style="display:none">0</span>
+        </div>
       </div>
       <div class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Switch light/dark mode">🌙</div>
       <div style="position:relative">
@@ -1137,6 +1220,13 @@ tr.hidden-row { display: none; }
 
     <div class="section-hd"><div class="section-num">2</div><h2>Today's Focus</h2></div>
     <div class="section-div"></div>
+    <div class="card" style="margin-bottom:20px;border-color:rgba(226,84,31,.35)">
+      <div class="card-header">
+        <div><div class="card-title">✅ My Tasks</div><div class="card-sub" id="home-my-tasks-sub">Open tasks assigned to you, across every client</div></div>
+        <span class="pc-badge pc-6" id="home-my-tasks-count">0</span>
+      </div>
+      <div id="homeMyTasksList"></div>
+    </div>
     <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:20px;align-items:start">
       <div class="card">
         <div class="card-header">
@@ -1611,10 +1701,10 @@ tr.hidden-row { display: none; }
   ════════════════════════════════════════════════════════════════════════ -->
   <div class="page" id="page-upsell">
     <div class="kpi-row">
-      <div class="kpi"><div class="kpi-icon">🎯</div><div class="kpi-val orange">520</div><div class="kpi-lbl">Total Opportunities</div></div>
-      <div class="kpi"><div class="kpi-icon">🔥</div><div class="kpi-val red">3</div><div class="kpi-lbl">High Priority Products</div></div>
-      <div class="kpi"><div class="kpi-icon">📦</div><div class="kpi-val yellow">4</div><div class="kpi-lbl">Medium Priority</div><div class="kpi-sub" style="color:var(--yellow)">Medium</div></div>
-      <div class="kpi"><div class="kpi-icon">✅</div><div class="kpi-val green">3</div><div class="kpi-lbl">Targeted Priority</div></div>
+      <div class="kpi"><div class="kpi-icon">🎯</div><div class="kpi-val orange" id="upsell-total-opps">0</div><div class="kpi-lbl">Total Opportunities</div><div class="kpi-sub">Across SMB, White Label, Support</div></div>
+      <div class="kpi"><div class="kpi-icon">🔥</div><div class="kpi-val red" id="upsell-high-count">0</div><div class="kpi-lbl">High Priority Products</div></div>
+      <div class="kpi"><div class="kpi-icon">📦</div><div class="kpi-val" style="color:var(--yellow)" id="upsell-med-count">0</div><div class="kpi-lbl">Medium Priority</div></div>
+      <div class="kpi"><div class="kpi-icon">✅</div><div class="kpi-val green" id="upsell-low-count">0</div><div class="kpi-lbl">Targeted Priority</div></div>
     </div>
     <div class="upsell-grid" id="upsellGrid"></div>
     <div class="page-footer">Client Success Hub · Niche Inc. · Upsell Playbook</div>
@@ -1630,6 +1720,7 @@ tr.hidden-row { display: none; }
       <div class="kpi"><div class="kpi-icon">📅</div><div class="kpi-val orange">90</div><div class="kpi-lbl">Days to Execute</div></div>
       <div class="kpi"><div class="kpi-icon">🎯</div><div class="kpi-val green">12+</div><div class="kpi-lbl">Target Activations</div></div>
     </div>
+    <div id="actionPlanSnapshot" style="margin-bottom:20px"></div>
     <div id="actionPlanContainer"></div>
     <div class="page-footer">Client Success Hub · Niche Inc. · Action Plan</div>
   </div>
@@ -2350,6 +2441,94 @@ function renderProductIcon(icon, sizeRem) {
   return icon;
 }
 
+// ─── CHART PRODUCT-ICON AXIS PLUGIN ───────────────────────────────────────────
+// Chart.js draws axis labels as plain canvas text — to show real product logos
+// instead, this plugin manually draws each product's actual logo image (or its
+// emoji, for products without a real logo) below the x-axis at each tick.
+const productLogoImageCache = {};
+function makeProductAxisIconPlugin(catalog) {
+  return {
+    id: 'productAxisIcons',
+    afterDraw(chart) {
+      const xAxis = chart.scales.x;
+      if (!xAxis) return;
+      const ctx = chart.ctx;
+      const iconSize = 20;
+      ctx.save();
+      catalog.forEach((p, i) => {
+        const x = xAxis.getPixelForTick(i);
+        if (x === undefined) return;
+        const y = xAxis.bottom + 8;
+        const isLogo = typeof p.icon === 'string' && p.icon.startsWith('logo:');
+        if (isLogo) {
+          const key = p.icon.slice(5);
+          let img = productLogoImageCache[key];
+          if (!img) {
+            const src = PRODUCT_LOGOS[key];
+            if (src) {
+              img = new Image();
+              img.onload = () => { try { chart.update('none'); } catch(e) {} };
+              img.src = src;
+              productLogoImageCache[key] = img;
+            }
+          }
+          if (img && img.complete && img.naturalWidth > 0) {
+            ctx.drawImage(img, x - iconSize / 2, y, iconSize, iconSize);
+          }
+        } else {
+          ctx.font = '16px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'top';
+          ctx.fillText(p.icon || '', x, y);
+        }
+      });
+      ctx.restore();
+    },
+  };
+}
+
+// Same idea, for horizontal bar charts where product labels run down the y-axis
+function makeProductYAxisIconPlugin(catalog) {
+  return {
+    id: 'productYAxisIcons',
+    afterDraw(chart) {
+      const yAxis = chart.scales.y;
+      if (!yAxis) return;
+      const ctx = chart.ctx;
+      const iconSize = 18;
+      ctx.save();
+      catalog.forEach((p, i) => {
+        const y = yAxis.getPixelForTick(i);
+        if (y === undefined) return;
+        const x = yAxis.left - iconSize - 6;
+        const isLogo = typeof p.icon === 'string' && p.icon.startsWith('logo:');
+        if (isLogo) {
+          const key = p.icon.slice(5);
+          let img = productLogoImageCache[key];
+          if (!img) {
+            const src = PRODUCT_LOGOS[key];
+            if (src) {
+              img = new Image();
+              img.onload = () => { try { chart.update('none'); } catch(e) {} };
+              img.src = src;
+              productLogoImageCache[key] = img;
+            }
+          }
+          if (img && img.complete && img.naturalWidth > 0) {
+            ctx.drawImage(img, x, y - iconSize / 2, iconSize, iconSize);
+          }
+        } else {
+          ctx.font = '14px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(p.icon || '', x + iconSize / 2, y);
+        }
+      });
+      ctx.restore();
+    },
+  };
+}
+
 const SMB_CATALOG = [
   { key: 'yelp',          label: 'Yelp',           icon: 'logo:yelp', priority: 'high',   desc: 'not yet on Yelp — solid baseline to close' },
   { key: 'google_lsa',    label: 'Google LSA',      icon: 'logo:google_lsa', priority: 'high',   desc: 'not using — highest upsell potential' },
@@ -2493,6 +2672,7 @@ function rebuildHomePage() {
   renderHomeGreeting();
   renderHomeKPIs();
   renderHomeQuickLinks();
+  renderHomeMyTasks();
   renderHomeAttentionList();
   renderHomeActivityList();
 }
@@ -3096,16 +3276,16 @@ function rebuildAdoptionBar(pk) {
   ds._pcts = pcts;
 
   chartRegistry[chartKey] = new Chart(ctx, {
-    type: 'bar', plugins: [labelPlugin],
+    type: 'bar', plugins: [labelPlugin, makeProductAxisIconPlugin(cat)],
     data: { labels, datasets: [ds] },
     options: {
-      responsive: true, maintainAspectRatio: false, layout: { padding: { top: 20 } },
+      responsive: true, maintainAspectRatio: false, layout: { padding: { top: 20, bottom: 26 } },
       plugins: { legend: { display: false },
         tooltip: { backgroundColor: C.tooltipBg, borderColor: C.tooltipBorder, borderWidth: 1, titleColor: C.tooltipTitle, bodyColor: C.orange, padding: 12, cornerRadius: 8,
           callbacks: { label: c => ` ${c.parsed.y}% — ${counts[c.dataIndex]} of ${total} clients` } } },
       scales: {
         y: { beginAtZero: true, max: 100, grid: { color: C.grid }, ticks: { callback: v => v + '%', color: C.tick, font: { size: 11 } }, border: { display: false } },
-        x: { grid: { display: false }, ticks: { color: C.text, font: { size: 10 } }, border: { display: false } }
+        x: { grid: { display: false }, ticks: { display: false }, border: { display: false } }
       }
     }
   });
@@ -3199,16 +3379,16 @@ function rebuildGapBar(pk) {
   ds._gaps = gaps;
 
   chartRegistry[chartKey] = new Chart(canvas, {
-    type: 'bar', plugins: [labelPlugin],
+    type: 'bar', plugins: [labelPlugin, makeProductYAxisIconPlugin(cat)],
     data: { labels, datasets: [ds] },
     options: {
-      indexAxis: 'y', responsive: true, maintainAspectRatio: false, layout: { padding: { right: 16 } },
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false, layout: { padding: { right: 16, left: 30 } },
       plugins: { legend: { display: false },
         tooltip: { backgroundColor: C.tooltipBg, borderColor: C.tooltipBorder, borderWidth: 1, titleColor: C.tooltipTitle, bodyColor: C.orange, padding: 12, cornerRadius: 8,
           callbacks: { label: ctx => ` ${ctx.parsed.x} clients to upsell (${Math.round(ctx.parsed.x/total*100)}%)` } } },
       scales: {
         x: { beginAtZero: true, max: total, grid: { color: C.grid }, ticks: { color: C.tick, font: { size: 11 } }, border: { display: false } },
-        y: { grid: { display: false }, ticks: { color: C.text, font: { size: 11, weight: '600' } }, border: { display: false } }
+        y: { grid: { display: false }, ticks: { display: false }, border: { display: false } }
       }
     }
   });
@@ -3630,26 +3810,48 @@ const upsellSteps = {
 function rebuildUpsellCards() {
   const ug = document.getElementById('upsellGrid');
   if (!ug) return;
-  const cat = getCatalog('smb');
-  const cl = getClients('smb');
-  const total = cl.length || 1;
-  ug.innerHTML = '';
-  cat.forEach(p => {
-    const using = cl.filter(c => c[p.key]).length;
-    const gap = total - using;
+  const portfolios = ['smb', 'whitelabel', 'support'];
+  const cat = getCatalog('smb'); // shared/unified catalog across all three portfolios
+  const pkMeta = { smb: { label: 'SMB', chip: 'chip-smb' }, whitelabel: { label: 'White Label', chip: 'chip-whitelabel' }, support: { label: 'Support', chip: 'chip-support' } };
+
+  const rows = cat.map(p => {
+    const byPortfolio = portfolios.map(pk => {
+      const cl = getClients(pk);
+      const using = cl.filter(c => c[p.key]).length;
+      return { pk, using, total: cl.length, gap: cl.length - using };
+    });
+    const totalClients = byPortfolio.reduce((s, x) => s + x.total, 0);
+    const totalGap = byPortfolio.reduce((s, x) => s + x.gap, 0);
+    return { p, byPortfolio, totalClients, totalGap };
+  });
+
+  rows.sort((a, b) => b.totalGap - a.totalGap); // biggest opportunity first
+
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  set('upsell-total-opps', rows.reduce((s, r) => s + r.totalGap, 0));
+  set('upsell-high-count', cat.filter(p => p.priority === 'high').length);
+  set('upsell-med-count', cat.filter(p => p.priority === 'medium').length);
+  set('upsell-low-count', cat.filter(p => p.priority === 'low').length);
+
+  ug.innerHTML = rows.map(({ p, byPortfolio, totalClients, totalGap }) => {
     const steps = (upsellSteps[p.key] || genericSteps(p.label)).map((s,i) => `<li><span class="step-n">${i+1}</span>${s}</li>`).join('');
     const pm = prioMeta[p.priority] || prioMeta.medium;
-    ug.innerHTML += `
+    const breakdown = byPortfolio
+      .filter(x => x.total > 0)
+      .map(x => `<span class="portfolio-chip ${pkMeta[x.pk].chip}">${pkMeta[x.pk].label}: ${x.gap}</span>`)
+      .join(' ');
+    return `
       <div class="upsell-card ${p.priority}">
         <div class="upsell-hd">
           <div class="upsell-name">${renderProductIcon(p.icon, 22)} ${p.label}</div>
           <span class="prio-tag ${pm.ptag}">${pm.plbl}</span>
         </div>
-        <div class="upsell-num">${gap} clients</div>
-        <div class="upsell-sub">${p.desc || (gap + ' of ' + total + ' clients not using')}</div>
+        <div class="upsell-num">${totalGap} clients</div>
+        <div class="upsell-sub">${totalGap} of ${totalClients} clients not using, across SMB, White Label &amp; Support</div>
+        <div style="margin:8px 0 6px;display:flex;gap:6px;flex-wrap:wrap">${breakdown}</div>
         <ul class="upsell-steps">${steps}</ul>
       </div>`;
-  });
+  }).join('');
 }
 
 // ─── ACTION PLAN ──────────────────────────────────────────────────────────────
@@ -3680,6 +3882,33 @@ const phases = [
 function rebuildActionPlan() {
   const ac = document.getElementById('actionPlanContainer');
   if (!ac) return;
+
+  const snap = document.getElementById('actionPlanSnapshot');
+  if (snap) {
+    const portfolios = ['smb', 'whitelabel', 'support'];
+    const cat = getCatalog('smb');
+    const rows = cat.map(p => {
+      const gap = portfolios.reduce((s, pk) => s + getClients(pk).filter(c => !c[p.key]).length, 0);
+      return { p, gap };
+    }).sort((a, b) => b.gap - a.gap).slice(0, 3);
+    const totalClients = portfolios.reduce((s, pk) => s + getClients(pk).length, 0);
+
+    snap.innerHTML = `
+      <div class="card" style="background:rgba(226,84,31,.06);border-color:rgba(226,84,31,.2)">
+        <div class="card-header">
+          <div><div class="card-title">📌 This Week's Top Priorities</div><div class="card-sub">Live, computed from your current SMB, White Label, and Support data — use these to focus Phase 1</div></div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          ${rows.map((r, i) => `
+            <div style="flex:1;min-width:180px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px">
+              <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">#${i+1} Opportunity</div>
+              <div style="font-weight:700;color:var(--text);font-size:14px;margin-bottom:4px">${renderProductIcon(r.p.icon, 18)} ${r.p.label}</div>
+              <div style="font-size:12px;color:var(--text2)">${r.gap} of ${totalClients} clients not using this yet</div>
+            </div>`).join('')}
+        </div>
+      </div>`;
+  }
+
   ac.innerHTML = '';
   phases.forEach(ph => {
     const steps = ph.steps.map(s => `
@@ -4226,6 +4455,7 @@ async function authorizeSession(session) {
   CURRENT_AUTH_USER = { id: match.id, name: match.name, email: match.email, role: match.role, avatar: match.avatar || '', authId: session.user.id };
   hideLoginGate();
   applyPermissionsToUI();
+  loadNotifications();
   bootApp();
 }
 
@@ -5258,6 +5488,354 @@ function applyCollectionsImport() {
   closeCollectionsDuplicatesModal();
 }
 
+// ════════════════════════════════════════════════════════════════════════
+// CLIENT NOTES, TASKS & NOTIFICATIONS
+// Notes and tasks are tied to a client by name (not a specific portfolio),
+// since a client can span multiple portfolios and a note/task is about the
+// business, not one dashboard entry. Any signed-in teammate can add notes,
+// tag others, and create/assign tasks — this is collaborative, not a
+// data-editing action, so it isn't gated behind Super user/Admin.
+// ════════════════════════════════════════════════════════════════════════
+const CLIENT_NOTES_CACHE_KEY = 'csh_client_notes_v1';
+const CLIENT_TASKS_CACHE_KEY = 'csh_client_tasks_v1';
+const NOTIFICATIONS_CACHE_KEY = 'csh_notifications_v1';
+let CLIENT_NOTES = [];
+let CLIENT_TASKS = [];
+let NOTIFICATIONS = [];
+let cntActiveClientName = null;
+let cntTaggedEmails = [];
+
+async function loadClientNotesTasks() {
+  try {
+    const [notesRows, taskRows] = await Promise.all([
+      sbSelect('client_notes', 'order=created_at.desc'),
+      sbSelect('client_tasks', 'order=created_at.desc'),
+    ]);
+    CLIENT_NOTES = notesRows;
+    CLIENT_TASKS = taskRows;
+    localStorage.setItem(CLIENT_NOTES_CACHE_KEY, JSON.stringify(CLIENT_NOTES));
+    localStorage.setItem(CLIENT_TASKS_CACHE_KEY, JSON.stringify(CLIENT_TASKS));
+  } catch(e) {
+    console.warn('client_notes/client_tasks tables unavailable, using local cache:', e.message);
+    try { CLIENT_NOTES = JSON.parse(localStorage.getItem(CLIENT_NOTES_CACHE_KEY) || '[]'); } catch(e2) { CLIENT_NOTES = []; }
+    try { CLIENT_TASKS = JSON.parse(localStorage.getItem(CLIENT_TASKS_CACHE_KEY) || '[]'); } catch(e2) { CLIENT_TASKS = []; }
+  }
+  rebuildHomePage();
+}
+
+async function loadNotifications() {
+  const u = getCurrentUser();
+  if (!u || !u.email) return;
+  try {
+    NOTIFICATIONS = await sbSelect('notifications', `recipient_email=eq.${encodeURIComponent(u.email)}&order=created_at.desc&limit=50`);
+  } catch(e) {
+    console.warn('notifications table unavailable:', e.message);
+    try { NOTIFICATIONS = JSON.parse(localStorage.getItem(NOTIFICATIONS_CACHE_KEY) || '[]'); } catch(e2) { NOTIFICATIONS = []; }
+  }
+  renderNotificationBell();
+}
+
+async function createNotification(recipientEmail, type, message, clientName) {
+  if (!recipientEmail) return;
+  const notif = {
+    id: (crypto.randomUUID ? crypto.randomUUID() : 'notif_' + Date.now() + Math.random().toString(16).slice(2)),
+    recipient_email: recipientEmail,
+    type, message,
+    client_name: clientName || null,
+    read: false,
+    created_at: new Date().toISOString(),
+  };
+  try { await sbUpsert('notifications', notif); } catch(e) { console.warn('Could not create notification:', e.message); }
+}
+
+function renderNotificationBell() {
+  const badge = document.getElementById('notifBadge');
+  const unread = NOTIFICATIONS.filter(n => !n.read).length;
+  if (badge) { badge.style.display = unread > 0 ? '' : 'none'; badge.textContent = unread; }
+}
+
+function toggleNotificationPanel() {
+  const panel = document.getElementById('notificationPanel');
+  if (!panel) return;
+  const showing = panel.style.display !== 'none';
+  panel.style.display = showing ? 'none' : '';
+  if (!showing) renderNotificationList();
+}
+document.addEventListener('click', (e) => {
+  const panel = document.getElementById('notificationPanel');
+  const bellBtn = document.getElementById('notifBellBtn');
+  if (!panel || panel.style.display === 'none') return;
+  if (!panel.contains(e.target) && bellBtn && !bellBtn.contains(e.target)) panel.style.display = 'none';
+});
+
+function renderNotificationList() {
+  const wrap = document.getElementById('notificationList');
+  if (!wrap) return;
+  if (NOTIFICATIONS.length === 0) {
+    wrap.innerHTML = emptyStateHTML({ icon: '🔔', title: 'No notifications', sub: "You'll see it here when someone tags you in a note or assigns you a task." });
+    return;
+  }
+  wrap.innerHTML = NOTIFICATIONS.map(n => `
+    <div class="notif-item ${n.read ? '' : 'unread'}" onclick="markNotificationRead('${n.id}')">
+      <div class="notif-msg">${escAttr(n.message)}</div>
+      <div class="notif-time">${fmtNoteTime(n.created_at)}</div>
+    </div>`).join('');
+}
+
+async function markNotificationRead(id) {
+  const n = NOTIFICATIONS.find(x => x.id === id);
+  if (!n || n.read) return;
+  n.read = true;
+  try { await sbUpsert('notifications', n); } catch(e) {}
+  renderNotificationBell();
+  renderNotificationList();
+}
+
+async function markAllNotificationsRead(e) {
+  if (e) e.preventDefault();
+  const unread = NOTIFICATIONS.filter(n => !n.read);
+  if (unread.length === 0) return;
+  unread.forEach(n => n.read = true);
+  try { await Promise.all(unread.map(n => sbUpsert('notifications', n))); } catch(e2) {}
+  renderNotificationBell();
+  renderNotificationList();
+}
+
+// ─── Client Notes & Tasks modal ────────────────────────────────────────────
+function openClientNotesTasksModal(clientName) {
+  cntActiveClientName = clientName;
+  document.getElementById('cntTitle').textContent = `📝 ${clientName}`;
+  cntTaggedEmails = [];
+  renderCntTagPicker();
+  populateCntTaskAssigneeSelect();
+  switchCntTab('notes');
+  renderClientNotesThread();
+  renderClientTasksList();
+  document.getElementById('clientNotesTasksModal').classList.add('open');
+}
+function closeClientNotesTasksModal() {
+  document.getElementById('clientNotesTasksModal').classList.remove('open');
+  cntActiveClientName = null;
+  cntTaggedEmails = [];
+}
+function switchCntTab(tab) {
+  const notesPane = document.getElementById('cntNotesPane');
+  const tasksPane = document.getElementById('cntTasksPane');
+  if (notesPane) notesPane.style.display = tab === 'notes' ? '' : 'none';
+  if (tasksPane) tasksPane.style.display = tab === 'tasks' ? '' : 'none';
+  document.querySelectorAll('#cntTabs .pm-tab').forEach((b, i) => b.classList.toggle('active', (tab === 'notes' && i === 0) || (tab === 'tasks' && i === 1)));
+}
+
+function renderCntTagPicker() {
+  const wrap = document.getElementById('cntTagPicker');
+  if (!wrap) return;
+  const u = getCurrentUser();
+  wrap.innerHTML = TEAM_MEMBERS.filter(m => !u || m.email !== u.email).map(m =>
+    `<span class="tag-chip" onclick="toggleCntTag(this,'${escAttr(m.email)}')">${escAttr(m.name)}</span>`
+  ).join('') || `<span style="font-size:11px;color:var(--text3)">No other teammates to tag yet.</span>`;
+}
+function toggleCntTag(el, email) {
+  el.classList.toggle('active');
+  if (cntTaggedEmails.includes(email)) cntTaggedEmails = cntTaggedEmails.filter(e => e !== email);
+  else cntTaggedEmails.push(email);
+}
+
+async function addClientNote() {
+  const ta = document.getElementById('cntNewNoteText');
+  const text = ta.value.trim();
+  if (!text) { showToast('Please write a note first.', 'warning'); ta.focus(); return; }
+  const u = getCurrentUser();
+  const note = {
+    id: (crypto.randomUUID ? crypto.randomUUID() : 'n_' + Date.now()),
+    client_name: cntActiveClientName,
+    author_email: u ? u.email : '',
+    author_name: u ? u.name : 'Guest',
+    text,
+    tagged_emails: [...cntTaggedEmails],
+    created_at: new Date().toISOString(),
+  };
+  CLIENT_NOTES.unshift(note);
+  localStorage.setItem(CLIENT_NOTES_CACHE_KEY, JSON.stringify(CLIENT_NOTES));
+  try { await sbUpsert('client_notes', note); } catch(e) { console.warn('Could not save note:', e.message); }
+
+  for (const email of note.tagged_emails) {
+    await createNotification(email, 'tagged', `${u ? u.name : 'Someone'} tagged you in a note on ${cntActiveClientName}`, cntActiveClientName);
+  }
+
+  ta.value = '';
+  cntTaggedEmails = [];
+  renderCntTagPicker();
+  renderClientNotesThread();
+  showToast('Note added.', 'success');
+}
+
+function renderClientNotesThread() {
+  const wrap = document.getElementById('cntNotesThread');
+  if (!wrap) return;
+  const notes = CLIENT_NOTES.filter(n => n.client_name === cntActiveClientName);
+  if (notes.length === 0) {
+    wrap.innerHTML = emptyStateHTML({ icon: '📝', title: 'No notes yet', sub: 'Add the first note about this client below.' });
+    return;
+  }
+  const u = getCurrentUser();
+  wrap.innerHTML = notes.map(n => {
+    const canEditNote = isAdmin() || (u && u.email === n.author_email);
+    const taggedNames = (n.tagged_emails || []).map(e => { const m = TEAM_MEMBERS.find(x => x.email === e); return m ? m.name : e; }).join(', ');
+    return `<div class="note-entry">
+      <div class="note-meta"><b>${escAttr(n.author_name)}</b> · ${fmtNoteTime(n.created_at)}${taggedNames ? ` · tagged ${escAttr(taggedNames)}` : ''}
+        ${canEditNote ? `<span style="float:right"><a href="#" onclick="editClientNote('${n.id}');return false;" style="color:var(--orange);margin-right:10px;text-decoration:none">Edit</a><a href="#" onclick="deleteClientNote('${n.id}');return false;" style="color:var(--red);text-decoration:none">Delete</a></span>` : ''}
+      </div>
+      <div class="note-text" id="noteText-${n.id}">${escAttr(n.text)}</div>
+    </div>`;
+  }).join('');
+}
+
+function editClientNote(id) {
+  const note = CLIENT_NOTES.find(n => n.id === id);
+  if (!note) return;
+  const el = document.getElementById('noteText-' + id);
+  if (!el) return;
+  el.innerHTML = `<textarea id="editArea-${id}" class="field-input" style="margin-bottom:6px;resize:vertical;font-family:inherit">${escAttr(note.text)}</textarea>
+    <div style="display:flex;gap:6px">
+      <button class="btn btn-primary btn-sm" onclick="saveClientNoteEdit('${id}')">Save</button>
+      <button class="btn btn-ghost btn-sm" onclick="renderClientNotesThread()">Cancel</button>
+    </div>`;
+}
+async function saveClientNoteEdit(id) {
+  const note = CLIENT_NOTES.find(n => n.id === id);
+  if (!note) return;
+  const ta = document.getElementById('editArea-' + id);
+  const newText = ta.value.trim();
+  if (!newText) { showToast('Note can\'t be empty.', 'warning'); return; }
+  note.text = newText;
+  note.updated_at = new Date().toISOString();
+  localStorage.setItem(CLIENT_NOTES_CACHE_KEY, JSON.stringify(CLIENT_NOTES));
+  try { await sbUpsert('client_notes', note); } catch(e) { console.warn('Could not save edit:', e.message); }
+  renderClientNotesThread();
+  showToast('Note updated.', 'success');
+}
+async function deleteClientNote(id) {
+  if (!(await showConfirmDialog('Delete this note?', { danger: true, confirmLabel: 'Delete' }))) return;
+  CLIENT_NOTES = CLIENT_NOTES.filter(n => n.id !== id);
+  localStorage.setItem(CLIENT_NOTES_CACHE_KEY, JSON.stringify(CLIENT_NOTES));
+  try { await sbDelete('client_notes', `id=eq.${id}`); } catch(e) {}
+  renderClientNotesThread();
+}
+
+// ─── Tasks ──────────────────────────────────────────────────────────────────
+function populateCntTaskAssigneeSelect() {
+  const sel = document.getElementById('cntNewTaskAssignee');
+  if (!sel) return;
+  const u = getCurrentUser();
+  sel.innerHTML = TEAM_MEMBERS.map(m => `<option value="${escAttr(m.email)}" ${u && m.email === u.email ? 'selected' : ''}>${escAttr(m.name)}${u && m.email === u.email ? ' (Myself)' : ''}</option>`).join('');
+}
+
+async function addClientTask() {
+  const titleEl = document.getElementById('cntNewTaskTitle');
+  const title = titleEl.value.trim();
+  if (!title) { showToast('Please enter a task description.', 'warning'); titleEl.focus(); return; }
+  const assigneeEmail = document.getElementById('cntNewTaskAssignee').value;
+  const assignee = TEAM_MEMBERS.find(m => m.email === assigneeEmail);
+  const due = document.getElementById('cntNewTaskDue').value || '';
+  const u = getCurrentUser();
+  const task = {
+    id: (crypto.randomUUID ? crypto.randomUUID() : 't_' + Date.now()),
+    client_name: cntActiveClientName,
+    title,
+    assigned_to_email: assigneeEmail,
+    assigned_to_name: assignee ? assignee.name : '',
+    created_by_email: u ? u.email : '',
+    created_by_name: u ? u.name : 'Guest',
+    due_date: due,
+    status: 'open',
+    created_at: new Date().toISOString(),
+  };
+  CLIENT_TASKS.unshift(task);
+  localStorage.setItem(CLIENT_TASKS_CACHE_KEY, JSON.stringify(CLIENT_TASKS));
+  try { await sbUpsert('client_tasks', task); } catch(e) { console.warn('Could not save task:', e.message); }
+
+  if (assigneeEmail && assigneeEmail !== (u && u.email)) {
+    await createNotification(assigneeEmail, 'task_assigned', `${u ? u.name : 'Someone'} assigned you a task on ${cntActiveClientName}: "${title}"`, cntActiveClientName);
+  }
+
+  titleEl.value = '';
+  document.getElementById('cntNewTaskDue').value = '';
+  renderClientTasksList();
+  rebuildHomePage();
+  showToast('Task created.', 'success');
+}
+
+function renderClientTasksList() {
+  const wrap = document.getElementById('cntTasksList');
+  if (!wrap) return;
+  const tasks = CLIENT_TASKS.filter(t => t.client_name === cntActiveClientName);
+  if (tasks.length === 0) {
+    wrap.innerHTML = emptyStateHTML({ icon: '✅', title: 'No tasks yet', sub: 'Create a task below and assign it to yourself or a teammate.' });
+    return;
+  }
+  wrap.innerHTML = tasks.map(t => `
+    <div class="task-row ${t.status === 'done' ? 'done' : ''}">
+      <input type="checkbox" ${t.status === 'done' ? 'checked' : ''} onchange="toggleClientTaskStatus('${t.id}')">
+      <div class="task-info">
+        <div class="task-title">${escAttr(t.title)}</div>
+        <div class="task-meta">Assigned to ${escAttr(t.assigned_to_name || '—')}${t.due_date ? ' · Due ' + fmtDate(t.due_date) : ''}</div>
+      </div>
+      <button class="row-action-btn danger" onclick="deleteClientTask('${t.id}')">🗑️</button>
+    </div>`).join('');
+}
+
+async function toggleClientTaskStatus(id) {
+  const task = CLIENT_TASKS.find(t => t.id === id);
+  if (!task) return;
+  task.status = task.status === 'done' ? 'open' : 'done';
+  localStorage.setItem(CLIENT_TASKS_CACHE_KEY, JSON.stringify(CLIENT_TASKS));
+  try { await sbUpsert('client_tasks', task); } catch(e) {}
+  renderClientTasksList();
+  rebuildHomePage();
+}
+
+async function deleteClientTask(id) {
+  if (!(await showConfirmDialog('Delete this task?', { danger: true, confirmLabel: 'Delete' }))) return;
+  CLIENT_TASKS = CLIENT_TASKS.filter(t => t.id !== id);
+  localStorage.setItem(CLIENT_TASKS_CACHE_KEY, JSON.stringify(CLIENT_TASKS));
+  try { await sbDelete('client_tasks', `id=eq.${id}`); } catch(e) {}
+  renderClientTasksList();
+  rebuildHomePage();
+}
+
+// ─── Home: My Tasks (specific to whoever's signed in) ──────────────────────
+function getMyOpenTasks() {
+  const u = getCurrentUser();
+  if (!u) return [];
+  return CLIENT_TASKS
+    .filter(t => t.assigned_to_email === u.email && t.status !== 'done')
+    .sort((a, b) => (a.due_date || '9999-99-99').localeCompare(b.due_date || '9999-99-99'));
+}
+
+function renderHomeMyTasks() {
+  const wrap = document.getElementById('homeMyTasksList');
+  if (!wrap) return;
+  const tasks = getMyOpenTasks();
+  const countEl = document.getElementById('home-my-tasks-count');
+  if (countEl) countEl.textContent = tasks.length;
+  if (tasks.length === 0) {
+    wrap.innerHTML = emptyStateHTML({ icon: '✅', title: 'Nothing on your plate', sub: 'Tasks assigned to you, on any client, will show up here.' });
+    return;
+  }
+  const today = new Date().toISOString().slice(0, 10);
+  wrap.innerHTML = tasks.map(t => {
+    const overdue = t.due_date && t.due_date < today;
+    const safeClient = (t.client_name || '').replace(/'/g, "\\'");
+    return `<div class="support-item" style="cursor:pointer" onclick="openClientNotesTasksModal('${safeClient}')">
+      <div class="support-avatar" style="background:var(--bg4);color:${overdue ? 'var(--red)' : 'var(--orange)'}">✅</div>
+      <div class="support-info">
+        <div class="support-name">${escAttr(t.title)}</div>
+        <div class="support-detail">${escAttr(t.client_name)}${t.due_date ? ' · ' + (overdue ? 'Overdue ' : 'Due ') + fmtDate(t.due_date) : ''}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
 // localStorage as instant cache (Supabase is source of truth)
 const STORAGE_KEY = 'csh_portfolios_v1';
 const SHEETS_KEY  = 'csh_sheets_v1';
@@ -6041,9 +6619,12 @@ function rebuildClientsDirectory() {
       <td style="padding-left:14px;color:var(--text);font-weight:600">${row.displayName}</td>
       <td>${chips}</td>
       <td><span class="pc-badge pc-${Math.min(total,6)}">${total}</span></td>
-      <td>${canEdit() ? `
+      <td>
+        <button class="row-action-btn" onclick="openClientNotesTasksModal('${safe}')">📝 Notes &amp; Tasks</button>
+        ${canEdit() ? `
         <button class="row-action-btn" onclick="openEditClientModal('${safe}')">✏️ Edit</button>
-        <button class="row-action-btn danger" onclick="openDeleteClientModal('${safe}')">🗑️ Remove</button>` : `<span style="font-size:11px;color:var(--text3)">View only</span>`}</td></tr>`;
+        <button class="row-action-btn danger" onclick="openDeleteClientModal('${safe}')">🗑️ Remove</button>` : ''}
+      </td></tr>`;
   });
   tbody.innerHTML = rowsHtml.length > 0 ? rowsHtml.join('') : emptyStateRow(4, {
     icon: '👥',
@@ -6206,6 +6787,9 @@ async function bootApp() {
     // Collections
     await loadCollectionsAccounts();
 
+    // Client Notes & Tasks
+    await loadClientNotesTasks();
+
     // Auto-refresh any connected Google Sheets
     let sheetsUrls = {};
     try {
@@ -6223,6 +6807,7 @@ async function bootApp() {
     if (pill) { pill.innerHTML = '<span class="dot" style="background:var(--red)"></span> Database offline · using cache'; pill.style.color = 'var(--red)'; }
     await loadAdSpendBusinesses();
     await loadCollectionsAccounts();
+    await loadClientNotesTasks();
   }
 }
 
