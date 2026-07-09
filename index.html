@@ -926,6 +926,14 @@ tr.hidden-row { display: none; }
 .mention-item:hover, .mention-item.highlighted { background: var(--bg3); }
 .mention-item .mention-email { font-size: 10px; color: var(--text3); }
 .note-mention { color: var(--orange); font-weight: 600; }
+.note-highlight { background: rgba(245,158,11,.35); color: var(--text); padding: 1px 3px; border-radius: 3px; }
+.note-link { color: var(--blue); text-decoration: underline; }
+.note-toolbar { display: flex; gap: 4px; margin-bottom: 6px; }
+.note-fmt-btn {
+  background: var(--bg3); border: 1px solid var(--border); border-radius: 6px;
+  color: var(--text2); font-size: 11px; padding: 4px 10px; cursor: pointer; transition: all .15s;
+}
+.note-fmt-btn:hover { background: var(--bg2); border-color: var(--orange); color: var(--text); }
 .cnt-section-title { font-size: 13px; font-weight: 800; color: var(--text); margin-bottom: 10px; }
 .cnt-divider { height: 1px; background: var(--border); margin: 20px 0; }
 .smart-paste-box {
@@ -1199,6 +1207,12 @@ tr.hidden-row { display: none; }
         <div class="cnt-section-title">📝 Notes</div>
         <div class="notes-thread" id="cntNotesThread" style="max-height:200px"></div>
         <label class="field-label">Add a Note</label>
+        <div class="note-toolbar">
+          <button type="button" class="note-fmt-btn" onclick="wrapNoteSelection('**','**','bold text')" title="Bold"><b>B</b></button>
+          <button type="button" class="note-fmt-btn" onclick="wrapNoteSelection('*','*','italic text')" title="Italic"><i>I</i></button>
+          <button type="button" class="note-fmt-btn" onclick="wrapNoteSelection('==','==','highlighted text')" title="Highlight">🖍️ Highlight</button>
+          <button type="button" class="note-fmt-btn" onclick="insertNoteLink()" title="Insert Link">🔗 Link</button>
+        </div>
         <div style="position:relative;margin-bottom:14px">
           <textarea id="cntNewNoteText" rows="2" placeholder="What's happening with this client? Type @ to tag a teammate" class="field-input" style="margin-bottom:0;resize:vertical;font-family:inherit" oninput="handleNoteMentionInput(event)" onkeydown="handleNoteMentionKeydown(event)"></textarea>
           <div id="cntMentionDropdown" class="mention-dropdown" style="display:none"></div>
@@ -1220,10 +1234,19 @@ tr.hidden-row { display: none; }
         </div>
         <div id="cntTasksList" style="margin-bottom:16px"></div>
         <label class="field-label" style="margin-bottom:8px">Add a Task</label>
-        <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:10px;align-items:start;margin-bottom:10px">
+        <div style="display:grid;grid-template-columns:1.1fr 0.85fr 1fr 0.85fr;gap:10px;align-items:start;margin-bottom:10px">
           <div><label class="field-label">Task</label><input type="text" id="cntNewTaskTitle" class="field-input" style="height:38px" placeholder="e.g. Follow up about renewal"></div>
           <div><label class="field-label">Assign to</label><select id="cntNewTaskAssignee" class="field-select" style="height:38px"></select></div>
           <div><label class="field-label">Due Date &amp; Time</label><input type="datetime-local" id="cntNewTaskDue" class="field-input" style="height:38px"></div>
+          <div><label class="field-label">Reminder</label><select id="cntNewTaskReminder" class="field-select" style="height:38px">
+            <option value="">Calendar default</option>
+            <option value="0">At time of event</option>
+            <option value="10">10 min before</option>
+            <option value="30">30 min before</option>
+            <option value="60">1 hour before</option>
+            <option value="1440">1 day before</option>
+            <option value="10080">1 week before</option>
+          </select></div>
         </div>
         <div style="display:flex;justify-content:flex-end">
           <button class="btn btn-primary btn-sm" id="cntTasksSubmitBtn" onclick="addClientTask()">＋ Add Task</button>
@@ -3013,6 +3036,9 @@ async function renderClientSpotlight(pk) {
   const adSpendEntry = (typeof AD_SPEND_BUSINESSES !== 'undefined' ? AD_SPEND_BUSINESSES : []).find(b => (b.name || '').trim().toLowerCase() === normName);
   const workedToday = getWorkedTodayNames().has(normName);
   const safe = client.name.replace(/'/g, "\\'");
+  const mergedEntry = buildMergedClients()[normName];
+  const memberPks = mergedEntry ? Object.keys(mergedEntry.portfolios) : [pk];
+  const portfolioChipsHtml = memberPks.map(mpk => `<span class="portfolio-chip chip-${mpk}">${PORTFOLIO_ICONS[mpk]} ${PORTFOLIO_LABELS[mpk]}</span>`).join('');
 
   const usingHtml = using.length
     ? `<div class="product-icon-row">${using.map(p => `<span class="product-icon-chip" title="${escAttr(p.label)}">${renderProductIcon(p.icon, 14)}</span>`).join('')}</div>`
@@ -3057,7 +3083,10 @@ async function renderClientSpotlight(pk) {
       <div class="spotlight-name-row">
         <div>
           <div class="spotlight-name">${escAttr(client.name)}</div>
-          ${client.org ? `<div class="spotlight-org">🏢 ${escAttr(client.org)}</div>` : ''}
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px">
+            ${portfolioChipsHtml}
+            ${client.org ? `<span class="spotlight-org">🏢 ${escAttr(client.org)}</span>` : ''}
+          </div>
         </div>
         <span class="spotlight-worked-badge ${workedToday ? 'spotlight-worked-yes' : 'spotlight-worked-no'}">${workedToday ? '✅ Worked today' : '⏳ Not touched yet today'}</span>
       </div>
@@ -4909,6 +4938,9 @@ async function pushTaskToGoogleCalendar(task) {
   if (!isGoogleCalendarConnected() || !task.due_date) return false;
   try {
     const hasTime = task.due_date.includes('T');
+    const reminders = (task.reminder_minutes === null || task.reminder_minutes === undefined)
+      ? { useDefault: true }
+      : { useDefault: false, overrides: [{ method: 'popup', minutes: task.reminder_minutes }] };
     let event;
     if (hasTime) {
       const start = new Date(task.due_date);
@@ -4918,7 +4950,7 @@ async function pushTaskToGoogleCalendar(task) {
         description: `Client Success Hub task for ${task.client_name}`,
         start: { dateTime: start.toISOString() },
         end: { dateTime: end.toISOString() },
-        reminders: { useDefault: true },
+        reminders,
       };
     } else {
       const nextDay = new Date(task.due_date + 'T00:00:00Z');
@@ -4928,7 +4960,7 @@ async function pushTaskToGoogleCalendar(task) {
         description: `Client Success Hub task for ${task.client_name}`,
         start: { date: task.due_date },
         end: { date: nextDay.toISOString().slice(0,10) },
-        reminders: { useDefault: true },
+        reminders,
       };
     }
     const res = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
@@ -4937,6 +4969,12 @@ async function pushTaskToGoogleCalendar(task) {
       body: JSON.stringify(event),
     });
     if (!res.ok) throw new Error('Calendar API ' + res.status);
+    const created = await res.json();
+    // Remember which Calendar event belongs to this task, so completing/deleting
+    // it in the Hub can also clean up (or update) the event on the Calendar side.
+    task.gcal_event_id = created.id;
+    try { await sbUpsert('client_tasks', task); } catch(e2) {}
+    localStorage.setItem(CLIENT_TASKS_CACHE_KEY, JSON.stringify(CLIENT_TASKS));
     let synced = [];
     try { synced = JSON.parse(localStorage.getItem(GCAL_SYNCED_TASKS_KEY) || '[]'); } catch(e) {}
     synced.push(task.id);
@@ -4944,6 +4982,27 @@ async function pushTaskToGoogleCalendar(task) {
     return true;
   } catch(e) {
     console.warn('Could not push task to Google Calendar:', e.message);
+    return false;
+  }
+}
+
+// Removes the Calendar event tied to a task — called when the task is marked
+// done or deleted in the Hub, so completed/removed tasks don't linger on your
+// calendar. This is still a Hub → Calendar action, not the reverse.
+async function deleteGoogleCalendarEvent(task) {
+  if (!isGoogleCalendarConnected() || !task || !task.gcal_event_id) return false;
+  try {
+    const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${task.gcal_event_id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': 'Bearer ' + googleAccessToken },
+    });
+    if (!res.ok && res.status !== 410 && res.status !== 404) throw new Error('Calendar API ' + res.status); // 410/404 = already gone, treat as success
+    task.gcal_event_id = null;
+    try { await sbUpsert('client_tasks', task); } catch(e2) {}
+    localStorage.setItem(CLIENT_TASKS_CACHE_KEY, JSON.stringify(CLIENT_TASKS));
+    return true;
+  } catch(e) {
+    console.warn('Could not remove Google Calendar event:', e.message);
     return false;
   }
 }
@@ -6958,7 +7017,44 @@ function renderNoteTextWithMentions(text) {
     const re = new RegExp('@' + m.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'gi');
     html = html.replace(re, `<span class="note-mention">@${escAttr(m.name)}</span>`);
   });
+  // Text is already fully HTML-escaped above, so it's safe to now turn these
+  // specific lightweight markdown tokens into real formatting — no raw HTML
+  // ever passes through untouched.
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');           // **bold**
+  html = html.replace(/(^|[^*])\*([^*\n]+?)\*(?!\*)/g, '$1<em>$2</em>');   // *italic*
+  html = html.replace(/==(.+?)==/g, '<mark class="note-highlight">$1</mark>'); // ==highlight==
+  html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="note-link">$1</a>'); // [text](https://url)
   return html;
+}
+
+// ─── Note text formatting toolbar (bold / italic / highlight / link) ──────
+function wrapNoteSelection(prefix, suffix, placeholder) {
+  const ta = document.getElementById('cntNewNoteText');
+  if (!ta) return;
+  const start = ta.selectionStart, end = ta.selectionEnd;
+  const selected = ta.value.slice(start, end) || placeholder;
+  const before = ta.value.slice(0, start);
+  const after = ta.value.slice(end);
+  ta.value = before + prefix + selected + suffix + after;
+  const newPos = before.length + prefix.length + selected.length + suffix.length;
+  ta.focus();
+  ta.setSelectionRange(newPos, newPos);
+}
+
+function insertNoteLink() {
+  const ta = document.getElementById('cntNewNoteText');
+  if (!ta) return;
+  const start = ta.selectionStart, end = ta.selectionEnd;
+  const selected = ta.value.slice(start, end) || 'link text';
+  const url = prompt('Paste the URL:', 'https://');
+  if (!url) return;
+  const before = ta.value.slice(0, start);
+  const after = ta.value.slice(end);
+  const insertText = `[${selected}](${url.trim()})`;
+  ta.value = before + insertText + after;
+  const newPos = before.length + insertText.length;
+  ta.focus();
+  ta.setSelectionRange(newPos, newPos);
 }
 
 function getClientNotes(clientName) {
@@ -7116,6 +7212,7 @@ async function addClientTask() {
   const assigneeEmail = document.getElementById('cntNewTaskAssignee').value;
   const assignee = TEAM_MEMBERS.find(m => m.email === assigneeEmail);
   const due = document.getElementById('cntNewTaskDue').value || '';
+  const reminderVal = document.getElementById('cntNewTaskReminder').value;
   const u = getCurrentUser();
   const task = {
     id: (crypto.randomUUID ? crypto.randomUUID() : 't_' + Date.now()),
@@ -7126,6 +7223,7 @@ async function addClientTask() {
     created_by_email: u ? u.email : '',
     created_by_name: u ? u.name : 'Guest',
     due_date: due,
+    reminder_minutes: reminderVal === '' ? null : parseInt(reminderVal),
     status: 'open',
     created_at: new Date().toISOString(),
   };
@@ -7142,6 +7240,7 @@ async function addClientTask() {
 
   titleEl.value = '';
   document.getElementById('cntNewTaskDue').value = '';
+  document.getElementById('cntNewTaskReminder').value = '';
   renderClientTasksList();
   rebuildHomePage();
   showToast('Task created.', 'success');
@@ -7173,12 +7272,19 @@ async function toggleClientTaskStatus(id) {
   task.status = task.status === 'done' ? 'open' : 'done';
   localStorage.setItem(CLIENT_TASKS_CACHE_KEY, JSON.stringify(CLIENT_TASKS));
   try { await sbUpsert('client_tasks', task); } catch(e) {}
+  if (task.status === 'done' && task.gcal_event_id) {
+    deleteGoogleCalendarEvent(task); // keep the calendar clean of finished tasks
+  } else if (task.status === 'open' && task.due_date && !task.gcal_event_id) {
+    pushTaskToGoogleCalendar(task); // reopened — re-sync if it's eligible and not already on the calendar
+  }
   renderClientTasksList();
   rebuildHomePage();
 }
 
 async function deleteClientTask(id) {
   if (!(await showConfirmDialog('Delete this task?', { danger: true, confirmLabel: 'Delete' }))) return;
+  const task = CLIENT_TASKS.find(t => t.id === id);
+  if (task && task.gcal_event_id) deleteGoogleCalendarEvent(task);
   CLIENT_TASKS = CLIENT_TASKS.filter(t => t.id !== id);
   localStorage.setItem(CLIENT_TASKS_CACHE_KEY, JSON.stringify(CLIENT_TASKS));
   try { await sbDelete('client_tasks', `id=eq.${id}`); } catch(e) {}
