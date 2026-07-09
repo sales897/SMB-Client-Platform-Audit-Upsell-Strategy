@@ -437,6 +437,13 @@ body {
 .field-input, .field-select {
   width: 100%; padding: 9px 12px; background: var(--bg3); border: 1px solid var(--border);
   border-radius: 8px; color: var(--text); font-size: 13px; outline: none; transition: border-color .2s;
+  box-sizing: border-box;
+}
+.field-select {
+  appearance: none; -webkit-appearance: none; -moz-appearance: none;
+  line-height: normal; padding-right: 32px; cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23a39a92' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 12px center;
 }
 .field-input:focus, .field-select:focus { border-color: var(--orange); }
 .field-input::placeholder { color: var(--text3); }
@@ -1112,7 +1119,7 @@ tr.hidden-row { display: none; }
       <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:10px;align-items:end">
         <div><label class="field-label">Task</label><input type="text" id="cntNewTaskTitle" class="field-input" placeholder="e.g. Follow up about renewal"></div>
         <div><label class="field-label">Assign to</label><select id="cntNewTaskAssignee" class="field-select"></select></div>
-        <div><label class="field-label">Due Date</label><input type="date" id="cntNewTaskDue" class="field-input"></div>
+        <div><label class="field-label">Due Date &amp; Time</label><input type="datetime-local" id="cntNewTaskDue" class="field-input"></div>
       </div>
     </div>
 
@@ -4173,10 +4180,12 @@ async function sbDelete(table, filter) {
 // still gets the one-click "Add to Google Calendar" link on every task.
 const GOOGLE_CALENDAR_CLIENT_ID = '';
 const GCAL_TOKEN_CACHE_KEY = 'csh_gcal_token_v1';
+const GCAL_ACCOUNT_CACHE_KEY = 'csh_gcal_account_v1';
 const GCAL_SYNCED_TASKS_KEY = 'csh_gcal_synced_tasks_v1';
 let googleTokenClient = null;
 let googleAccessToken = null;
 let googleTokenExpiresAt = 0;
+let googleConnectedAccountEmail = null; // which Google account/calendar is actually connected
 
 function loadCachedGoogleToken() {
   try {
@@ -4184,10 +4193,29 @@ function loadCachedGoogleToken() {
     if (cached && cached.token && cached.expiresAt > Date.now()) {
       googleAccessToken = cached.token;
       googleTokenExpiresAt = cached.expiresAt;
+      googleConnectedAccountEmail = localStorage.getItem(GCAL_ACCOUNT_CACHE_KEY) || null;
     }
   } catch(e) {}
 }
 loadCachedGoogleToken();
+
+// Confirms which Google account actually granted access — the primary calendar's
+// "id" is that account's email address. Shown in the UI so it's never a guess.
+async function fetchGoogleConnectedAccount() {
+  if (!googleAccessToken) return;
+  try {
+    const res = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary', {
+      headers: { 'Authorization': 'Bearer ' + googleAccessToken },
+    });
+    if (!res.ok) throw new Error('Calendar API ' + res.status);
+    const data = await res.json();
+    googleConnectedAccountEmail = data.id || data.summary || null;
+    if (googleConnectedAccountEmail) localStorage.setItem(GCAL_ACCOUNT_CACHE_KEY, googleConnectedAccountEmail);
+  } catch(e) {
+    console.warn('Could not confirm connected Google account:', e.message);
+  }
+  renderGoogleCalendarStatus();
+}
 
 function initGoogleCalendarClient() {
   if (!GOOGLE_CALENDAR_CLIENT_ID || typeof google === 'undefined' || !google.accounts) return;
@@ -4195,12 +4223,13 @@ function initGoogleCalendarClient() {
   googleTokenClient = google.accounts.oauth2.initTokenClient({
     client_id: GOOGLE_CALENDAR_CLIENT_ID,
     scope: 'https://www.googleapis.com/auth/calendar.events',
-    callback: (resp) => {
+    callback: async (resp) => {
       if (resp && resp.access_token) {
         googleAccessToken = resp.access_token;
         googleTokenExpiresAt = Date.now() + ((resp.expires_in || 3600) - 60) * 1000;
         localStorage.setItem(GCAL_TOKEN_CACHE_KEY, JSON.stringify({ token: googleAccessToken, expiresAt: googleTokenExpiresAt }));
-        showToast('Google Calendar connected — your assigned tasks will sync automatically.', 'success');
+        await fetchGoogleConnectedAccount();
+        showToast(`Google Calendar connected${googleConnectedAccountEmail ? ' — ' + googleConnectedAccountEmail : ''}. Your assigned tasks will sync automatically.`, 'success');
         syncMyTasksToGoogleCalendar();
       }
     },
@@ -4223,7 +4252,9 @@ function connectGoogleCalendar() {
 function disconnectGoogleCalendar() {
   googleAccessToken = null;
   googleTokenExpiresAt = 0;
+  googleConnectedAccountEmail = null;
   localStorage.removeItem(GCAL_TOKEN_CACHE_KEY);
+  localStorage.removeItem(GCAL_ACCOUNT_CACHE_KEY);
   showToast('Google Calendar disconnected.', 'info');
   renderGoogleCalendarStatus();
 }
@@ -4231,15 +4262,26 @@ function disconnectGoogleCalendar() {
 // Builds a one-click "Add to Google Calendar" link that needs zero setup —
 // works for every teammate today, even before/without the OAuth connection above.
 function gcalQuickAddUrl(task) {
-  const day = (task.due_date || '').replace(/-/g, '');
-  const nextDay = task.due_date ? new Date(task.due_date + 'T00:00:00Z') : null;
-  if (nextDay) nextDay.setUTCDate(nextDay.getUTCDate() + 1);
-  const nextDayStr = nextDay ? nextDay.toISOString().slice(0,10).replace(/-/g,'') : day;
+  let datesParam = '';
+  if (task.due_date) {
+    const hasTime = task.due_date.includes('T');
+    if (hasTime) {
+      const start = new Date(task.due_date);
+      const end = new Date(start.getTime() + 60 * 60 * 1000); // default 1hr block
+      const toUtcStamp = (d) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+      datesParam = `${toUtcStamp(start)}/${toUtcStamp(end)}`;
+    } else {
+      const day = task.due_date.replace(/-/g, '');
+      const nextDay = new Date(task.due_date + 'T00:00:00Z');
+      nextDay.setUTCDate(nextDay.getUTCDate() + 1);
+      datesParam = `${day}/${nextDay.toISOString().slice(0,10).replace(/-/g,'')}`;
+    }
+  }
   const params = new URLSearchParams({
     action: 'TEMPLATE',
     text: task.title,
     details: `Client Success Hub task for ${task.client_name}${task.assigned_to_name ? ' — assigned to ' + task.assigned_to_name : ''}`,
-    dates: day ? `${day}/${nextDayStr}` : '',
+    dates: datesParam,
   });
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }
@@ -4247,15 +4289,29 @@ function gcalQuickAddUrl(task) {
 async function pushTaskToGoogleCalendar(task) {
   if (!isGoogleCalendarConnected() || !task.due_date) return false;
   try {
-    const nextDay = new Date(task.due_date + 'T00:00:00Z');
-    nextDay.setUTCDate(nextDay.getUTCDate() + 1);
-    const event = {
-      summary: task.title,
-      description: `Client Success Hub task for ${task.client_name}`,
-      start: { date: task.due_date },
-      end: { date: nextDay.toISOString().slice(0,10) },
-      reminders: { useDefault: true },
-    };
+    const hasTime = task.due_date.includes('T');
+    let event;
+    if (hasTime) {
+      const start = new Date(task.due_date);
+      const end = new Date(start.getTime() + 60 * 60 * 1000); // default 1hr block
+      event = {
+        summary: task.title,
+        description: `Client Success Hub task for ${task.client_name}`,
+        start: { dateTime: start.toISOString() },
+        end: { dateTime: end.toISOString() },
+        reminders: { useDefault: true },
+      };
+    } else {
+      const nextDay = new Date(task.due_date + 'T00:00:00Z');
+      nextDay.setUTCDate(nextDay.getUTCDate() + 1);
+      event = {
+        summary: task.title,
+        description: `Client Success Hub task for ${task.client_name}`,
+        start: { date: task.due_date },
+        end: { date: nextDay.toISOString().slice(0,10) },
+        reminders: { useDefault: true },
+      };
+    }
     const res = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
       method: 'POST',
       headers: { 'Authorization': 'Bearer ' + googleAccessToken, 'Content-Type': 'application/json' },
@@ -4291,9 +4347,13 @@ function renderGoogleCalendarStatus() {
   const el = document.getElementById('gcalStatusPill');
   if (!el) return;
   if (!isGoogleCalendarConfigured()) { el.innerHTML = ''; return; }
-  el.innerHTML = isGoogleCalendarConnected()
-    ? `<span class="portfolio-chip chip-addon">📅 Google Calendar connected</span> <a href="#" onclick="disconnectGoogleCalendar();return false;" style="font-size:11px;color:var(--text3);margin-left:6px">Disconnect</a>`
-    : `<button class="btn btn-ghost btn-sm" onclick="connectGoogleCalendar()">📅 Connect Google Calendar</button>`;
+  if (isGoogleCalendarConnected()) {
+    const label = googleConnectedAccountEmail ? `📅 Connected: ${escAttr(googleConnectedAccountEmail)}` : '📅 Google Calendar connected';
+    el.innerHTML = `<span class="portfolio-chip chip-addon" title="Tasks assigned to you sync to this calendar">${label}</span> <a href="#" onclick="disconnectGoogleCalendar();return false;" style="font-size:11px;color:var(--text3);margin-left:6px">Disconnect</a>`;
+    if (!googleConnectedAccountEmail) fetchGoogleConnectedAccount(); // backfill once, then re-renders itself
+  } else {
+    el.innerHTML = `<button class="btn btn-ghost btn-sm" onclick="connectGoogleCalendar()">📅 Connect Google Calendar</button>`;
+  }
 }
 
 // ════════════════════════════════════════════════════════════════════════
@@ -4819,6 +4879,17 @@ function fmtDate(d) {
   const dt = new Date(d + 'T00:00:00');
   if (isNaN(dt)) return d;
   return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+// Tasks can carry either a plain date (legacy) or a full date+time (datetime-local
+// input) — this shows the time too when one was actually picked.
+function fmtDateTime(d) {
+  if (!d) return '—';
+  const hasTime = d.includes('T');
+  const dt = new Date(hasTime ? d : d + 'T00:00:00');
+  if (isNaN(dt)) return d;
+  const dateStr = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  if (!hasTime) return dateStr;
+  return `${dateStr} at ${dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
 }
 function promoPillClass(p) { return p === 'Yes' ? 'yes' : p === 'Already Using' ? 'using' : 'no'; }
 
@@ -6337,7 +6408,7 @@ function renderClientTasksList() {
       <input type="checkbox" ${t.status === 'done' ? 'checked' : ''} onchange="toggleClientTaskStatus('${t.id}')">
       <div class="task-info">
         <div class="task-title">${escAttr(t.title)}</div>
-        <div class="task-meta">Assigned to ${escAttr(t.assigned_to_name || '—')}${t.due_date ? ' · Due ' + fmtDate(t.due_date) : ''}</div>
+        <div class="task-meta">Assigned to ${escAttr(t.assigned_to_name || '—')}${t.due_date ? ' · Due ' + fmtDateTime(t.due_date) : ''}</div>
       </div>
       ${t.due_date ? `<a href="${gcalQuickAddUrl(t)}" target="_blank" rel="noopener" class="row-action-btn" title="Add to Google Calendar">📅</a>` : ''}
       <button class="row-action-btn danger" onclick="deleteClientTask('${t.id}')">🗑️</button>
