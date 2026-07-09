@@ -691,6 +691,10 @@ tr.hidden-row { display: none; }
   display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--text2); line-height: 1.5;
   background: rgba(239,68,68,.06); border: 1px solid rgba(239,68,68,.2); border-radius: 8px; padding: 10px 12px;
 }
+.opportunity-chip {
+  display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--text2); line-height: 1.5;
+  background: rgba(34,197,94,.06); border: 1px solid rgba(34,197,94,.2); border-radius: 8px; padding: 10px 12px;
+}
 .kpi-log-row { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
 @media (max-width: 900px) { .kpi-sop-grid { grid-template-columns: 1fr; } .kpi-log-row { grid-template-columns: 1fr; } }
 
@@ -4369,22 +4373,22 @@ const KPI_META = {
     ],
   },
   solving: {
-    label: 'Solving Problems Before They Escalate', short: 'Solving Problems', icon: '🧯', color: '#22c55e',
-    definition: 'When an issue does surface, resolving it fast, completely, and with proactive communication — so a fixable problem never has the chance to become a churn reason or a public complaint.',
-    why: 'Clients rarely leave over a single problem — they leave over a problem that wasn\'t handled well. Speed and ownership are the entire game here.',
+    label: 'Growth Opportunities', short: 'Growth Opportunities', icon: '🚀', color: '#22c55e',
+    definition: 'Proactively identifying and presenting the next right product, upgrade, or expansion for a client — based on their results, usage trends, and unused capacity in the catalog — and putting it in front of them before they ever have to ask what else is available.',
+    why: 'Clients almost never ask "what else could I be doing?" on their own. If we wait for them to ask, we\'ve already given up months of expansion revenue — and given them time to go looking somewhere else. Growth conversations that come from us, backed by their own results, land as expertise, not a sales pitch.',
     sop: [
-      { title: 'First-Response SLA', body: 'Acknowledge any client-reported issue within 4 business hours, even if the fix isn\'t ready yet.' },
-      { title: 'Single-Owner Rule', body: 'Every open issue gets ONE named owner in the task tracker (never "the team"), with a due date, tracked through to close.' },
-      { title: 'Root Cause, Not Band-Aid', body: 'Before closing a ticket, confirm the underlying cause — not just the symptom — is actually fixed. Note it for pattern-spotting.' },
-      { title: 'Proactive Status Updates', body: 'Update the client before they have to ask "any update?" — even if the update is just "still working on it."' },
-      { title: 'Escalation Ladder', body: 'If unresolved after 48 hours, auto-escalate to an Admin. Never let a stuck ticket age silently.' },
-      { title: 'Closure + Prevention Loop', body: 'After resolving, log what would have prevented it — and feed that straight back into Anticipating Needs and Preempting Risks above.' },
+      { title: 'Monthly Whitespace Review', body: 'For every client, check which products in the catalog they\'re NOT using yet (the "Upsell Opportunity" list) and rank by fit to their vertical and results so far.' },
+      { title: 'Results-Based Pitch', body: 'When a client\'s numbers are strong — high adoption, low untouched products, solid ROI on what they already have — package that performance into a specific next-product recommendation, not a generic "have you considered..."' },
+      { title: 'Trigger-Based Outreach', body: 'e.g. a client hitting a call-volume ceiling on Voice Agent → proactively pitch Chat Widget or Contact Form to catch overflow, before they notice leads slipping through.' },
+      { title: 'Quarterly Growth Conversation', body: 'Separate from a health-check QBR: a dedicated conversation framed entirely around what growing further could look like for them, using their own adoption and ROI data as the proof.' },
+      { title: 'Track the Pitch, Not Just the Close', body: 'Log every proactive growth pitch as a note — even the ones that get declined — so we can see how many real opportunities we\'re surfacing, not just how many convert.' },
     ],
+    signalsLabel: 'Growth Signals to Watch For',
+    signalIcon: '💡',
     signals: [
-      'No status update sent to the client in 24+ hours on an open issue',
-      'The client had to follow up twice on the same issue',
-      'The same root cause recurring for a second time',
-      'Client tone shifting from patient to frustrated across notes',
+      'A client fully adopted on one product with strong results but nothing else — a "single-product plateau" is the clearest sign they\'re ready for a second product, if we ask.',
+      'Usage or volume trending up on an existing product — hitting a ceiling usually means they\'re ready for the next one.',
+      'A growth trigger in their own business (new location, hiring, expansion) mentioned in a note, but not yet reflected in what they\'re using with us.',
     ],
   },
 };
@@ -4512,7 +4516,10 @@ function rebuildKpiPlaybooks() {
         <div class="step-num" style="background:${meta.color}">${i + 1}</div>
         <div class="step-body"><strong>${s.title}</strong>${s.body}</div>
       </div>`).join('');
-    const signals = meta.signals.map(s => `<div class="warning-chip">⚠️ ${s}</div>`).join('');
+    const signalIcon = meta.signalIcon || '⚠️';
+    const signalsLabel = meta.signalsLabel || 'Early Warning Signs to Watch For';
+    const chipClass = meta.signalIcon ? 'opportunity-chip' : 'warning-chip';
+    const signals = meta.signals.map(s => `<div class="${chipClass}">${signalIcon} ${s}</div>`).join('');
     return `
       <div class="kpi-playbook-card" id="kpi-${key}" style="--kpi-accent:${meta.color}">
         <div class="kpi-playbook-hd">
@@ -4522,7 +4529,7 @@ function rebuildKpiPlaybooks() {
         <div class="kpi-why-box"><strong style="color:var(--text)">Why it matters:</strong> ${meta.why}</div>
         <div class="kpi-subhead">Standard Operating Procedure</div>
         <div class="kpi-sop-grid">${sopSteps}</div>
-        <div class="kpi-subhead">Early Warning Signs to Watch For</div>
+        <div class="kpi-subhead">${signalsLabel}</div>
         <div class="warning-list">${signals}</div>
       </div>`;
   }).join('');
@@ -5019,7 +5026,102 @@ async function syncMyTasksToGoogleCalendar() {
   const pending = CLIENT_TASKS.filter(t => t.assigned_to_email === u.email && t.status !== 'done' && t.due_date && !synced.includes(t.id));
   for (const t of pending) { await pushTaskToGoogleCalendar(t); }
   if (pending.length > 0) showToast(`${pending.length} task${pending.length===1?'':'s'} synced to your Google Calendar.`, 'success');
+  pollGoogleCalendarChanges(false); // also pull back anything changed directly in Calendar
 }
+
+function dateToDatetimeLocalString(d) {
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function getMyGcalSyncedOpenTasks() {
+  const u = getCurrentUser();
+  if (!u) return [];
+  return CLIENT_TASKS.filter(t => t.assigned_to_email === u.email && t.gcal_event_id && t.status !== 'done');
+}
+
+// Client-side "pull" half of the sync — polls Google Calendar for each task
+// this browser knows was pushed there, and reconciles anything that changed
+// or was deleted directly in Calendar back into the Hub. This only runs while
+// someone has the Hub open (on load, every 5 minutes, and when the tab
+// becomes visible again) — there's no server, so it can't react the instant
+// something changes in Calendar while nobody's in the Hub. That tradeoff is
+// intentional: it avoids needing a backend, webhook receiver, or stored
+// refresh tokens, at the cost of not being truly real-time.
+let gcalPollInFlight = false;
+async function pollGoogleCalendarChanges(showFeedback) {
+  if (!isGoogleCalendarConnected()) { if (showFeedback) showToast('Connect Google Calendar first.', 'warning'); return; }
+  if (gcalPollInFlight) return;
+  gcalPollInFlight = true;
+  try {
+    const tasks = getMyGcalSyncedOpenTasks();
+    if (tasks.length === 0) { if (showFeedback) showToast('Nothing to sync — no Calendar-linked tasks yet.', 'info'); return; }
+
+    let changed = 0, removed = 0;
+    await Promise.allSettled(tasks.map(async task => {
+      try {
+        const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${task.gcal_event_id}`, {
+          headers: { 'Authorization': 'Bearer ' + googleAccessToken },
+        });
+        if (res.status === 404 || res.status === 410) {
+          task.gcal_event_id = null;
+          removed++;
+          try { await sbUpsert('client_tasks', task); } catch(e) {}
+          return;
+        }
+        if (!res.ok) return; // transient error — leave it, try again next poll
+        const event = await res.json();
+        if (event.status === 'cancelled') {
+          task.gcal_event_id = null;
+          removed++;
+          try { await sbUpsert('client_tasks', task); } catch(e) {}
+          return;
+        }
+        let taskChanged = false;
+        if (event.start) {
+          if (event.start.dateTime) {
+            const newLocal = dateToDatetimeLocalString(new Date(event.start.dateTime));
+            if (newLocal !== task.due_date) { task.due_date = newLocal; taskChanged = true; }
+          } else if (event.start.date && event.start.date !== task.due_date) {
+            task.due_date = event.start.date; taskChanged = true;
+          }
+        }
+        if (event.summary && event.summary !== task.title) { task.title = event.summary; taskChanged = true; }
+        if (taskChanged) {
+          changed++;
+          try { await sbUpsert('client_tasks', task); } catch(e) {}
+        }
+      } catch(e) {
+        console.warn('Calendar poll failed for task', task.id, e.message);
+      }
+    }));
+
+    if (changed > 0 || removed > 0) {
+      localStorage.setItem(CLIENT_TASKS_CACHE_KEY, JSON.stringify(CLIENT_TASKS));
+      renderClientTasksList();
+      rebuildHomePage();
+      ['smb', 'whitelabel', 'support'].forEach(pk => { if (typeof renderClientSpotlight === 'function') renderClientSpotlight(pk); });
+    }
+    if (showFeedback) {
+      showToast(changed || removed
+        ? `Synced from Google Calendar: ${changed} updated${removed ? ', ' + removed + ' removed there' : ''}.`
+        : 'Everything already matches Google Calendar.', 'success');
+    } else if (changed || removed) {
+      showToast(`Google Calendar sync: ${changed} task${changed === 1 ? '' : 's'} updated${removed ? ', ' + removed + ' event' + (removed === 1 ? '' : 's') + ' removed there' : ''}.`, 'info');
+    }
+  } finally {
+    gcalPollInFlight = false;
+  }
+}
+
+// Poll for Calendar-side changes every 5 minutes while the Hub is open, and
+// immediately whenever the tab becomes visible again (catches anything that
+// happened while someone was away on another tab, without waiting for the
+// timer). Both are safe no-ops if Calendar isn't connected.
+setInterval(() => pollGoogleCalendarChanges(false), 5 * 60 * 1000);
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') pollGoogleCalendarChanges(false);
+});
 
 function renderGoogleCalendarStatus() {
   const el = document.getElementById('gcalStatusPill');
@@ -5027,7 +5129,7 @@ function renderGoogleCalendarStatus() {
   if (!isGoogleCalendarConfigured()) { el.innerHTML = ''; return; }
   if (isGoogleCalendarConnected()) {
     const label = googleConnectedAccountEmail ? `📅 Connected: ${escAttr(googleConnectedAccountEmail)}` : '📅 Google Calendar connected';
-    el.innerHTML = `<span class="portfolio-chip chip-addon" title="Tasks assigned to you sync to this calendar">${label}</span> <a href="#" onclick="disconnectGoogleCalendar();return false;" style="font-size:11px;color:var(--text3);margin-left:6px">Disconnect</a>`;
+    el.innerHTML = `<span class="portfolio-chip chip-addon" title="Tasks assigned to you sync to this calendar">${label}</span> <a href="#" onclick="pollGoogleCalendarChanges(true);return false;" style="font-size:11px;color:var(--text2);margin-left:8px" title="Check Calendar for anything changed or deleted there">🔄 Sync Now</a> <a href="#" onclick="disconnectGoogleCalendar();return false;" style="font-size:11px;color:var(--text3);margin-left:8px">Disconnect</a>`;
     if (!googleConnectedAccountEmail) fetchGoogleConnectedAccount(); // backfill once, then re-renders itself
   } else {
     el.innerHTML = `<button class="btn btn-ghost btn-sm" onclick="connectGoogleCalendar()">📅 Connect Google Calendar</button>`;
@@ -8456,7 +8558,7 @@ async function bootApp() {
     await loadClientNotesTasks();
     migrateOldCollectionsNotes();
 
-    // Client Success KPIs (Anticipating Needs / Preempting Risks / Solving Problems)
+    // Client Success KPIs (Anticipating Needs / Preempting Risks / Growth Opportunities)
     await loadKpiHistory();
 
     // Client Spotlight (daily focus client per portfolio)
