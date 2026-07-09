@@ -655,6 +655,44 @@ tr.hidden-row { display: none; }
 .step-body { font-size: 11.5px; color: var(--text2); line-height: 1.45; }
 .step-body strong { color: var(--text); display: block; margin-bottom: 2px; font-size: 12px; }
 
+/* ─── CLIENT SUCCESS KPI PLAYBOOK ──────────────────────────────────────── */
+.kpi-hero-card {
+  background: var(--bg2); border: 1px solid var(--border); border-top: 3px solid var(--kpi-accent, var(--orange));
+  border-radius: var(--radius); padding: 20px;
+}
+.kpi-hero-name { font-size: 14px; font-weight: 800; color: var(--text); display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.kpi-star-picker { display: flex; gap: 4px; margin-bottom: 8px; }
+.kpi-star-picker .star { font-size: 26px; line-height: 1; color: var(--border); transition: color .12s, transform .12s; }
+.kpi-star-picker.editable .star { cursor: pointer; }
+.kpi-star-picker.editable .star:hover { transform: scale(1.15); }
+.kpi-star-picker .star.filled { color: var(--yellow); }
+.kpi-score-label { font-size: 11px; color: var(--text3); margin-bottom: 12px; }
+.kpi-trend-badge { font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 12px; display: inline-block; margin-bottom: 12px; }
+.kpi-trend-up { background: rgba(34,197,94,.15); color: var(--green); }
+.kpi-trend-down { background: rgba(239,68,68,.15); color: var(--red); }
+.kpi-trend-flat { background: rgba(163,154,146,.18); color: var(--text2); }
+.kpi-hero-desc { font-size: 12px; color: var(--text2); line-height: 1.55; margin-bottom: 12px; }
+.kpi-jump-link { font-size: 11px; font-weight: 700; color: var(--orange); text-decoration: none; }
+.kpi-jump-link:hover { text-decoration: underline; }
+
+.kpi-playbook-card {
+  background: var(--bg2); border: 1px solid var(--border); border-left: 4px solid var(--kpi-accent, var(--orange));
+  border-radius: var(--radius); padding: 24px; margin-bottom: 16px; scroll-margin-top: 20px;
+}
+.kpi-playbook-hd { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+.kpi-playbook-title { font-size: 17px; font-weight: 800; color: var(--text); display: flex; align-items: center; gap: 8px; }
+.kpi-subhead { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--text3); margin: 18px 0 10px; }
+.kpi-subhead:first-of-type { margin-top: 4px; }
+.kpi-why-box { font-size: 12.5px; color: var(--text2); line-height: 1.6; background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+.kpi-sop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.warning-list { display: flex; flex-direction: column; gap: 8px; }
+.warning-chip {
+  display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--text2); line-height: 1.5;
+  background: rgba(239,68,68,.06); border: 1px solid rgba(239,68,68,.2); border-radius: 8px; padding: 10px 12px;
+}
+.kpi-log-row { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+@media (max-width: 900px) { .kpi-sop-grid { grid-template-columns: 1fr; } .kpi-log-row { grid-template-columns: 1fr; } }
+
 /* ─── VOICE AGENT PAGE ─────────────────────────────────────────────────── */
 .flag-table { width: 100%; border-collapse: collapse; }
 .flag-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--text2); vertical-align: top; }
@@ -1044,7 +1082,7 @@ tr.hidden-row { display: none; }
       <span class="icon">🚀</span> Upsell Playbook
     </div>
     <div class="nav-item" onclick="showPage('action')">
-      <span class="icon">🗺️</span> Action Plan
+      <span class="icon">🎯</span> Client Success Playbook
     </div>
     <div class="nav-item" id="navProductsItem" onclick="showPage('products')">
       <span class="icon">📦</span> Manage Products
@@ -1240,6 +1278,7 @@ tr.hidden-row { display: none; }
     <div class="card">
       <div class="card-header">
         <div><div class="card-title">Unified Client Directory</div><div class="card-sub">Clients with the same name across portfolios are merged · Updates live with every upload</div></div>
+        <button class="btn btn-primary btn-sm" id="addClientBtn" onclick="openAddClientModal()">＋ Add Client</button>
       </div>
       <div class="table-controls">
         <input type="text" class="search-box" id="clientsSearch" placeholder="Search all clients..." oninput="filterClientsDirectory()">
@@ -1790,15 +1829,34 @@ tr.hidden-row { display: none; }
        PAGE 7: ACTION PLAN
   ════════════════════════════════════════════════════════════════════════ -->
   <div class="page" id="page-action">
-    <div class="kpi-row">
-      <div class="kpi"><div class="kpi-icon">🗺️</div><div class="kpi-val">3</div><div class="kpi-lbl">Phases</div></div>
-      <div class="kpi"><div class="kpi-icon">📋</div><div class="kpi-val">12</div><div class="kpi-lbl">Action Steps</div></div>
-      <div class="kpi"><div class="kpi-icon">📅</div><div class="kpi-val orange">90</div><div class="kpi-lbl">Days to Execute</div></div>
-      <div class="kpi"><div class="kpi-icon">🎯</div><div class="kpi-val green">12+</div><div class="kpi-lbl">Target Activations</div></div>
+    <div class="kpi-row" id="kpiSummaryRow"></div>
+
+    <div class="grid-3" id="kpiHeroRow" style="margin-bottom:20px"></div>
+
+    <div class="grid-2" style="margin-bottom:20px">
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">Current Scores</div><div class="card-sub">All three KPIs side by side — target is 5 stars across the board</div></div>
+        </div>
+        <div class="chart-wrap h260"><canvas id="kpiCurrentBar"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">Score Trend Over Time</div><div class="card-sub">Every logged update, tracked automatically</div></div>
+        </div>
+        <div class="chart-wrap h260"><canvas id="kpiTrendLine"></canvas></div>
+      </div>
     </div>
+
+    <div class="section-hd"><div class="section-num">📖</div><h2>SOPs &amp; Playbooks — By KPI</h2></div>
+    <div class="section-div"></div>
+    <div id="kpiPlaybooksContainer"></div>
+
+    <div class="section-hd" style="margin-top:8px"><div class="section-num">📦</div><h2>Product Adoption Roadmap</h2></div>
+    <div class="section-div"></div>
     <div id="actionPlanSnapshot" style="margin-bottom:20px"></div>
     <div id="actionPlanContainer"></div>
-    <div class="page-footer">Client Success Hub · Niche Inc. · Action Plan</div>
+    <div class="page-footer">Client Success Hub · Niche Inc. · Client Success Playbook</div>
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════════
@@ -2292,6 +2350,43 @@ tr.hidden-row { display: none; }
   </div>
 </div>
 
+<!-- ADD CLIENT MODAL -->
+<div class="modal-overlay" id="addClientModal">
+  <div class="modal wide">
+    <h3>➕ Add Client</h3>
+    <p>Create a new client manually — pick which portfolio(s) they belong to, toggle their products, and add contact info if you have it.</p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+      <div><label class="field-label">Client / Business Name <span style="color:var(--orange)">*</span></label><input type="text" id="acName" class="field-input" style="height:38px" placeholder="e.g. Summit Roofing Co."></div>
+      <div><label class="field-label">Organization <span style="color:var(--text3);font-weight:400">(optional — groups multi-location businesses)</span></label><input type="text" id="acOrg" class="field-input" style="height:38px" placeholder="e.g. Summit Holdings"></div>
+    </div>
+
+    <label class="field-label">Portfolio(s) <span style="color:var(--orange)">*</span></label>
+    <div style="display:flex;gap:18px;margin-bottom:16px">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="checkbox" id="acPortfolioSmb" onchange="renderAddClientProductGroups()"> 📊 SMB</label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="checkbox" id="acPortfolioWhitelabel" onchange="renderAddClientProductGroups()"> 🏷️ White Label</label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="checkbox" id="acPortfolioSupport" onchange="renderAddClientProductGroups()"> 🎫 Support</label>
+    </div>
+
+    <div id="addClientProductGroups"></div>
+
+    <div class="cnt-divider"></div>
+
+    <div style="font-size:11px;color:var(--text3);margin-bottom:12px">Primary contact (optional)</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div><label class="field-label">Contact Name</label><input type="text" id="acContactName" class="field-input" style="height:38px" placeholder="e.g. Jamie Rivera"></div>
+      <div><label class="field-label">Title</label><input type="text" id="acContactTitle" class="field-input" style="height:38px" placeholder="e.g. Owner / Office Manager"></div>
+      <div><label class="field-label">Email</label><input type="email" id="acContactEmail" class="field-input" style="height:38px" placeholder="e.g. jamie@business.com"></div>
+      <div><label class="field-label">Phone</label><input type="tel" id="acContactPhone" class="field-input" style="height:38px" placeholder="e.g. (555) 123-4567"></div>
+    </div>
+
+    <div class="modal-btns" style="margin-top:18px">
+      <button class="btn btn-ghost" onclick="closeAddClientModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveNewClient()">＋ Add Client</button>
+    </div>
+  </div>
+</div>
+
 <!-- DELETE CLIENT CONFIRMATION MODAL -->
 <div class="modal-overlay" id="deleteClientModal">
   <div class="modal">
@@ -2379,7 +2474,7 @@ const pageMeta = {
   voice:      { title: 'Voice Agent',          sub: 'Performance & activity flags' },
   textagent:  { title: 'Text Agent',           sub: 'Performance & messaging metrics' },
   upsell:     { title: 'Upsell Playbook',      sub: 'By product · prioritized action cards' },
-  action:     { title: 'Action Plan',          sub: '90-day step-by-step execution guide' },
+  action:     { title: 'Client Success Playbook', sub: 'Our KPIs, SOPs, and the plan to earn 5 stars on every one' },
   products:   { title: 'Manage Products',      sub: 'Add, remove, and configure your product catalog' },
   adspend:    { title: 'Ad Spend Management', sub: 'Business-by-business budget, promo status, and recommendations' },
   collections:{ title: 'Collections',              sub: 'Outstanding balances and card fails, with status and notes' },
@@ -3973,6 +4068,263 @@ function rebuildUpsellCards() {
   }).join('');
 }
 
+// ════════════════════════════════════════════════════════════════════════
+// CLIENT SUCCESS KPIs — anticipating client needs, preempting risks, and
+// solving problems before they escalate. These are our three core measures
+// of the client experience, scored 1–5 stars and tracked over time.
+// ════════════════════════════════════════════════════════════════════════
+const KPI_KEYS = ['anticipating', 'preempting', 'solving'];
+const KPI_META = {
+  anticipating: {
+    label: 'Anticipating Client Needs', short: 'Anticipating Needs', icon: '🔮', color: '#3b82f6',
+    definition: 'Proactively identifying what a client will need next — more capacity, a new product, a process change — based on usage patterns, seasonal trends, and account signals, rather than only reacting once they ask.',
+    why: 'Clients who feel "read" by their CSM are dramatically less likely to churn, and they expand the fastest. Waiting for the client to ask is the same as telling them we weren\'t paying attention.',
+    sop: [
+      { title: 'Monthly Usage Review', body: 'Pull adoption %, ad spend pacing, and lead volume trend for every account. Flag any 20%+ dip or spike for follow-up this week.' },
+      { title: 'Seasonal / Vertical Mapping', body: 'Know each client\'s busy season (roofing storms, HVAC summer, plumbing winter) and reach out 4–6 weeks ahead with a capacity/budget check-in.' },
+      { title: 'Usage-Trigger Playbooks', body: 'e.g. Voice Agent call volume up 3 weeks straight → proactively suggest more routing capacity or adding Chat Widget, before they hit a ceiling.' },
+      { title: 'Quarterly Business Reviews', body: 'For every client on 2+ products, schedule a QBR to walk through performance data and surface needs before they become a complaint.' },
+      { title: '"Two Steps Ahead" Note Habit', body: 'Every client note should end with what you expect to be true next month — not just what happened this month.' },
+    ],
+    signals: [
+      'Ad spend consistently under-pacing (client may be about to ask "is this even working?")',
+      'A single-product client stagnant for 90+ days — ripe for either expansion or quiet churn risk',
+      'A seasonal client approaching their peak with no capacity conversation started yet',
+    ],
+  },
+  preempting: {
+    label: 'Preempting Risks', short: 'Preempting Risks', icon: '🛡️', color: '#ef4444',
+    definition: 'Spotting and neutralizing account risk — churn, non-payment, dissatisfaction, technical failure — before it becomes a crisis. Treating early warning signals as action triggers, not just data points.',
+    why: 'Almost every "surprise" churn or escalation had visible warning signs weeks earlier. Preempting risk is the difference between a calm QBR conversation and a last-minute save call.',
+    sop: [
+      { title: 'Weekly Health Scan', body: 'Every Monday, review Collections (aging balances, card fails) and any account with 2+ "Needs Attention" notes. Assign an owner and a next action the same day.' },
+      { title: 'Zero-Usage Alarm', body: 'Any client with Voice Agent, Chat Widget, or Contact Form live but 0 activity in 14 days gets outreach that same week — a silent setup is a silent risk.' },
+      { title: 'Escalation-Language Scan', body: 'Notes containing words like "cancel," "unhappy," "competitor," or "refund" get tagged to an Admin and a phone call within 24 hours — not an email.' },
+      { title: 'Payment Risk Triage', body: 'Any card fail or balance overdue 15+ days triggers the structured Collections workflow immediately, not an ad-hoc follow-up.' },
+      { title: 'Renewal Calendar', body: 'Track every contract end date. Start the renewal conversation 60 days out, not 6 days out.' },
+    ],
+    signals: [
+      'Declining engagement — fewer logins, slower replies, less note activity from the client\'s side',
+      'Any billing friction: a failed card, a late payment, pushback on an invoice',
+      'A request to "pause" anything, or a drop in ad spend with no explanation',
+      'Unusual silence from a normally responsive contact',
+    ],
+  },
+  solving: {
+    label: 'Solving Problems Before They Escalate', short: 'Solving Problems', icon: '🧯', color: '#22c55e',
+    definition: 'When an issue does surface, resolving it fast, completely, and with proactive communication — so a fixable problem never has the chance to become a churn reason or a public complaint.',
+    why: 'Clients rarely leave over a single problem — they leave over a problem that wasn\'t handled well. Speed and ownership are the entire game here.',
+    sop: [
+      { title: 'First-Response SLA', body: 'Acknowledge any client-reported issue within 4 business hours, even if the fix isn\'t ready yet.' },
+      { title: 'Single-Owner Rule', body: 'Every open issue gets ONE named owner in the task tracker (never "the team"), with a due date, tracked through to close.' },
+      { title: 'Root Cause, Not Band-Aid', body: 'Before closing a ticket, confirm the underlying cause — not just the symptom — is actually fixed. Note it for pattern-spotting.' },
+      { title: 'Proactive Status Updates', body: 'Update the client before they have to ask "any update?" — even if the update is just "still working on it."' },
+      { title: 'Escalation Ladder', body: 'If unresolved after 48 hours, auto-escalate to an Admin. Never let a stuck ticket age silently.' },
+      { title: 'Closure + Prevention Loop', body: 'After resolving, log what would have prevented it — and feed that straight back into Anticipating Needs and Preempting Risks above.' },
+    ],
+    signals: [
+      'No status update sent to the client in 24+ hours on an open issue',
+      'The client had to follow up twice on the same issue',
+      'The same root cause recurring for a second time',
+      'Client tone shifting from patient to frustrated across notes',
+    ],
+  },
+};
+
+const KPI_HISTORY_CACHE_KEY = 'csh_kpi_history_v1';
+let KPI_SCORE_HISTORY = []; // { id, kpi_key, score, note, author_name, created_at }
+
+async function loadKpiHistory() {
+  try {
+    KPI_SCORE_HISTORY = await sbSelect('kpi_scores', 'order=created_at.asc');
+    localStorage.setItem(KPI_HISTORY_CACHE_KEY, JSON.stringify(KPI_SCORE_HISTORY));
+  } catch(e) {
+    console.warn('kpi_scores table unavailable, using local cache:', e.message);
+    try { KPI_SCORE_HISTORY = JSON.parse(localStorage.getItem(KPI_HISTORY_CACHE_KEY) || '[]'); } catch(e2) { KPI_SCORE_HISTORY = []; }
+  }
+  if (KPI_SCORE_HISTORY.length === 0) await seedInitialKpiScores();
+  rebuildActionPlan();
+}
+
+// One-time baseline so the dashboard isn't empty on first load — reflects the
+// scores set when this playbook was built: Anticipating (2), Preempting (2), Solving (3).
+async function seedInitialKpiScores() {
+  const seedDate = new Date().toISOString();
+  const seeds = [
+    { kpi_key: 'anticipating', score: 2 },
+    { kpi_key: 'preempting', score: 2 },
+    { kpi_key: 'solving', score: 3 },
+  ];
+  for (const s of seeds) {
+    const row = { id: (crypto.randomUUID ? crypto.randomUUID() : 'kpi_' + Date.now() + Math.random().toString(16).slice(2)), kpi_key: s.kpi_key, score: s.score, note: 'Initial baseline', author_name: 'System', created_at: seedDate };
+    KPI_SCORE_HISTORY.push(row);
+    try { await sbUpsert('kpi_scores', row); } catch(e) { console.warn('Could not seed KPI score:', e.message); }
+  }
+  localStorage.setItem(KPI_HISTORY_CACHE_KEY, JSON.stringify(KPI_SCORE_HISTORY));
+}
+
+function getKpiHistory(key) {
+  return KPI_SCORE_HISTORY.filter(r => r.kpi_key === key).sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+}
+function getLatestKpiScore(key) {
+  const rows = getKpiHistory(key);
+  return rows.length ? rows[rows.length - 1].score : 0;
+}
+function getKpiTrend(key) {
+  const rows = getKpiHistory(key);
+  if (rows.length < 2) return 0;
+  return rows[rows.length - 1].score - rows[rows.length - 2].score;
+}
+
+function starsHtml(score, size) {
+  let h = '';
+  for (let i = 1; i <= 5; i++) h += `<span style="font-size:${size}px;color:${i <= score ? 'var(--yellow)' : 'var(--border)'}">★</span>`;
+  return h;
+}
+function starPickerHtml(key, score) {
+  const editable = canEdit();
+  let h = `<div class="kpi-star-picker${editable ? ' editable' : ''}" data-kpi="${key}">`;
+  for (let i = 1; i <= 5; i++) {
+    h += `<span class="star${i <= score ? ' filled' : ''}" data-val="${i}" ${editable ? `onclick="logKpiScore('${key}', ${i})"` : ''}>★</span>`;
+  }
+  h += `</div>`;
+  return h;
+}
+function trendBadgeHtml(key) {
+  const trend = getKpiTrend(key);
+  if (trend > 0) return `<span class="kpi-trend-badge kpi-trend-up">▲ Improved ${trend > 1 ? 'by ' + trend : ''}</span>`;
+  if (trend < 0) return `<span class="kpi-trend-badge kpi-trend-down">▼ Declined ${trend < -1 ? 'by ' + Math.abs(trend) : ''}</span>`;
+  return `<span class="kpi-trend-badge kpi-trend-flat">→ Stable</span>`;
+}
+
+async function logKpiScore(key, score) {
+  if (!requirePermission('edit')) return;
+  const u = getCurrentUser();
+  const row = { id: (crypto.randomUUID ? crypto.randomUUID() : 'kpi_' + Date.now() + Math.random().toString(16).slice(2)), kpi_key: key, score, note: '', author_name: u ? u.name : 'Guest', created_at: new Date().toISOString() };
+  KPI_SCORE_HISTORY.push(row);
+  localStorage.setItem(KPI_HISTORY_CACHE_KEY, JSON.stringify(KPI_SCORE_HISTORY));
+  try { await sbUpsert('kpi_scores', row); } catch(e) { console.warn('Could not save KPI score:', e.message); }
+  rebuildActionPlan();
+  showToast(`${KPI_META[key].short} set to ${score} star${score === 1 ? '' : 's'}.`, 'success');
+}
+
+function rebuildKpiSummary() {
+  const row = document.getElementById('kpiSummaryRow');
+  if (!row) return;
+  const scores = KPI_KEYS.map(k => getLatestKpiScore(k));
+  const avg = scores.reduce((a, b) => a + b, 0) / (scores.length || 1);
+  const weakestIdx = scores.indexOf(Math.min(...scores));
+  const weakestKey = KPI_KEYS[weakestIdx];
+  const totalEntries = KPI_SCORE_HISTORY.length;
+  const lastEntry = [...KPI_SCORE_HISTORY].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
+  row.innerHTML = `
+    <div class="kpi"><div class="kpi-icon">⭐</div><div class="kpi-val orange">${avg.toFixed(1)} / 5</div><div class="kpi-lbl">Overall Client Success Score</div><div class="kpi-sub">Average across all 3 KPIs</div></div>
+    <div class="kpi"><div class="kpi-icon">${KPI_META[weakestKey].icon}</div><div class="kpi-val red">${KPI_META[weakestKey].short}</div><div class="kpi-lbl">Lowest Scoring KPI</div><div class="kpi-sub">Focus area right now</div></div>
+    <div class="kpi"><div class="kpi-icon">📈</div><div class="kpi-val">${totalEntries}</div><div class="kpi-lbl">Score Updates Logged</div><div class="kpi-sub">All-time history</div></div>
+    <div class="kpi"><div class="kpi-icon">🕒</div><div class="kpi-val" style="font-size:15px">${lastEntry ? fmtNoteTime(lastEntry.created_at) : '—'}</div><div class="kpi-lbl">Last Updated</div><div class="kpi-sub">${lastEntry ? escAttr(lastEntry.author_name) : ''}</div></div>
+  `;
+}
+
+function rebuildKpiHeroRow() {
+  const row = document.getElementById('kpiHeroRow');
+  if (!row) return;
+  row.innerHTML = KPI_KEYS.map(key => {
+    const meta = KPI_META[key];
+    const score = getLatestKpiScore(key);
+    return `
+      <div class="kpi-hero-card" style="--kpi-accent:${meta.color}">
+        <div class="kpi-hero-name">${meta.icon} ${meta.label}</div>
+        ${starPickerHtml(key, score)}
+        <div class="kpi-score-label">${score} / 5 stars${canEdit() ? ' — click a star to update' : ''}</div>
+        ${trendBadgeHtml(key)}
+        <div class="kpi-hero-desc">${meta.definition}</div>
+        <a href="#kpi-${key}" class="kpi-jump-link">View SOP &amp; playbook ↓</a>
+      </div>`;
+  }).join('');
+}
+
+function rebuildKpiPlaybooks() {
+  const container = document.getElementById('kpiPlaybooksContainer');
+  if (!container) return;
+  container.innerHTML = KPI_KEYS.map(key => {
+    const meta = KPI_META[key];
+    const score = getLatestKpiScore(key);
+    const sopSteps = meta.sop.map((s, i) => `
+      <div class="action-step">
+        <div class="step-num" style="background:${meta.color}">${i + 1}</div>
+        <div class="step-body"><strong>${s.title}</strong>${s.body}</div>
+      </div>`).join('');
+    const signals = meta.signals.map(s => `<div class="warning-chip">⚠️ ${s}</div>`).join('');
+    return `
+      <div class="kpi-playbook-card" id="kpi-${key}" style="--kpi-accent:${meta.color}">
+        <div class="kpi-playbook-hd">
+          <div class="kpi-playbook-title">${meta.icon} ${meta.label}</div>
+          ${starPickerHtml(key, score)}
+        </div>
+        <div class="kpi-why-box"><strong style="color:var(--text)">Why it matters:</strong> ${meta.why}</div>
+        <div class="kpi-subhead">Standard Operating Procedure</div>
+        <div class="kpi-sop-grid">${sopSteps}</div>
+        <div class="kpi-subhead">Early Warning Signs to Watch For</div>
+        <div class="warning-list">${signals}</div>
+      </div>`;
+  }).join('');
+}
+
+function rebuildKpiCharts() {
+  const barKey = 'kpi-current-bar';
+  destroyChart(barKey);
+  const barCanvas = document.getElementById('kpiCurrentBar');
+  if (barCanvas) {
+    const scores = KPI_KEYS.map(k => getLatestKpiScore(k));
+    chartRegistry[barKey] = new Chart(barCanvas, {
+      type: 'bar',
+      data: {
+        labels: KPI_KEYS.map(k => KPI_META[k].short),
+        datasets: [{ data: scores, backgroundColor: KPI_KEYS.map(k => KPI_META[k].color), borderRadius: { topLeft: 6, topRight: 6 }, borderSkipped: false, barPercentage: 0.5 }],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false },
+          tooltip: { backgroundColor: C.tooltipBg, borderColor: C.tooltipBorder, borderWidth: 1, titleColor: C.tooltipTitle, bodyColor: C.orange, padding: 12, cornerRadius: 8,
+            callbacks: { label: ctx => ` ${ctx.parsed.y} / 5 stars` } } },
+        scales: {
+          y: { beginAtZero: true, max: 5, ticks: { stepSize: 1, color: C.tick }, grid: { color: C.grid }, border: { display: false } },
+          x: { grid: { display: false }, ticks: { color: C.text, font: { size: 11 } }, border: { display: false } },
+        },
+      },
+    });
+  }
+
+  const lineKey = 'kpi-trend-line';
+  destroyChart(lineKey);
+  const lineCanvas = document.getElementById('kpiTrendLine');
+  if (lineCanvas) {
+    const allDates = Array.from(new Set(KPI_SCORE_HISTORY.map(r => (r.created_at || '').slice(0, 10)))).filter(Boolean).sort();
+    const datasets = KPI_KEYS.map(k => {
+      const rows = getKpiHistory(k);
+      const data = allDates.map(d => {
+        const upTo = rows.filter(r => (r.created_at || '').slice(0, 10) <= d);
+        return upTo.length ? upTo[upTo.length - 1].score : null;
+      });
+      return { label: KPI_META[k].short, data, borderColor: KPI_META[k].color, backgroundColor: KPI_META[k].color, tension: 0.3, spanGaps: true, pointRadius: 4, pointHoverRadius: 6 };
+    });
+    chartRegistry[lineKey] = new Chart(lineCanvas, {
+      type: 'line',
+      data: { labels: allDates.map(d => fmtDate(d)), datasets },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { color: C.text, font: { size: 11, weight: '600' }, usePointStyle: true, pointStyleWidth: 10 } },
+          tooltip: { backgroundColor: C.tooltipBg, borderColor: C.tooltipBorder, borderWidth: 1, titleColor: C.tooltipTitle, bodyColor: C.orange, padding: 12, cornerRadius: 8,
+            callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y} / 5` } } },
+        scales: {
+          y: { beginAtZero: true, max: 5, ticks: { stepSize: 1, color: C.tick }, grid: { color: C.grid }, border: { display: false } },
+          x: { grid: { display: false }, ticks: { color: C.tick, font: { size: 11 } }, border: { display: false } },
+        },
+      },
+    });
+  }
+}
+
 // ─── ACTION PLAN ──────────────────────────────────────────────────────────────
 const phases = [
   { tag:'PHASE 1', title:'Audit & Prioritize', time:'📅 Weeks 1–2 · Immediate',
@@ -3999,6 +4351,11 @@ const phases = [
 ];
 
 function rebuildActionPlan() {
+  rebuildKpiSummary();
+  rebuildKpiHeroRow();
+  rebuildKpiPlaybooks();
+  rebuildKpiCharts();
+
   const ac = document.getElementById('actionPlanContainer');
   if (!ac) return;
 
@@ -7312,6 +7669,8 @@ function rebuildClientsDirectory() {
   set('cl-support-count', getClients('support').length);
   set('cl-multi-count', multiCount);
   set('navClientsBadge', rows.length);
+  const addBtn = document.getElementById('addClientBtn');
+  if (addBtn) addBtn.style.display = canEdit() ? '' : 'none';
   const tbody = document.getElementById('clientsDirectoryBody');
   if (!tbody) return;
   const rowsHtml = rows.map(row => {
@@ -7384,6 +7743,93 @@ function filterClientsByPortfolio(p, btn) {
   document.querySelectorAll('#clientsFilterPills .filter-pill').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   filterClientsDirectory();
+}
+
+const PORTFOLIO_CHECKBOX_IDS = { smb: 'acPortfolioSmb', whitelabel: 'acPortfolioWhitelabel', support: 'acPortfolioSupport' };
+
+function openAddClientModal() {
+  if (!requirePermission('edit')) return;
+  ['acName','acOrg','acContactName','acContactTitle','acContactEmail','acContactPhone'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  Object.values(PORTFOLIO_CHECKBOX_IDS).forEach(id => { const el = document.getElementById(id); if (el) el.checked = false; });
+  renderAddClientProductGroups();
+  document.getElementById('addClientModal').classList.add('open');
+}
+function closeAddClientModal() {
+  document.getElementById('addClientModal').classList.remove('open');
+}
+
+function renderAddClientProductGroups() {
+  const container = document.getElementById('addClientProductGroups');
+  if (!container) return;
+  const selectedPks = Object.keys(PORTFOLIO_CHECKBOX_IDS).filter(pk => (document.getElementById(PORTFOLIO_CHECKBOX_IDS[pk]) || {}).checked);
+  if (selectedPks.length === 0) { container.innerHTML = ''; return; }
+  container.innerHTML = selectedPks.map(pk => {
+    let h = `<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">${PORTFOLIO_ICONS[pk]} ${PORTFOLIO_LABELS[pk]} — products already using</div><div class="edit-client-grid">`;
+    getCatalog(pk).forEach(p => {
+      h += `<div class="edit-client-row"><label for="acp-${pk}-${p.key}">${p.label}</label><input type="checkbox" id="acp-${pk}-${p.key}"></div>`;
+    });
+    h += `</div></div>`;
+    return h;
+  }).join('');
+}
+
+async function saveNewClient() {
+  const nameEl = document.getElementById('acName');
+  const name = nameEl.value.trim();
+  if (!name) { showToast('Please enter a client name.', 'warning'); nameEl.focus(); return; }
+  const selectedPks = Object.keys(PORTFOLIO_CHECKBOX_IDS).filter(pk => (document.getElementById(PORTFOLIO_CHECKBOX_IDS[pk]) || {}).checked);
+  if (selectedPks.length === 0) { showToast('Please select at least one portfolio.', 'warning'); return; }
+  const org = document.getElementById('acOrg').value.trim();
+  const norm = name.toLowerCase();
+
+  const addedTo = [];
+  const skippedFrom = [];
+  selectedPks.forEach(pk => {
+    const existing = getClients(pk).find(c => (c.name || '').trim().toLowerCase() === norm);
+    if (existing) { skippedFrom.push(PORTFOLIO_LABELS[pk]); return; }
+    const client = { name, org: org || undefined, cellNotes: '' };
+    getProdKeys(pk).forEach(k => {
+      const cb = document.getElementById(`acp-${pk}-${k}`);
+      client[k] = cb ? cb.checked : false;
+    });
+    PORTFOLIOS[pk].clients.push(client);
+    addedTo.push(pk);
+  });
+
+  if (addedTo.length === 0) {
+    showToast(`"${name}" already exists in ${skippedFrom.join(', ')} — nothing added.`, 'warning');
+    return;
+  }
+
+  // Contact info is keyed by client name, not portfolio, so it applies regardless of which portfolio(s) were just added
+  const contact_name = document.getElementById('acContactName').value.trim();
+  const title = document.getElementById('acContactTitle').value.trim();
+  const email = document.getElementById('acContactEmail').value.trim();
+  const phone = document.getElementById('acContactPhone').value.trim();
+  if (contact_name || title || email || phone) {
+    let contact = getClientContact(name);
+    if (!contact) {
+      contact = { id: (crypto.randomUUID ? crypto.randomUUID() : 'contact_' + Date.now()), client_name: name };
+      CLIENT_CONTACTS.push(contact);
+    }
+    contact.contact_name = contact_name;
+    contact.title = title;
+    contact.email = email;
+    contact.phone = phone;
+    contact.updated_at = new Date().toISOString();
+    localStorage.setItem(CLIENT_CONTACTS_CACHE_KEY, JSON.stringify(CLIENT_CONTACTS));
+    try { await sbUpsert('client_contacts', contact); } catch(e) { console.warn('Could not save contact info:', e.message); }
+  }
+
+  closeAddClientModal();
+  rebuildAll();
+  addedTo.forEach(pk => saveClientsToSupabase(pk).catch(e => console.warn('Save failed:', e)));
+
+  let msg = `Added "${name}" to ${addedTo.map(pk => PORTFOLIO_LABELS[pk]).join(', ')} · Saved`;
+  if (skippedFrom.length) msg += ` (already existed in ${skippedFrom.join(', ')}, skipped)`;
+  showUploadFeedback(msg, false);
 }
 
 let editingClientName = null;
@@ -7518,6 +7964,9 @@ async function bootApp() {
     await loadClientNotesTasks();
     migrateOldCollectionsNotes();
 
+    // Client Success KPIs (Anticipating Needs / Preempting Risks / Solving Problems)
+    await loadKpiHistory();
+
     // Auto-refresh any connected Google Sheets
     let sheetsUrls = {};
     try {
@@ -7537,6 +7986,7 @@ async function bootApp() {
     await loadCollectionsAccounts();
     await loadClientNotesTasks();
     migrateOldCollectionsNotes();
+    await loadKpiHistory();
   }
 }
 
