@@ -556,6 +556,16 @@ tr.hidden-row { display: none; }
 .pc-5 { background: rgba(168,85,247,.12); color: #a855f7; }
 .pc-6 { background: rgba(226,84,31,.15); color: var(--orange); }
 
+.pc-cell { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.product-icon-row { display: flex; align-items: center; flex-wrap: wrap; gap: 4px; }
+.product-icon-chip {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; padding: 2px;
+  background: var(--bg3); border: 1px solid var(--border); border-radius: 6px;
+  flex-shrink: 0;
+}
+.product-icon-chip img { width: 14px; height: 14px; }
+
 /* ─── UPSELL CARDS ─────────────────────────────────────────────────────── */
 .upsell-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
 .upsell-card {
@@ -1186,10 +1196,10 @@ tr.hidden-row { display: none; }
       <div class="tbl-scroll" style="max-height:560px">
         <table style="table-layout:auto" id="allClientsTable">
           <thead><tr>
-            <th style="text-align:left;padding-left:14px;width:24%">Client Name</th>
-            <th style="width:30%">Portfolios</th>
-            <th style="width:12%"># Products</th>
-            <th style="width:34%">Actions</th>
+            <th style="text-align:left;padding-left:14px;width:20%">Client Name</th>
+            <th style="width:24%">Portfolios</th>
+            <th style="width:26%"># Products</th>
+            <th style="width:30%">Actions</th>
           </tr></thead>
           <tbody id="clientsDirectoryBody"></tbody>
         </table>
@@ -1365,6 +1375,12 @@ tr.hidden-row { display: none; }
         <div class="kpi-val" id="kpi-whitelabel-total">12</div>
         <div class="kpi-lbl">Total Clients</div>
         <div class="kpi-sub">Active in platform</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-icon">🏬</div>
+        <div class="kpi-val orange" id="kpi-whitelabel-multiloc">0</div>
+        <div class="kpi-lbl">White Label / Multilocation</div>
+        <div class="kpi-sub">Businesses with 2+ locations</div>
       </div>
       <div class="kpi">
         <div class="kpi-icon">📦</div>
@@ -3771,6 +3787,8 @@ function rebuildOrgFilter(pk) {
     orgs.map(o => `<option value="${escAttr(o)}">${escAttr(o)} (${orgCounts[o]} locations)</option>`).join('');
   if (orgs.includes(prevVal)) sel.value = prevVal;
   else { activeOrgFilters[pk] = ''; sel.value = ''; }
+  const multilocEl = document.getElementById('kpi-' + pk + '-multiloc');
+  if (multilocEl) multilocEl.textContent = orgs.length;
   renderOrgRollup(pk);
 }
 
@@ -6828,14 +6846,28 @@ function rebuildClientsDirectory() {
   const rowsHtml = rows.map(row => {
     const pks = Object.keys(row.portfolios);
     let total = 0;
-    pks.forEach(pk => { total += getProdKeys(pk).filter(k => row.portfolios[pk].client[k]).length; });
+    const activeProducts = {}; // key -> catalog entry, de-duped across portfolios
+    pks.forEach(pk => {
+      getCatalog(pk).forEach(p => {
+        if (row.portfolios[pk].client[p.key]) {
+          total++;
+          if (!activeProducts[p.key]) activeProducts[p.key] = p;
+        }
+      });
+    });
     const chips = pks.map(pk => `<span class="portfolio-chip chip-${pk}">${PORTFOLIO_ICONS[pk]} ${PORTFOLIO_LABELS[pk]}</span>`).join('');
     const safe = row.displayName.replace(/'/g,"\\'");
     const attrs = pks.map(pk => `data-has-${pk}="true"`).join(' ');
+    const productList = Object.values(activeProducts);
+    const iconsHtml = productList.length
+      ? `<span class="product-icon-row">${productList.map(p =>
+          `<span class="product-icon-chip" title="${escAttr(p.label)}">${renderProductIcon(p.icon, 14)}</span>`
+        ).join('')}</span>`
+      : '';
     return `<tr data-name="${row.displayName.toLowerCase()}" data-portfolio-count="${pks.length}" ${attrs}>
       <td style="padding-left:14px;color:var(--text);font-weight:600">${row.displayName}</td>
       <td>${chips}</td>
-      <td><span class="pc-badge pc-${Math.min(total,6)}">${total}</span></td>
+      <td><span class="pc-cell"><span class="pc-badge pc-${Math.min(total,6)}">${total}</span>${iconsHtml}</span></td>
       <td>
         <button class="row-action-btn" onclick="openClientNotesTasksModal('${safe}')">📝 Notes &amp; Tasks</button>
         ${canEdit() ? `
