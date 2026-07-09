@@ -7,6 +7,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
 /* ─── RESET & BASE ─────────────────────────────────────────────────────── */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -836,6 +837,17 @@ tr.hidden-row { display: none; }
 .note-entry .note-meta b { color: var(--text2); }
 .note-entry .note-text { font-size: 12px; color: var(--text); line-height: 1.5; white-space: pre-wrap; }
 .note-empty { padding: 20px; text-align: center; font-size: 12px; color: var(--text3); }
+
+.mention-dropdown {
+  position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 20;
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.4); max-height: 160px; overflow-y: auto;
+}
+.mention-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; font-size: 12px; color: var(--text); cursor: pointer; }
+.mention-item:hover, .mention-item.highlighted { background: var(--bg3); }
+.mention-item .mention-email { font-size: 10px; color: var(--text3); }
+.note-mention { color: var(--orange); font-weight: 600; }
+
 .team-row { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; background: var(--bg3); }
 .team-row .team-name { flex: 1; font-weight: 700; font-size: 13px; color: var(--text); }
 .team-row .team-email { font-size: 11px; color: var(--text3); }
@@ -1074,7 +1086,7 @@ tr.hidden-row { display: none; }
 <div class="modal-overlay" id="clientNotesTasksModal">
   <div class="modal wide">
     <h3 id="cntTitle">📝 Notes &amp; Tasks</h3>
-    <div style="display:flex;gap:8px;margin-bottom:16px" id="cntTabs">
+    <div style="display:flex;gap:8px;margin-bottom:18px" id="cntTabs">
       <button class="pm-tab active" onclick="switchCntTab('notes')">📝 Notes</button>
       <button class="pm-tab" onclick="switchCntTab('tasks')">✅ Tasks</button>
     </div>
@@ -1082,13 +1094,21 @@ tr.hidden-row { display: none; }
     <div id="cntNotesPane">
       <div class="notes-thread" id="cntNotesThread" style="max-height:220px"></div>
       <label class="field-label">Add a Note</label>
-      <textarea id="cntNewNoteText" rows="2" placeholder="What's happening with this client?" class="field-input" style="margin-bottom:10px;resize:vertical;font-family:inherit"></textarea>
-      <label class="field-label">Tag teammates (optional — they'll be notified)</label>
-      <div id="cntTagPicker" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+      <div style="position:relative;margin-bottom:14px">
+        <textarea id="cntNewNoteText" rows="2" placeholder="What's happening with this client? Type @ to tag a teammate" class="field-input" style="margin-bottom:0;resize:vertical;font-family:inherit" oninput="handleNoteMentionInput(event)" onkeydown="handleNoteMentionKeydown(event)"></textarea>
+        <div id="cntMentionDropdown" class="mention-dropdown" style="display:none"></div>
+      </div>
+      <label class="field-label">Tag teammates <span style="color:var(--text3);font-weight:400">(optional — they'll be notified instantly)</span></label>
+      <div id="cntTagPicker" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px"></div>
     </div>
 
     <div id="cntTasksPane" style="display:none">
-      <div id="cntTasksList" style="margin-bottom:16px"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <span style="font-size:11px;color:var(--text3)">Tasks with a due date can sync straight to Google Calendar</span>
+        <span id="gcalStatusPill"></span>
+      </div>
+      <div id="cntTasksList" style="margin-bottom:18px"></div>
+      <label class="field-label" style="margin-bottom:8px">Add a Task</label>
       <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:10px;align-items:end">
         <div><label class="field-label">Task</label><input type="text" id="cntNewTaskTitle" class="field-input" placeholder="e.g. Follow up about renewal"></div>
         <div><label class="field-label">Assign to</label><select id="cntNewTaskAssignee" class="field-select"></select></div>
@@ -1096,7 +1116,7 @@ tr.hidden-row { display: none; }
       </div>
     </div>
 
-    <div class="modal-btns">
+    <div class="modal-btns" style="margin-top:18px">
       <button class="btn btn-ghost" onclick="closeClientNotesTasksModal()">Close</button>
       <button class="btn btn-primary" id="cntNotesSubmitBtn" onclick="addClientNote()">Add Note</button>
       <button class="btn btn-primary" id="cntTasksSubmitBtn" style="display:none" onclick="addClientTask()">＋ Add Task</button>
@@ -4138,6 +4158,145 @@ async function sbDelete(table, filter) {
 }
 
 // ════════════════════════════════════════════════════════════════════════
+// GOOGLE CALENDAR SYNC — tasks assigned to you can be pushed straight to
+// your own Google Calendar. Google's security model only allows writing to
+// the calendar of whoever grants consent, so each teammate connects their
+// OWN calendar once (below); there's no way to write to someone else's
+// calendar on their behalf. Requires a Google Cloud OAuth Client ID — see
+// setup notes where GOOGLE_CALENDAR_CLIENT_ID is defined.
+// ════════════════════════════════════════════════════════════════════════
+// TODO (one-time setup): create an OAuth 2.0 "Web application" Client ID at
+// https://console.cloud.google.com/apis/credentials, add this site's URL
+// (e.g. https://your-site.netlify.app) under "Authorized JavaScript origins",
+// enable the Google Calendar API for the project, then paste the Client ID
+// below. Until this is set, the auto-sync silently stays off and everyone
+// still gets the one-click "Add to Google Calendar" link on every task.
+const GOOGLE_CALENDAR_CLIENT_ID = '';
+const GCAL_TOKEN_CACHE_KEY = 'csh_gcal_token_v1';
+const GCAL_SYNCED_TASKS_KEY = 'csh_gcal_synced_tasks_v1';
+let googleTokenClient = null;
+let googleAccessToken = null;
+let googleTokenExpiresAt = 0;
+
+function loadCachedGoogleToken() {
+  try {
+    const cached = JSON.parse(localStorage.getItem(GCAL_TOKEN_CACHE_KEY) || 'null');
+    if (cached && cached.token && cached.expiresAt > Date.now()) {
+      googleAccessToken = cached.token;
+      googleTokenExpiresAt = cached.expiresAt;
+    }
+  } catch(e) {}
+}
+loadCachedGoogleToken();
+
+function initGoogleCalendarClient() {
+  if (!GOOGLE_CALENDAR_CLIENT_ID || typeof google === 'undefined' || !google.accounts) return;
+  if (googleTokenClient) return;
+  googleTokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: GOOGLE_CALENDAR_CLIENT_ID,
+    scope: 'https://www.googleapis.com/auth/calendar.events',
+    callback: (resp) => {
+      if (resp && resp.access_token) {
+        googleAccessToken = resp.access_token;
+        googleTokenExpiresAt = Date.now() + ((resp.expires_in || 3600) - 60) * 1000;
+        localStorage.setItem(GCAL_TOKEN_CACHE_KEY, JSON.stringify({ token: googleAccessToken, expiresAt: googleTokenExpiresAt }));
+        showToast('Google Calendar connected — your assigned tasks will sync automatically.', 'success');
+        syncMyTasksToGoogleCalendar();
+      }
+    },
+  });
+}
+
+function isGoogleCalendarConfigured() { return !!GOOGLE_CALENDAR_CLIENT_ID; }
+function isGoogleCalendarConnected() { return !!googleAccessToken && googleTokenExpiresAt > Date.now(); }
+
+function connectGoogleCalendar() {
+  if (!isGoogleCalendarConfigured()) {
+    showToast('Google Calendar isn\'t configured for this Hub yet — an Admin needs to add a Google OAuth Client ID.', 'warning');
+    return;
+  }
+  initGoogleCalendarClient();
+  if (!googleTokenClient) { showToast('Google sign-in is still loading — try again in a moment.', 'warning'); return; }
+  googleTokenClient.requestAccessToken({ prompt: isGoogleCalendarConnected() ? '' : 'consent' });
+}
+
+function disconnectGoogleCalendar() {
+  googleAccessToken = null;
+  googleTokenExpiresAt = 0;
+  localStorage.removeItem(GCAL_TOKEN_CACHE_KEY);
+  showToast('Google Calendar disconnected.', 'info');
+  renderGoogleCalendarStatus();
+}
+
+// Builds a one-click "Add to Google Calendar" link that needs zero setup —
+// works for every teammate today, even before/without the OAuth connection above.
+function gcalQuickAddUrl(task) {
+  const day = (task.due_date || '').replace(/-/g, '');
+  const nextDay = task.due_date ? new Date(task.due_date + 'T00:00:00Z') : null;
+  if (nextDay) nextDay.setUTCDate(nextDay.getUTCDate() + 1);
+  const nextDayStr = nextDay ? nextDay.toISOString().slice(0,10).replace(/-/g,'') : day;
+  const params = new URLSearchParams({
+    action: 'TEMPLATE',
+    text: task.title,
+    details: `Client Success Hub task for ${task.client_name}${task.assigned_to_name ? ' — assigned to ' + task.assigned_to_name : ''}`,
+    dates: day ? `${day}/${nextDayStr}` : '',
+  });
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+
+async function pushTaskToGoogleCalendar(task) {
+  if (!isGoogleCalendarConnected() || !task.due_date) return false;
+  try {
+    const nextDay = new Date(task.due_date + 'T00:00:00Z');
+    nextDay.setUTCDate(nextDay.getUTCDate() + 1);
+    const event = {
+      summary: task.title,
+      description: `Client Success Hub task for ${task.client_name}`,
+      start: { date: task.due_date },
+      end: { date: nextDay.toISOString().slice(0,10) },
+      reminders: { useDefault: true },
+    };
+    const res = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + googleAccessToken, 'Content-Type': 'application/json' },
+      body: JSON.stringify(event),
+    });
+    if (!res.ok) throw new Error('Calendar API ' + res.status);
+    let synced = [];
+    try { synced = JSON.parse(localStorage.getItem(GCAL_SYNCED_TASKS_KEY) || '[]'); } catch(e) {}
+    synced.push(task.id);
+    localStorage.setItem(GCAL_SYNCED_TASKS_KEY, JSON.stringify(synced));
+    return true;
+  } catch(e) {
+    console.warn('Could not push task to Google Calendar:', e.message);
+    return false;
+  }
+}
+
+// Scans every task assigned to the current user and pushes any that are open,
+// have a due date, and haven't been synced yet. Runs on load, after realtime
+// task-assignment notifications, and right after creating a task for yourself.
+async function syncMyTasksToGoogleCalendar() {
+  if (!isGoogleCalendarConnected()) return;
+  const u = getCurrentUser();
+  if (!u) return;
+  let synced = [];
+  try { synced = JSON.parse(localStorage.getItem(GCAL_SYNCED_TASKS_KEY) || '[]'); } catch(e) {}
+  const pending = CLIENT_TASKS.filter(t => t.assigned_to_email === u.email && t.status !== 'done' && t.due_date && !synced.includes(t.id));
+  for (const t of pending) { await pushTaskToGoogleCalendar(t); }
+  if (pending.length > 0) showToast(`${pending.length} task${pending.length===1?'':'s'} synced to your Google Calendar.`, 'success');
+}
+
+function renderGoogleCalendarStatus() {
+  const el = document.getElementById('gcalStatusPill');
+  if (!el) return;
+  if (!isGoogleCalendarConfigured()) { el.innerHTML = ''; return; }
+  el.innerHTML = isGoogleCalendarConnected()
+    ? `<span class="portfolio-chip chip-addon">📅 Google Calendar connected</span> <a href="#" onclick="disconnectGoogleCalendar();return false;" style="font-size:11px;color:var(--text3);margin-left:6px">Disconnect</a>`
+    : `<button class="btn btn-ghost btn-sm" onclick="connectGoogleCalendar()">📅 Connect Google Calendar</button>`;
+}
+
+// ════════════════════════════════════════════════════════════════════════
 // ROLES & PERMISSIONS
 // Team members live in Supabase table "team_members" (falls back to
 // localStorage if that table doesn't exist yet in your project — see the
@@ -4288,11 +4447,27 @@ function handleAvatarUpload(event) {
 }
 
 // ─── Team member / allowlist persistence (Supabase, with localStorage fallback) ──
+// Roles must exactly match 'user' / 'superuser' / 'admin' for permissions and the
+// dropdown's "selected" state to work — this tolerates whatever variant ended up
+// in the database (spaces, capitalization, hyphens) and maps it to the canonical form.
+function normalizeRole(raw) {
+  const r = String(raw || '').trim().toLowerCase().replace(/[\s_-]+/g, '');
+  if (r === 'admin') return 'admin';
+  if (r === 'superuser' || r === 'super') return 'superuser';
+  return 'user';
+}
+
 async function loadTeamMembers() {
   try {
     const rows = await sbSelect('team_members', 'order=name.asc');
-    TEAM_MEMBERS = rows.map(r => ({ id: r.id, name: r.name, email: r.email || '', role: r.role, avatar: r.avatar || '' }));
+    TEAM_MEMBERS = rows.map(r => ({ id: r.id, name: r.name, email: r.email || '', role: normalizeRole(r.role), avatar: r.avatar || '' }));
     localStorage.setItem(TEAM_CACHE_KEY, JSON.stringify(TEAM_MEMBERS));
+    // Self-heal: if a role was stored in a non-canonical format (e.g. "super user"
+    // with a space, instead of "superuser"), write the canonical value straight
+    // back to Supabase so the table and the in-app dropdowns never drift apart.
+    rows.forEach((r, i) => {
+      if (r.role !== TEAM_MEMBERS[i].role) persistTeamMember(TEAM_MEMBERS[i]).catch(() => {});
+    });
   } catch(e) {
     console.warn('team_members table unavailable, using local cache:', e.message);
     try { TEAM_MEMBERS = JSON.parse(localStorage.getItem(TEAM_CACHE_KEY) || '[]'); }
@@ -4325,7 +4500,7 @@ async function addTeamMember() {
     return;
   }
   const roleLabel = roleEl.value === 'admin' ? 'Admin' : roleEl.value === 'superuser' ? 'Super user' : 'User';
-  const member = { id: (crypto.randomUUID ? crypto.randomUUID() : 'm_' + Date.now()), name: name || email.split('@')[0], email, role: roleEl.value };
+  const member = { id: (crypto.randomUUID ? crypto.randomUUID() : 'm_' + Date.now()), name: name || email.split('@')[0], email, role: normalizeRole(roleEl.value) };
   const saved = await persistTeamMember(member);
   if (!saved) {
     showToast(`Could not save ${email} to the database. Check your connection and try again — nothing was added.`, 'error');
@@ -4343,7 +4518,7 @@ async function updateTeamMemberRole(id, role) {
   const m = TEAM_MEMBERS.find(x => x.id === id);
   if (!m) return;
   const prevRole = m.role;
-  m.role = role;
+  m.role = normalizeRole(role);
   const saved = await persistTeamMember(m);
   if (!saved) {
     m.role = prevRole;
@@ -4352,7 +4527,7 @@ async function updateTeamMemberRole(id, role) {
     return;
   }
   const cur = getCurrentUser();
-  if (cur && cur.id === id) { cur.role = role; applyPermissionsToUI(); }
+  if (cur && cur.id === id) { cur.role = m.role; applyPermissionsToUI(); }
 }
 
 async function removeTeamMember(id) {
@@ -4515,6 +4690,9 @@ async function authorizeSession(session) {
   hideLoginGate();
   applyPermissionsToUI();
   loadNotifications();
+  subscribeToRealtimeNotifications();
+  requestNotificationPermissionOnce();
+  initGoogleCalendarClient();
   bootApp();
 }
 
@@ -5696,6 +5874,7 @@ async function loadClientNotesTasks() {
     try { CLIENT_TASKS = JSON.parse(localStorage.getItem(CLIENT_TASKS_CACHE_KEY) || '[]'); } catch(e2) { CLIENT_TASKS = []; }
   }
   rebuildHomePage();
+  syncMyTasksToGoogleCalendar();
 }
 
 async function loadNotifications() {
@@ -5776,6 +5955,53 @@ async function markAllNotificationsRead(e) {
   renderNotificationList();
 }
 
+// ─── REALTIME PUSH — notifications land instantly instead of waiting for a
+// page reload. Requires Realtime to be turned on for the "notifications"
+// table in Supabase (Database → Replication in the Supabase dashboard). ────
+let notificationsRealtimeChannel = null;
+
+function subscribeToRealtimeNotifications() {
+  const u = getCurrentUser();
+  if (!u || !u.email || !supabaseClient) return;
+  if (notificationsRealtimeChannel) { try { supabaseClient.removeChannel(notificationsRealtimeChannel); } catch(e) {} }
+  notificationsRealtimeChannel = supabaseClient
+    .channel('notifications-' + u.email)
+    .on('postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'notifications', filter: `recipient_email=eq.${u.email}` },
+      (payload) => handleIncomingNotification(payload.new)
+    )
+    .subscribe();
+}
+
+function handleIncomingNotification(n) {
+  if (!n) return;
+  if (NOTIFICATIONS.some(x => x.id === n.id)) return; // already have it (e.g. we created it ourselves)
+  NOTIFICATIONS.unshift(n);
+  renderNotificationBell();
+  const panel = document.getElementById('notificationPanel');
+  if (panel && panel.style.display !== 'none') renderNotificationList();
+  showToast(n.message, 'info');
+  showDesktopNotification('Client Success Hub', n.message);
+  if (n.type === 'task_assigned') {
+    loadClientNotesTasks().then(syncMyTasksToGoogleCalendar);
+  }
+}
+
+// Native OS-level popup, in addition to the in-app toast/bell, so a task or
+// tag lands on-screen right away even if the tab isn't focused.
+function requestNotificationPermissionOnce() {
+  if (typeof Notification === 'undefined') return;
+  const askedKey = 'csh_notif_permission_asked_v1';
+  if (Notification.permission === 'default' && !localStorage.getItem(askedKey)) {
+    localStorage.setItem(askedKey, '1');
+    Notification.requestPermission();
+  }
+}
+function showDesktopNotification(title, body) {
+  if (typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+  try { new Notification(title, { body, icon: undefined }); } catch(e) {}
+}
+
 // ─── Client Notes & Tasks modal ────────────────────────────────────────────
 function openClientNotesTasksModal(clientName) {
   cntActiveClientName = clientName;
@@ -5803,6 +6029,7 @@ function switchCntTab(tab) {
   const tasksBtn = document.getElementById('cntTasksSubmitBtn');
   if (notesBtn) notesBtn.style.display = tab === 'notes' ? '' : 'none';
   if (tasksBtn) tasksBtn.style.display = tab === 'tasks' ? '' : 'none';
+  if (tab === 'tasks') renderGoogleCalendarStatus();
 }
 
 function renderCntTagPicker() {
@@ -5817,6 +6044,98 @@ function toggleCntTag(el, email) {
   el.classList.toggle('active');
   if (cntTaggedEmails.includes(email)) cntTaggedEmails = cntTaggedEmails.filter(e => e !== email);
   else cntTaggedEmails.push(email);
+}
+
+// ─── @mention autocomplete in the note textarea ────────────────────────────
+let mentionActiveIndex = -1;
+let mentionMatches = [];
+
+function getMentionQuery(ta) {
+  const caret = ta.selectionStart;
+  const upToCaret = ta.value.slice(0, caret);
+  const m = /(^|\s)@([\w.]*)$/.exec(upToCaret);
+  return m ? { query: m[2], start: caret - m[2].length - 1 } : null;
+}
+
+function handleNoteMentionInput(e) {
+  const ta = e.target;
+  const dd = document.getElementById('cntMentionDropdown');
+  const ctx = getMentionQuery(ta);
+  const u = getCurrentUser();
+  if (!ctx) { dd.style.display = 'none'; return; }
+  mentionMatches = TEAM_MEMBERS.filter(m => (!u || m.email !== u.email) && m.name.toLowerCase().includes(ctx.query.toLowerCase()));
+  if (mentionMatches.length === 0) { dd.style.display = 'none'; return; }
+  mentionActiveIndex = 0;
+  dd.innerHTML = mentionMatches.map((m, i) =>
+    `<div class="mention-item${i===0?' highlighted':''}" data-idx="${i}" onmousedown="event.preventDefault();selectMention(${i})">
+      <span>👤 ${escAttr(m.name)}</span><span class="mention-email">${escAttr(m.email)}</span>
+    </div>`
+  ).join('');
+  dd.style.display = '';
+  dd.dataset.mentionStart = ctx.start;
+}
+
+function handleNoteMentionKeydown(e) {
+  const dd = document.getElementById('cntMentionDropdown');
+  if (dd.style.display === 'none' || mentionMatches.length === 0) return;
+  if (e.key === 'ArrowDown') { e.preventDefault(); mentionActiveIndex = (mentionActiveIndex + 1) % mentionMatches.length; refreshMentionHighlight(); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); mentionActiveIndex = (mentionActiveIndex - 1 + mentionMatches.length) % mentionMatches.length; refreshMentionHighlight(); }
+  else if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); selectMention(mentionActiveIndex); }
+  else if (e.key === 'Escape') { dd.style.display = 'none'; }
+}
+
+function refreshMentionHighlight() {
+  document.querySelectorAll('#cntMentionDropdown .mention-item').forEach((el, i) => el.classList.toggle('highlighted', i === mentionActiveIndex));
+}
+
+function selectMention(idx) {
+  const member = mentionMatches[idx];
+  const dd = document.getElementById('cntMentionDropdown');
+  const ta = document.getElementById('cntNewNoteText');
+  if (!member || !ta) return;
+  const start = parseInt(dd.dataset.mentionStart || '0');
+  const caret = ta.selectionStart;
+  const before = ta.value.slice(0, start);
+  const after = ta.value.slice(caret);
+  const insert = `@${member.name} `;
+  ta.value = before + insert + after;
+  const newCaret = (before + insert).length;
+  ta.focus();
+  ta.setSelectionRange(newCaret, newCaret);
+  dd.style.display = 'none';
+  if (!cntTaggedEmails.includes(member.email)) {
+    cntTaggedEmails.push(member.email);
+    renderCntTagPicker();
+    document.querySelectorAll('#cntTagPicker .tag-chip').forEach(chip => {
+      if (chip.textContent.trim() === member.name) chip.classList.add('active');
+    });
+  }
+}
+
+document.addEventListener('click', (e) => {
+  const dd = document.getElementById('cntMentionDropdown');
+  const ta = document.getElementById('cntNewNoteText');
+  if (dd && dd.style.display !== 'none' && !dd.contains(e.target) && e.target !== ta) dd.style.display = 'none';
+});
+
+// Catches mentions typed out fully by hand (without using the dropdown) so
+// they still notify + get bolded, even if the picker/dropdown wasn't used.
+function parseMentionsFromText(text) {
+  const emails = [];
+  TEAM_MEMBERS.forEach(m => {
+    const re = new RegExp('@' + m.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'i');
+    if (re.test(text)) emails.push(m.email);
+  });
+  return emails;
+}
+
+function renderNoteTextWithMentions(text) {
+  let html = escAttr(text);
+  TEAM_MEMBERS.forEach(m => {
+    const re = new RegExp('@' + m.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'gi');
+    html = html.replace(re, `<span class="note-mention">@${escAttr(m.name)}</span>`);
+  });
+  return html;
 }
 
 function getClientNotes(clientName) {
@@ -5880,13 +6199,15 @@ async function addClientNote() {
   const text = ta.value.trim();
   if (!text) { showToast('Please write a note first.', 'warning'); ta.focus(); return; }
   const u = getCurrentUser();
+  const mentionedEmails = parseMentionsFromText(text);
+  const taggedEmails = Array.from(new Set([...cntTaggedEmails, ...mentionedEmails]));
   const note = {
     id: (crypto.randomUUID ? crypto.randomUUID() : 'n_' + Date.now()),
     client_name: cntActiveClientName,
     author_email: u ? u.email : '',
     author_name: u ? u.name : 'Guest',
     text,
-    tagged_emails: [...cntTaggedEmails],
+    tagged_emails: taggedEmails,
     created_at: new Date().toISOString(),
   };
   CLIENT_NOTES.unshift(note);
@@ -5920,7 +6241,7 @@ function renderClientNotesThread() {
       <div class="note-meta"><b>${escAttr(n.author_name)}</b> · ${fmtNoteTime(n.created_at)}${taggedNames ? ` · tagged ${escAttr(taggedNames)}` : ''}
         ${canEditNote ? `<span style="float:right"><a href="#" onclick="editClientNote('${n.id}');return false;" style="color:var(--orange);margin-right:10px;text-decoration:none">Edit</a><a href="#" onclick="deleteClientNote('${n.id}');return false;" style="color:var(--red);text-decoration:none">Delete</a></span>` : ''}
       </div>
-      <div class="note-text" id="noteText-${n.id}">${escAttr(n.text)}</div>
+      <div class="note-text" id="noteText-${n.id}">${renderNoteTextWithMentions(n.text)}</div>
     </div>`;
   }).join('');
 }
@@ -5991,6 +6312,9 @@ async function addClientTask() {
 
   if (assigneeEmail && assigneeEmail !== (u && u.email)) {
     await createNotification(assigneeEmail, 'task_assigned', `${u ? u.name : 'Someone'} assigned you a task on ${cntActiveClientName}: "${title}"`, cntActiveClientName);
+  } else if (task.due_date) {
+    // Assigned to yourself — push to your connected Google Calendar right away, no need to wait for a reload.
+    pushTaskToGoogleCalendar(task).then(ok => { if (ok) showToast('Also added to your Google Calendar.', 'success'); });
   }
 
   titleEl.value = '';
@@ -6015,6 +6339,7 @@ function renderClientTasksList() {
         <div class="task-title">${escAttr(t.title)}</div>
         <div class="task-meta">Assigned to ${escAttr(t.assigned_to_name || '—')}${t.due_date ? ' · Due ' + fmtDate(t.due_date) : ''}</div>
       </div>
+      ${t.due_date ? `<a href="${gcalQuickAddUrl(t)}" target="_blank" rel="noopener" class="row-action-btn" title="Add to Google Calendar">📅</a>` : ''}
       <button class="row-action-btn danger" onclick="deleteClientTask('${t.id}')">🗑️</button>
     </div>`).join('');
 }
