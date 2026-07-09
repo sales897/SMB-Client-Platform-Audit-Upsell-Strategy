@@ -11,6 +11,7 @@
 /* ─── RESET & BASE ─────────────────────────────────────────────────────── */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 :root {
+  color-scheme: dark;
   --bg:       #000000;
   --bg2:      #0a0a0a;
   --bg3:      #141414;
@@ -32,6 +33,7 @@
   --shadow:   0 4px 24px rgba(0,0,0,.5);
 }
 html[data-theme="light"] {
+  color-scheme: light;
   --bg:       #f7f6f4;
   --bg2:      #ffffff;
   --bg3:      #f1efec;
@@ -1825,6 +1827,39 @@ tr.hidden-row { display: none; }
     </div>
   </div>
 
+  <!-- COLLECTIONS: EDIT ACCOUNT MODAL -->
+  <div class="modal-overlay" id="editCollectionsModal">
+    <div class="modal wide">
+      <h3>✏️ Edit Account</h3>
+      <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr 1.2fr;gap:10px;align-items:end;margin-bottom:12px">
+        <div>
+          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Business Name</label>
+          <input type="text" id="colEditName" style="margin-bottom:0">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Amount ($)</label>
+          <input type="number" id="colEditAmount" min="0" step="0.01" style="margin-bottom:0">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px" id="colEditDateLabel">Due Date</label>
+          <input type="date" id="colEditDate" style="margin-bottom:0">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Resolved Date</label>
+          <input type="date" id="colEditResolvedDate" style="margin-bottom:0">
+        </div>
+        <div>
+          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Status</label>
+          <select id="colEditStatus"></select>
+        </div>
+      </div>
+      <div class="modal-btns">
+        <button class="btn btn-ghost" onclick="closeEditCollectionsModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveCollectionsEdit()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
   <!-- COLLECTIONS: COLUMN MAPPING MODAL (step 1 of import) -->
   <div class="modal-overlay" id="collectionsMappingModal">
     <div class="modal wide">
@@ -3433,12 +3468,17 @@ async function loadTeamMembers() {
 }
 
 async function persistTeamMember(member) {
-  localStorage.setItem(TEAM_CACHE_KEY, JSON.stringify(TEAM_MEMBERS));
-  try { await sbUpsert('team_members', member); }
-  catch(e) { console.warn('Could not save team member to Supabase (table may not exist yet):', e.message); }
+  try {
+    await sbUpsert('team_members', member);
+    localStorage.setItem(TEAM_CACHE_KEY, JSON.stringify(TEAM_MEMBERS));
+    return true;
+  } catch(e) {
+    console.warn('Could not save team member to Supabase:', e.message);
+    return false;
+  }
 }
 
-function addTeamMember() {
+async function addTeamMember() {
   if (!requirePermission('admin')) return;
   const nameEl = document.getElementById('newMemberName');
   const emailEl = document.getElementById('newMemberEmail');
@@ -3452,8 +3492,13 @@ function addTeamMember() {
   }
   const roleLabel = roleEl.value === 'admin' ? 'Admin' : roleEl.value === 'superuser' ? 'Super user' : 'User';
   const member = { id: (crypto.randomUUID ? crypto.randomUUID() : 'm_' + Date.now()), name: name || email.split('@')[0], email, role: roleEl.value };
+  const saved = await persistTeamMember(member);
+  if (!saved) {
+    showToast(`Could not save ${email} to the database. Check your connection and try again — nothing was added.`, 'error');
+    return;
+  }
   TEAM_MEMBERS.push(member);
-  persistTeamMember(member);
+  localStorage.setItem(TEAM_CACHE_KEY, JSON.stringify(TEAM_MEMBERS));
   nameEl.value = ''; emailEl.value = ''; roleEl.value = 'user';
   renderTeamUI();
   showToast(`${email} can now sign in (${roleLabel} access).`, 'success');
@@ -3463,8 +3508,15 @@ async function updateTeamMemberRole(id, role) {
   if (!requirePermission('admin')) { renderTeamUI(); return; }
   const m = TEAM_MEMBERS.find(x => x.id === id);
   if (!m) return;
+  const prevRole = m.role;
   m.role = role;
-  persistTeamMember(m);
+  const saved = await persistTeamMember(m);
+  if (!saved) {
+    m.role = prevRole;
+    renderTeamUI();
+    showToast('Could not save that role change. Check your connection and try again.', 'error');
+    return;
+  }
   const cur = getCurrentUser();
   if (cur && cur.id === id) { cur.role = role; applyPermissionsToUI(); }
 }
@@ -3589,10 +3641,17 @@ async function authorizeSession(session) {
   let match = TEAM_MEMBERS.find(m => (m.email || '').toLowerCase() === email.toLowerCase());
 
   if (!match && TEAM_MEMBERS.length === 0) {
-    // Nobody's been set up yet — this person becomes the first Admin automatically
-    match = { id: session.user.id, name: displayName, email, role: 'admin' };
-    TEAM_MEMBERS.push(match);
-    persistTeamMember(match);
+    // Nobody's visible to this session yet — attempt to self-bootstrap as the first Admin.
+    // This can still be correctly rejected by the database if the table isn't really
+    // empty (RLS enforces that), so we must confirm the write actually succeeded
+    // before treating this person as authorized.
+    const bootstrapMember = { id: session.user.id, name: displayName, email, role: 'admin' };
+    const saved = await persistTeamMember(bootstrapMember);
+    if (saved) {
+      match = bootstrapMember;
+      TEAM_MEMBERS.push(match);
+      localStorage.setItem(TEAM_CACHE_KEY, JSON.stringify(TEAM_MEMBERS));
+    }
   }
 
   if (!match) {
@@ -4186,6 +4245,52 @@ async function removeCollectionsAccount(id) {
   rebuildCollectionsPage();
 }
 
+let editingCollectionsId = null;
+function openEditCollectionsModal(id) {
+  if (!requirePermission('edit')) return;
+  const a = COLLECTIONS_ACCOUNTS.find(x => x.id === id);
+  if (!a) return;
+  editingCollectionsId = id;
+  const sel = document.getElementById('colEditStatus');
+  if (!sel.dataset.filled) {
+    sel.innerHTML = COLLECTIONS_STATUSES.map(s => `<option value="${s.key}">${s.label}</option>`).join('');
+    sel.dataset.filled = '1';
+  }
+  document.getElementById('colEditName').value = a.name;
+  document.getElementById('colEditAmount').value = a.amount;
+  document.getElementById('colEditDateLabel').textContent = a.type === 'outstanding' ? 'Due Date' : 'Last Attempt';
+  document.getElementById('colEditDate').value = a.date || '';
+  document.getElementById('colEditResolvedDate').value = a.resolvedDate || '';
+  sel.value = a.status;
+  document.getElementById('editCollectionsModal').classList.add('open');
+}
+function closeEditCollectionsModal() {
+  document.getElementById('editCollectionsModal').classList.remove('open');
+  editingCollectionsId = null;
+}
+function saveCollectionsEdit() {
+  const a = COLLECTIONS_ACCOUNTS.find(x => x.id === editingCollectionsId);
+  if (!a) return;
+  const nameEl = document.getElementById('colEditName');
+  const name = nameEl.value.trim();
+  if (!name) { showToast('Please enter a business name.', 'warning'); nameEl.focus(); return; }
+  const newStatus = document.getElementById('colEditStatus').value;
+  if (newStatus !== a.status) {
+    const user = getCurrentUser();
+    a.notes = a.notes || [];
+    a.notes.unshift({ author: user ? user.name : 'Guest', text: `Status changed: ${statusMeta(a.status).label} → ${statusMeta(newStatus).label}`, ts: new Date().toISOString(), system: true });
+  }
+  a.name = name;
+  a.amount = Number(document.getElementById('colEditAmount').value) || 0;
+  a.date = document.getElementById('colEditDate').value || '';
+  a.resolvedDate = document.getElementById('colEditResolvedDate').value || '';
+  if (newStatus === 'resolved' && !a.resolvedDate) a.resolvedDate = new Date().toISOString().slice(0,10);
+  a.status = newStatus;
+  persistCollectionsAccount(a);
+  closeEditCollectionsModal();
+  rebuildCollectionsPage();
+}
+
 let openNotesAccountId = null;
 function openCollectionsNotesModal(id) {
   const a = COLLECTIONS_ACCOUNTS.find(x => x.id === id);
@@ -4339,6 +4444,7 @@ function rebuildCollectionsTable() {
       `<td title="${(latestNote || '').replace(/"/g,'&quot;')}" style="color:var(--text2)">${noteShort}</td>`,
       `<td>
         <button class="row-action-btn" onclick="openCollectionsNotesModal('${a.id}')">📝 ${a.notes ? a.notes.length : 0}</button>
+        ${editable ? `<button class="row-action-btn" onclick="openEditCollectionsModal('${a.id}')">✏️</button>` : ''}
         ${editable ? `<button class="row-action-btn danger" onclick="removeCollectionsAccount('${a.id}')">🗑️</button>` : ''}
       </td>`,
     ];
