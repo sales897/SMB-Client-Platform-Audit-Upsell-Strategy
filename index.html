@@ -230,6 +230,11 @@ body {
 .kpi-val.red { color: var(--red); }
 .kpi-lbl { font-size: 12px; color: var(--text2); margin-top: 6px; }
 .kpi-sub { font-size: 11px; color: var(--text3); margin-top: 3px; }
+.kpi-glow-green {
+  border-color: rgba(34,197,94,.5);
+  box-shadow: 0 0 0 1px rgba(34,197,94,.3), 0 0 24px rgba(34,197,94,.35);
+}
+.kpi-glow-green::before { background: linear-gradient(90deg, var(--green), #16a34a); }
 .kpi-trend { position: absolute; top: 18px; right: 18px; font-size: 11px; font-weight: 700; }
 .kpi-trend.up { color: var(--green); }
 .kpi-trend.down { color: var(--red); }
@@ -946,7 +951,7 @@ tr.hidden-row { display: none; }
     <div class="nav-label">Performance</div>
     <div class="nav-item" onclick="showPage('voice')">
       <span class="icon">🎙️</span> Voice Agent
-      <span class="badge red">31</span>
+      <span class="badge red" id="navVoiceBadge">0</span>
     </div>
     <div class="nav-item" onclick="showPage('textagent')">
       <span class="icon">💬</span> Text Agent
@@ -1112,6 +1117,7 @@ tr.hidden-row { display: none; }
       <div class="kpi"><div class="kpi-icon">👥</div><div class="kpi-val orange" id="home-total-clients">0</div><div class="kpi-lbl">Unique Clients</div><div class="kpi-sub">Across SMB, White Label, Support</div></div>
       <div class="kpi"><div class="kpi-icon">💰</div><div class="kpi-val" id="home-ad-budget">$0</div><div class="kpi-lbl">Total Ad Spend Budget</div></div>
       <div class="kpi"><div class="kpi-icon">🧾</div><div class="kpi-val" id="home-collections-owed">$0</div><div class="kpi-lbl">Outstanding + Card Fails</div></div>
+      <div class="kpi kpi-glow-green"><div class="kpi-icon">✅</div><div class="kpi-val green" id="home-collected">$0</div><div class="kpi-lbl">Amount Collected</div><div class="kpi-sub">Payment Plan &amp; Resolved, all Collections</div></div>
       <div class="kpi"><div class="kpi-icon">⚠️</div><div class="kpi-val red" id="home-needs-attention">0</div><div class="kpi-lbl">Need Attention Today</div></div>
     </div>
 
@@ -1420,6 +1426,30 @@ tr.hidden-row { display: none; }
           <tbody id="taBreakdownBody"></tbody>
         </table>
       </div>
+    </div>
+
+    <div class="section-hd" style="margin-top:8px"><div class="section-num" style="background:var(--blue)">💬</div><h2 style="color:var(--blue)">Client Activity &amp; Notes</h2></div>
+    <div class="section-div" style="background:linear-gradient(90deg,var(--blue),transparent)"></div>
+    <div class="card">
+      <div class="card-header">
+        <div><div class="card-title">Yelp / Google LSA / Thumbtack Notes</div><div class="card-sub" id="ta-notes-sub">Pulled from comments attached to these columns during upload, across SMB, White Label, and Support</div></div>
+      </div>
+      <div class="table-controls">
+        <input type="text" class="search-box" id="taNotesSearch" placeholder="Search clients..." oninput="rebuildTextAgentNotes()">
+        <div style="display:flex;gap:6px;flex-wrap:wrap" id="taNotesProductPills">
+          <button class="filter-pill active" onclick="setTextAgentProductFilter('all',this)">All Products</button>
+          <button class="filter-pill" onclick="setTextAgentProductFilter('yelp',this)">⭐ Yelp</button>
+          <button class="filter-pill" onclick="setTextAgentProductFilter('google_lsa',this)">🔍 Google LSA</button>
+          <button class="filter-pill" onclick="setTextAgentProductFilter('thumbtack',this)">📌 Thumbtack</button>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap" id="taNotesPortfolioPills">
+          <button class="filter-pill active" onclick="setTextAgentPortfolioFilter('all',this)">All Portfolios</button>
+          <button class="filter-pill" onclick="setTextAgentPortfolioFilter('smb',this)">📊 SMB</button>
+          <button class="filter-pill" onclick="setTextAgentPortfolioFilter('whitelabel',this)">🏷️ White Label</button>
+          <button class="filter-pill" onclick="setTextAgentPortfolioFilter('support',this)">📊 Support</button>
+        </div>
+      </div>
+      <div id="taNotesList"></div>
     </div>
 
     <div class="card" style="margin-top:20px;display:none" id="taClientListCard">
@@ -1802,6 +1832,7 @@ tr.hidden-row { display: none; }
     <div class="kpi-row">
       <div class="kpi"><div class="kpi-icon">🧾</div><div class="kpi-val orange" id="col-total">0</div><div class="kpi-lbl" id="col-total-lbl">Accounts</div></div>
       <div class="kpi"><div class="kpi-icon">💰</div><div class="kpi-val" id="col-amount">$0</div><div class="kpi-lbl" id="col-amount-lbl">Total Owed</div></div>
+      <div class="kpi kpi-glow-green"><div class="kpi-icon">✅</div><div class="kpi-val green" id="col-collected">$0</div><div class="kpi-lbl">Amount Collected</div><div class="kpi-sub">From Payment Plan &amp; Resolved accounts</div></div>
       <div class="kpi"><div class="kpi-icon">⚠️</div><div class="kpi-val red" id="col-needs">0</div><div class="kpi-lbl">Needs Attention</div><div class="kpi-sub">Pending, In Review, or Escalated</div></div>
       <div class="kpi"><div class="kpi-icon">✅</div><div class="kpi-val green" id="col-resolved">0</div><div class="kpi-lbl">Resolved</div></div>
     </div>
@@ -2442,6 +2473,7 @@ function renderHomeKPIs() {
   const totalClients = Object.keys(buildMergedClients()).length;
   const adBudget = AD_SPEND_BUSINESSES.reduce((s, b) => s + (b.budget || 0), 0);
   const collectionsOwed = COLLECTIONS_ACCOUNTS.reduce((s, a) => s + (a.amount || 0), 0);
+  const collected = COLLECTIONS_ACCOUNTS.filter(a => ['paymentplan', 'resolved'].includes(a.status)).reduce((s, a) => s + (a.amount || 0), 0);
   const needsAttention = COLLECTIONS_ACCOUNTS.filter(a => ['pending', 'inreview', 'escalated'].includes(a.status)).length
     + AD_SPEND_BUSINESSES.filter(b => b.promo === 'Yes').length;
 
@@ -2449,6 +2481,7 @@ function renderHomeKPIs() {
   set('home-total-clients', totalClients);
   set('home-ad-budget', fmtMoney(adBudget));
   set('home-collections-owed', fmtMoney(collectionsOwed));
+  set('home-collected', fmtMoney(collected));
   set('home-needs-attention', needsAttention);
 }
 
@@ -2528,6 +2561,7 @@ function rebuildVoicePage() {
 
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
   set('va-using', using.length);
+  set('navVoiceBadge', using.length);
   set('va-using-pct', `${pct}% of all clients`);
   set('va-not-using', notUsing.length);
   set('va-adoption-pct', `${pct}%`);
@@ -2651,6 +2685,65 @@ function rebuildTextAgentPage() {
       </tr>`;
     }).join('');
   }
+
+  rebuildTextAgentNotes();
+}
+
+let textAgentProductFilter = 'all';
+let textAgentPortfolioFilter = 'all';
+
+function setTextAgentProductFilter(key, btn) {
+  textAgentProductFilter = key;
+  document.querySelectorAll('#taNotesProductPills .filter-pill').forEach(p => p.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  rebuildTextAgentNotes();
+}
+function setTextAgentPortfolioFilter(pk, btn) {
+  textAgentPortfolioFilter = pk;
+  document.querySelectorAll('#taNotesPortfolioPills .filter-pill').forEach(p => p.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  rebuildTextAgentNotes();
+}
+
+function rebuildTextAgentNotes() {
+  const wrap = document.getElementById('taNotesList');
+  if (!wrap) return;
+  const q = (document.getElementById('taNotesSearch') || {}).value?.toLowerCase().trim() || '';
+  const productKeys = textAgentProductFilter === 'all' ? TEXT_AGENT_PRODUCTS.map(p => p.key) : [textAgentProductFilter];
+
+  let entries = [];
+  getAllClientsWithPortfolio().forEach(({ client: c, pk }) => {
+    if (textAgentPortfolioFilter !== 'all' && pk !== textAgentPortfolioFilter) return;
+    if (!c.cellNotes) return;
+    productKeys.forEach(key => {
+      if (c.cellNotes[key]) {
+        entries.push({ name: c.name, pk, productKey: key, note: c.cellNotes[key] });
+      }
+    });
+  });
+  if (q) entries = entries.filter(e => (e.name || '').toLowerCase().includes(q));
+
+  if (entries.length === 0) {
+    wrap.innerHTML = emptyStateHTML({
+      icon: '💬',
+      title: 'No notes yet',
+      sub: 'Clients show up here automatically when a comment is attached to their Yelp, Google LSA, or Thumbtack column during an Excel upload, in any of the three portfolios.',
+    });
+    return;
+  }
+
+  wrap.innerHTML = entries.map(e => {
+    const meta = TA_PORTFOLIO_META[e.pk];
+    const product = TEXT_AGENT_PRODUCTS.find(p => p.key === e.productKey);
+    return `<div class="support-item">
+      <div class="support-avatar" style="background:var(--bg4);color:var(--blue)">${product.icon}</div>
+      <div class="support-info">
+        <div class="support-name">${escAttr(e.name)}</div>
+        <div class="support-detail">${product.label} · ${escAttr(e.note)}</div>
+      </div>
+      <span class="portfolio-chip ${meta.chip}">${meta.label}</span>
+    </div>`;
+  }).join('');
 }
 
 function showTextAgentClientList(productKey, pk) {
@@ -4630,6 +4723,7 @@ function rebuildCollectionsPage() {
   const list = COLLECTIONS_ACCOUNTS.filter(a => a.type === activeCollectionsType);
   set('col-total', list.length);
   set('col-amount', fmtMoney(list.reduce((s,a) => s + (a.amount || 0), 0)));
+  set('col-collected', fmtMoney(list.filter(a => ['paymentplan','resolved'].includes(a.status)).reduce((s,a) => s + (a.amount || 0), 0)));
   set('col-needs', list.filter(a => ['pending','inreview','escalated'].includes(a.status)).length);
   set('col-resolved', list.filter(a => a.status === 'resolved').length);
   set('colCountSub', `${list.length} account${list.length === 1 ? '' : 's'}`);
