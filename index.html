@@ -2625,6 +2625,15 @@ let C = {
   tooltipBg: '#0a0a0a', tooltipBorder: '#272727', tooltipTitle: '#f0f0f0', axisLabel: '#a3a3a3',
 };
 
+// Canvas/Chart.js can't render "var(--x)" strings directly — resolve to the actual computed color.
+function resolveCssColor(c) {
+  if (typeof c !== 'string') return c;
+  const m = /^var\((--[a-zA-Z0-9-]+)\)$/.exec(c.trim());
+  if (!m) return c;
+  const resolved = getComputedStyle(document.documentElement).getPropertyValue(m[1]).trim();
+  return resolved || c;
+}
+
 function refreshChartColors() {
   const isLight = document.documentElement.getAttribute('data-theme') === 'light';
   if (isLight) {
@@ -5250,7 +5259,7 @@ function rebuildCollectionsCharts() {
       type: 'doughnut',
       data: {
         labels: present.map(x => x.s.label),
-        datasets: [{ data: present.map(x => x.count), backgroundColor: present.map(x => x.s.color), borderWidth: 3, borderColor: C.tooltipBg, hoverOffset: 8 }],
+        datasets: [{ data: present.map(x => x.count), backgroundColor: present.map(x => resolveCssColor(x.s.color)), borderWidth: 3, borderColor: C.tooltipBg, hoverOffset: 8 }],
       },
       options: {
         responsive: true, maintainAspectRatio: false, cutout: '68%',
@@ -5281,7 +5290,7 @@ function rebuildCollectionsCharts() {
           labels: present.map(x => x.s.label),
           datasets: [{
             data: present.map(x => x.amount),
-            backgroundColor: present.map(x => x.s.color), borderRadius: { topRight: 6, bottomRight: 6 }, borderSkipped: 'left', barPercentage: 0.65,
+            backgroundColor: present.map(x => resolveCssColor(x.s.color)), borderRadius: { topRight: 6, bottomRight: 6 }, borderSkipped: 'left', barPercentage: 0.65,
           }],
         },
         options: {
