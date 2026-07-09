@@ -424,6 +424,17 @@ body {
 }
 .export-csv-btn:hover { border-color: var(--green); color: var(--green); }
 
+/* ─── SHARED FORM FIELD STYLES ──────────────────────────────────────────────
+   Consolidates what used to be identical inline styles repeated 40+ times
+   across every "Add X" form (Ad Spend, Collections, Team, Products, etc.) */
+.field-label { font-size: 11px; color: var(--text3); display: block; margin-bottom: 5px; }
+.field-input, .field-select {
+  width: 100%; padding: 9px 12px; background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--text); font-size: 13px; outline: none; transition: border-color .2s;
+}
+.field-input:focus, .field-select:focus { border-color: var(--orange); }
+.field-input::placeholder { color: var(--text3); }
+
 /* ─── LOGIN GATE ───────────────────────────────────────────────────────────── */
 .login-gate {
   position: fixed; inset: 0; z-index: 5000;
@@ -1548,16 +1559,16 @@ tr.hidden-row { display: none; }
       </div>
       <div style="display:grid;grid-template-columns:1fr 90px 1fr 1fr;gap:10px;align-items:end;margin-bottom:14px">
         <div>
-          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Product Name</label>
-          <input type="text" id="newProductName" placeholder="e.g. SMS Marketing" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+          <label class="field-label">Product Name</label>
+          <input type="text" id="newProductName" placeholder="e.g. SMS Marketing" class="field-input">
         </div>
         <div>
-          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Icon</label>
+          <label class="field-label">Icon</label>
           <input type="text" id="newProductIcon" placeholder="📦" maxlength="2" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;text-align:center">
         </div>
         <div>
-          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Priority</label>
-          <select id="newProductPriority" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+          <label class="field-label">Priority</label>
+          <select id="newProductPriority" class="field-input">
             <option value="high">🔥 High Priority</option>
             <option value="medium" selected>Medium Priority</option>
             <option value="low">Targeted Priority</option>
@@ -1566,8 +1577,8 @@ tr.hidden-row { display: none; }
         <button class="btn btn-primary" onclick="addProduct()">＋ Add Product</button>
       </div>
       <div>
-        <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Upsell Description <span style="color:var(--text3)">(optional — shown on the Upsell Playbook card)</span></label>
-        <input type="text" id="newProductDesc" placeholder="e.g. not using — new product launch" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+        <label class="field-label">Upsell Description <span style="color:var(--text3)">(optional — shown on the Upsell Playbook card)</span></label>
+        <input type="text" id="newProductDesc" placeholder="e.g. not using — new product launch" class="field-input">
       </div>
     </div>
 
@@ -1602,24 +1613,24 @@ tr.hidden-row { display: none; }
       </div>
       <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr 1.2fr;gap:10px;align-items:end;margin-bottom:10px">
         <div>
-          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Business Name</label>
-          <input type="text" id="asName" placeholder="e.g. Summit Roofing Co." style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+          <label class="field-label">Business Name</label>
+          <input type="text" id="asName" placeholder="e.g. Summit Roofing Co." class="field-input">
         </div>
         <div>
-          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Budget ($/mo)</label>
-          <input type="number" id="asBudget" placeholder="2500" min="0" step="1" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+          <label class="field-label">Budget ($/mo)</label>
+          <input type="number" id="asBudget" placeholder="2500" min="0" step="1" class="field-input">
         </div>
         <div>
-          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Watermark ($)</label>
-          <input type="number" id="asWatermark" placeholder="1000" min="0" step="1" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+          <label class="field-label">Watermark ($)</label>
+          <input type="number" id="asWatermark" placeholder="1000" min="0" step="1" class="field-input">
         </div>
         <div>
-          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Start Date</label>
-          <input type="date" id="asStartDate" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+          <label class="field-label">Start Date</label>
+          <input type="date" id="asStartDate" class="field-input">
         </div>
         <div>
-          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Promo Eligible</label>
-          <select id="asPromo" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+          <label class="field-label">Promo Eligible</label>
+          <select id="asPromo" class="field-input">
             <option value="Yes">Yes</option>
             <option value="No">No</option>
             <option value="Already Using">Already Using</option>
@@ -1628,12 +1639,12 @@ tr.hidden-row { display: none; }
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end">
         <div>
-          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Add-Ons <span style="color:var(--text3)">(comma-separated)</span></label>
-          <input type="text" id="asAddons" placeholder="e.g. Rank Tracker, Extra Landing Page" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+          <label class="field-label">Add-Ons <span style="color:var(--text3)">(comma-separated)</span></label>
+          <input type="text" id="asAddons" placeholder="e.g. Rank Tracker, Extra Landing Page" class="field-input">
         </div>
         <div>
-          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Recommendations</label>
-          <input type="text" id="asRecs" placeholder="e.g. Increase budget 20% after 30 days" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+          <label class="field-label">Recommendations</label>
+          <input type="text" id="asRecs" placeholder="e.g. Increase budget 20% after 30 days" class="field-input">
         </div>
         <button class="btn btn-primary" onclick="addAdSpendBusiness()">＋ Add Business</button>
       </div>
@@ -1670,23 +1681,23 @@ tr.hidden-row { display: none; }
       <h3>✏️ Edit Business</h3>
       <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr 1.2fr;gap:10px;align-items:end;margin-bottom:12px">
         <div>
-          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Business Name</label>
+          <label class="field-label">Business Name</label>
           <input type="text" id="asEditName" style="margin-bottom:0">
         </div>
         <div>
-          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Budget ($/mo)</label>
+          <label class="field-label">Budget ($/mo)</label>
           <input type="number" id="asEditBudget" min="0" step="1" style="margin-bottom:0">
         </div>
         <div>
-          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Watermark ($)</label>
+          <label class="field-label">Watermark ($)</label>
           <input type="number" id="asEditWatermark" min="0" step="1" style="margin-bottom:0">
         </div>
         <div>
-          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Start Date</label>
+          <label class="field-label">Start Date</label>
           <input type="date" id="asEditStartDate" style="margin-bottom:0">
         </div>
         <div>
-          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Promo Eligible</label>
+          <label class="field-label">Promo Eligible</label>
           <select id="asEditPromo">
             <option value="Yes">Yes</option>
             <option value="No">No</option>
@@ -1694,9 +1705,9 @@ tr.hidden-row { display: none; }
           </select>
         </div>
       </div>
-      <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Add-Ons <span style="color:var(--text3)">(comma-separated)</span></label>
+      <label class="field-label">Add-Ons <span style="color:var(--text3)">(comma-separated)</span></label>
       <input type="text" id="asEditAddons">
-      <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Recommendations</label>
+      <label class="field-label">Recommendations</label>
       <textarea id="asEditRecs" rows="3" style="width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;margin-bottom:14px;resize:vertical;font-family:inherit"></textarea>
       <div class="modal-btns">
         <button class="btn btn-ghost" onclick="closeEditAdSpendModal()">Cancel</button>
@@ -1770,24 +1781,24 @@ tr.hidden-row { display: none; }
       </div>
       <div style="display:grid;grid-template-columns:1.3fr 0.85fr 0.85fr 0.85fr 0.85fr auto;gap:10px;align-items:end">
         <div>
-          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Business Name</label>
-          <input type="text" id="colName" placeholder="e.g. Summit Roofing Co." style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+          <label class="field-label">Business Name</label>
+          <input type="text" id="colName" placeholder="e.g. Summit Roofing Co." class="field-input">
         </div>
         <div>
-          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Amount ($)</label>
-          <input type="number" id="colAmount" placeholder="450" min="0" step="0.01" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+          <label class="field-label">Amount ($)</label>
+          <input type="number" id="colAmount" placeholder="450" min="0" step="0.01" class="field-input">
         </div>
         <div>
-          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px" id="colDateLabel">Due Date</label>
-          <input type="date" id="colDate" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+          <label class="field-label" id="colDateLabel">Due Date</label>
+          <input type="date" id="colDate" class="field-input">
         </div>
         <div>
-          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Resolved Date</label>
-          <input type="date" id="colResolvedDate" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+          <label class="field-label">Resolved Date</label>
+          <input type="date" id="colResolvedDate" class="field-input">
         </div>
         <div>
-          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Status</label>
-          <select id="colStatus" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none"></select>
+          <label class="field-label">Status</label>
+          <select id="colStatus" class="field-input"></select>
         </div>
         <button class="btn btn-primary" onclick="addCollectionsAccount()">＋ Add Account</button>
       </div>
@@ -1833,23 +1844,23 @@ tr.hidden-row { display: none; }
       <h3>✏️ Edit Account</h3>
       <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr 1.2fr;gap:10px;align-items:end;margin-bottom:12px">
         <div>
-          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Business Name</label>
+          <label class="field-label">Business Name</label>
           <input type="text" id="colEditName" style="margin-bottom:0">
         </div>
         <div>
-          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Amount ($)</label>
+          <label class="field-label">Amount ($)</label>
           <input type="number" id="colEditAmount" min="0" step="0.01" style="margin-bottom:0">
         </div>
         <div>
-          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px" id="colEditDateLabel">Due Date</label>
+          <label class="field-label" id="colEditDateLabel">Due Date</label>
           <input type="date" id="colEditDate" style="margin-bottom:0">
         </div>
         <div>
-          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Resolved Date</label>
+          <label class="field-label">Resolved Date</label>
           <input type="date" id="colEditResolvedDate" style="margin-bottom:0">
         </div>
         <div>
-          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Status</label>
+          <label class="field-label">Status</label>
           <select id="colEditStatus"></select>
         </div>
       </div>
@@ -1906,16 +1917,16 @@ tr.hidden-row { display: none; }
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 160px 120px;gap:10px;align-items:end">
         <div>
-          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Email <span style="color:var(--orange)">(required — this is their login)</span></label>
-          <input type="text" id="newMemberEmail" placeholder="jordan@getniche.ai" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+          <label class="field-label">Email <span style="color:var(--orange)">(required — this is their login)</span></label>
+          <input type="text" id="newMemberEmail" placeholder="jordan@getniche.ai" class="field-input">
         </div>
         <div>
-          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Name <span style="color:var(--text3)">(optional — fills in automatically on first sign-in)</span></label>
-          <input type="text" id="newMemberName" placeholder="e.g. Jordan Lee" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+          <label class="field-label">Name <span style="color:var(--text3)">(optional — fills in automatically on first sign-in)</span></label>
+          <input type="text" id="newMemberName" placeholder="e.g. Jordan Lee" class="field-input">
         </div>
         <div>
-          <label style="font-size:11px;color:var(--text3);display:block;margin-bottom:5px">Role</label>
-          <select id="newMemberRole" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none">
+          <label class="field-label">Role</label>
+          <select id="newMemberRole" class="field-input">
             <option value="user">User — view only</option>
             <option value="superuser">Super user — upload & edit</option>
             <option value="admin">Admin — full access</option>
