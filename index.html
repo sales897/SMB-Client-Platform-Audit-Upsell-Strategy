@@ -1268,7 +1268,7 @@ tr.hidden-row { display: none; }
       <span class="icon">🚀</span> Upsell Playbook
     </div>
     <div class="nav-item" onclick="showPage('action')">
-      <span class="icon">🎯</span> Client Success Playbook
+      <span class="icon">🎯</span> SuccessOS
     </div>
     <div class="nav-item" onclick="showPage('workflows')">
       <span class="icon">🔁</span> Workflows
@@ -2091,6 +2091,8 @@ tr.hidden-row { display: none; }
 
     <div class="grid-3" id="kpiHeroRow" style="margin-bottom:20px"></div>
 
+    <div id="coachingCornerContainer" style="margin-bottom:20px"></div>
+
     <div class="grid-2" style="margin-bottom:20px">
       <div class="card">
         <div class="card-header">
@@ -2114,7 +2116,7 @@ tr.hidden-row { display: none; }
     <div class="section-div"></div>
     <div id="actionPlanSnapshot" style="margin-bottom:20px"></div>
     <div id="actionPlanContainer"></div>
-    <div class="page-footer">Client Success Hub · Niche Inc. · Client Success Playbook</div>
+    <div class="page-footer">Client Success Hub · Niche Inc. · SuccessOS</div>
   </div>
 
   <div class="page" id="page-workflows">
@@ -2862,7 +2864,7 @@ const pageMeta = {
   voice:      { title: 'Voice Agent',          sub: 'Performance & activity flags' },
   textagent:  { title: 'Text Agent',           sub: 'Performance & messaging metrics' },
   upsell:     { title: 'Upsell Playbook',      sub: 'By product · prioritized action cards' },
-  action:     { title: 'Client Success Playbook', sub: 'Our KPIs, SOPs, and the plan to earn 5 stars on every one' },
+  action:     { title: 'SuccessOS', sub: 'The operating system for Client Success — playbooks, SOPs, KPIs, reporting, and coaching, all in one' },
   workflows:  { title: 'Workflows', sub: 'Automate the busywork — inactivity alerts and scheduled recurring tasks' },
   knowledge:  { title: 'Knowledge Base', sub: 'Docs, SOPs, and website content Nirvana can search and reference' },
   products:   { title: 'Manage Products',      sub: 'Add, remove, and configure your product catalog' },
@@ -3292,7 +3294,7 @@ function getWorkedTodayNames() {
 }
 
 // ─── Client Health Score ────────────────────────────────────────────────────
-// Combines the same risk factors the Client Success Playbook's Preempting
+// Combines the same risk factors the SuccessOS's Preempting
 // Risks SOP already names — declining engagement and billing friction — plus
 // task backlog, into one 0-100 score with a transparent, itemized breakdown
 // (never a black box). 100 = perfectly healthy; penalties stack.
@@ -4921,6 +4923,9 @@ const KPI_META = {
       'A single-product client stagnant for 90+ days — ripe for either expansion or quiet churn risk',
       'A seasonal client approaching their peak with no capacity conversation started yet',
     ],
+    cadence: 'Usage review monthly for every account; seasonal/vertical check-ins 4–6 weeks ahead of each client\'s known busy season; QBRs quarterly for any client on 2+ products.',
+    owner: 'Assigned CSM runs the review and outreach. If a flagged account goes two consecutive months without a resolved follow-up, it escalates to the Team Lead.',
+    escalation: 'If proactive outreach about a usage-trigger or seasonal check-in goes unanswered after 2 attempts within 5 business days, loop in the Team Lead and carry the account into the next Weekly Health Scan (see Preempting Risks SOP) so it isn\'t dropped.',
   },
   preempting: {
     label: 'Preempting Risks', short: 'Preempting Risks', icon: '🛡️', color: '#ef4444',
@@ -5158,6 +5163,44 @@ function rebuildKpiCharts() {
   }
 }
 
+// ─── COACHING CORNER ──────────────────────────────────────────────────────────
+// A rotating coaching tip pulled from the weakest-scoring KPI's own SOP steps.
+// Rotates daily (deterministic by day-of-year) so it stays consistent across
+// reloads the same day, and always points back at the real playbook for
+// whichever KPI needs the most attention right now.
+function rebuildCoachingCorner() {
+  const el = document.getElementById('coachingCornerContainer');
+  if (!el) return;
+
+  const scores = KPI_KEYS.map(k => getLatestKpiScore(k));
+  const weakestIdx = scores.indexOf(Math.min(...scores));
+  const weakestKey = KPI_KEYS[weakestIdx];
+  const meta = KPI_META[weakestKey];
+  const score = scores[weakestIdx];
+
+  const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
+  const tip = meta.sop[dayOfYear % meta.sop.length];
+
+  el.innerHTML = `
+    <div class="card" style="--kpi-accent:${meta.color};border-left:3px solid ${meta.color}">
+      <div class="card-header">
+        <div>
+          <div class="card-title">🎓 Coaching Corner</div>
+          <div class="card-sub">Today's focus, based on your lowest-scoring KPI</div>
+        </div>
+        <a href="#kpi-${weakestKey}" class="kpi-jump-link">Full SOP &amp; playbook ↓</a>
+      </div>
+      <div class="kpi-why-box">
+        <strong style="color:var(--text)">${meta.icon} ${meta.label}</strong> is currently sitting at ${score}/5 stars${trendBadgeHtml(weakestKey)}.
+        Here's one thing to work on today:
+      </div>
+      <div class="action-step" style="margin-top:10px">
+        <div class="step-num" style="background:${meta.color}">🎓</div>
+        <div class="step-body"><strong>${tip.title}</strong>${tip.body}</div>
+      </div>
+    </div>`;
+}
+
 // ─── ACTION PLAN ──────────────────────────────────────────────────────────────
 const phases = [
   { tag:'PHASE 1', title:'Audit & Prioritize', time:'📅 Weeks 1–2 · Immediate',
@@ -5186,6 +5229,7 @@ const phases = [
 function rebuildActionPlan() {
   rebuildKpiSummary();
   rebuildKpiHeroRow();
+  rebuildCoachingCorner();
   rebuildKpiPlaybooks();
   rebuildKpiCharts();
 
@@ -9809,6 +9853,149 @@ let editingKnowledgeId = null;
 
 const KB_CATEGORY_LABELS = { sop: '📋 SOP', docs: '📄 Docs', website: '🌐 Website', other: '📎 Other' };
 
+const CORE_SOP_VERSION = 1; // bump this to push updated SOP content to everyone on next load
+const CORE_SOP_DOCUMENTS = [
+  {
+    sop_key: 'core-kpi-anticipating',
+    title: 'SOP: Anticipating Client Needs',
+    category: 'sop',
+    content:
+`PURPOSE
+Proactively identify what a client will need next — more capacity, a new product, a process change — based on usage patterns, seasonal trends, and account signals, rather than only reacting once they ask.
+
+WHY THIS MATTERS
+Clients who feel "read" by their CSM are dramatically less likely to churn, and they expand the fastest. Waiting for the client to ask is the same as telling them we weren't paying attention. This is one of the three core SuccessOS KPIs — scored 1-5 stars on the SuccessOS page and tracked over time.
+
+OWNER: Client Success Rep assigned to the account.
+CADENCE: Weekly usage scan, monthly deep review, quarterly QBR for multi-product clients.
+
+PROCEDURE
+
+1. Monthly Usage Review
+   Pull adoption %, ad spend pacing, and lead volume trend for every account in your book. Flag any 20%+ dip or spike for follow-up that same week. Log the flag as a client note so it's visible to the rest of the team, not just in your head.
+
+2. Seasonal / Vertical Mapping
+   Know each client's busy season (roofing storms, HVAC summer, plumbing winter, restoration after storms) and build a simple per-client calendar note of when their peak hits. Reach out 4-6 weeks ahead of that peak with a capacity/budget check-in — don't wait for them to hit the wall first.
+
+3. Usage-Trigger Playbooks
+   Watch for specific usage patterns that predict a need before the client voices it. Example: Voice Agent call volume trending up 3 weeks in a row means they're approaching a routing ceiling — proactively suggest more capacity or adding Chat Widget to catch overflow, before they notice missed leads.
+
+4. Quarterly Business Reviews (QBRs)
+   For every client on 2+ products, schedule a QBR to walk through performance data and surface needs before they become a complaint. Bring the data, not just an agenda — adoption rate, ROI signal, and a specific recommendation for what's next.
+
+5. "Two Steps Ahead" Note Habit
+   Every client note should end with what you expect to be true next month — not just what happened this month. This turns note-writing into a forecasting habit, and makes account handoffs between reps far smoother because the next person inherits a forecast, not just a history.
+
+SIGNALS TO WATCH FOR
+- Ad spend consistently under-pacing (client may be about to ask "is this even working?")
+- A single-product client stagnant for 90+ days — ripe for either expansion or quiet churn risk
+- A seasonal client approaching their peak with no capacity conversation started yet
+
+ESCALATION
+If a usage-trigger signal is spotted but the assigned rep hasn't logged a follow-up note within 5 business days, the Team Lead should flag it directly with the rep at the next 1:1 — this KPI depends on habits staying consistent across the whole book, not just on the accounts that happen to be top of mind.`
+  },
+  {
+    sop_key: 'core-kpi-preempting',
+    title: 'SOP: Preempting Risks',
+    category: 'sop',
+    content:
+`PURPOSE
+Spot and neutralize account risk — churn, non-payment, dissatisfaction, technical failure — before it becomes a crisis. Treat early warning signals as action triggers, not just data points.
+
+WHY THIS MATTERS
+Almost every "surprise" churn or escalation had visible warning signs weeks earlier. Preempting risk is the difference between a calm QBR conversation and a last-minute save call. This is one of the three core SuccessOS KPIs — scored 1-5 stars on the SuccessOS page and tracked over time.
+
+OWNER: Client Success Rep assigned to the account, with Admin escalation for anything time-sensitive.
+CADENCE: Weekly health scan (every Monday), same-day response to any escalation-language or payment-risk signal.
+
+PROCEDURE
+
+1. Weekly Health Scan
+   Every Monday, review the Collections page (aging balances, card fails) and any account with 2+ "Needs Attention" notes logged. Assign an owner and a next action the same day — a flagged account with no owner by Tuesday is a process failure, not just bad luck.
+
+2. Zero-Usage Alarm
+   Any client with Voice Agent, Chat Widget, or Contact Form live but showing 0 activity in 14 days gets outreach that same week. A silent setup is a silent risk — either something's broken, or the client has quietly checked out, and both need to be caught early rather than discovered at renewal time.
+
+3. Escalation-Language Scan
+   When reading or logging client notes, watch for words like "cancel," "unhappy," "competitor," or "refund." Any note containing this language gets tagged to an Admin and gets a phone call within 24 hours — not an email. Tone and urgency matter more here than a written reply can convey.
+
+4. Payment Risk Triage
+   Any card fail or balance overdue 15+ days triggers the structured Collections workflow immediately, not an ad-hoc follow-up. Check the Collections page for current status and follow the standard escalation ladder there rather than improvising contact attempts.
+
+5. Renewal Calendar
+   Track every contract end date on the account. Start the renewal conversation 60 days out, not 6 days out — a renewal conversation that starts as a surprise is already starting from a position of risk.
+
+SIGNALS TO WATCH FOR
+- Declining engagement — fewer logins, slower replies, less note activity from the client's side
+- Any billing friction: a failed card, a late payment, pushback on an invoice
+- A request to "pause" anything, or a drop in ad spend with no explanation
+- Unusual silence from a normally responsive contact
+
+ESCALATION
+Escalation-language and payment-risk signals are same-day, not same-week. If a rep can't reach the client within 24 hours of an escalation-language flag, hand it to the Team Lead rather than letting it sit for a second attempt on the rep's own schedule.`
+  },
+  {
+    sop_key: 'core-kpi-solving',
+    title: 'SOP: Growth Opportunities (Proactive Expansion)',
+    category: 'sop',
+    content:
+`PURPOSE
+Proactively identify and present the next right product, upgrade, or expansion for a client — based on their results, usage trends, and unused capacity in the catalog — and put it in front of them before they ever have to ask what else is available.
+
+WHY THIS MATTERS
+Clients almost never ask "what else could I be doing?" on their own. If we wait for them to ask, we've already given up months of expansion revenue — and given them time to go looking somewhere else. Growth conversations that come from us, backed by their own results, land as expertise, not a sales pitch. This is one of the three core SuccessOS KPIs — scored 1-5 stars on the SuccessOS page and tracked over time.
+
+OWNER: Client Success Rep assigned to the account.
+CADENCE: Monthly whitespace review per client, dedicated quarterly growth conversation.
+
+PROCEDURE
+
+1. Monthly Whitespace Review
+   For every client, check which products in the catalog they're NOT using yet (the "Upsell Opportunity" list on the Upsell Playbook page) and rank by fit to their vertical and results so far. A whitespace review with no ranking is just a list — the ranking is what turns it into a plan.
+
+2. Results-Based Pitch
+   When a client's numbers are strong — high adoption, low untouched products, solid ROI on what they already have — package that performance into a specific next-product recommendation, not a generic "have you considered...". Lead with their own data.
+
+3. Trigger-Based Outreach
+   Watch for usage patterns that signal readiness. Example: a client hitting a call-volume ceiling on Voice Agent is a strong signal to proactively pitch Chat Widget or Contact Form to catch overflow, before they notice leads slipping through the cracks.
+
+4. Quarterly Growth Conversation
+   Separate from a health-check QBR: hold a dedicated conversation framed entirely around what growing further could look like for the client, using their own adoption and ROI data as the proof. Don't fold this into a general check-in — it deserves its own agenda.
+
+5. Track the Pitch, Not Just the Close
+   Log every proactive growth pitch as a client note — even the ones that get declined — so the team can see how many real opportunities are being surfaced, not just how many convert. A declined pitch that's logged is still evidence the KPI is being worked; an unlogged pitch, won or lost, is invisible.
+
+GROWTH SIGNALS TO WATCH FOR
+- A client fully adopted on one product with strong results but nothing else — a "single-product plateau" is the clearest sign they're ready for a second product, if we ask.
+- Usage or volume trending up on an existing product — hitting a ceiling usually means they're ready for the next one.
+- A growth trigger in their own business (new location, hiring, expansion) mentioned in a note, but not yet reflected in what they're using with us.
+
+ESCALATION
+This KPI is scored on pitches surfaced, not just deals closed — if a rep isn't logging any growth pitches for their book in a given month, that's a coaching conversation with the Team Lead, not a performance write-up.`
+  },
+];
+
+async function seedCoreSOPDocuments() {
+  for (const doc of CORE_SOP_DOCUMENTS) {
+    const existing = KNOWLEDGE_BASE.find(k => k.sop_key === doc.sop_key);
+    if (!existing) {
+      const entry = {
+        id: (crypto.randomUUID ? crypto.randomUUID() : 'kb_sop_' + Date.now() + Math.random().toString(16).slice(2)),
+        title: doc.title, category: doc.category, content: doc.content, source_url: null,
+        created_at: new Date().toISOString(), created_by: 'System', updated_at: new Date().toISOString(),
+        sop_key: doc.sop_key, sop_version: CORE_SOP_VERSION,
+      };
+      await persistKnowledgeEntry(entry);
+    } else if ((existing.sop_version || 0) < CORE_SOP_VERSION) {
+      existing.title = doc.title;
+      existing.content = doc.content;
+      existing.sop_version = CORE_SOP_VERSION;
+      existing.updated_at = new Date().toISOString();
+      await persistKnowledgeEntry(existing);
+    }
+  }
+}
+
 async function loadKnowledgeBase() {
   try {
     KNOWLEDGE_BASE = await sbSelect('knowledge_base');
@@ -9817,6 +10004,7 @@ async function loadKnowledgeBase() {
     console.warn('knowledge_base table unavailable, using local cache:', e.message);
     try { KNOWLEDGE_BASE = JSON.parse(localStorage.getItem(KNOWLEDGE_CACHE_KEY) || '[]'); } catch(e2) { KNOWLEDGE_BASE = []; }
   }
+  await seedCoreSOPDocuments();
   rebuildKnowledgePage();
 }
 
@@ -10087,8 +10275,8 @@ const CHART_REGISTRY_FOR_AI = {
   adspend_promo_eligibility:      { canvas: 'adSpendPromoDonut',     page: 'adspend',    label: 'Ad Spend — Promo Eligibility',        rebuild: () => rebuildAdSpendCharts() },
   collections_amount_by_status:   { canvas: 'collectionsAmountBar',  page: 'collections',label: 'Collections — Amount by Status',      rebuild: () => rebuildCollectionsCharts() },
   collections_accounts_by_status: { canvas: 'collectionsStatusDonut',page: 'collections',label: 'Collections — Accounts by Status',    rebuild: () => rebuildCollectionsCharts() },
-  kpi_current_scores:             { canvas: 'kpiCurrentBar',         page: 'action',     label: 'Client Success Playbook — Current Scores', rebuild: () => rebuildKpiCharts() },
-  kpi_score_trend:                { canvas: 'kpiTrendLine',          page: 'action',     label: 'Client Success Playbook — Score Trend', rebuild: () => rebuildKpiCharts() },
+  kpi_current_scores:             { canvas: 'kpiCurrentBar',         page: 'action',     label: 'SuccessOS — Current Scores', rebuild: () => rebuildKpiCharts() },
+  kpi_score_trend:                { canvas: 'kpiTrendLine',          page: 'action',     label: 'SuccessOS — Score Trend', rebuild: () => rebuildKpiCharts() },
   voice_agent_adoption:           { canvas: 'voiceBar',              page: 'voice',      label: 'Voice Agent — Adoption by Portfolio', rebuild: () => rebuildVoicePage() },
   text_agent_adoption:            { canvas: 'textAgentAdoptionChart',page: 'textagent',  label: 'Text Agent — Products Adoption',      rebuild: () => rebuildTextAgentPage() },
 };
@@ -10180,14 +10368,14 @@ const AI_AGENT_TOOLS = [
   },
   {
     name: 'log_kpi_score',
-    description: 'Log a new Client Success Playbook KPI score (1-5 stars). kpi_key must be one of: anticipating (Anticipating Client Needs), preempting (Preempting Risks), solving (Growth Opportunities). This changes data — the user will be asked to confirm first.',
+    description: 'Log a new SuccessOS KPI score (1-5 stars). kpi_key must be one of: anticipating (Anticipating Client Needs), preempting (Preempting Risks), solving (Growth Opportunities). This changes data — the user will be asked to confirm first.',
     input_schema: {
       type: 'object',
       properties: { kpi_key: { type: 'string', enum: ['anticipating', 'preempting', 'solving'] }, score: { type: 'integer', minimum: 1, maximum: 5 } },
       required: ['kpi_key', 'score'],
     },
   },
-  { name: 'get_kpi_summary', description: 'Get the current Client Success Playbook KPI scores and recent trend for all three KPIs.', input_schema: { type: 'object', properties: {} } },
+  { name: 'get_kpi_summary', description: 'Get the current SuccessOS KPI scores and recent trend for all three KPIs.', input_schema: { type: 'object', properties: {} } },
   { name: 'get_collections_summary', description: 'Get Collections data broken down separately by Outstanding Balances and Card Fails — each with its own account count, total dollar amount, and breakdown by status (Pending, In Review, Contacted, Payment Plan, Escalated, Resolved, Write-Off). Also includes accounts needing attention.', input_schema: { type: 'object', properties: {} } },
   { name: 'get_adspend_summary', description: 'Get Ad Spend Management data: total and average monthly budget, a breakdown by promo status (eligible / not eligible / already using — each with count and total budget), and the top 10 spenders.', input_schema: { type: 'object', properties: {} } },
   {
@@ -10992,7 +11180,7 @@ function buildDailyBriefingText() {
   if (data.kpi_scores.length) {
     const arrowMap = { improved: '▲', declined: '▼', stable: '→' };
     const kpiLine = data.kpi_scores.map(k => `${k.kpi}: ${k.score}/5 ${arrowMap[k.trend]}`).join(' · ');
-    lines.push(`**⭐ Client Success Playbook:** ${kpiLine}`);
+    lines.push(`**⭐ SuccessOS:** ${kpiLine}`);
     lines.push('');
   }
 
@@ -11280,7 +11468,7 @@ async function streamAiAgentResponse(systemPrompt, onTextDelta) {
 async function runAiAgentTurn(toolTagForNextText) {
   showAiAgentTyping(true);
   const u = getCurrentUser();
-  const systemPrompt = `You are Nirvana, the AI Agent inside Niche Inc.'s Client Success Hub, helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the SMB, White Label, and Support portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. Whenever a request would affect MORE THAN ONE client (e.g. "create a follow-up task for every client that hasn't been touched in 30 days," or a list of specific client names), always use bulk_create_tasks or bulk_add_note instead of calling create_task/add_note in a loop — looping individual calls would force a separate confirmation click per client, while the bulk tools show one confirmation with the full affected list. Workflows automate two things: "inactivity" (create a task if a client hasn't had a note in N days) and "schedule" (create a task on a recurring cadence, for one client or a whole portfolio) — if someone describes an automation idea in plain English, translate it into the right workflow fields yourself rather than making them fill out a form. For questions about company policy, procedures, "how do we...", or what the website/docs say, search the Knowledge Base — it contains SOPs, docs, and website content the team has fed in, separate from live client data. You can read and explain every chart in the Hub: get_portfolio_summary explains a portfolio's Product Adoption Rate and Products Per Client charts, get_product_adoption explains the Voice Agent / Text Agent charts, get_collections_summary explains the Collections breakdown (always separated into Outstanding Balances vs Card Fails, each with its own status breakdown — never collapse these into one number), get_adspend_summary explains Ad Spend's promo/budget breakdown, and get_kpi_summary explains the Client Success Playbook scores. When someone asks you to break down, interpret, or explain any data or chart, always call the specific tool that has that breakdown built in rather than answering from a vaguer or more general tool — if a user asks for a split by category/status/type, that split should already be in the tool result; use it. Prefer the data tools above for explaining charts — they're faster and more precise. Only use view_chart when the question is genuinely about the chart's visual appearance itself (e.g. "does this look right," "what do you see," "describe this chart visually") — calling it will switch the user's screen to that chart's page, so mention that you're pulling it up. Whenever asked to check for discrepancies, duplicates, mismatches, or whether numbers add up anywhere in the Hub (including client counts, Collections, Ad Spend, or the Knowledge Base), always call audit_data_integrity rather than speculating about possible causes — it actually reconciles the numbers and reports genuine findings, so use what it returns instead of guessing at explanations like "could be duplicates" or "could be stale data." A daily briefing already gets shown automatically once per day when the chat is first opened — if asked for a summary, rundown, or "what should I focus on" at any other point, use get_daily_briefing to pull the same live data fresh rather than referencing whatever was shown earlier, since it may be out of date by then. Whenever asked "which accounts are at risk," "who needs attention," or how healthy a specific client is, use get_at_risk_clients or get_client_health rather than checking just one signal (like Collections alone, or note recency alone) — those tools already combine engagement, task backlog, and billing friction into one score with a transparent breakdown of exactly why, which is a more honest answer than picking one factor and guessing at the rest. When summarizing data, only use the real numbers/content returned by tools — never estimate or make things up. If a tool returns an error (e.g. client not found, or nothing in the knowledge base matches), tell the user plainly rather than guessing.`;
+  const systemPrompt = `You are Nirvana, the AI Agent inside Niche Inc.'s Client Success Hub, helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the SMB, White Label, and Support portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. Whenever a request would affect MORE THAN ONE client (e.g. "create a follow-up task for every client that hasn't been touched in 30 days," or a list of specific client names), always use bulk_create_tasks or bulk_add_note instead of calling create_task/add_note in a loop — looping individual calls would force a separate confirmation click per client, while the bulk tools show one confirmation with the full affected list. Workflows automate two things: "inactivity" (create a task if a client hasn't had a note in N days) and "schedule" (create a task on a recurring cadence, for one client or a whole portfolio) — if someone describes an automation idea in plain English, translate it into the right workflow fields yourself rather than making them fill out a form. For questions about company policy, procedures, "how do we...", or what the website/docs say, search the Knowledge Base — it contains SOPs, docs, and website content the team has fed in, separate from live client data. You can read and explain every chart in the Hub: get_portfolio_summary explains a portfolio's Product Adoption Rate and Products Per Client charts, get_product_adoption explains the Voice Agent / Text Agent charts, get_collections_summary explains the Collections breakdown (always separated into Outstanding Balances vs Card Fails, each with its own status breakdown — never collapse these into one number), get_adspend_summary explains Ad Spend's promo/budget breakdown, and get_kpi_summary explains the SuccessOS scores. When someone asks you to break down, interpret, or explain any data or chart, always call the specific tool that has that breakdown built in rather than answering from a vaguer or more general tool — if a user asks for a split by category/status/type, that split should already be in the tool result; use it. Prefer the data tools above for explaining charts — they're faster and more precise. Only use view_chart when the question is genuinely about the chart's visual appearance itself (e.g. "does this look right," "what do you see," "describe this chart visually") — calling it will switch the user's screen to that chart's page, so mention that you're pulling it up. Whenever asked to check for discrepancies, duplicates, mismatches, or whether numbers add up anywhere in the Hub (including client counts, Collections, Ad Spend, or the Knowledge Base), always call audit_data_integrity rather than speculating about possible causes — it actually reconciles the numbers and reports genuine findings, so use what it returns instead of guessing at explanations like "could be duplicates" or "could be stale data." A daily briefing already gets shown automatically once per day when the chat is first opened — if asked for a summary, rundown, or "what should I focus on" at any other point, use get_daily_briefing to pull the same live data fresh rather than referencing whatever was shown earlier, since it may be out of date by then. Whenever asked "which accounts are at risk," "who needs attention," or how healthy a specific client is, use get_at_risk_clients or get_client_health rather than checking just one signal (like Collections alone, or note recency alone) — those tools already combine engagement, task backlog, and billing friction into one score with a transparent breakdown of exactly why, which is a more honest answer than picking one factor and guessing at the rest. When summarizing data, only use the real numbers/content returned by tools — never estimate or make things up. If a tool returns an error (e.g. client not found, or nothing in the knowledge base matches), tell the user plainly rather than guessing.`;
 
   let streamBubble = null;
   const onTextDelta = (fullTextSoFar) => {
