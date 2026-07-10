@@ -897,6 +897,11 @@ tr.hidden-row { display: none; }
 .btn-sm { padding: 6px 12px; font-size: 11px; }
 .btn:disabled { opacity: .4; cursor: not-allowed; }
 .modal.wide { width: 820px; }
+.modal.xwide { width: 1040px; }
+.cnt-columns { display: grid; grid-template-columns: 1.15fr 1fr; gap: 24px; }
+.cnt-column-scroll { max-height: 46vh; overflow-y: auto; padding-right: 6px; }
+.cnt-column-divider { border-left: 1px solid var(--border); padding-left: 24px; }
+@media (max-width: 900px) { .cnt-columns { grid-template-columns: 1fr; } .cnt-column-divider { border-left: none; padding-left: 0; border-top: 1px solid var(--border); padding-top: 20px; } }
 .modal select {
   width: 100%; padding: 9px 12px;
   background: var(--bg3); border: 1px solid var(--border);
@@ -1279,99 +1284,93 @@ tr.hidden-row { display: none; }
 
 <!-- CLIENT NOTES & TASKS MODAL -->
 <div class="modal-overlay" id="clientNotesTasksModal">
-  <div class="modal wide">
+  <div class="modal xwide">
     <h3 id="cntTitle">👤 Client Profile</h3>
 
-    <div style="max-height:66vh;overflow-y:auto;padding-right:8px;margin-top:6px">
-
-      <div class="cnt-section">
-        <div class="cnt-section-title">👤 Contact Info</div>
-        <div style="font-size:11px;color:var(--text3);margin-bottom:14px">Primary point of contact for this client — visible to everyone, editable by Super users and Admins</div>
-        <div class="smart-paste-box">
-          <label class="field-label">📋 Smart Paste <span style="color:var(--text3);font-weight:400">— paste a signature, business card text, or a spreadsheet row and it'll auto-fill the fields below</span></label>
-          <input type="text" id="cntSmartPaste" class="field-input" style="height:38px" placeholder="Paste here…" onpaste="setTimeout(() => handleSmartPaste('cnt', this.value), 0)">
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px">
-          <div><label class="field-label">Contact Name</label><input type="text" id="cntContactName" class="field-input" style="height:38px" placeholder="e.g. Jamie Rivera"></div>
-          <div><label class="field-label">Title</label><input type="text" id="cntContactTitle" class="field-input" style="height:38px" placeholder="e.g. Owner / Office Manager"></div>
-          <div><label class="field-label">Email</label><input type="email" id="cntContactEmail" class="field-input" style="height:38px" placeholder="e.g. jamie@business.com"></div>
-          <div><label class="field-label">Phone</label><input type="tel" id="cntContactPhone" class="field-input" style="height:38px" placeholder="e.g. (555) 123-4567"></div>
-        </div>
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <div id="cntContactSavedNote" style="font-size:11px;color:var(--text3)"></div>
-          <button class="btn btn-primary btn-sm" id="cntContactSubmitBtn" onclick="saveClientContactInfo()">💾 Save Contact Info</button>
-        </div>
+    <div class="cnt-section" style="margin-top:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div class="cnt-section-title" style="margin-bottom:0">👤 Contact Info</div>
+        <div id="cntContactSavedNote" style="font-size:11px;color:var(--text3)"></div>
       </div>
+      <div class="smart-paste-box" style="padding:8px 12px;margin-bottom:10px">
+        <input type="text" id="cntSmartPaste" class="field-input" style="height:34px;margin-bottom:0" placeholder="📋 Paste a signature, business card, or spreadsheet row to auto-fill →" onpaste="setTimeout(() => handleSmartPaste('cnt', this.value), 0)">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1.2fr 1fr auto;gap:10px;align-items:end">
+        <div><label class="field-label">Contact Name</label><input type="text" id="cntContactName" class="field-input" style="height:36px" placeholder="e.g. Jamie Rivera"></div>
+        <div><label class="field-label">Title</label><input type="text" id="cntContactTitle" class="field-input" style="height:36px" placeholder="e.g. Owner"></div>
+        <div><label class="field-label">Email</label><input type="email" id="cntContactEmail" class="field-input" style="height:36px" placeholder="e.g. jamie@business.com"></div>
+        <div><label class="field-label">Phone</label><input type="tel" id="cntContactPhone" class="field-input" style="height:36px" placeholder="(555) 123-4567"></div>
+        <button class="btn btn-primary btn-sm" id="cntContactSubmitBtn" style="height:36px" onclick="saveClientContactInfo()">💾 Save</button>
+      </div>
+    </div>
 
-      <div class="cnt-divider"></div>
+    <div class="cnt-divider"></div>
 
+    <div class="cnt-columns">
       <div class="cnt-section">
         <div class="cnt-section-title">📝 Notes</div>
-        <div class="notes-thread" id="cntNotesThread" style="max-height:200px"></div>
-        <label class="field-label">Add a Note</label>
+        <div class="notes-thread cnt-column-scroll" id="cntNotesThread"></div>
+        <label class="field-label" style="margin-top:12px">Add a Note</label>
         <div class="note-toolbar">
           <button type="button" class="note-fmt-btn" onclick="wrapNoteSelection('**','**','bold text')" title="Bold"><b>B</b></button>
           <button type="button" class="note-fmt-btn" onclick="wrapNoteSelection('*','*','italic text')" title="Italic"><i>I</i></button>
-          <button type="button" class="note-fmt-btn" onclick="wrapNoteSelection('==','==','highlighted text')" title="Highlight">🖍️ Highlight</button>
-          <button type="button" class="note-fmt-btn" onclick="insertNoteLink()" title="Insert Link">🔗 Link</button>
-          <button type="button" class="note-fmt-btn voice-btn" id="noteVoiceBtn" onclick="toggleVoiceInput('cntNewNoteText','noteVoiceBtn')" title="Speak your note">🎤 Speak</button>
+          <button type="button" class="note-fmt-btn" onclick="wrapNoteSelection('==','==','highlighted text')" title="Highlight">🖍️</button>
+          <button type="button" class="note-fmt-btn" onclick="insertNoteLink()" title="Insert Link">🔗</button>
+          <button type="button" class="note-fmt-btn voice-btn" id="noteVoiceBtn" onclick="toggleVoiceInput('cntNewNoteText','noteVoiceBtn')" title="Speak your note">🎤</button>
         </div>
-        <div style="position:relative;margin-bottom:14px">
-          <textarea id="cntNewNoteText" rows="2" placeholder="What's happening with this client? Type @ to tag a teammate" class="field-input" style="margin-bottom:0;resize:vertical;font-family:inherit" oninput="handleNoteMentionInput(event)" onkeydown="handleNoteMentionKeydown(event)"></textarea>
+        <div style="position:relative;margin-bottom:10px">
+          <textarea id="cntNewNoteText" rows="2" placeholder="What's happening? Type @ to tag a teammate" class="field-input" style="margin-bottom:0;resize:vertical;font-family:inherit" oninput="handleNoteMentionInput(event)" onkeydown="handleNoteMentionKeydown(event)"></textarea>
           <div id="cntMentionDropdown" class="mention-dropdown" style="display:none"></div>
         </div>
-        <label class="field-label">Tag teammates <span style="color:var(--text3);font-weight:400">(optional — they'll be notified instantly)</span></label>
         <div id="cntTagPicker" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px"></div>
         <div style="display:flex;justify-content:flex-end">
           <button class="btn btn-primary btn-sm" id="cntNotesSubmitBtn" onclick="addClientNote()">Add Note</button>
         </div>
       </div>
 
-      <div class="cnt-divider"></div>
-
-      <div class="cnt-section">
-        <div class="cnt-section-title">✅ Tasks</div>
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-          <span style="font-size:11px;color:var(--text3)">Tasks with a due date can sync straight to Google Calendar</span>
+      <div class="cnt-section cnt-column-divider">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div class="cnt-section-title" style="margin-bottom:0">✅ Tasks</div>
           <span id="gcalStatusPill"></span>
         </div>
-        <div id="cntTasksList" style="margin-bottom:16px"></div>
-        <label class="field-label" style="margin-bottom:8px">Add a Task</label>
-        <div style="display:grid;grid-template-columns:1.1fr 0.85fr 1fr 0.85fr;gap:10px;align-items:start;margin-bottom:10px">
-          <div><label class="field-label">Task</label><input type="text" id="cntNewTaskTitle" class="field-input" style="height:38px" placeholder="e.g. Follow up about renewal"></div>
-          <div><label class="field-label">Assign to</label><select id="cntNewTaskAssignee" class="field-select" style="height:38px"></select></div>
-          <div><label class="field-label">Due Date &amp; Time</label><input type="datetime-local" id="cntNewTaskDue" class="field-input" style="height:38px"></div>
-          <div><label class="field-label">Reminder</label><select id="cntNewTaskReminder" class="field-select" style="height:38px">
-            <option value="">Calendar default</option>
+        <div id="cntTasksList" class="cnt-column-scroll" style="margin-bottom:12px"></div>
+        <label class="field-label">Add a Task</label>
+        <input type="text" id="cntNewTaskTitle" class="field-input" style="height:36px;margin-bottom:8px" placeholder="e.g. Follow up about renewal">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+          <select id="cntNewTaskAssignee" class="field-select" style="height:36px"></select>
+          <input type="datetime-local" id="cntNewTaskDue" class="field-input" style="height:36px">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+          <select id="cntNewTaskReminder" class="field-select" style="height:36px">
+            <option value="">Reminder: Calendar default</option>
             <option value="0">At time of event</option>
             <option value="10">10 min before</option>
             <option value="30">30 min before</option>
             <option value="60">1 hour before</option>
             <option value="1440">1 day before</option>
             <option value="10080">1 week before</option>
-          </select></div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;align-items:start;margin-bottom:10px">
-          <div><label class="field-label">Repeat</label><select id="cntNewTaskRecurrence" class="field-select" style="height:38px" onchange="toggleCustomRecurrenceFields()">
+          </select>
+          <select id="cntNewTaskRecurrence" class="field-select" style="height:36px" onchange="toggleCustomRecurrenceFields()">
             <option value="">Does not repeat</option>
-            <option value="daily">Daily</option>
-            <option value="weekdays">Weekdays (Mon–Fri)</option>
-            <option value="biweekly">Bi-weekly</option>
-            <option value="monthly">Monthly</option>
-            <option value="custom">Custom…</option>
-          </select></div>
-          <div id="cntRecurrenceCustomN" style="display:none"><label class="field-label">Every</label><input type="number" id="cntNewTaskRecurrenceN" class="field-input" style="height:38px" min="1" value="2"></div>
-          <div id="cntRecurrenceCustomUnit" style="display:none"><label class="field-label">&nbsp;</label><select id="cntNewTaskRecurrenceUnit" class="field-select" style="height:38px">
+            <option value="daily">Repeat: Daily</option>
+            <option value="weekdays">Repeat: Weekdays</option>
+            <option value="biweekly">Repeat: Bi-weekly</option>
+            <option value="monthly">Repeat: Monthly</option>
+            <option value="custom">Repeat: Custom…</option>
+          </select>
+        </div>
+        <div id="cntRecurrenceCustomN" style="display:none;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+          <input type="number" id="cntNewTaskRecurrenceN" class="field-input" style="height:36px" min="1" value="2" placeholder="Every">
+          <select id="cntNewTaskRecurrenceUnit" class="field-select" style="height:36px">
             <option value="days">Days</option>
             <option value="weeks">Weeks</option>
             <option value="months">Months</option>
-          </select></div>
+          </select>
         </div>
         <div style="display:flex;justify-content:flex-end">
           <button class="btn btn-primary btn-sm" id="cntTasksSubmitBtn" onclick="addClientTask()">＋ Add Task</button>
         </div>
       </div>
-
     </div>
 
     <div class="modal-btns" style="margin-top:18px">
@@ -7226,6 +7225,10 @@ function openClientNotesTasksModal(clientName) {
   cntActiveClientName = clientName;
   document.getElementById('cntTitle').textContent = `👤 ${clientName}`;
   cntTaggedEmails = [];
+  const noteText = document.getElementById('cntNewNoteText');
+  if (noteText) noteText.value = '';
+  const polishBtn = document.getElementById('notePolishBtn');
+  if (polishBtn) polishBtn.remove();
   renderCntTagPicker();
   populateCntTaskAssigneeSelect();
   renderClientContactInfo();
@@ -7355,12 +7358,34 @@ function renderNoteTextWithMentions(text) {
   return html;
 }
 
-// ─── Note text formatting toolbar (bold / italic / highlight / link) ──────
 // ─── Speech-to-text (voice input) — reusable for any text field ───────────
 // Uses the browser's built-in Web Speech API — no backend, no API key, works
 // instantly. Currently supported in Chrome, Edge, and Safari; not in Firefox.
 let activeVoiceRecognizer = null;
 let activeVoiceTargetId = null;
+
+// The Web Speech API returns raw text with no punctuation at all — this adds
+// a best-effort "?" for question-shaped phrasing, or a "." otherwise, once
+// the person stops talking. Never touches text that already ends with
+// punctuation (e.g. if they said "question mark" themselves).
+function addSpeechPunctuation(text) {
+  const trimmed = (text || '').trim();
+  if (!trimmed || /[.?!]$/.test(trimmed)) return trimmed;
+  const soundsLikeQuestion = /^(who|what|when|where|why|how|which|whose|can|could|would|should|shall|will|is|are|was|were|do|does|did|have|has|had|may|might)\b/i.test(trimmed);
+  return trimmed + (soundsLikeQuestion ? '?' : '.');
+}
+
+// Also raw + all-lowercase by default from most browsers' speech engines —
+// capitalizes the first letter and the standalone pronoun "I" / "I'm" / "I'll"
+// / "I've" / "I'd". This is a fast, free heuristic, not real proofreading —
+// see polishTextWithAI() below for an optional deeper pass.
+function capitalizeSpeechText(text) {
+  if (!text) return text;
+  let out = text.charAt(0).toUpperCase() + text.slice(1);
+  out = out.replace(/\bi'(m|ll|ve|d)\b/gi, (m) => 'I' + m.slice(1));
+  out = out.replace(/\bi\b/g, 'I');
+  return out;
+}
 
 function toggleVoiceInput(targetId, btnId) {
   const btn = document.getElementById(btnId);
@@ -7381,13 +7406,24 @@ function toggleVoiceInput(targetId, btnId) {
   const input = document.getElementById(targetId);
   if (!input) return;
 
+  // Auto-send only makes sense for the chat box — a note shouldn't fire off
+  // the moment you pause; you'll still want to glance at it before saving.
+  const autoSendWhenDone = (targetId === 'aiAgentInput');
+
   const baseText = input.value ? input.value.replace(/\s+$/, '') + ' ' : '';
   let accumulatedFinal = '';
+  let silenceTimer = null;
+  const SILENCE_MS = 1600; // how long a pause has to be before we treat it as "done talking"
 
   const recognizer = new SpeechRecognition();
   recognizer.lang = 'en-US';
   recognizer.interimResults = true;
   recognizer.continuous = true;
+
+  const resetSilenceTimer = () => {
+    if (silenceTimer) clearTimeout(silenceTimer);
+    silenceTimer = setTimeout(() => recognizer.stop(), SILENCE_MS);
+  };
 
   recognizer.onresult = (event) => {
     let interim = '';
@@ -7397,6 +7433,7 @@ function toggleVoiceInput(targetId, btnId) {
       else interim += transcript;
     }
     input.value = baseText + accumulatedFinal + interim;
+    resetSilenceTimer();
   };
   recognizer.onerror = (e) => {
     console.warn('Speech recognition error:', e.error);
@@ -7407,15 +7444,73 @@ function toggleVoiceInput(targetId, btnId) {
     }
   };
   recognizer.onend = () => {
+    if (silenceTimer) clearTimeout(silenceTimer);
     if (btn) btn.classList.remove('listening');
     activeVoiceRecognizer = null;
     activeVoiceTargetId = null;
+    // Only clean up the freshly-dictated portion — never touch text that was
+    // already in the field before this dictation started.
+    let dictated = accumulatedFinal.trim();
+    if (dictated) {
+      dictated = capitalizeSpeechText(dictated);
+      dictated = addSpeechPunctuation(dictated);
+    }
+    input.value = (baseText + dictated).trim();
+    if (!autoSendWhenDone && dictated) showPolishButton(targetId);
+    if (autoSendWhenDone && input.value.trim()) sendAiAgentMessage();
   };
 
   recognizer.start();
+  resetSilenceTimer(); // also covers the case where they never say anything at all
   activeVoiceRecognizer = recognizer;
   activeVoiceTargetId = targetId;
   if (btn) btn.classList.add('listening');
+}
+
+// Optional deeper pass for the notes field (not offered on the chat box,
+// since that auto-sends immediately and there'd be no window to use it).
+// Sends the current text through Nirvana's backend for a one-off spelling/
+// grammar/capitalization cleanup — this does cost a small API call, so it's
+// an explicit button rather than something that runs automatically.
+function showPolishButton(targetId) {
+  if (targetId !== 'cntNewNoteText') return;
+  const toolbar = document.querySelector('.note-toolbar');
+  if (!toolbar || document.getElementById('notePolishBtn')) return;
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.id = 'notePolishBtn';
+  btn.className = 'note-fmt-btn';
+  btn.title = 'Fix spelling, grammar, and capitalization with AI';
+  btn.textContent = '✨ Polish';
+  btn.onclick = () => polishTextWithAI('cntNewNoteText', btn);
+  toolbar.appendChild(btn);
+}
+
+async function polishTextWithAI(targetId, btn) {
+  const input = document.getElementById(targetId);
+  const text = input.value.trim();
+  if (!text) return;
+  const originalLabel = btn.textContent;
+  btn.textContent = '✨ Polishing…';
+  btn.disabled = true;
+  try {
+    const res = await fetch(AI_AGENT_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        system: 'Fix only spelling, grammar, capitalization, and punctuation in the text the user gives you. Do not change the meaning, tone, or add/remove information. Reply with ONLY the corrected text and nothing else — no preamble, no quotes, no explanation.',
+        messages: [{ role: 'user', content: text }],
+      }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error((data && (data.error && data.error.message || data.error)) || `Request failed (${res.status})`);
+    const cleaned = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('').trim();
+    if (cleaned) { input.value = cleaned; showToast('Cleaned up with AI.', 'success'); }
+  } catch(e) {
+    showToast('Could not reach the cleanup service: ' + e.message, 'warning');
+  } finally {
+    if (btn.parentNode) btn.remove(); // one-shot — remove it after use so it doesn't linger stale
+  }
 }
 
 function wrapNoteSelection(prefix, suffix, placeholder) {
@@ -7528,6 +7623,8 @@ async function addClientNote() {
   }
 
   ta.value = '';
+  const polishBtn = document.getElementById('notePolishBtn');
+  if (polishBtn) polishBtn.remove();
   cntTaggedEmails = [];
   renderCntTagPicker();
   renderClientNotesThread();
@@ -7605,9 +7702,7 @@ function toggleCustomRecurrenceFields() {
   const val = (document.getElementById('cntNewTaskRecurrence') || {}).value;
   const show = val === 'custom';
   const nEl = document.getElementById('cntRecurrenceCustomN');
-  const uEl = document.getElementById('cntRecurrenceCustomUnit');
-  if (nEl) nEl.style.display = show ? '' : 'none';
-  if (uEl) uEl.style.display = show ? '' : 'none';
+  if (nEl) nEl.style.display = show ? 'grid' : 'none';
 }
 
 // Computes the next due date for a recurring task, preserving time-of-day if
