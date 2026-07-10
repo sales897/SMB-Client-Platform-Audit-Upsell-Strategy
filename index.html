@@ -698,6 +698,38 @@ tr.hidden-row { display: none; }
 .kpi-log-row { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
 @media (max-width: 900px) { .kpi-sop-grid { grid-template-columns: 1fr; } .kpi-log-row { grid-template-columns: 1fr; } }
 
+/* ─── AI AGENT ──────────────────────────────────────────────────────────── */
+.ai-agent-fab {
+  position: fixed; bottom: 24px; right: 24px; z-index: 4000;
+  width: 56px; height: 56px; border-radius: 50%; border: none;
+  background: var(--orange); color: #fff; font-size: 24px; cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0,0,0,.4); transition: transform .15s;
+}
+.ai-agent-fab:hover { transform: scale(1.08); }
+.ai-agent-panel {
+  position: fixed; bottom: 90px; right: 24px; z-index: 4000;
+  width: 380px; max-width: calc(100vw - 32px); height: 520px; max-height: 70vh;
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 16px;
+  box-shadow: 0 24px 64px rgba(0,0,0,.6); display: flex; flex-direction: column; overflow: hidden;
+}
+.ai-agent-header {
+  display: flex; align-items: center; justify-content: space-between; padding: 14px 16px;
+  border-bottom: 1px solid var(--border); font-weight: 800; color: var(--text); font-size: 14px; flex-shrink: 0;
+}
+.ai-agent-header button { background: none; border: none; color: var(--text3); font-size: 16px; cursor: pointer; }
+.ai-agent-messages { flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.ai-msg { font-size: 13px; line-height: 1.5; padding: 9px 12px; border-radius: 10px; max-width: 85%; white-space: pre-wrap; }
+.ai-msg-user { align-self: flex-end; background: var(--orange); color: #fff; }
+.ai-msg-assistant { align-self: flex-start; background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
+.ai-agent-confirm { padding: 12px 16px; border-top: 1px solid var(--border); background: rgba(226,84,31,.06); flex-shrink: 0; }
+.ai-confirm-text { font-size: 12px; color: var(--text2); margin-bottom: 8px; line-height: 1.5; }
+.ai-confirm-btns { display: flex; gap: 8px; justify-content: flex-end; }
+.ai-agent-input-row { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--border); flex-shrink: 0; }
+.ai-agent-input-row input { flex: 1; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; color: var(--text); font-size: 13px; outline: none; }
+.ai-agent-input-row input:focus { border-color: var(--orange); }
+.ai-agent-input-row button { background: var(--orange); color: #fff; border: none; border-radius: 8px; padding: 9px 16px; font-size: 13px; font-weight: 700; cursor: pointer; }
+.ai-agent-input-row button:disabled { opacity: .5; cursor: default; }
+
 /* ─── CLIENT SPOTLIGHT ─────────────────────────────────────────────────── */
 .spotlight-card {
   background: linear-gradient(135deg, rgba(226,84,31,.07), rgba(226,84,31,.02));
@@ -1266,6 +1298,21 @@ tr.hidden-row { display: none; }
 </div>
 
 <!-- NOTIFICATIONS PANEL -->
+<!-- AI AGENT -->
+<button class="ai-agent-fab" id="aiAgentFab" onclick="toggleAiAgentPanel()" title="Ask the Hub Assistant">🤖</button>
+<div class="ai-agent-panel" id="aiAgentPanel" style="display:none">
+  <div class="ai-agent-header">
+    <div>🤖 Hub Assistant</div>
+    <button onclick="toggleAiAgentPanel()">✕</button>
+  </div>
+  <div class="ai-agent-messages" id="aiAgentMessages"></div>
+  <div class="ai-agent-confirm" id="aiAgentConfirm" style="display:none"></div>
+  <div class="ai-agent-input-row">
+    <input type="text" id="aiAgentInput" placeholder="Find a client, ask a question, or tell me what to do…" onkeydown="if(event.key==='Enter') sendAiAgentMessage()">
+    <button id="aiAgentSendBtn" onclick="sendAiAgentMessage()">Send</button>
+  </div>
+</div>
+
 <div class="notif-panel" id="notificationPanel" style="display:none">
   <div class="notif-panel-header">
     <span>🔔 Notifications</span>
@@ -8523,6 +8570,296 @@ async function autoRefreshSheets(urls) {
   const anyFailed = results.some(r => r.status === 'rejected');
   showUploadFeedback(anyFailed ? 'Sheets refresh: some failed' : `Google Sheets · ${portfolios.map(pk => PORTFOLIOS[pk].name).join(', ')} · live`, anyFailed);
 }
+
+// ════════════════════════════════════════════════════════════════════════
+// AI AGENT — a chat assistant that can find/navigate/show/edit/suggest
+// across the Hub's real live data. Talks to Claude through a small Netlify
+// Function backend (netlify/functions/ai-agent.js) which holds the actual
+// Anthropic API key server-side — the browser never sees it. Read-only tools
+// (search, summaries, navigation) run immediately; anything that changes
+// data (notes, tasks, KPI scores) always asks the user to confirm first.
+// ════════════════════════════════════════════════════════════════════════
+const AI_AGENT_ENDPOINT = '/.netlify/functions/ai-agent';
+
+const AI_AGENT_TOOLS = [
+  {
+    name: 'search_clients',
+    description: 'Search for clients by name or organization across all portfolios (SMB, White Label, Support). Returns matches with which portfolio(s) each belongs to.',
+    input_schema: { type: 'object', properties: { query: { type: 'string', description: 'Name or partial name to search for' } }, required: ['query'] },
+  },
+  {
+    name: 'get_client_details',
+    description: 'Get full details for one specific client: products in use / not in use, contact info, recent notes, open tasks, Collections status, and Ad Spend status.',
+    input_schema: { type: 'object', properties: { client_name: { type: 'string' } }, required: ['client_name'] },
+  },
+  {
+    name: 'add_note',
+    description: 'Add a note to a client\'s record. This changes data — the user will be asked to confirm before it is actually saved.',
+    input_schema: { type: 'object', properties: { client_name: { type: 'string' }, text: { type: 'string' } }, required: ['client_name', 'text'] },
+  },
+  {
+    name: 'create_task',
+    description: 'Create a task for a client, optionally assigned to a teammate with a due date. This changes data — the user will be asked to confirm before it is actually saved.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        client_name: { type: 'string' },
+        title: { type: 'string' },
+        assigned_to: { type: 'string', description: 'Team member name or email; defaults to the current user if omitted' },
+        due_date: { type: 'string', description: 'yyyy-mm-dd or yyyy-mm-ddThh:mm, optional' },
+      },
+      required: ['client_name', 'title'],
+    },
+  },
+  {
+    name: 'log_kpi_score',
+    description: 'Log a new Client Success Playbook KPI score (1-5 stars). kpi_key must be one of: anticipating (Anticipating Client Needs), preempting (Preempting Risks), solving (Growth Opportunities). This changes data — the user will be asked to confirm first.',
+    input_schema: {
+      type: 'object',
+      properties: { kpi_key: { type: 'string', enum: ['anticipating', 'preempting', 'solving'] }, score: { type: 'integer', minimum: 1, maximum: 5 } },
+      required: ['kpi_key', 'score'],
+    },
+  },
+  { name: 'get_kpi_summary', description: 'Get the current Client Success Playbook KPI scores and recent trend for all three KPIs.', input_schema: { type: 'object', properties: {} } },
+  { name: 'get_collections_summary', description: 'Get a summary of Collections: outstanding balances, card fails, and accounts needing attention.', input_schema: { type: 'object', properties: {} } },
+  { name: 'get_adspend_summary', description: 'Get a summary of Ad Spend Management: total budget, promo-eligible businesses.', input_schema: { type: 'object', properties: {} } },
+  {
+    name: 'navigate_to',
+    description: 'Switch the Hub to a different page for the user.',
+    input_schema: { type: 'object', properties: { page: { type: 'string', enum: ['home', 'smb', 'whitelabel', 'support', 'clients', 'collections', 'adspend', 'action', 'voice', 'textagent'] } }, required: ['page'] },
+  },
+  {
+    name: 'open_client_profile',
+    description: 'Open the full client profile popup (Contact Info / Notes / Tasks) for a specific client.',
+    input_schema: { type: 'object', properties: { client_name: { type: 'string' } }, required: ['client_name'] },
+  },
+];
+
+const AI_ACTION_TOOLS = ['add_note', 'create_task', 'log_kpi_score']; // tools that change data — always confirmed
+
+function aiFindMergedClient(name) {
+  const merged = buildMergedClients();
+  return merged[(name || '').trim().toLowerCase()] || null;
+}
+
+async function executeAiTool(name, input) {
+  switch (name) {
+    case 'search_clients': {
+      const merged = buildMergedClients();
+      const q = (input.query || '').toLowerCase();
+      const matches = Object.values(merged).filter(r => r.displayName.toLowerCase().includes(q)).slice(0, 15);
+      if (matches.length === 0) return { results: [], note: 'No matching clients found.' };
+      return { results: matches.map(r => ({ name: r.displayName, portfolios: Object.keys(r.portfolios).map(pk => PORTFOLIO_LABELS[pk]) })) };
+    }
+    case 'get_client_details': {
+      const entry = aiFindMergedClient(input.client_name);
+      if (!entry) return { error: 'Client not found' };
+      const pks = Object.keys(entry.portfolios);
+      const productsUsing = new Set(), productsNotUsing = new Set();
+      pks.forEach(pk => {
+        const client = entry.portfolios[pk].client;
+        getCatalog(pk).forEach(p => { (client[p.key] ? productsUsing : productsNotUsing).add(p.label); });
+      });
+      const contact = getClientContact(entry.displayName);
+      const notes = getClientNotes(entry.displayName).slice(0, 5).map(n => ({ author: n.author_name, when: fmtNoteTime(n.created_at), text: n.text }));
+      const tasks = CLIENT_TASKS.filter(t => t.client_name === entry.displayName && t.status !== 'done').map(t => ({ title: t.title, due: t.due_date, assigned_to: t.assigned_to_name }));
+      const normName = entry.displayName.trim().toLowerCase();
+      const collectionsEntry = (typeof COLLECTIONS_ACCOUNTS !== 'undefined' ? COLLECTIONS_ACCOUNTS : []).find(a => (a.name || '').trim().toLowerCase() === normName);
+      const adSpendEntry = (typeof AD_SPEND_BUSINESSES !== 'undefined' ? AD_SPEND_BUSINESSES : []).find(b => (b.name || '').trim().toLowerCase() === normName);
+      return {
+        name: entry.displayName,
+        portfolios: pks.map(pk => PORTFOLIO_LABELS[pk]),
+        products_in_use: Array.from(productsUsing),
+        products_not_using: Array.from(productsNotUsing),
+        contact: contact ? { name: contact.contact_name, title: contact.title, email: contact.email, phone: contact.phone } : null,
+        recent_notes: notes,
+        open_tasks: tasks,
+        collections: collectionsEntry ? { type: collectionsEntry.type, amount: collectionsEntry.amount, status: statusMeta(collectionsEntry.status).label } : null,
+        ad_spend: adSpendEntry ? { monthly_budget: adSpendEntry.budget, promo_status: adSpendEntry.promo } : null,
+      };
+    }
+    case 'get_kpi_summary':
+      return KPI_KEYS.map(k => ({ kpi: KPI_META[k].label, score: getLatestKpiScore(k), trend: getKpiTrend(k) > 0 ? 'improved' : getKpiTrend(k) < 0 ? 'declined' : 'stable' }));
+    case 'get_collections_summary': {
+      const list = typeof COLLECTIONS_ACCOUNTS !== 'undefined' ? COLLECTIONS_ACCOUNTS : [];
+      return {
+        total_accounts: list.length,
+        total_outstanding: list.filter(a => a.type === 'outstanding').reduce((s, a) => s + (a.amount || 0), 0),
+        needs_attention: list.filter(a => ['escalated', 'pending'].includes(a.status)).map(a => ({ name: a.name, amount: a.amount, status: statusMeta(a.status).label })).slice(0, 10),
+      };
+    }
+    case 'get_adspend_summary': {
+      const list = typeof AD_SPEND_BUSINESSES !== 'undefined' ? AD_SPEND_BUSINESSES : [];
+      return {
+        total_businesses: list.length,
+        total_monthly_budget: list.reduce((s, b) => s + (b.budget || 0), 0),
+        promo_eligible: list.filter(b => b.promo === 'Yes').map(b => b.name).slice(0, 15),
+      };
+    }
+    case 'navigate_to':
+      showPage(input.page);
+      return { ok: true, navigated_to: input.page };
+    case 'open_client_profile': {
+      const entry = aiFindMergedClient(input.client_name);
+      if (!entry) return { error: 'Client not found' };
+      openClientNotesTasksModal(entry.displayName);
+      return { ok: true, opened: entry.displayName };
+    }
+    // Side-effect tools — only ever reached after the user has confirmed (see handleAiAgentResponse)
+    case 'add_note': {
+      const entry = aiFindMergedClient(input.client_name);
+      if (!entry) return { error: 'Client not found' };
+      cntActiveClientName = entry.displayName;
+      const ta = document.getElementById('cntNewNoteText');
+      if (ta) ta.value = input.text;
+      await addClientNote();
+      return { ok: true };
+    }
+    case 'create_task': {
+      const entry = aiFindMergedClient(input.client_name);
+      if (!entry) return { error: 'Client not found' };
+      cntActiveClientName = entry.displayName;
+      document.getElementById('cntNewTaskTitle').value = input.title;
+      document.getElementById('cntNewTaskDue').value = input.due_date || '';
+      if (input.assigned_to) {
+        const m = TEAM_MEMBERS.find(m => m.name.toLowerCase() === input.assigned_to.toLowerCase() || m.email.toLowerCase() === input.assigned_to.toLowerCase());
+        if (m) document.getElementById('cntNewTaskAssignee').value = m.email;
+      }
+      await addClientTask();
+      return { ok: true };
+    }
+    case 'log_kpi_score':
+      await logKpiScore(input.kpi_key, input.score);
+      return { ok: true };
+    default:
+      return { error: 'Unknown tool: ' + name };
+  }
+}
+
+function describeAiAction(tool) {
+  const i = tool.input;
+  if (tool.name === 'add_note') return `📝 Add a note to <b>${escAttr(i.client_name)}</b>: "${escAttr(i.text)}"`;
+  if (tool.name === 'create_task') return `✅ Create a task for <b>${escAttr(i.client_name)}</b>: "${escAttr(i.title)}"${i.due_date ? ' — due ' + escAttr(i.due_date) : ''}${i.assigned_to ? ' — assigned to ' + escAttr(i.assigned_to) : ''}`;
+  if (tool.name === 'log_kpi_score') return `⭐ Set <b>${escAttr((KPI_META[i.kpi_key] || {}).label || i.kpi_key)}</b> to ${i.score} star${i.score === 1 ? '' : 's'}`;
+  return `Run ${escAttr(tool.name)}?`;
+}
+
+function confirmAiAgentAction(tool) {
+  return new Promise(resolve => {
+    const box = document.getElementById('aiAgentConfirm');
+    box.innerHTML = `
+      <div class="ai-confirm-text">${describeAiAction(tool)}</div>
+      <div class="ai-confirm-btns">
+        <button class="btn btn-ghost btn-sm" id="aiConfirmNo">Cancel</button>
+        <button class="btn btn-primary btn-sm" id="aiConfirmYes">Confirm</button>
+      </div>`;
+    box.style.display = 'block';
+    document.getElementById('aiConfirmYes').onclick = () => { box.style.display = 'none'; resolve(true); };
+    document.getElementById('aiConfirmNo').onclick = () => { box.style.display = 'none'; resolve(false); };
+  });
+}
+
+let aiAgentMessages = [];
+
+function toggleAiAgentPanel() {
+  const panel = document.getElementById('aiAgentPanel');
+  const willShow = panel.style.display === 'none';
+  panel.style.display = willShow ? 'flex' : 'none';
+  if (willShow && aiAgentMessages.length === 0) {
+    appendAiAgentMessage('assistant', `Hi${(getCurrentUser()||{}).name ? ' ' + getCurrentUser().name : ''}! I can find clients, pull up their details, check KPIs/Collections/Ad Spend, take you to a page, or add a note/task if you tell me to. What do you need?`);
+  }
+}
+
+function appendAiAgentMessage(role, text) {
+  const wrap = document.getElementById('aiAgentMessages');
+  const div = document.createElement('div');
+  div.className = 'ai-msg ai-msg-' + role;
+  div.textContent = text; // plain text only — never render model output as HTML
+  wrap.appendChild(div);
+  wrap.scrollTop = wrap.scrollHeight;
+}
+
+function showAiAgentTyping(show) {
+  let el = document.getElementById('aiAgentTyping');
+  const btn = document.getElementById('aiAgentSendBtn');
+  if (btn) btn.disabled = show;
+  if (show && !el) {
+    const wrap = document.getElementById('aiAgentMessages');
+    el = document.createElement('div');
+    el.id = 'aiAgentTyping';
+    el.className = 'ai-msg ai-msg-assistant';
+    el.textContent = '…';
+    wrap.appendChild(el);
+    wrap.scrollTop = wrap.scrollHeight;
+  } else if (!show && el) {
+    el.remove();
+  }
+}
+
+async function sendAiAgentMessage() {
+  const input = document.getElementById('aiAgentInput');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  appendAiAgentMessage('user', text);
+  aiAgentMessages.push({ role: 'user', content: text });
+  await runAiAgentTurn();
+}
+
+async function runAiAgentTurn() {
+  showAiAgentTyping(true);
+  const u = getCurrentUser();
+  const systemPrompt = `You are the Hub Assistant inside Niche Inc.'s Client Success Hub, helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the SMB, White Label, and Support portfolios. Be concise and conversational. When asked to add a note, create a task, or log a KPI score, call the matching tool directly — the app will handle asking the user to confirm, so don't ask for confirmation yourself in your reply text. When summarizing data, only use the real numbers returned by tools — never estimate or make numbers up. If a tool returns an error (e.g. client not found), tell the user plainly rather than guessing.`;
+  try {
+    const res = await fetch(AI_AGENT_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ system: systemPrompt, messages: aiAgentMessages, tools: AI_AGENT_TOOLS }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error((data && (data.error && data.error.message || data.error)) || `Request failed (${res.status})`);
+    await handleAiAgentResponse(data);
+  } catch(e) {
+    appendAiAgentMessage('assistant', `⚠️ I couldn't reach the assistant backend: ${e.message}. If this keeps happening, an Admin may need to check the Netlify Function setup.`);
+  } finally {
+    showAiAgentTyping(false);
+  }
+}
+
+async function handleAiAgentResponse(data) {
+  aiAgentMessages.push({ role: 'assistant', content: data.content });
+  const textBlocks = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n');
+  if (textBlocks) appendAiAgentMessage('assistant', textBlocks);
+
+  const toolUses = (data.content || []).filter(b => b.type === 'tool_use');
+  if (toolUses.length === 0) return; // conversation turn complete
+
+  const actionTool = toolUses.find(t => AI_ACTION_TOOLS.includes(t.name));
+  if (actionTool) {
+    const confirmed = await confirmAiAgentAction(actionTool);
+    if (!confirmed) {
+      const toolResults = toolUses.map(t => ({
+        type: 'tool_result', tool_use_id: t.id,
+        content: t.id === actionTool.id ? 'The user declined this action — do not perform it.' : 'Skipped because another action in this turn was declined.',
+      }));
+      aiAgentMessages.push({ role: 'user', content: toolResults });
+      await runAiAgentTurn();
+      return;
+    }
+  }
+
+  showAiAgentTyping(true);
+  const toolResults = [];
+  for (const t of toolUses) {
+    let result;
+    try { result = await executeAiTool(t.name, t.input); }
+    catch(e) { result = { error: e.message }; }
+    toolResults.push({ type: 'tool_result', tool_use_id: t.id, content: JSON.stringify(result) });
+  }
+  aiAgentMessages.push({ role: 'user', content: toolResults });
+  await runAiAgentTurn(); // let Claude respond to the tool results
+}
+
 
 // ════════════════════════════════════════════════════════════════════════
 // BOOT — Supabase first, localStorage cache fallback, then sample data
