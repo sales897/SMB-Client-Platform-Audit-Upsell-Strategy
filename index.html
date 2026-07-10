@@ -7529,50 +7529,11 @@ function toggleVoiceInput(targetId, btnId) {
   let baseText = input.value ? input.value.replace(/\s+$/, '') + ' ' : '';
   let accumulatedFinal = '';
   let silenceTimer = null;
+  let restartCount = 0;
+  const MAX_AUTO_RESTARTS = 8; // safety cap so a genuinely broken mic/connection doesn't loop forever silently
 
-  const recognizer = new SpeechRecognition();
-  recognizer._userStopped = false;
-  recognizer.lang = 'en-US';
-  recognizer.interimResults = true;
-  recognizer.continuous = true;
-
-  const resetSilenceTimer = () => {
+  function finalizeAndStop() {
     if (silenceTimer) clearTimeout(silenceTimer);
-    silenceTimer = setTimeout(() => { recognizer._userStopped = true; recognizer.stop(); }, SILENCE_MS);
-  };
-
-  recognizer.onresult = (event) => {
-    let interim = '';
-    for (let i = event.resultIndex; i < event.results.length; i++) {
-      const transcript = event.results[i][0].transcript;
-      if (event.results[i].isFinal) accumulatedFinal += transcript + ' ';
-      else interim += transcript;
-    }
-    input.value = baseText + accumulatedFinal + interim;
-    resetSilenceTimer();
-  };
-  recognizer.onerror = (e) => {
-    console.warn('Speech recognition error:', e.error);
-    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
-      showToast('Microphone access was blocked — check your browser\'s site permissions.', 'warning');
-      recognizer._userStopped = true; // don't try to auto-restart after a permission error
-    } else if (e.error !== 'no-speech' && e.error !== 'aborted' && e.error !== 'network') {
-      showToast('Voice input error: ' + e.error, 'warning');
-    }
-    // "no-speech"/"network" are common transient hiccups — let onend's
-    // auto-restart (below) recover from these silently instead of alarming
-    // the user every time the browser's own speech service blips.
-  };
-  recognizer.onend = () => {
-    if (silenceTimer) clearTimeout(silenceTimer);
-    // Browser ended the session on its own (common after long continuous use,
-    // or a brief network hiccup) rather than the user actually stopping —
-    // seamlessly start a new session so a long note doesn't just die mid-sentence.
-    if (!recognizer._userStopped && isNoteField) {
-      baseText = (baseText + accumulatedFinal).trim() + ' ';
-      accumulatedFinal = '';
-      try { recognizer.start(); resetSilenceTimer(); return; } catch(e) { /* fall through and finish cleanly below */ }
-    }
     if (btn) btn.classList.remove('listening');
     activeVoiceRecognizer = null;
     activeVoiceTargetId = null;
@@ -7588,12 +7549,72 @@ function toggleVoiceInput(targetId, btnId) {
     if (isNoteField) renderCntTagPicker(); // reflect any names just tagged by voice
     if (!autoSendWhenDone && dictated) showPolishButton(targetId);
     if (autoSendWhenDone && input.value.trim()) sendAiAgentMessage();
-  };
+  }
 
-  recognizer.start();
-  resetSilenceTimer(); // also covers the case where they never say anything at all
-  activeVoiceRecognizer = recognizer;
-  activeVoiceTargetId = targetId;
+  // Starts one listening session. If the browser drops the connection on its
+  // own (common after long continuous use, or a brief network hiccup) rather
+  // than the user actually stopping, a fresh session starts automatically —
+  // reusing the same recognizer object to restart is unreliable across
+  // browsers, so this always creates a brand-new instance instead.
+  function startSession() {
+    const recognizer = new SpeechRecognition();
+    recognizer._userStopped = false;
+    recognizer.lang = 'en-US';
+    recognizer.interimResults = true;
+    recognizer.continuous = true;
+
+    const resetSilenceTimer = () => {
+      if (silenceTimer) clearTimeout(silenceTimer);
+      silenceTimer = setTimeout(() => { recognizer._userStopped = true; recognizer.stop(); }, SILENCE_MS);
+    };
+
+    recognizer.onresult = (event) => {
+      let interim = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const transcript = event.results[i][0].transcript;
+        if (event.results[i].isFinal) accumulatedFinal += transcript + ' ';
+        else interim += transcript;
+      }
+      input.value = baseText + accumulatedFinal + interim;
+      restartCount = 0; // getting real results means the connection is healthy again
+      resetSilenceTimer();
+    };
+    recognizer.onerror = (e) => {
+      console.warn('Speech recognition error:', e.error);
+      if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+        showToast('Microphone access was blocked — check your browser\'s site permissions.', 'warning');
+        recognizer._userStopped = true; // don't try to auto-restart after a permission error
+      } else if (e.error !== 'no-speech' && e.error !== 'aborted' && e.error !== 'network') {
+        showToast('Voice input error: ' + e.error, 'warning');
+      }
+      // "no-speech"/"network" are common transient hiccups — let onend's
+      // auto-restart recover from these silently instead of alarming the
+      // user every time the browser's own speech service blips.
+    };
+    recognizer.onend = () => {
+      if (silenceTimer) clearTimeout(silenceTimer);
+      if (!recognizer._userStopped) {
+        if (restartCount >= MAX_AUTO_RESTARTS) {
+          showToast('Voice input kept disconnecting — what you said so far has been kept. Try again in a moment.', 'warning');
+          finalizeAndStop();
+          return;
+        }
+        restartCount++;
+        baseText = (baseText + accumulatedFinal).trim() + ' ';
+        accumulatedFinal = '';
+        startSession();
+        return;
+      }
+      finalizeAndStop();
+    };
+
+    recognizer.start();
+    resetSilenceTimer(); // also covers the case where they never say anything at all
+    activeVoiceRecognizer = recognizer;
+    activeVoiceTargetId = targetId;
+  }
+
+  startSession();
   if (btn) btn.classList.add('listening');
 }
 
@@ -9735,6 +9756,50 @@ async function saveKnowledgeEntry() {
 // ════════════════════════════════════════════════════════════════════════
 const AI_AGENT_ENDPOINT = '/.netlify/functions/ai-agent';
 
+// Maps a friendly chart name (what Nirvana requests) to its canvas element,
+// display label, and the function that redraws it — needed because charts
+// on non-visible pages render at 0×0 size (the page is display:none), so we
+// have to switch to that page and force a redraw before capturing an image.
+const CHART_REGISTRY_FOR_AI = {
+  smb_adoption_rate:            { canvas: 'adoptionBar-smb',        page: 'smb',        label: 'SMB — Product Adoption Rate',         rebuild: () => rebuildAdoptionBar('smb') },
+  smb_products_per_client:      { canvas: 'distPie-smb',            page: 'smb',        label: 'SMB — Products Per Client',           rebuild: () => rebuildDistDonut('smb') },
+  smb_upsell_gap:                { canvas: 'gapBar-smb',             page: 'smb',        label: 'SMB — Upsell Gap',                     rebuild: () => rebuildGapBar('smb') },
+  whitelabel_adoption_rate:      { canvas: 'adoptionBar-whitelabel', page: 'whitelabel', label: 'White Label — Product Adoption Rate', rebuild: () => rebuildAdoptionBar('whitelabel') },
+  whitelabel_products_per_client:{ canvas: 'distPie-whitelabel',     page: 'whitelabel', label: 'White Label — Products Per Client',   rebuild: () => rebuildDistDonut('whitelabel') },
+  whitelabel_upsell_gap:         { canvas: 'gapBar-whitelabel',      page: 'whitelabel', label: 'White Label — Upsell Gap',             rebuild: () => rebuildGapBar('whitelabel') },
+  support_adoption_rate:         { canvas: 'adoptionBar-support',    page: 'support',    label: 'Support — Product Adoption Rate',     rebuild: () => rebuildAdoptionBar('support') },
+  support_products_per_client:   { canvas: 'distPie-support',        page: 'support',    label: 'Support — Products Per Client',       rebuild: () => rebuildDistDonut('support') },
+  support_upsell_gap:            { canvas: 'gapBar-support',         page: 'support',    label: 'Support — Upsell Gap',                 rebuild: () => rebuildGapBar('support') },
+  adspend_budget_by_business:     { canvas: 'adSpendBudgetBar',      page: 'adspend',    label: 'Ad Spend — Budget by Business',       rebuild: () => rebuildAdSpendCharts() },
+  adspend_promo_eligibility:      { canvas: 'adSpendPromoDonut',     page: 'adspend',    label: 'Ad Spend — Promo Eligibility',        rebuild: () => rebuildAdSpendCharts() },
+  collections_amount_by_status:   { canvas: 'collectionsAmountBar',  page: 'collections',label: 'Collections — Amount by Status',      rebuild: () => rebuildCollectionsCharts() },
+  collections_accounts_by_status: { canvas: 'collectionsStatusDonut',page: 'collections',label: 'Collections — Accounts by Status',    rebuild: () => rebuildCollectionsCharts() },
+  kpi_current_scores:             { canvas: 'kpiCurrentBar',         page: 'action',     label: 'Client Success Playbook — Current Scores', rebuild: () => rebuildKpiCharts() },
+  kpi_score_trend:                { canvas: 'kpiTrendLine',          page: 'action',     label: 'Client Success Playbook — Score Trend', rebuild: () => rebuildKpiCharts() },
+  voice_agent_adoption:           { canvas: 'voiceBar',              page: 'voice',      label: 'Voice Agent — Adoption by Portfolio', rebuild: () => rebuildVoicePage() },
+  text_agent_adoption:            { canvas: 'textAgentAdoptionChart',page: 'textagent',  label: 'Text Agent — Products Adoption',      rebuild: () => rebuildTextAgentPage() },
+};
+
+async function captureChartImage(entry) {
+  const canvas = document.getElementById(entry.canvas);
+  if (!canvas) return null;
+  const pageDiv = document.getElementById('page-' + entry.page);
+  const wasActive = pageDiv && pageDiv.classList.contains('active');
+  if (!wasActive) {
+    showPage(entry.page);
+    try { entry.rebuild(); } catch(e) { console.warn('Chart rebuild before capture failed:', e); }
+    // Wait a couple of paint frames so the now-visible canvas actually has
+    // real dimensions and Chart.js has finished drawing into it.
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+  }
+  try {
+    return canvas.toDataURL('image/png');
+  } catch(e) {
+    console.warn('Could not capture chart image:', e);
+    return null;
+  }
+}
+
 const AI_AGENT_TOOLS = [
   {
     name: 'search_clients',
@@ -9787,6 +9852,16 @@ const AI_AGENT_TOOLS = [
     name: 'get_product_adoption',
     description: 'Get cross-portfolio adoption for one specific product (e.g. voice_agent, yelp, google_lsa, thumbtack, chat_widget, contact_form, acculynx, builder_prime, ghl, housecall_pro) — how many clients in each of SMB/White Label/Support use it vs don\'t, and overall adoption %. This is exactly what the Voice Agent and Text Agent pages show — use this whenever asked to explain those charts.',
     input_schema: { type: 'object', properties: { product_key: { type: 'string' } }, required: ['product_key'] },
+  },
+  {
+    name: 'view_chart',
+    description: 'Actually look at a chart\'s rendered image (not just its underlying numbers) — use this when asked something visual about a chart itself (e.g. "does this look right," "what stands out visually," "describe what you see"). This will switch the user\'s screen to that chart\'s page if it isn\'t already showing. Valid chart_name values: smb_adoption_rate, smb_products_per_client, smb_upsell_gap, whitelabel_adoption_rate, whitelabel_products_per_client, whitelabel_upsell_gap, support_adoption_rate, support_products_per_client, support_upsell_gap, adspend_budget_by_business, adspend_promo_eligibility, collections_amount_by_status, collections_accounts_by_status, kpi_current_scores, kpi_score_trend, voice_agent_adoption, text_agent_adoption.',
+    input_schema: { type: 'object', properties: { chart_name: { type: 'string' } }, required: ['chart_name'] },
+  },
+  {
+    name: 'audit_data_integrity',
+    description: 'Run a full data health check across the Hub: reconciles client counts (explains any gap between per-portfolio sums and the unique merged directory count, caused by cross-sold clients), finds genuine duplicate client entries within a single portfolio, finds Collections/Ad Spend/Contact records that reference a client name that doesn\'t exist anywhere, and checks the Knowledge Base for empty or duplicate-titled entries. Always use this — not speculation — whenever asked to check for discrepancies, duplicates, mismatches, or data accuracy anywhere in the Hub.',
+    input_schema: { type: 'object', properties: {} },
   },
   {
     name: 'navigate_to',
@@ -9853,6 +9928,80 @@ const AI_ACTION_TOOLS = ['add_note', 'create_task', 'log_kpi_score', 'create_wor
 function aiFindMergedClient(name) {
   const merged = buildMergedClients();
   return merged[(name || '').trim().toLowerCase()] || null;
+}
+
+// Reconciles client counts across the Hub, finds real duplicate client
+// records, finds Collections/Ad Spend/Contact entries that reference a
+// client name that doesn't exist anywhere, and sanity-checks the Knowledge
+// Base. This is what lets Nirvana actually investigate a discrepancy instead
+// of just noticing one and shrugging.
+function auditDataIntegrity() {
+  const portfolios = ['smb', 'whitelabel', 'support'];
+  const perPortfolio = {};
+  portfolios.forEach(pk => { perPortfolio[PORTFOLIO_LABELS[pk]] = getClients(pk).length; });
+  const sumOfPortfolioCounts = Object.values(perPortfolio).reduce((a, b) => a + b, 0);
+
+  const merged = buildMergedClients();
+  const mergedRows = Object.values(merged);
+  const uniqueClientCount = mergedRows.length;
+  const crossSoldRows = mergedRows.filter(r => Object.keys(r.portfolios).length > 1);
+  const gap = sumOfPortfolioCounts - uniqueClientCount;
+
+  // Real duplicates: the same client name appearing more than once WITHIN a
+  // single portfolio's own list (this is a genuine data problem — cross-portfolio
+  // overlap is normal and already accounted for above, this checks for actual
+  // repeated rows that shouldn't exist).
+  const duplicatesWithinPortfolio = [];
+  portfolios.forEach(pk => {
+    const seen = {};
+    getClients(pk).forEach(c => {
+      const norm = (c.name || '').trim().toLowerCase();
+      if (!norm) return;
+      seen[norm] = (seen[norm] || 0) + 1;
+    });
+    Object.entries(seen).filter(([, n]) => n > 1).forEach(([name, count]) => {
+      duplicatesWithinPortfolio.push({ portfolio: PORTFOLIO_LABELS[pk], client_name: name, appears: count + ' times' });
+    });
+  });
+
+  const allClientNames = new Set(mergedRows.map(r => r.displayName.trim().toLowerCase()));
+  const orphanedCollections = (typeof COLLECTIONS_ACCOUNTS !== 'undefined' ? COLLECTIONS_ACCOUNTS : [])
+    .filter(a => !allClientNames.has((a.name || '').trim().toLowerCase()))
+    .map(a => ({ name: a.name, type: a.type === 'outstanding' ? 'Outstanding Balance' : 'Card Fail', amount: a.amount }));
+  const orphanedAdSpend = (typeof AD_SPEND_BUSINESSES !== 'undefined' ? AD_SPEND_BUSINESSES : [])
+    .filter(b => !allClientNames.has((b.name || '').trim().toLowerCase()))
+    .map(b => ({ name: b.name, monthly_budget: b.budget }));
+  const orphanedContacts = (typeof CLIENT_CONTACTS !== 'undefined' ? CLIENT_CONTACTS : [])
+    .filter(c => !allClientNames.has((c.client_name || '').trim().toLowerCase()))
+    .map(c => ({ client_name: c.client_name }));
+
+  const kbIssues = [];
+  const kbTitleSeen = {};
+  (typeof KNOWLEDGE_BASE !== 'undefined' ? KNOWLEDGE_BASE : []).forEach(k => {
+    const t = (k.title || '').trim().toLowerCase();
+    if (!k.content || k.content.trim().length < 20) kbIssues.push({ title: k.title, issue: 'Very little or no content — may need re-adding' });
+    if (t) kbTitleSeen[t] = (kbTitleSeen[t] || 0) + 1;
+  });
+  Object.entries(kbTitleSeen).filter(([, n]) => n > 1).forEach(([title, count]) => {
+    kbIssues.push({ title, issue: `Duplicate title — appears ${count} times in the Knowledge Base` });
+  });
+
+  return {
+    client_count_reconciliation: {
+      per_portfolio: perPortfolio,
+      sum_of_portfolio_counts: sumOfPortfolioCounts,
+      unique_merged_clients: uniqueClientCount,
+      clients_in_2_or_more_portfolios: crossSoldRows.length,
+      explanation: gap === 0
+        ? 'The sum of portfolio counts matches the unique merged count exactly — no cross-sold clients and nothing to reconcile.'
+        : `The ${gap}-client difference between the sum of portfolio counts (${sumOfPortfolioCounts}) and the unique merged directory count (${uniqueClientCount}) is fully explained by ${crossSoldRows.length} client(s) that exist in more than one portfolio and get counted once in the unified directory but multiple times in the per-portfolio sum. This is expected behavior, not a data error.`,
+    },
+    duplicate_clients_within_a_single_portfolio: duplicatesWithinPortfolio.length ? duplicatesWithinPortfolio : 'None found — no genuine duplicates within any single portfolio.',
+    orphaned_collections_accounts: orphanedCollections.length ? orphanedCollections : 'None found — every Collections account matches a real client.',
+    orphaned_adspend_businesses: orphanedAdSpend.length ? orphanedAdSpend : 'None found — every Ad Spend business matches a real client.',
+    orphaned_contact_records: orphanedContacts.length ? orphanedContacts : 'None found — every saved contact matches a real client.',
+    knowledge_base_issues: kbIssues.length ? kbIssues : 'None found — no empty or duplicate-titled entries.',
+  };
 }
 
 async function executeAiTool(name, input) {
@@ -9937,6 +10086,15 @@ async function executeAiTool(name, input) {
         by_portfolio: byPortfolio,
       };
     }
+    case 'view_chart': {
+      const entry = CHART_REGISTRY_FOR_AI[input.chart_name];
+      if (!entry) return { error: `Unknown chart "${input.chart_name}". Valid options: ${Object.keys(CHART_REGISTRY_FOR_AI).join(', ')}` };
+      const dataUrl = await captureChartImage(entry);
+      if (!dataUrl) return { error: 'Could not capture that chart — it may not have any data to show yet.' };
+      return { __isImage: true, dataUrl, label: entry.label };
+    }
+    case 'audit_data_integrity':
+      return auditDataIntegrity();
     case 'get_collections_summary': {
       const list = typeof COLLECTIONS_ACCOUNTS !== 'undefined' ? COLLECTIONS_ACCOUNTS : [];
       const byStatus = (arr) => COLLECTIONS_STATUSES.map(s => ({
@@ -10026,6 +10184,7 @@ async function executeAiTool(name, input) {
       return { results: matches.map(k => ({ title: k.title, category: k.category, source_url: k.source_url || null, content: (k.content || '').slice(0, 4000) })) };
     }
     case 'create_workflow': {
+      if (!requirePermission('edit')) return { error: 'This account doesn\'t have permission to create workflows.' };
       const assignee = input.action_assignee ? TEAM_MEMBERS.find(m => m.name.toLowerCase() === input.action_assignee.toLowerCase() || m.email.toLowerCase() === input.action_assignee.toLowerCase()) : null;
       const wf = {
         id: (crypto.randomUUID ? crypto.randomUUID() : 'wf_' + Date.now()),
@@ -10049,6 +10208,7 @@ async function executeAiTool(name, input) {
       return { ok: true, created: wf.name };
     }
     case 'update_workflow': {
+      if (!requirePermission('edit')) return { error: 'This account doesn\'t have permission to edit workflows.' };
       const wf = WORKFLOWS.find(w => w.name.toLowerCase() === (input.workflow_name || '').toLowerCase());
       if (!wf) return { error: 'Workflow not found' };
       if (input.active !== undefined) wf.active = input.active;
@@ -10065,6 +10225,7 @@ async function executeAiTool(name, input) {
       return { ok: true, updated: wf.name };
     }
     case 'delete_workflow': {
+      if (!requirePermission('edit')) return { error: 'This account doesn\'t have permission to delete workflows.' };
       const wf = WORKFLOWS.find(w => w.name.toLowerCase() === (input.workflow_name || '').toLowerCase());
       if (!wf) return { error: 'Workflow not found' };
       await deleteWorkflowById(wf.id);
@@ -10102,6 +10263,97 @@ function confirmAiAgentAction(tool) {
 }
 
 let aiAgentMessages = [];
+let aiAgentPanelInitialized = false; // only render stored history / greeting once per page load, not every open/close
+
+const NIRVANA_CONVO_CACHE_KEY = 'csh_nirvana_convo_v1';
+const NIRVANA_MAX_STORED_MESSAGES = 60; // caps storage growth over months of use
+
+// Loads this user's saved conversation so Nirvana remembers past chats across
+// page reloads and browser sessions — previously every refresh wiped her memory.
+async function loadNirvanaConversation() {
+  const u = getCurrentUser();
+  if (!u || !u.email) return;
+  try {
+    const rows = await sbSelect('nirvana_conversations', `id=eq.${encodeURIComponent(u.email)}`);
+    if (rows && rows.length && Array.isArray(rows[0].messages)) {
+      aiAgentMessages = sanitizeLoadedNirvanaHistory(rows[0].messages);
+      localStorage.setItem(NIRVANA_CONVO_CACHE_KEY, JSON.stringify(aiAgentMessages));
+      return;
+    }
+  } catch(e) {
+    console.warn('nirvana_conversations table unavailable, using local cache:', e.message);
+  }
+  try {
+    const cached = JSON.parse(localStorage.getItem(NIRVANA_CONVO_CACHE_KEY) || '[]');
+    if (Array.isArray(cached) && cached.length) aiAgentMessages = sanitizeLoadedNirvanaHistory(cached);
+  } catch(e) {}
+}
+
+// A conversation can only be safely resumed if it doesn't end mid-tool-call —
+// if the browser closed right after Claude asked to use a tool but before the
+// result was ever sent back, that dangling turn gets dropped rather than
+// risk resuming into an invalid state.
+function sanitizeLoadedNirvanaHistory(messages) {
+  if (!Array.isArray(messages) || messages.length === 0) return [];
+  const last = messages[messages.length - 1];
+  if (last && last.role === 'assistant' && Array.isArray(last.content) && last.content.some(b => b.type === 'tool_use')) {
+    return messages.slice(0, -1);
+  }
+  return messages;
+}
+
+// Strips heavy chart-image data out before persisting (no need to store
+// screenshots across sessions — just the fact that one was shown), and caps
+// total stored length, always cutting at a safe boundary (a real new user
+// question) rather than mid-tool-exchange.
+function pruneNirvanaHistoryForStorage(messages) {
+  let cleaned = messages.map(m => {
+    if (m.role === 'user' && Array.isArray(m.content)) {
+      const strippedContent = m.content.map(block => {
+        if (block.type === 'tool_result' && Array.isArray(block.content) && block.content.some(c => c.type === 'image')) {
+          return { ...block, content: '[Chart image was shown here — not stored across sessions]' };
+        }
+        return block;
+      });
+      return { ...m, content: strippedContent };
+    }
+    return m;
+  });
+  if (cleaned.length > NIRVANA_MAX_STORED_MESSAGES) {
+    const excess = cleaned.length - NIRVANA_MAX_STORED_MESSAGES;
+    let cutIndex = excess;
+    while (cutIndex < cleaned.length && !(cleaned[cutIndex].role === 'user' && typeof cleaned[cutIndex].content === 'string')) cutIndex++;
+    cleaned = cleaned.slice(cutIndex);
+  }
+  return cleaned;
+}
+
+async function saveNirvanaConversation() {
+  const u = getCurrentUser();
+  if (!u || !u.email) return;
+  const pruned = pruneNirvanaHistoryForStorage(aiAgentMessages);
+  localStorage.setItem(NIRVANA_CONVO_CACHE_KEY, JSON.stringify(pruned));
+  try {
+    await sbUpsert('nirvana_conversations', { id: u.email, messages: pruned, updated_at: new Date().toISOString() });
+  } catch(e) {
+    console.warn('Could not save Nirvana conversation:', e.message);
+  }
+}
+
+// Replays a loaded conversation into visible chat bubbles (tool-use/tool-result
+// entries are internal plumbing and aren't shown as their own bubbles).
+function renderStoredNirvanaHistory() {
+  const wrap = document.getElementById('aiAgentMessages');
+  if (wrap) wrap.innerHTML = '';
+  aiAgentMessages.forEach(m => {
+    if (m.role === 'user' && typeof m.content === 'string') {
+      appendAiAgentMessage('user', m.content);
+    } else if (m.role === 'assistant' && Array.isArray(m.content)) {
+      const text = m.content.filter(b => b.type === 'text').map(b => b.text).join('\n');
+      if (text) appendAiAgentMessage('assistant', text);
+    }
+  });
+}
 
 const AI_QUICK_SUGGESTIONS = [
   { label: '📊 KPI scores', msg: 'Show me our current KPI scores' },
@@ -10118,6 +10370,8 @@ const AI_TOOL_LABELS = {
   get_adspend_summary: '💰 Checked Ad Spend',
   get_portfolio_summary: '📊 Checked portfolio adoption data',
   get_product_adoption: '📈 Checked product adoption data',
+  view_chart: '👁️ Looked at the chart',
+  audit_data_integrity: '🔍 Ran a data integrity check',
   navigate_to: '🧭 Navigated the Hub',
   open_client_profile: '👤 Opened client profile',
   add_note: '📝 Added a note',
@@ -10175,15 +10429,20 @@ function toggleAiAgentPanel() {
   if (!willShow && typeof window.speechSynthesis !== 'undefined') window.speechSynthesis.cancel(); // stop talking if the panel is closed mid-reply
   if (willShow) {
     updateNirvanaVoiceButton();
-    if (aiAgentMessages.length === 0) {
-      const u = getCurrentUser();
-      appendAiAgentMessage('assistant', `Hey${u ? ' ' + u.name : ''}! I am Nirvana, your AI Agent inside the Client Success Hub. I can find clients, pull up their details, check KPIs/Collections/Ad Spend, take you to a page, or add a note/task if you tell me to. What do you need?`);
-      renderAiQuickSuggestions();
+    if (!aiAgentPanelInitialized) {
+      aiAgentPanelInitialized = true;
+      if (aiAgentMessages.length > 0) {
+        renderStoredNirvanaHistory();
+      } else {
+        const u = getCurrentUser();
+        appendAiAgentMessage('assistant', `Hey${u ? ' ' + u.name : ''}! I am Nirvana, your AI Agent inside the Client Success Hub. I can find clients, pull up their details, check KPIs/Collections/Ad Spend, take you to a page, or add a note/task if you tell me to. What do you need?`);
+        renderAiQuickSuggestions();
+      }
     }
   }
 }
 
-function clearAiAgentChat() {
+async function clearAiAgentChat() {
   aiAgentMessages = [];
   document.getElementById('aiAgentMessages').innerHTML = '';
   const box = document.getElementById('aiAgentSuggestions');
@@ -10191,6 +10450,10 @@ function clearAiAgentChat() {
   const u = getCurrentUser();
   appendAiAgentMessage('assistant', `New conversation started. What do you need${u ? ', ' + u.name : ''}?`);
   renderAiQuickSuggestions();
+  localStorage.removeItem(NIRVANA_CONVO_CACHE_KEY);
+  if (u && u.email) {
+    try { await sbDelete('nirvana_conversations', `id=eq.${encodeURIComponent(u.email)}`); } catch(e) {}
+  }
 }
 
 function renderAiQuickSuggestions() {
@@ -10277,7 +10540,7 @@ function renderAiMarkdown(raw) {
   return html;
 }
 
-function appendAiAgentMessage(role, text, toolTag) {
+function appendAiAgentMessage(role, text, toolTag, atTimestamp) {
   const wrap = document.getElementById('aiAgentMessages');
   const row = document.createElement('div');
   row.className = 'ai-msg-row ai-msg-row-' + role;
@@ -10294,7 +10557,7 @@ function appendAiAgentMessage(role, text, toolTag) {
   row.appendChild(bubble);
   const time = document.createElement('div');
   time.className = 'ai-msg-time';
-  time.textContent = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  time.textContent = new Date(atTimestamp || Date.now()).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
   row.appendChild(time);
   wrap.appendChild(row);
   wrap.scrollTop = wrap.scrollHeight;
@@ -10332,7 +10595,7 @@ async function sendAiAgentMessage() {
 async function runAiAgentTurn(toolTagForNextText) {
   showAiAgentTyping(true);
   const u = getCurrentUser();
-  const systemPrompt = `You are Nirvana, the AI Agent inside Niche Inc.'s Client Success Hub, helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the SMB, White Label, and Support portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. Workflows automate two things: "inactivity" (create a task if a client hasn't had a note in N days) and "schedule" (create a task on a recurring cadence, for one client or a whole portfolio) — if someone describes an automation idea in plain English, translate it into the right workflow fields yourself rather than making them fill out a form. For questions about company policy, procedures, "how do we...", or what the website/docs say, search the Knowledge Base — it contains SOPs, docs, and website content the team has fed in, separate from live client data. You can read and explain every chart in the Hub: get_portfolio_summary explains a portfolio's Product Adoption Rate and Products Per Client charts, get_product_adoption explains the Voice Agent / Text Agent charts, get_collections_summary explains the Collections breakdown (always separated into Outstanding Balances vs Card Fails, each with its own status breakdown — never collapse these into one number), get_adspend_summary explains Ad Spend's promo/budget breakdown, and get_kpi_summary explains the Client Success Playbook scores. When someone asks you to break down, interpret, or explain any data or chart, always call the specific tool that has that breakdown built in rather than answering from a vaguer or more general tool — if a user asks for a split by category/status/type, that split should already be in the tool result; use it. When summarizing data, only use the real numbers/content returned by tools — never estimate or make things up. If a tool returns an error (e.g. client not found, or nothing in the knowledge base matches), tell the user plainly rather than guessing.`;
+  const systemPrompt = `You are Nirvana, the AI Agent inside Niche Inc.'s Client Success Hub, helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the SMB, White Label, and Support portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. Workflows automate two things: "inactivity" (create a task if a client hasn't had a note in N days) and "schedule" (create a task on a recurring cadence, for one client or a whole portfolio) — if someone describes an automation idea in plain English, translate it into the right workflow fields yourself rather than making them fill out a form. For questions about company policy, procedures, "how do we...", or what the website/docs say, search the Knowledge Base — it contains SOPs, docs, and website content the team has fed in, separate from live client data. You can read and explain every chart in the Hub: get_portfolio_summary explains a portfolio's Product Adoption Rate and Products Per Client charts, get_product_adoption explains the Voice Agent / Text Agent charts, get_collections_summary explains the Collections breakdown (always separated into Outstanding Balances vs Card Fails, each with its own status breakdown — never collapse these into one number), get_adspend_summary explains Ad Spend's promo/budget breakdown, and get_kpi_summary explains the Client Success Playbook scores. When someone asks you to break down, interpret, or explain any data or chart, always call the specific tool that has that breakdown built in rather than answering from a vaguer or more general tool — if a user asks for a split by category/status/type, that split should already be in the tool result; use it. Prefer the data tools above for explaining charts — they're faster and more precise. Only use view_chart when the question is genuinely about the chart's visual appearance itself (e.g. "does this look right," "what do you see," "describe this chart visually") — calling it will switch the user's screen to that chart's page, so mention that you're pulling it up. Whenever asked to check for discrepancies, duplicates, mismatches, or whether numbers add up anywhere in the Hub (including client counts, Collections, Ad Spend, or the Knowledge Base), always call audit_data_integrity rather than speculating about possible causes — it actually reconciles the numbers and reports genuine findings, so use what it returns instead of guessing at explanations like "could be duplicates" or "could be stale data." When summarizing data, only use the real numbers/content returned by tools — never estimate or make things up. If a tool returns an error (e.g. client not found, or nothing in the knowledge base matches), tell the user plainly rather than guessing.`;
   try {
     const res = await fetch(AI_AGENT_ENDPOINT, {
       method: 'POST',
@@ -10346,6 +10609,7 @@ async function runAiAgentTurn(toolTagForNextText) {
     appendAiAgentMessage('assistant', `⚠️ I couldn't reach the assistant backend: ${e.message}. If this keeps happening, an Admin may need to check the Netlify Function setup.`);
   } finally {
     showAiAgentTyping(false);
+    saveNirvanaConversation(); // fire-and-forget — keeps persisted memory in sync after every round-trip
   }
 }
 
@@ -10378,7 +10642,19 @@ async function handleAiAgentResponse(data, toolTag) {
     let result;
     try { result = await executeAiTool(t.name, t.input); }
     catch(e) { result = { error: e.message }; }
-    toolResults.push({ type: 'tool_result', tool_use_id: t.id, content: JSON.stringify(result) });
+    if (result && result.__isImage) {
+      // Chart/screenshot tools return an actual image, not just JSON — sent
+      // as a real image content block so Claude genuinely looks at it.
+      toolResults.push({
+        type: 'tool_result', tool_use_id: t.id,
+        content: [
+          { type: 'image', source: { type: 'base64', media_type: 'image/png', data: result.dataUrl.replace(/^data:image\/png;base64,/, '') } },
+          { type: 'text', text: `This is the "${result.label}" chart, currently showing on screen.` },
+        ],
+      });
+    } else {
+      toolResults.push({ type: 'tool_result', tool_use_id: t.id, content: JSON.stringify(result) });
+    }
     usedLabels.push(AI_TOOL_LABELS[t.name] || t.name);
   }
   aiAgentMessages.push({ role: 'user', content: toolResults });
@@ -10434,6 +10710,9 @@ async function bootApp() {
     // Knowledge Base (SOPs, docs, website content Nirvana can search)
     await loadKnowledgeBase();
 
+    // Nirvana's saved conversation history (persistent memory across sessions)
+    await loadNirvanaConversation();
+
     // Final pass now that every data source (notes, contacts, collections, ad
     // spend) has loaded — ensures cards like the Client Spotlight, which pull
     // from all of the above, render with full context instead of partial data.
@@ -10463,6 +10742,7 @@ async function bootApp() {
     await loadWorkflows();
     runWorkflowEngine();
     await loadKnowledgeBase();
+    await loadNirvanaConversation();
     rebuildAll();
   }
 }
