@@ -9,6 +9,8 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
 <style>
 /* ─── RESET & BASE ─────────────────────────────────────────────────────── */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -1050,6 +1052,11 @@ tr.hidden-row { display: none; }
 .kb-badge-docs { background: rgba(59,130,246,.15); color: var(--blue); }
 .kb-badge-website { background: rgba(226,84,31,.15); color: var(--orange); }
 .kb-badge-other { background: rgba(163,154,146,.18); color: var(--text2); }
+.kb-dropzone {
+  border: 2px dashed var(--border); border-radius: 10px; margin-bottom: 16px;
+  padding: 16px; text-align: center; cursor: pointer; transition: all .15s;
+}
+.kb-dropzone:hover, .kb-dropzone.dragover { border-color: var(--orange); background: rgba(226,84,31,.06); }
 
 .team-row { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; background: var(--bg3); }
 .team-row .team-name { flex: 1; font-weight: 700; font-size: 13px; color: var(--text); }
@@ -2662,7 +2669,7 @@ tr.hidden-row { display: none; }
 <div class="modal-overlay" id="knowledgeModal">
   <div class="modal wide">
     <h3 id="knowledgeModalTitle">📚 Add Knowledge</h3>
-    <p>Feed Nirvana something to learn — paste in text directly, or fetch a webpage's content automatically.</p>
+    <p>Feed Nirvana something to learn — upload a file, fetch a webpage, or paste text directly.</p>
 
     <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:14px">
       <div><label class="field-label">Title <span style="color:var(--orange)">*</span></label><input type="text" id="kbTitle" class="field-input" style="height:38px" placeholder="e.g. New Client Onboarding SOP"></div>
@@ -2678,6 +2685,13 @@ tr.hidden-row { display: none; }
     <div style="display:flex;gap:8px;margin-bottom:16px">
       <input type="text" id="kbSourceUrl" class="field-input" style="height:38px" placeholder="https://example.com/page">
       <button class="btn btn-ghost btn-sm" id="kbFetchBtn" onclick="fetchKnowledgeFromUrl()" style="white-space:nowrap">🌐 Fetch Page Text</button>
+    </div>
+
+    <div id="kbDropZone" class="kb-dropzone" ondragover="event.preventDefault(); this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="handleKnowledgeFileDrop(event)" onclick="document.getElementById('kbFileInput').click()">
+      <input type="file" id="kbFileInput" accept=".txt,.md,.pdf,.docx,.xlsx,.xls,.csv" style="display:none" onchange="handleKnowledgeFileSelect(event)">
+      <div style="font-size:22px;margin-bottom:4px">📁</div>
+      <div style="font-size:12px;color:var(--text2)">Drag a file here, or click to upload</div>
+      <div style="font-size:10.5px;color:var(--text3);margin-top:2px">.txt · .md · .pdf · .docx · .xlsx · .csv</div>
     </div>
 
     <label class="field-label">Content <span style="color:var(--orange)">*</span></label>
@@ -5042,6 +5056,12 @@ function parseCSV(text) {
 // SUPABASE CONNECTION
 // All data stored in Supabase — shared across all users and browsers
 // ════════════════════════════════════════════════════════════════════════
+// PDF.js needs its worker script pointed at a matching version — used by the
+// Knowledge Base's "upload a PDF" feature.
+if (typeof pdfjsLib !== 'undefined') {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+}
+
 const SUPABASE_URL = 'https://banmahudemvjkygwihsd.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhbm1haHVkZW12amt5Z3dpaHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5MjIzOTIsImV4cCI6MjA5ODQ5ODM5Mn0.01Y4i_nAFt-wmN-YNcE3dw_3od0NoU4HgvjwSCWw0cc';
 const API = SUPABASE_URL + '/rest/v1';
@@ -7484,6 +7504,11 @@ function toggleVoiceInput(targetId, btnId) {
   // Switching mics — stop whichever field was listening before
   if (activeVoiceRecognizer) { activeVoiceRecognizer._userStopped = true; activeVoiceRecognizer.stop(); }
 
+  // Clicking the mic always interrupts Nirvana mid-sentence if she's talking —
+  // lets you jump in with "sorry, I meant X instead of Y" without waiting for
+  // her to finish, and avoids her voice talking over your own dictation.
+  if (typeof window.speechSynthesis !== 'undefined') window.speechSynthesis.cancel();
+
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) {
     showToast('Voice input isn\'t supported in this browser — try Chrome, Edge, or Safari.', 'warning');
@@ -9601,6 +9626,85 @@ async function fetchKnowledgeFromUrl() {
   }
 }
 
+// ─── File upload (drag-and-drop or click) for the Knowledge Base ──────────
+// Everything parses entirely in the browser — no file ever leaves the
+// device, no backend involved. PDF (pdf.js) and Word (Mammoth.js) both
+// extract plain text; Excel/CSV reuses the same XLSX library already used
+// for client data imports.
+async function handleKnowledgeFileDrop(event) {
+  event.preventDefault();
+  document.getElementById('kbDropZone').classList.remove('dragover');
+  const file = event.dataTransfer.files[0];
+  if (file) await processKnowledgeFile(file);
+}
+async function handleKnowledgeFileSelect(event) {
+  const file = event.target.files[0];
+  if (file) await processKnowledgeFile(file);
+  event.target.value = ''; // allow re-selecting the same file again later
+}
+
+async function processKnowledgeFile(file) {
+  const ext = (file.name.split('.').pop() || '').toLowerCase();
+  showToast(`Reading ${file.name}…`, 'info');
+  try {
+    let text = '';
+    if (ext === 'txt' || ext === 'md') {
+      text = await file.text();
+    } else if (ext === 'pdf') {
+      text = await extractPdfText(file);
+    } else if (ext === 'docx') {
+      text = await extractDocxText(file);
+    } else if (ext === 'xlsx' || ext === 'xls' || ext === 'csv') {
+      text = await extractSpreadsheetText(file);
+    } else {
+      showToast(`".${ext}" files aren't supported yet — try .txt, .md, .pdf, .docx, .xlsx, or .csv.`, 'warning');
+      return;
+    }
+    text = text.trim();
+    if (!text) { showToast('No readable text found in that file.', 'warning'); return; }
+    document.getElementById('kbContent').value = text;
+    document.getElementById('kbContentMeta').textContent = `${text.length.toLocaleString()} characters from ${file.name}`;
+    if (!document.getElementById('kbTitle').value.trim()) {
+      document.getElementById('kbTitle').value = file.name.replace(/\.[^.]+$/, '');
+    }
+    showToast(`Loaded "${file.name}" — review it below before saving.`, 'success');
+  } catch(e) {
+    console.warn('Knowledge file parse failed:', e);
+    showToast(`Could not read that file: ${e.message}`, 'warning');
+  }
+}
+
+async function extractPdfText(file) {
+  if (typeof pdfjsLib === 'undefined') throw new Error('PDF reader library didn\'t load — check your connection and try again');
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  let text = '';
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    text += content.items.map(item => item.str).join(' ') + '\n\n';
+  }
+  return text;
+}
+
+async function extractDocxText(file) {
+  if (typeof mammoth === 'undefined') throw new Error('Word document reader library didn\'t load — check your connection and try again');
+  const arrayBuffer = await file.arrayBuffer();
+  const result = await mammoth.extractRawText({ arrayBuffer });
+  return result.value;
+}
+
+async function extractSpreadsheetText(file) {
+  if (typeof XLSX === 'undefined') throw new Error('Spreadsheet reader library didn\'t load');
+  const arrayBuffer = await file.arrayBuffer();
+  const wb = XLSX.read(arrayBuffer, { type: 'array' });
+  let text = '';
+  wb.SheetNames.forEach(name => {
+    text += `--- ${name} ---\n${XLSX.utils.sheet_to_csv(wb.Sheets[name])}\n\n`;
+  });
+  return text;
+}
+
 async function saveKnowledgeEntry() {
   const title = document.getElementById('kbTitle').value.trim();
   const content = document.getElementById('kbContent').value.trim();
@@ -9672,8 +9776,18 @@ const AI_AGENT_TOOLS = [
     },
   },
   { name: 'get_kpi_summary', description: 'Get the current Client Success Playbook KPI scores and recent trend for all three KPIs.', input_schema: { type: 'object', properties: {} } },
-  { name: 'get_collections_summary', description: 'Get a summary of Collections: outstanding balances, card fails, and accounts needing attention.', input_schema: { type: 'object', properties: {} } },
-  { name: 'get_adspend_summary', description: 'Get a summary of Ad Spend Management: total budget, promo-eligible businesses.', input_schema: { type: 'object', properties: {} } },
+  { name: 'get_collections_summary', description: 'Get Collections data broken down separately by Outstanding Balances and Card Fails — each with its own account count, total dollar amount, and breakdown by status (Pending, In Review, Contacted, Payment Plan, Escalated, Resolved, Write-Off). Also includes accounts needing attention.', input_schema: { type: 'object', properties: {} } },
+  { name: 'get_adspend_summary', description: 'Get Ad Spend Management data: total and average monthly budget, a breakdown by promo status (eligible / not eligible / already using — each with count and total budget), and the top 10 spenders.', input_schema: { type: 'object', properties: {} } },
+  {
+    name: 'get_portfolio_summary',
+    description: 'Get the full breakdown for one portfolio dashboard (SMB, White Label, or Support) — total clients, average products per client, total upsell opportunities, which products are fully untouched, and adoption rate for every single product. This is exactly the data behind that portfolio\'s "Product Adoption Rate" and "Products Per Client" charts — use this whenever asked to read, interpret, or explain those charts, or asked things like "which product has the lowest adoption in SMB."',
+    input_schema: { type: 'object', properties: { portfolio: { type: 'string', enum: ['smb', 'whitelabel', 'support'] } }, required: ['portfolio'] },
+  },
+  {
+    name: 'get_product_adoption',
+    description: 'Get cross-portfolio adoption for one specific product (e.g. voice_agent, yelp, google_lsa, thumbtack, chat_widget, contact_form, acculynx, builder_prime, ghl, housecall_pro) — how many clients in each of SMB/White Label/Support use it vs don\'t, and overall adoption %. This is exactly what the Voice Agent and Text Agent pages show — use this whenever asked to explain those charts.',
+    input_schema: { type: 'object', properties: { product_key: { type: 'string' } }, required: ['product_key'] },
+  },
   {
     name: 'navigate_to',
     description: 'Switch the Hub to a different page for the user.',
@@ -9779,20 +9893,91 @@ async function executeAiTool(name, input) {
     }
     case 'get_kpi_summary':
       return KPI_KEYS.map(k => ({ kpi: KPI_META[k].label, score: getLatestKpiScore(k), trend: getKpiTrend(k) > 0 ? 'improved' : getKpiTrend(k) < 0 ? 'declined' : 'stable' }));
+    case 'get_portfolio_summary': {
+      const pk = input.portfolio;
+      if (!['smb', 'whitelabel', 'support'].includes(pk)) return { error: 'portfolio must be smb, whitelabel, or support' };
+      const cat = getCatalog(pk);
+      const cl = getClients(pk);
+      const total = cl.length;
+      if (total === 0 || cat.length === 0) return { portfolio: PORTFOLIO_LABELS[pk], total_clients: total, products_tracked: cat.length, note: 'No data yet for this portfolio.' };
+      const keys = getProdKeys(pk);
+      const counts = keys.map(k => cl.filter(c => c[k]).length);
+      const totalInstances = counts.reduce((a, b) => a + b, 0);
+      const productAdoption = cat.map((p, i) => ({
+        product: p.label, clients_using: counts[i],
+        adoption_pct: Math.round(counts[i] / total * 100),
+        upsell_opportunity: total - counts[i],
+      })).sort((a, b) => b.adoption_pct - a.adoption_pct);
+      return {
+        portfolio: PORTFOLIO_LABELS[pk],
+        total_clients: total,
+        products_tracked: cat.length,
+        avg_products_per_client: +(totalInstances / total).toFixed(1),
+        total_upsell_opportunities: counts.reduce((sum, n) => sum + (total - n), 0),
+        products_fully_untouched: productAdoption.filter(p => p.clients_using === 0).map(p => p.product),
+        product_adoption_breakdown: productAdoption,
+      };
+    }
+    case 'get_product_adoption': {
+      const productKey = input.product_key;
+      const portfolios = ['smb', 'whitelabel', 'support'];
+      const byPortfolio = portfolios.map(pk => {
+        const cl = getClients(pk);
+        const using = cl.filter(c => c[productKey]).length;
+        return { portfolio: PORTFOLIO_LABELS[pk], total_clients: cl.length, using, not_using: cl.length - using, adoption_pct: cl.length ? Math.round(using / cl.length * 100) : 0 };
+      });
+      const totalClients = byPortfolio.reduce((s, p) => s + p.total_clients, 0);
+      const totalUsing = byPortfolio.reduce((s, p) => s + p.using, 0);
+      if (totalClients === 0) return { error: `No clients found, or "${productKey}" isn't a recognized product key.` };
+      return {
+        product_key: productKey,
+        total_clients: totalClients,
+        total_using: totalUsing,
+        overall_adoption_pct: Math.round(totalUsing / totalClients * 100),
+        by_portfolio: byPortfolio,
+      };
+    }
     case 'get_collections_summary': {
       const list = typeof COLLECTIONS_ACCOUNTS !== 'undefined' ? COLLECTIONS_ACCOUNTS : [];
+      const byStatus = (arr) => COLLECTIONS_STATUSES.map(s => ({
+        status: s.label,
+        count: arr.filter(a => a.status === s.key).length,
+        amount: arr.filter(a => a.status === s.key).reduce((sum, a) => sum + (a.amount || 0), 0),
+      })).filter(s => s.count > 0);
+      const outstanding = list.filter(a => a.type === 'outstanding');
+      const cardFails = list.filter(a => a.type === 'cardfail');
       return {
         total_accounts: list.length,
-        total_outstanding: list.filter(a => a.type === 'outstanding').reduce((s, a) => s + (a.amount || 0), 0),
-        needs_attention: list.filter(a => ['escalated', 'pending'].includes(a.status)).map(a => ({ name: a.name, amount: a.amount, status: statusMeta(a.status).label })).slice(0, 10),
+        total_amount: list.reduce((s, a) => s + (a.amount || 0), 0),
+        outstanding_balances: {
+          count: outstanding.length,
+          total_amount: outstanding.reduce((s, a) => s + (a.amount || 0), 0),
+          by_status: byStatus(outstanding),
+        },
+        card_fails: {
+          count: cardFails.length,
+          total_amount: cardFails.reduce((s, a) => s + (a.amount || 0), 0),
+          by_status: byStatus(cardFails),
+        },
+        needs_attention: list.filter(a => ['escalated', 'pending'].includes(a.status)).map(a => ({ name: a.name, amount: a.amount, type: a.type === 'outstanding' ? 'Outstanding Balance' : 'Card Fail', status: statusMeta(a.status).label })).slice(0, 10),
       };
     }
     case 'get_adspend_summary': {
       const list = typeof AD_SPEND_BUSINESSES !== 'undefined' ? AD_SPEND_BUSINESSES : [];
+      const byPromo = (status) => {
+        const filtered = list.filter(b => b.promo === status);
+        return { count: filtered.length, total_budget: filtered.reduce((s, b) => s + (b.budget || 0), 0) };
+      };
       return {
         total_businesses: list.length,
         total_monthly_budget: list.reduce((s, b) => s + (b.budget || 0), 0),
-        promo_eligible: list.filter(b => b.promo === 'Yes').map(b => b.name).slice(0, 15),
+        average_monthly_budget: list.length ? Math.round(list.reduce((s, b) => s + (b.budget || 0), 0) / list.length) : 0,
+        promo_breakdown: {
+          eligible: byPromo('Yes'),
+          not_eligible: byPromo('No'),
+          already_using: byPromo('Already Using'),
+        },
+        top_spenders: list.slice().sort((a, b) => (b.budget || 0) - (a.budget || 0)).slice(0, 10).map(b => ({ name: b.name, monthly_budget: b.budget, promo_status: b.promo })),
       };
     }
     case 'navigate_to':
@@ -9931,6 +10116,8 @@ const AI_TOOL_LABELS = {
   get_kpi_summary: '⭐ Checked KPI scores',
   get_collections_summary: '🧾 Checked Collections',
   get_adspend_summary: '💰 Checked Ad Spend',
+  get_portfolio_summary: '📊 Checked portfolio adoption data',
+  get_product_adoption: '📈 Checked product adoption data',
   navigate_to: '🧭 Navigated the Hub',
   open_client_profile: '👤 Opened client profile',
   add_note: '📝 Added a note',
@@ -10145,7 +10332,7 @@ async function sendAiAgentMessage() {
 async function runAiAgentTurn(toolTagForNextText) {
   showAiAgentTyping(true);
   const u = getCurrentUser();
-  const systemPrompt = `You are Nirvana, the AI Agent inside Niche Inc.'s Client Success Hub, helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the SMB, White Label, and Support portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. Workflows automate two things: "inactivity" (create a task if a client hasn't had a note in N days) and "schedule" (create a task on a recurring cadence, for one client or a whole portfolio) — if someone describes an automation idea in plain English, translate it into the right workflow fields yourself rather than making them fill out a form. For questions about company policy, procedures, "how do we...", or what the website/docs say, search the Knowledge Base — it contains SOPs, docs, and website content the team has fed in, separate from live client data. When summarizing data, only use the real numbers/content returned by tools — never estimate or make things up. If a tool returns an error (e.g. client not found, or nothing in the knowledge base matches), tell the user plainly rather than guessing.`;
+  const systemPrompt = `You are Nirvana, the AI Agent inside Niche Inc.'s Client Success Hub, helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the SMB, White Label, and Support portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. Workflows automate two things: "inactivity" (create a task if a client hasn't had a note in N days) and "schedule" (create a task on a recurring cadence, for one client or a whole portfolio) — if someone describes an automation idea in plain English, translate it into the right workflow fields yourself rather than making them fill out a form. For questions about company policy, procedures, "how do we...", or what the website/docs say, search the Knowledge Base — it contains SOPs, docs, and website content the team has fed in, separate from live client data. You can read and explain every chart in the Hub: get_portfolio_summary explains a portfolio's Product Adoption Rate and Products Per Client charts, get_product_adoption explains the Voice Agent / Text Agent charts, get_collections_summary explains the Collections breakdown (always separated into Outstanding Balances vs Card Fails, each with its own status breakdown — never collapse these into one number), get_adspend_summary explains Ad Spend's promo/budget breakdown, and get_kpi_summary explains the Client Success Playbook scores. When someone asks you to break down, interpret, or explain any data or chart, always call the specific tool that has that breakdown built in rather than answering from a vaguer or more general tool — if a user asks for a split by category/status/type, that split should already be in the tool result; use it. When summarizing data, only use the real numbers/content returned by tools — never estimate or make things up. If a tool returns an error (e.g. client not found, or nothing in the knowledge base matches), tell the user plainly rather than guessing.`;
   try {
     const res = await fetch(AI_AGENT_ENDPOINT, {
       method: 'POST',
