@@ -1020,6 +1020,19 @@ tr.hidden-row { display: none; }
   color: var(--text2); font-size: 11px; padding: 4px 10px; cursor: pointer; transition: all .15s;
 }
 .note-fmt-btn:hover { background: var(--bg2); border-color: var(--orange); color: var(--text); }
+.voice-btn.listening, .ai-voice-btn.listening {
+  background: rgba(239,68,68,.15) !important; border-color: var(--red) !important; color: var(--red) !important;
+  animation: voicePulse 1.2s infinite;
+}
+.ai-voice-btn {
+  background: var(--bg3); border: 1px solid var(--border); border-radius: 8px;
+  color: var(--text2); font-size: 15px; padding: 9px 12px; cursor: pointer; transition: all .15s;
+}
+.ai-voice-btn:hover { border-color: var(--orange); color: var(--text); }
+@keyframes voicePulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,.45); }
+  50% { box-shadow: 0 0 0 6px rgba(239,68,68,0); }
+}
 .cnt-section-title { font-size: 13px; font-weight: 800; color: var(--text); margin-bottom: 10px; }
 .cnt-divider { height: 1px; background: var(--border); margin: 20px 0; }
 .smart-paste-box {
@@ -1301,6 +1314,7 @@ tr.hidden-row { display: none; }
           <button type="button" class="note-fmt-btn" onclick="wrapNoteSelection('*','*','italic text')" title="Italic"><i>I</i></button>
           <button type="button" class="note-fmt-btn" onclick="wrapNoteSelection('==','==','highlighted text')" title="Highlight">🖍️ Highlight</button>
           <button type="button" class="note-fmt-btn" onclick="insertNoteLink()" title="Insert Link">🔗 Link</button>
+          <button type="button" class="note-fmt-btn voice-btn" id="noteVoiceBtn" onclick="toggleVoiceInput('cntNewNoteText','noteVoiceBtn')" title="Speak your note">🎤 Speak</button>
         </div>
         <div style="position:relative;margin-bottom:14px">
           <textarea id="cntNewNoteText" rows="2" placeholder="What's happening with this client? Type @ to tag a teammate" class="field-input" style="margin-bottom:0;resize:vertical;font-family:inherit" oninput="handleNoteMentionInput(event)" onkeydown="handleNoteMentionKeydown(event)"></textarea>
@@ -1384,6 +1398,7 @@ tr.hidden-row { display: none; }
   <div class="ai-agent-confirm" id="aiAgentConfirm" style="display:none"></div>
   <div class="ai-agent-input-row">
     <input type="text" id="aiAgentInput" placeholder="Find a client, ask a question, or tell me what to do…" onkeydown="if(event.key==='Enter') sendAiAgentMessage()">
+    <button id="aiVoiceBtn" class="ai-voice-btn" onclick="toggleVoiceInput('aiAgentInput','aiVoiceBtn')" title="Speak to Nirvana">🎤</button>
     <button id="aiAgentSendBtn" onclick="sendAiAgentMessage()">Send</button>
   </div>
 </div>
@@ -7341,6 +7356,68 @@ function renderNoteTextWithMentions(text) {
 }
 
 // ─── Note text formatting toolbar (bold / italic / highlight / link) ──────
+// ─── Speech-to-text (voice input) — reusable for any text field ───────────
+// Uses the browser's built-in Web Speech API — no backend, no API key, works
+// instantly. Currently supported in Chrome, Edge, and Safari; not in Firefox.
+let activeVoiceRecognizer = null;
+let activeVoiceTargetId = null;
+
+function toggleVoiceInput(targetId, btnId) {
+  const btn = document.getElementById(btnId);
+
+  // Clicking the mic again while it's already listening on this field stops it
+  if (activeVoiceRecognizer && activeVoiceTargetId === targetId) {
+    activeVoiceRecognizer.stop();
+    return;
+  }
+  // Switching mics — stop whichever field was listening before
+  if (activeVoiceRecognizer) activeVoiceRecognizer.stop();
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    showToast('Voice input isn\'t supported in this browser — try Chrome, Edge, or Safari.', 'warning');
+    return;
+  }
+  const input = document.getElementById(targetId);
+  if (!input) return;
+
+  const baseText = input.value ? input.value.replace(/\s+$/, '') + ' ' : '';
+  let accumulatedFinal = '';
+
+  const recognizer = new SpeechRecognition();
+  recognizer.lang = 'en-US';
+  recognizer.interimResults = true;
+  recognizer.continuous = true;
+
+  recognizer.onresult = (event) => {
+    let interim = '';
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      const transcript = event.results[i][0].transcript;
+      if (event.results[i].isFinal) accumulatedFinal += transcript + ' ';
+      else interim += transcript;
+    }
+    input.value = baseText + accumulatedFinal + interim;
+  };
+  recognizer.onerror = (e) => {
+    console.warn('Speech recognition error:', e.error);
+    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+      showToast('Microphone access was blocked — check your browser\'s site permissions.', 'warning');
+    } else if (e.error !== 'no-speech' && e.error !== 'aborted') {
+      showToast('Voice input error: ' + e.error, 'warning');
+    }
+  };
+  recognizer.onend = () => {
+    if (btn) btn.classList.remove('listening');
+    activeVoiceRecognizer = null;
+    activeVoiceTargetId = null;
+  };
+
+  recognizer.start();
+  activeVoiceRecognizer = recognizer;
+  activeVoiceTargetId = targetId;
+  if (btn) btn.classList.add('listening');
+}
+
 function wrapNoteSelection(prefix, suffix, placeholder) {
   const ta = document.getElementById('cntNewNoteText');
   if (!ta) return;
