@@ -740,6 +740,7 @@ tr.hidden-row { display: none; }
 .ai-agent-header-actions { display: flex; gap: 4px; }
 .ai-agent-header button { background: none; border: none; color: var(--text3); font-size: 15px; cursor: pointer; padding: 4px 6px; border-radius: 6px; transition: background .15s; }
 .ai-agent-header button:hover { background: var(--bg3); color: var(--text); }
+.ai-agent-header button.active { background: rgba(226,84,31,.18); color: var(--orange); }
 .ai-agent-messages { flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
 .ai-msg-row { display: flex; flex-direction: column; max-width: 88%; }
 .ai-msg-row.ai-msg-row-user { align-self: flex-end; align-items: flex-end; }
@@ -1044,6 +1045,11 @@ tr.hidden-row { display: none; }
   background: rgba(226,84,31,.05); border: 1px dashed rgba(226,84,31,.35); border-radius: 10px;
   padding: 12px 14px; margin-bottom: 16px;
 }
+.kb-badge { font-size: 9.5px; font-weight: 700; padding: 3px 8px; border-radius: 10px; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+.kb-badge-sop { background: rgba(34,197,94,.15); color: var(--green); }
+.kb-badge-docs { background: rgba(59,130,246,.15); color: var(--blue); }
+.kb-badge-website { background: rgba(226,84,31,.15); color: var(--orange); }
+.kb-badge-other { background: rgba(163,154,146,.18); color: var(--text2); }
 
 .team-row { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; background: var(--bg3); }
 .team-row .team-name { flex: 1; font-weight: 700; font-size: 13px; color: var(--text); }
@@ -1231,6 +1237,9 @@ tr.hidden-row { display: none; }
     <div class="nav-item" onclick="showPage('workflows')">
       <span class="icon">🔁</span> Workflows
     </div>
+    <div class="nav-item" onclick="showPage('knowledge')">
+      <span class="icon">📚</span> Knowledge Base
+    </div>
     <div class="nav-item" id="navProductsItem" onclick="showPage('products')">
       <span class="icon">📦</span> Manage Products
     </div>
@@ -1389,6 +1398,7 @@ tr.hidden-row { display: none; }
   <div class="ai-agent-header">
     <div class="ai-agent-header-title"><span class="ai-agent-header-icon">✨</span> Nirvana</div>
     <div class="ai-agent-header-actions">
+      <button id="aiVoiceReplyBtn" onclick="toggleNirvanaVoiceReply()" title="Voice replies: Off (click to enable)">🔇</button>
       <button onclick="clearAiAgentChat()" title="Clear conversation">🗑️</button>
       <button onclick="toggleAiAgentPanel()" title="Close">✕</button>
     </div>
@@ -2105,6 +2115,26 @@ tr.hidden-row { display: none; }
     <div class="page-footer">Client Success Hub · Niche Inc. · Workflows</div>
   </div>
 
+  <div class="page" id="page-knowledge">
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-icon">📚</div><div class="kpi-val" id="kb-total-count">0</div><div class="kpi-lbl">Knowledge Entries</div><div class="kpi-sub">Available for Nirvana to search</div></div>
+      <div class="kpi"><div class="kpi-icon">🌐</div><div class="kpi-val orange" id="kb-website-count">0</div><div class="kpi-lbl">Website</div><div class="kpi-sub">Pulled from pages</div></div>
+      <div class="kpi"><div class="kpi-icon">📄</div><div class="kpi-val" id="kb-docs-count">0</div><div class="kpi-lbl">Docs</div><div class="kpi-sub">Reference material</div></div>
+      <div class="kpi"><div class="kpi-icon">📋</div><div class="kpi-val green" id="kb-sop-count">0</div><div class="kpi-lbl">SOPs</div><div class="kpi-sub">Standard procedures</div></div>
+    </div>
+
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header">
+        <div><div class="card-title">What Nirvana Knows</div><div class="card-sub">Ask it things like "What's our SOP for onboarding?" or "What does our website say about pricing?"</div></div>
+        <button class="btn btn-primary btn-sm" id="addKnowledgeBtn" onclick="openAddKnowledgeModal()">＋ Add Knowledge</button>
+      </div>
+      <input type="text" id="kbSearchBox" class="search-box" placeholder="Search entries…" style="margin-bottom:16px" oninput="rebuildKnowledgePage()">
+      <div id="knowledgeList"></div>
+    </div>
+
+    <div class="page-footer">Client Success Hub · Niche Inc. · Knowledge Base</div>
+  </div>
+
   <!-- ═══════════════════════════════════════════════════════════════════
        PAGE 8: MANAGE PRODUCTS
   ════════════════════════════════════════════════════════════════════════ -->
@@ -2628,6 +2658,39 @@ tr.hidden-row { display: none; }
   </div>
 </div>
 
+<!-- KNOWLEDGE BASE MODAL -->
+<div class="modal-overlay" id="knowledgeModal">
+  <div class="modal wide">
+    <h3 id="knowledgeModalTitle">📚 Add Knowledge</h3>
+    <p>Feed Nirvana something to learn — paste in text directly, or fetch a webpage's content automatically.</p>
+
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:14px">
+      <div><label class="field-label">Title <span style="color:var(--orange)">*</span></label><input type="text" id="kbTitle" class="field-input" style="height:38px" placeholder="e.g. New Client Onboarding SOP"></div>
+      <div><label class="field-label">Category</label><select id="kbCategory" class="field-select" style="height:38px">
+        <option value="sop">📋 SOP</option>
+        <option value="docs">📄 Docs</option>
+        <option value="website">🌐 Website</option>
+        <option value="other">📎 Other</option>
+      </select></div>
+    </div>
+
+    <label class="field-label">Source URL <span style="color:var(--text3);font-weight:400">(optional — needed only if you want to auto-fetch a page's text)</span></label>
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <input type="text" id="kbSourceUrl" class="field-input" style="height:38px" placeholder="https://example.com/page">
+      <button class="btn btn-ghost btn-sm" id="kbFetchBtn" onclick="fetchKnowledgeFromUrl()" style="white-space:nowrap">🌐 Fetch Page Text</button>
+    </div>
+
+    <label class="field-label">Content <span style="color:var(--orange)">*</span></label>
+    <textarea id="kbContent" class="field-input" rows="10" style="resize:vertical;font-family:inherit;margin-bottom:4px" placeholder="Paste the SOP, doc content, or webpage text here…"></textarea>
+    <div id="kbContentMeta" style="font-size:11px;color:var(--text3);margin-bottom:16px"></div>
+
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeKnowledgeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveKnowledgeEntry()">💾 Save</button>
+    </div>
+  </div>
+</div>
+
 <!-- ADD CLIENT MODAL -->
 <div class="modal-overlay" id="addClientModal">
   <div class="modal wide">
@@ -2758,6 +2821,7 @@ const pageMeta = {
   upsell:     { title: 'Upsell Playbook',      sub: 'By product · prioritized action cards' },
   action:     { title: 'Client Success Playbook', sub: 'Our KPIs, SOPs, and the plan to earn 5 stars on every one' },
   workflows:  { title: 'Workflows', sub: 'Automate the busywork — inactivity alerts and scheduled recurring tasks' },
+  knowledge:  { title: 'Knowledge Base', sub: 'Docs, SOPs, and website content Nirvana can search and reference' },
   products:   { title: 'Manage Products',      sub: 'Add, remove, and configure your product catalog' },
   adspend:    { title: 'Ad Spend Management', sub: 'Business-by-business budget, promo status, and recommendations' },
   collections:{ title: 'Collections',              sub: 'Outstanding balances and card fails, with status and notes' },
@@ -3335,6 +3399,7 @@ function rebuildAll() {
   if (typeof rebuildAdSpendPage === 'function') rebuildAdSpendPage();
   if (typeof rebuildCollectionsPage === 'function') rebuildCollectionsPage();
   if (typeof rebuildWorkflowsPage === 'function') rebuildWorkflowsPage();
+  if (typeof rebuildKnowledgePage === 'function') rebuildKnowledgePage();
   refreshNavBadges(); // final guaranteed pass — always correct, never a cached/stale number
 }
 
@@ -7412,11 +7477,12 @@ function toggleVoiceInput(targetId, btnId) {
 
   // Clicking the mic again while it's already listening on this field stops it
   if (activeVoiceRecognizer && activeVoiceTargetId === targetId) {
+    activeVoiceRecognizer._userStopped = true;
     activeVoiceRecognizer.stop();
     return;
   }
   // Switching mics — stop whichever field was listening before
-  if (activeVoiceRecognizer) activeVoiceRecognizer.stop();
+  if (activeVoiceRecognizer) { activeVoiceRecognizer._userStopped = true; activeVoiceRecognizer.stop(); }
 
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SpeechRecognition) {
@@ -7426,23 +7492,28 @@ function toggleVoiceInput(targetId, btnId) {
   const input = document.getElementById(targetId);
   if (!input) return;
 
+  const isNoteField = (targetId === 'cntNewNoteText');
   // Auto-send only makes sense for the chat box — a note shouldn't fire off
   // the moment you pause; you'll still want to glance at it before saving.
   const autoSendWhenDone = (targetId === 'aiAgentInput');
+  // Chat: a short pause really does mean "done talking," so auto-send fast.
+  // Notes: people pause to think mid-dictation all the time — this is only a
+  // safety net for "walked away and left the mic on," not a real cutoff.
+  const SILENCE_MS = autoSendWhenDone ? 1600 : 15000;
 
-  const baseText = input.value ? input.value.replace(/\s+$/, '') + ' ' : '';
+  let baseText = input.value ? input.value.replace(/\s+$/, '') + ' ' : '';
   let accumulatedFinal = '';
   let silenceTimer = null;
-  const SILENCE_MS = 1600; // how long a pause has to be before we treat it as "done talking"
 
   const recognizer = new SpeechRecognition();
+  recognizer._userStopped = false;
   recognizer.lang = 'en-US';
   recognizer.interimResults = true;
   recognizer.continuous = true;
 
   const resetSilenceTimer = () => {
     if (silenceTimer) clearTimeout(silenceTimer);
-    silenceTimer = setTimeout(() => recognizer.stop(), SILENCE_MS);
+    silenceTimer = setTimeout(() => { recognizer._userStopped = true; recognizer.stop(); }, SILENCE_MS);
   };
 
   recognizer.onresult = (event) => {
@@ -7459,12 +7530,24 @@ function toggleVoiceInput(targetId, btnId) {
     console.warn('Speech recognition error:', e.error);
     if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
       showToast('Microphone access was blocked — check your browser\'s site permissions.', 'warning');
-    } else if (e.error !== 'no-speech' && e.error !== 'aborted') {
+      recognizer._userStopped = true; // don't try to auto-restart after a permission error
+    } else if (e.error !== 'no-speech' && e.error !== 'aborted' && e.error !== 'network') {
       showToast('Voice input error: ' + e.error, 'warning');
     }
+    // "no-speech"/"network" are common transient hiccups — let onend's
+    // auto-restart (below) recover from these silently instead of alarming
+    // the user every time the browser's own speech service blips.
   };
   recognizer.onend = () => {
     if (silenceTimer) clearTimeout(silenceTimer);
+    // Browser ended the session on its own (common after long continuous use,
+    // or a brief network hiccup) rather than the user actually stopping —
+    // seamlessly start a new session so a long note doesn't just die mid-sentence.
+    if (!recognizer._userStopped && isNoteField) {
+      baseText = (baseText + accumulatedFinal).trim() + ' ';
+      accumulatedFinal = '';
+      try { recognizer.start(); resetSilenceTimer(); return; } catch(e) { /* fall through and finish cleanly below */ }
+    }
     if (btn) btn.classList.remove('listening');
     activeVoiceRecognizer = null;
     activeVoiceTargetId = null;
@@ -7473,11 +7556,11 @@ function toggleVoiceInput(targetId, btnId) {
     let dictated = accumulatedFinal.trim();
     if (dictated) {
       dictated = capitalizeSpeechText(dictated);
-      if (targetId === 'cntNewNoteText') dictated = convertSpokenTagsToMentions(dictated);
+      if (isNoteField) dictated = convertSpokenTagsToMentions(dictated);
       dictated = addSpeechPunctuation(dictated);
     }
     input.value = (baseText + dictated).trim();
-    if (targetId === 'cntNewNoteText') renderCntTagPicker(); // reflect any names just tagged by voice
+    if (isNoteField) renderCntTagPicker(); // reflect any names just tagged by voice
     if (!autoSendWhenDone && dictated) showPolishButton(targetId);
     if (autoSendWhenDone && input.value.trim()) sendAiAgentMessage();
   };
@@ -9352,6 +9435,193 @@ async function runWorkflowEngine() {
 setInterval(() => runWorkflowEngine(), 30 * 60 * 1000); // re-check every 30 minutes while the Hub is open
 
 // ════════════════════════════════════════════════════════════════════════
+// KNOWLEDGE BASE — lets the team feed Nirvana reference material (SOPs,
+// docs, website content) that it can search and use to answer questions,
+// separate from live client data. Simple keyword search, not embeddings —
+// no vector DB needed, and it's plenty effective for a knowledge base sized
+// like this one. "Fetch Page Text" pulls a URL's content via a small Netlify
+// Function (fetch-url.js) since browsers can't fetch arbitrary external
+// sites directly (CORS) — it can't execute JavaScript-rendered pages, only
+// what's in the page's raw HTML.
+// ════════════════════════════════════════════════════════════════════════
+const KNOWLEDGE_CACHE_KEY = 'csh_knowledge_v1';
+let KNOWLEDGE_BASE = [];
+let editingKnowledgeId = null;
+
+const KB_CATEGORY_LABELS = { sop: '📋 SOP', docs: '📄 Docs', website: '🌐 Website', other: '📎 Other' };
+
+async function loadKnowledgeBase() {
+  try {
+    KNOWLEDGE_BASE = await sbSelect('knowledge_base');
+    localStorage.setItem(KNOWLEDGE_CACHE_KEY, JSON.stringify(KNOWLEDGE_BASE));
+  } catch(e) {
+    console.warn('knowledge_base table unavailable, using local cache:', e.message);
+    try { KNOWLEDGE_BASE = JSON.parse(localStorage.getItem(KNOWLEDGE_CACHE_KEY) || '[]'); } catch(e2) { KNOWLEDGE_BASE = []; }
+  }
+  rebuildKnowledgePage();
+}
+
+async function persistKnowledgeEntry(entry) {
+  const idx = KNOWLEDGE_BASE.findIndex(k => k.id === entry.id);
+  if (idx >= 0) KNOWLEDGE_BASE[idx] = entry; else KNOWLEDGE_BASE.unshift(entry);
+  localStorage.setItem(KNOWLEDGE_CACHE_KEY, JSON.stringify(KNOWLEDGE_BASE));
+  try { await sbUpsert('knowledge_base', entry); } catch(e) { console.warn('Could not save knowledge entry:', e.message); }
+}
+
+async function deleteKnowledgeEntry(id) {
+  KNOWLEDGE_BASE = KNOWLEDGE_BASE.filter(k => k.id !== id);
+  localStorage.setItem(KNOWLEDGE_CACHE_KEY, JSON.stringify(KNOWLEDGE_BASE));
+  try { await sbDelete('knowledge_base', `id=eq.${id}`); } catch(e) {}
+  rebuildKnowledgePage();
+}
+
+// Simple keyword scoring — no embeddings needed. Scores each entry by how
+// many of the query's words appear in its title (weighted higher) or
+// content, and returns the strongest matches.
+function searchKnowledgeBase(query, limit) {
+  const words = (query || '').toLowerCase().split(/\s+/).filter(w => w.length > 2);
+  if (words.length === 0) return [];
+  const scored = KNOWLEDGE_BASE.map(entry => {
+    const title = (entry.title || '').toLowerCase();
+    const content = (entry.content || '').toLowerCase();
+    let score = 0;
+    words.forEach(w => {
+      if (title.includes(w)) score += 3;
+      const contentMatches = content.split(w).length - 1;
+      score += Math.min(contentMatches, 5); // cap so one word repeated a lot doesn't dominate
+    });
+    return { entry, score };
+  }).filter(s => s.score > 0).sort((a, b) => b.score - a.score);
+  return scored.slice(0, limit || 5).map(s => s.entry);
+}
+
+function rebuildKnowledgePage() {
+  const addBtn = document.getElementById('addKnowledgeBtn');
+  if (addBtn) addBtn.style.display = canEdit() ? '' : 'none';
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  set('kb-total-count', KNOWLEDGE_BASE.length);
+  set('kb-website-count', KNOWLEDGE_BASE.filter(k => k.category === 'website').length);
+  set('kb-docs-count', KNOWLEDGE_BASE.filter(k => k.category === 'docs').length);
+  set('kb-sop-count', KNOWLEDGE_BASE.filter(k => k.category === 'sop').length);
+
+  const list = document.getElementById('knowledgeList');
+  if (!list) return;
+  const q = (document.getElementById('kbSearchBox') || {}).value || '';
+  const entries = q.trim() ? searchKnowledgeBase(q, 50) : KNOWLEDGE_BASE;
+  if (entries.length === 0) {
+    list.innerHTML = emptyStateHTML({ icon: '📚', title: KNOWLEDGE_BASE.length ? 'No matches' : 'No knowledge yet', sub: KNOWLEDGE_BASE.length ? 'Try a different search term.' : 'Add an SOP, doc, or website page below, or ask Nirvana to help.', compact: true });
+    return;
+  }
+  list.innerHTML = entries.map(k => {
+    const excerpt = (k.content || '').slice(0, 160).trim();
+    return `
+    <div class="edit-client-row" style="margin-bottom:8px;padding:14px;align-items:flex-start">
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+          <span class="kb-badge kb-badge-${k.category}">${escAttr(KB_CATEGORY_LABELS[k.category] || k.category)}</span>
+          <span style="font-weight:700;color:var(--text);font-size:13px">${escAttr(k.title)}</span>
+        </div>
+        <div style="font-size:11.5px;color:var(--text2);line-height:1.5">${escAttr(excerpt)}${(k.content || '').length > 160 ? '…' : ''}</div>
+        ${k.source_url ? `<div style="font-size:10.5px;color:var(--text3);margin-top:4px">🔗 <a href="${escAttr(k.source_url)}" target="_blank" rel="noopener noreferrer" style="color:var(--text3)">${escAttr(k.source_url)}</a></div>` : ''}
+      </div>
+      ${canEdit() ? `
+      <button class="row-action-btn" onclick="openEditKnowledgeModal('${k.id}')">✏️ Edit</button>
+      <button class="row-action-btn danger" onclick="confirmDeleteKnowledge('${k.id}')">🗑️</button>` : ''}
+    </div>`;
+  }).join('');
+}
+
+async function confirmDeleteKnowledge(id) {
+  const entry = KNOWLEDGE_BASE.find(k => k.id === id);
+  if (!entry) return;
+  if (!(await showConfirmDialog(`Delete "${entry.title}" from the knowledge base?`, { danger: true, confirmLabel: 'Delete' }))) return;
+  await deleteKnowledgeEntry(id);
+  showToast('Knowledge entry deleted.', 'success');
+}
+
+function openAddKnowledgeModal() {
+  if (!requirePermission('edit')) return;
+  editingKnowledgeId = null;
+  document.getElementById('knowledgeModalTitle').textContent = '📚 Add Knowledge';
+  document.getElementById('kbTitle').value = '';
+  document.getElementById('kbCategory').value = 'sop';
+  document.getElementById('kbSourceUrl').value = '';
+  document.getElementById('kbContent').value = '';
+  document.getElementById('kbContentMeta').textContent = '';
+  document.getElementById('knowledgeModal').classList.add('open');
+}
+
+function openEditKnowledgeModal(id) {
+  if (!requirePermission('edit')) return;
+  const entry = KNOWLEDGE_BASE.find(k => k.id === id);
+  if (!entry) return;
+  editingKnowledgeId = id;
+  document.getElementById('knowledgeModalTitle').textContent = '✏️ Edit Knowledge';
+  document.getElementById('kbTitle').value = entry.title;
+  document.getElementById('kbCategory').value = entry.category || 'other';
+  document.getElementById('kbSourceUrl').value = entry.source_url || '';
+  document.getElementById('kbContent').value = entry.content || '';
+  document.getElementById('kbContentMeta').textContent = `${(entry.content || '').length.toLocaleString()} characters`;
+  document.getElementById('knowledgeModal').classList.add('open');
+}
+
+function closeKnowledgeModal() {
+  document.getElementById('knowledgeModal').classList.remove('open');
+  editingKnowledgeId = null;
+}
+
+async function fetchKnowledgeFromUrl() {
+  const urlEl = document.getElementById('kbSourceUrl');
+  const url = urlEl.value.trim();
+  if (!url) { showToast('Paste a URL first.', 'warning'); urlEl.focus(); return; }
+  const btn = document.getElementById('kbFetchBtn');
+  const originalLabel = btn.textContent;
+  btn.textContent = '🌐 Fetching…';
+  btn.disabled = true;
+  try {
+    const res = await fetch('/.netlify/functions/fetch-url', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+    document.getElementById('kbContent').value = data.text;
+    document.getElementById('kbContentMeta').textContent = `${data.length.toLocaleString()} characters fetched${data.truncated ? ' (truncated to fit)' : ''}`;
+    if (!document.getElementById('kbTitle').value.trim()) {
+      try { document.getElementById('kbTitle').value = new URL(url).hostname.replace(/^www\./, ''); } catch(e) {}
+    }
+    document.getElementById('kbCategory').value = 'website';
+    showToast('Page text fetched — review it below before saving.', 'success');
+  } catch(e) {
+    showToast('Could not fetch that page: ' + e.message, 'warning');
+  } finally {
+    btn.textContent = originalLabel;
+    btn.disabled = false;
+  }
+}
+
+async function saveKnowledgeEntry() {
+  const title = document.getElementById('kbTitle').value.trim();
+  const content = document.getElementById('kbContent').value.trim();
+  if (!title) { showToast('Please give this entry a title.', 'warning'); return; }
+  if (!content) { showToast('Please add some content — paste text or fetch a page first.', 'warning'); return; }
+  const entry = editingKnowledgeId ? KNOWLEDGE_BASE.find(k => k.id === editingKnowledgeId) : {
+    id: (crypto.randomUUID ? crypto.randomUUID() : 'kb_' + Date.now()),
+    created_at: new Date().toISOString(), created_by: (getCurrentUser() || {}).name || 'Guest',
+  };
+  entry.title = title;
+  entry.category = document.getElementById('kbCategory').value;
+  entry.source_url = document.getElementById('kbSourceUrl').value.trim() || null;
+  entry.content = content;
+  entry.updated_at = new Date().toISOString();
+  await persistKnowledgeEntry(entry);
+  closeKnowledgeModal();
+  rebuildKnowledgePage();
+  showToast(`"${title}" saved to the knowledge base.`, 'success');
+}
+
+// ════════════════════════════════════════════════════════════════════════
 // AI AGENT — a chat assistant that can find/navigate/show/edit/suggest
 // across the Hub's real live data. Talks to Claude through a small Netlify
 // Function backend (netlify/functions/ai-agent.js) which holds the actual
@@ -9407,7 +9677,7 @@ const AI_AGENT_TOOLS = [
   {
     name: 'navigate_to',
     description: 'Switch the Hub to a different page for the user.',
-    input_schema: { type: 'object', properties: { page: { type: 'string', enum: ['home', 'smb', 'whitelabel', 'support', 'clients', 'collections', 'adspend', 'action', 'workflows', 'voice', 'textagent'] } }, required: ['page'] },
+    input_schema: { type: 'object', properties: { page: { type: 'string', enum: ['home', 'smb', 'whitelabel', 'support', 'clients', 'collections', 'adspend', 'action', 'workflows', 'knowledge', 'voice', 'textagent'] } }, required: ['page'] },
   },
   {
     name: 'open_client_profile',
@@ -9415,6 +9685,11 @@ const AI_AGENT_TOOLS = [
     input_schema: { type: 'object', properties: { client_name: { type: 'string' } }, required: ['client_name'] },
   },
   { name: 'list_workflows', description: 'List all existing automation workflows (inactivity alerts and scheduled recurring tasks), including whether each is active.', input_schema: { type: 'object', properties: {} } },
+  {
+    name: 'search_knowledge_base',
+    description: 'Search the team\'s Knowledge Base (SOPs, docs, and website content that has been fed in) for anything relevant to the question. Use this whenever asked about company policy, procedures, "how do we...", or what the website/docs say about something.',
+    input_schema: { type: 'object', properties: { query: { type: 'string', description: 'Keywords to search for' } }, required: ['query'] },
+  },
   {
     name: 'create_workflow',
     description: 'Create a new automation workflow. Two trigger types: "inactivity" (creates a task if a client in a portfolio has had no note logged in N days) or "schedule" (creates a task on a recurring schedule, either for one specific client or for every client in a portfolio). This changes data — the user will be asked to confirm first.',
@@ -9560,6 +9835,11 @@ async function executeAiTool(name, input) {
     case 'list_workflows':
       if (WORKFLOWS.length === 0) return { workflows: [], note: 'No workflows exist yet.' };
       return { workflows: WORKFLOWS.map(wf => ({ name: wf.name, active: wf.active, trigger: describeWorkflowTrigger(wf), action: describeWorkflowAction(wf), last_ran: wf.last_run_at || 'never' })) };
+    case 'search_knowledge_base': {
+      const matches = searchKnowledgeBase(input.query, 3);
+      if (matches.length === 0) return { results: [], note: 'No matching knowledge base entries found.' };
+      return { results: matches.map(k => ({ title: k.title, category: k.category, source_url: k.source_url || null, content: (k.content || '').slice(0, 4000) })) };
+    }
     case 'create_workflow': {
       const assignee = input.action_assignee ? TEAM_MEMBERS.find(m => m.name.toLowerCase() === input.action_assignee.toLowerCase() || m.email.toLowerCase() === input.action_assignee.toLowerCase()) : null;
       const wf = {
@@ -9657,19 +9937,62 @@ const AI_TOOL_LABELS = {
   create_task: '✅ Created a task',
   log_kpi_score: '⭐ Logged a KPI score',
   list_workflows: '🔁 Checked workflows',
+  search_knowledge_base: '📚 Searched the Knowledge Base',
   create_workflow: '🔁 Created a workflow',
   update_workflow: '🔁 Updated a workflow',
   delete_workflow: '🗑️ Deleted a workflow',
 };
 
+let nirvanaVoiceReplyEnabled = (localStorage.getItem('csh_nirvana_voice_v1') === '1');
+
+function toggleNirvanaVoiceReply() {
+  nirvanaVoiceReplyEnabled = !nirvanaVoiceReplyEnabled;
+  localStorage.setItem('csh_nirvana_voice_v1', nirvanaVoiceReplyEnabled ? '1' : '0');
+  updateNirvanaVoiceButton();
+  if (!nirvanaVoiceReplyEnabled && typeof window.speechSynthesis !== 'undefined') window.speechSynthesis.cancel();
+  else showToast('Nirvana will now read her replies aloud.', 'info');
+}
+
+function updateNirvanaVoiceButton() {
+  const btn = document.getElementById('aiVoiceReplyBtn');
+  if (!btn) return;
+  btn.textContent = nirvanaVoiceReplyEnabled ? '🔊' : '🔇';
+  btn.title = nirvanaVoiceReplyEnabled ? 'Voice replies: On (click to mute)' : 'Voice replies: Off (click to enable)';
+  btn.classList.toggle('active', nirvanaVoiceReplyEnabled);
+}
+
+// Reads a reply aloud using the browser's built-in text-to-speech — no
+// backend, no API key. Strips markdown syntax first so it doesn't read
+// literal asterisks/pipes out loud, and skips tables entirely since reading
+// a table row-by-row out loud isn't useful.
+function speakNirvanaReply(text) {
+  if (!nirvanaVoiceReplyEnabled || typeof window.speechSynthesis === 'undefined' || !text) return;
+  const plain = text
+    .split('\n').filter(line => !/^\s*\|/.test(line)) // drop markdown table rows
+    .join(' ')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // links -> just the label
+    .replace(/[*_`#]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  if (!plain) return;
+  window.speechSynthesis.cancel(); // don't let replies stack/overlap
+  const utterance = new SpeechSynthesisUtterance(plain);
+  utterance.rate = 1.02;
+  window.speechSynthesis.speak(utterance);
+}
+
 function toggleAiAgentPanel() {
   const panel = document.getElementById('aiAgentPanel');
   const willShow = panel.style.display === 'none';
   panel.style.display = willShow ? 'flex' : 'none';
-  if (willShow && aiAgentMessages.length === 0) {
-    const u = getCurrentUser();
-    appendAiAgentMessage('assistant', `Hey${u ? ' ' + u.name : ''}! I am Nirvana, your AI Agent inside the Client Success Hub. I can find clients, pull up their details, check KPIs/Collections/Ad Spend, take you to a page, or add a note/task if you tell me to. What do you need?`);
-    renderAiQuickSuggestions();
+  if (!willShow && typeof window.speechSynthesis !== 'undefined') window.speechSynthesis.cancel(); // stop talking if the panel is closed mid-reply
+  if (willShow) {
+    updateNirvanaVoiceButton();
+    if (aiAgentMessages.length === 0) {
+      const u = getCurrentUser();
+      appendAiAgentMessage('assistant', `Hey${u ? ' ' + u.name : ''}! I am Nirvana, your AI Agent inside the Client Success Hub. I can find clients, pull up their details, check KPIs/Collections/Ad Spend, take you to a page, or add a note/task if you tell me to. What do you need?`);
+      renderAiQuickSuggestions();
+    }
   }
 }
 
@@ -9822,7 +10145,7 @@ async function sendAiAgentMessage() {
 async function runAiAgentTurn(toolTagForNextText) {
   showAiAgentTyping(true);
   const u = getCurrentUser();
-  const systemPrompt = `You are Nirvana, the AI Agent inside Niche Inc.'s Client Success Hub, helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the SMB, White Label, and Support portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. Workflows automate two things: "inactivity" (create a task if a client hasn't had a note in N days) and "schedule" (create a task on a recurring cadence, for one client or a whole portfolio) — if someone describes an automation idea in plain English, translate it into the right workflow fields yourself rather than making them fill out a form. When summarizing data, only use the real numbers returned by tools — never estimate or make numbers up. If a tool returns an error (e.g. client not found), tell the user plainly rather than guessing.`;
+  const systemPrompt = `You are Nirvana, the AI Agent inside Niche Inc.'s Client Success Hub, helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the SMB, White Label, and Support portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. Workflows automate two things: "inactivity" (create a task if a client hasn't had a note in N days) and "schedule" (create a task on a recurring cadence, for one client or a whole portfolio) — if someone describes an automation idea in plain English, translate it into the right workflow fields yourself rather than making them fill out a form. For questions about company policy, procedures, "how do we...", or what the website/docs say, search the Knowledge Base — it contains SOPs, docs, and website content the team has fed in, separate from live client data. When summarizing data, only use the real numbers/content returned by tools — never estimate or make things up. If a tool returns an error (e.g. client not found, or nothing in the knowledge base matches), tell the user plainly rather than guessing.`;
   try {
     const res = await fetch(AI_AGENT_ENDPOINT, {
       method: 'POST',
@@ -9842,7 +10165,7 @@ async function runAiAgentTurn(toolTagForNextText) {
 async function handleAiAgentResponse(data, toolTag) {
   aiAgentMessages.push({ role: 'assistant', content: data.content });
   const textBlocks = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n');
-  if (textBlocks) appendAiAgentMessage('assistant', textBlocks, toolTag);
+  if (textBlocks) { appendAiAgentMessage('assistant', textBlocks, toolTag); speakNirvanaReply(textBlocks); }
 
   const toolUses = (data.content || []).filter(b => b.type === 'tool_use');
   if (toolUses.length === 0) return; // conversation turn complete
@@ -9921,6 +10244,9 @@ async function bootApp() {
     await loadWorkflows();
     runWorkflowEngine();
 
+    // Knowledge Base (SOPs, docs, website content Nirvana can search)
+    await loadKnowledgeBase();
+
     // Final pass now that every data source (notes, contacts, collections, ad
     // spend) has loaded — ensures cards like the Client Spotlight, which pull
     // from all of the above, render with full context instead of partial data.
@@ -9949,6 +10275,7 @@ async function bootApp() {
     await loadClientSpotlight();
     await loadWorkflows();
     runWorkflowEngine();
+    await loadKnowledgeBase();
     rebuildAll();
   }
 }
