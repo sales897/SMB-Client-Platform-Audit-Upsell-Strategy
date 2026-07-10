@@ -8843,7 +8843,7 @@ function toggleAiAgentPanel() {
   panel.style.display = willShow ? 'flex' : 'none';
   if (willShow && aiAgentMessages.length === 0) {
     const u = getCurrentUser();
-    appendAiAgentMessage('assistant', `Hi${u ? ' ' + u.name : ''}! I'm Nirvana — I can find clients, pull up their details, check KPIs/Collections/Ad Spend, take you to a page, or add a note/task if you tell me to. What do you need?`);
+    appendAiAgentMessage('assistant', `Hey${u ? ' ' + u.name : ''}! I am Nirvana, your AI Agent inside the Client Success Hub. I can find clients, pull up their details, check KPIs/Collections/Ad Spend, take you to a page, or add a note/task if you tell me to. What do you need?`);
     renderAiQuickSuggestions();
   }
 }
