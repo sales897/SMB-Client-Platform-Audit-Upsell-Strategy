@@ -9800,6 +9800,10 @@ async function captureChartImage(entry) {
   }
 }
 
+// Declared here, before AI_AGENT_TOOLS below, because that array's tool
+// descriptions reference this value directly — it must exist first.
+const BULK_ACTION_MAX = 100; // safety cap so a mistyped/over-broad filter can't accidentally hit the entire client base
+
 const AI_AGENT_TOOLS = [
   {
     name: 'search_clients',
@@ -9829,6 +9833,36 @@ const AI_AGENT_TOOLS = [
         recurrence: { type: 'string', enum: ['daily', 'weekdays', 'biweekly', 'monthly'], description: 'Optional — makes this a repeating task. Requires due_date to be set.' },
       },
       required: ['client_name', 'title'],
+    },
+  },
+  {
+    name: 'bulk_create_tasks',
+    description: `Create the SAME task for MULTIPLE clients in one shot — either an explicit list of client names, or every client matching a filter (a portfolio, optionally combined with "no note logged in N days"). Shows ONE confirmation listing every affected client before creating anything, instead of asking separately for each. ALWAYS use this instead of calling create_task in a loop whenever more than one client is involved — looping create_task would force a separate confirmation per client. Capped at ${BULK_ACTION_MAX} clients per call as a safety limit.`,
+    input_schema: {
+      type: 'object',
+      properties: {
+        client_names: { type: 'array', items: { type: 'string' }, description: 'Explicit list of client names — use this OR the filter fields below, not both' },
+        filter_portfolio: { type: 'string', enum: ['all', 'smb', 'whitelabel', 'support'], description: 'Portfolio to pull clients from when not using an explicit list' },
+        filter_inactive_days: { type: 'integer', description: 'Only include clients with no note logged in at least this many days' },
+        title: { type: 'string' },
+        assigned_to: { type: 'string', description: 'Team member name or email; defaults to the current user if omitted' },
+        due_date: { type: 'string', description: 'yyyy-mm-dd or yyyy-mm-ddThh:mm, optional — applies to every task created' },
+      },
+      required: ['title'],
+    },
+  },
+  {
+    name: 'bulk_add_note',
+    description: `Add the SAME note text to MULTIPLE clients in one shot — either an explicit list of client names, or every client matching a filter (a portfolio, optionally combined with "no note logged in N days"). Shows ONE confirmation listing every affected client before adding anything. Capped at ${BULK_ACTION_MAX} clients per call as a safety limit.`,
+    input_schema: {
+      type: 'object',
+      properties: {
+        client_names: { type: 'array', items: { type: 'string' }, description: 'Explicit list of client names — use this OR the filter fields below, not both' },
+        filter_portfolio: { type: 'string', enum: ['all', 'smb', 'whitelabel', 'support'] },
+        filter_inactive_days: { type: 'integer' },
+        text: { type: 'string' },
+      },
+      required: ['text'],
     },
   },
   {
@@ -9923,11 +9957,34 @@ const AI_AGENT_TOOLS = [
   },
 ];
 
-const AI_ACTION_TOOLS = ['add_note', 'create_task', 'log_kpi_score', 'create_workflow', 'update_workflow', 'delete_workflow']; // tools that change data — always confirmed
+const AI_ACTION_TOOLS = ['add_note', 'create_task', 'log_kpi_score', 'create_workflow', 'update_workflow', 'delete_workflow', 'bulk_create_tasks', 'bulk_add_note']; // tools that change data — always confirmed
 
 function aiFindMergedClient(name) {
   const merged = buildMergedClients();
   return merged[(name || '').trim().toLowerCase()] || null;
+}
+
+// Resolves a bulk tool's target client list — either an explicit list of
+// names, or every client in a portfolio optionally filtered by inactivity
+// (no note logged in at least N days). Shared by the preview (confirmation
+// dialog) and the actual execution, so what you approve is exactly what runs.
+function resolveBulkTargets(input) {
+  let names;
+  if (Array.isArray(input.client_names) && input.client_names.length > 0) {
+    names = input.client_names;
+  } else {
+    names = getPortfolioClientList(input.filter_portfolio || 'all');
+  }
+  if (input.filter_inactive_days) {
+    const now = Date.now();
+    const threshold = input.filter_inactive_days * 24 * 60 * 60 * 1000;
+    names = names.filter(name => {
+      const notes = getClientNotes(name); // sorted newest-first
+      const lastNoteMs = notes.length ? new Date(notes[0].created_at).getTime() : 0;
+      return (now - lastNoteMs) >= threshold;
+    });
+  }
+  return names;
 }
 
 // Reconciles client counts across the Hub, finds real duplicate client
@@ -10172,6 +10229,68 @@ async function executeAiTool(name, input) {
       await addClientTask();
       return { ok: true };
     }
+    case 'bulk_create_tasks': {
+      const targets = resolveBulkTargets(input);
+      if (targets.length === 0) return { error: 'No clients matched that filter — nothing was created.' };
+      if (targets.length > BULK_ACTION_MAX) return { error: `That would affect ${targets.length} clients, over the ${BULK_ACTION_MAX}-client safety limit. Narrow the filter (a specific portfolio, or a longer inactivity threshold) and try again.` };
+      const assignee = input.assigned_to ? TEAM_MEMBERS.find(m => m.name.toLowerCase() === input.assigned_to.toLowerCase() || m.email.toLowerCase() === input.assigned_to.toLowerCase()) : null;
+      const u = getCurrentUser();
+      const assigneeEmail = assignee ? assignee.email : (u ? u.email : '');
+      const assigneeName = assignee ? assignee.name : (u ? u.name : '');
+      const newTasks = [];
+      const skipped = [];
+      targets.forEach(name => {
+        const entry = aiFindMergedClient(name);
+        if (!entry) { skipped.push(name); return; }
+        newTasks.push({
+          id: (crypto.randomUUID ? crypto.randomUUID() : 't_' + Date.now() + Math.random().toString(16).slice(2) + newTasks.length),
+          client_name: entry.displayName, title: input.title,
+          assigned_to_email: assigneeEmail, assigned_to_name: assigneeName,
+          created_by_email: u ? u.email : '', created_by_name: u ? u.name : 'Guest',
+          due_date: input.due_date || '', reminder_minutes: null, recurrence: null,
+          status: 'open', created_at: new Date().toISOString(),
+        });
+      });
+      if (newTasks.length === 0) return { error: 'None of those client names matched a real client — nothing was created.' };
+      CLIENT_TASKS.unshift(...newTasks);
+      localStorage.setItem(CLIENT_TASKS_CACHE_KEY, JSON.stringify(CLIENT_TASKS));
+      try { await Promise.all(newTasks.map(t => sbUpsert('client_tasks', t))); } catch(e) { console.warn('Bulk task save had errors:', e.message); }
+      // One consolidated notification instead of spamming the assignee with a separate alert per client
+      if (assigneeEmail && assigneeEmail !== (u && u.email)) {
+        await createNotification(assigneeEmail, 'task_assigned', `${u ? u.name : 'Someone'} (via Nirvana) assigned you ${newTasks.length} task${newTasks.length === 1 ? '' : 's'}: "${input.title}"`, newTasks.map(t => t.client_name).slice(0, 5).join(', '));
+      }
+      renderClientTasksList();
+      rebuildHomePage();
+      return { ok: true, created_count: newTasks.length, skipped_count: skipped.length, skipped_names: skipped.slice(0, 10), client_names: newTasks.map(t => t.client_name) };
+    }
+    case 'bulk_add_note': {
+      const targets = resolveBulkTargets(input);
+      if (targets.length === 0) return { error: 'No clients matched that filter — nothing was added.' };
+      if (targets.length > BULK_ACTION_MAX) return { error: `That would affect ${targets.length} clients, over the ${BULK_ACTION_MAX}-client safety limit. Narrow the filter and try again.` };
+      const u = getCurrentUser();
+      const mentionedEmails = parseMentionsFromText(input.text || '');
+      const newNotes = [];
+      const skipped = [];
+      targets.forEach(name => {
+        const entry = aiFindMergedClient(name);
+        if (!entry) { skipped.push(name); return; }
+        newNotes.push({
+          id: (crypto.randomUUID ? crypto.randomUUID() : 'n_' + Date.now() + Math.random().toString(16).slice(2) + newNotes.length),
+          client_name: entry.displayName, author_email: u ? u.email : '', author_name: u ? u.name : 'Guest',
+          text: input.text, tagged_emails: mentionedEmails, created_at: new Date().toISOString(),
+        });
+      });
+      if (newNotes.length === 0) return { error: 'None of those client names matched a real client — nothing was added.' };
+      CLIENT_NOTES.unshift(...newNotes);
+      localStorage.setItem(CLIENT_NOTES_CACHE_KEY, JSON.stringify(CLIENT_NOTES));
+      try { await Promise.all(newNotes.map(n => sbUpsert('client_notes', n))); } catch(e) { console.warn('Bulk note save had errors:', e.message); }
+      for (const email of mentionedEmails) {
+        await createNotification(email, 'tagged', `${u ? u.name : 'Someone'} (via Nirvana) tagged you in ${newNotes.length} note${newNotes.length === 1 ? '' : 's'}`, newNotes.map(n => n.client_name).slice(0, 5).join(', '));
+      }
+      renderClientNotesThread();
+      rebuildHomePage();
+      return { ok: true, added_count: newNotes.length, skipped_count: skipped.length, skipped_names: skipped.slice(0, 10), client_names: newNotes.map(n => n.client_name) };
+    }
     case 'log_kpi_score':
       await logKpiScore(input.kpi_key, input.score);
       return { ok: true };
@@ -10240,6 +10359,17 @@ function describeAiAction(tool) {
   const i = tool.input;
   if (tool.name === 'add_note') return `📝 Add a note to <b>${escAttr(i.client_name)}</b>: "${escAttr(i.text)}"`;
   if (tool.name === 'create_task') return `✅ Create a task for <b>${escAttr(i.client_name)}</b>: "${escAttr(i.title)}"${i.due_date ? ' — due ' + escAttr(i.due_date) : ''}${i.assigned_to ? ' — assigned to ' + escAttr(i.assigned_to) : ''}${i.recurrence ? ' — repeats ' + escAttr(i.recurrence) : ''}`;
+  if (tool.name === 'bulk_create_tasks' || tool.name === 'bulk_add_note') {
+    const targets = resolveBulkTargets(i);
+    const overCap = targets.length > BULK_ACTION_MAX;
+    const capNote = overCap ? ` <span style="color:var(--red)">⚠️ Exceeds the ${BULK_ACTION_MAX}-client safety limit — this will be rejected. Narrow the filter first.</span>` : '';
+    const preview = targets.slice(0, 15).map(n => escAttr(n)).join(', ') + (targets.length > 15 ? ` … and ${targets.length - 15} more` : '');
+    const previewLine = `<br><span style="color:var(--text3);font-size:11px">${preview || 'No matching clients found.'}</span>`;
+    if (tool.name === 'bulk_create_tasks') {
+      return `✅ Create a task "${escAttr(i.title)}" for <b>${targets.length}</b> client${targets.length === 1 ? '' : 's'}${i.assigned_to ? ' — assigned to ' + escAttr(i.assigned_to) : ''}${i.due_date ? ' — due ' + escAttr(i.due_date) : ''}:${capNote}${previewLine}`;
+    }
+    return `📝 Add a note to <b>${targets.length}</b> client${targets.length === 1 ? '' : 's'}: "${escAttr(i.text)}"${capNote}${previewLine}`;
+  }
   if (tool.name === 'log_kpi_score') return `⭐ Set <b>${escAttr((KPI_META[i.kpi_key] || {}).label || i.kpi_key)}</b> to ${i.score} star${i.score === 1 ? '' : 's'}`;
   if (tool.name === 'create_workflow') return `🔁 Create workflow <b>${escAttr(i.name)}</b> — ${i.trigger_type === 'inactivity' ? `alert if inactive ${escAttr(i.inactivity_days || 14)} days` : `on a ${escAttr(i.schedule_type || 'weekly')} schedule`}, action: "${escAttr(i.action_title)}"`;
   if (tool.name === 'update_workflow') return `🔁 Update workflow <b>${escAttr(i.workflow_name)}</b>`;
@@ -10376,6 +10506,8 @@ const AI_TOOL_LABELS = {
   open_client_profile: '👤 Opened client profile',
   add_note: '📝 Added a note',
   create_task: '✅ Created a task',
+  bulk_create_tasks: '✅ Created multiple tasks',
+  bulk_add_note: '📝 Added a note to multiple clients',
   log_kpi_score: '⭐ Logged a KPI score',
   list_workflows: '🔁 Checked workflows',
   search_knowledge_base: '📚 Searched the Knowledge Base',
@@ -10592,20 +10724,124 @@ async function sendAiAgentMessage() {
   await runAiAgentTurn();
 }
 
+// ─── Streaming bubble helpers — same visual structure as appendAiAgentMessage,
+// but built incrementally so text can update live as it streams in. ─────────
+function createStreamingBubble(toolTag) {
+  const wrap = document.getElementById('aiAgentMessages');
+  const row = document.createElement('div');
+  row.className = 'ai-msg-row ai-msg-row-assistant';
+  if (toolTag) {
+    const tag = document.createElement('div');
+    tag.style.cssText = 'font-size:10px;color:var(--text3);margin-bottom:4px;padding:0 2px';
+    tag.textContent = toolTag;
+    row.appendChild(tag);
+  }
+  const bubble = document.createElement('div');
+  bubble.className = 'ai-msg ai-msg-assistant';
+  row.appendChild(bubble);
+  wrap.appendChild(row);
+  wrap.scrollTop = wrap.scrollHeight;
+  return { row, bubble };
+}
+function updateStreamingBubble(streamRef, text) {
+  streamRef.bubble.innerHTML = renderAiMarkdown(text);
+  const wrap = document.getElementById('aiAgentMessages');
+  wrap.scrollTop = wrap.scrollHeight;
+}
+function finalizeStreamingBubble(streamRef) {
+  const time = document.createElement('div');
+  time.className = 'ai-msg-time';
+  time.textContent = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+  streamRef.row.appendChild(time);
+}
+
+// Parses Claude's Server-Sent Events stream (proxied through the Netlify
+// Function untouched) and reconstructs the final message — calling
+// onTextDelta with the running text as it arrives, so the UI can update live
+// instead of waiting for the whole reply. Tool-call inputs stream in as
+// fragmented JSON (input_json_delta) and are only parsed once complete.
+async function streamAiAgentResponse(systemPrompt, onTextDelta) {
+  const res = await fetch(AI_AGENT_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ system: systemPrompt, messages: aiAgentMessages, tools: AI_AGENT_TOOLS }),
+  });
+
+  const contentType = res.headers.get('content-type') || '';
+  if (!res.ok || contentType.includes('application/json') || !res.body) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error((errData && (errData.error && errData.error.message || errData.error)) || `Request failed (${res.status})`);
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  const contentBlocks = [];
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const frames = buffer.split('\n\n');
+    buffer = frames.pop(); // last frame may be incomplete — keep it for next chunk
+
+    for (const frame of frames) {
+      let dataStr = null;
+      for (const line of frame.split('\n')) {
+        if (line.startsWith('data:')) dataStr = line.slice(5).trim();
+      }
+      if (!dataStr) continue;
+      let data;
+      try { data = JSON.parse(dataStr); } catch(e) { continue; }
+
+      if (data.type === 'content_block_start') {
+        contentBlocks[data.index] = data.content_block.type === 'tool_use'
+          ? { type: 'tool_use', id: data.content_block.id, name: data.content_block.name, input: {}, _partialJson: '' }
+          : { type: 'text', text: '' };
+      } else if (data.type === 'content_block_delta') {
+        const block = contentBlocks[data.index];
+        if (!block) continue;
+        if (data.delta.type === 'text_delta') {
+          block.text += data.delta.text;
+          onTextDelta(block.text);
+        } else if (data.delta.type === 'input_json_delta') {
+          block._partialJson += data.delta.partial_json;
+        }
+      } else if (data.type === 'content_block_stop') {
+        const block = contentBlocks[data.index];
+        if (block && block.type === 'tool_use') {
+          try { block.input = JSON.parse(block._partialJson || '{}'); } catch(e) { block.input = {}; }
+          delete block._partialJson;
+        }
+      } else if (data.type === 'error') {
+        throw new Error((data.error && data.error.message) || 'Stream error');
+      }
+    }
+  }
+
+  return { content: contentBlocks.filter(Boolean) };
+}
+
 async function runAiAgentTurn(toolTagForNextText) {
   showAiAgentTyping(true);
   const u = getCurrentUser();
-  const systemPrompt = `You are Nirvana, the AI Agent inside Niche Inc.'s Client Success Hub, helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the SMB, White Label, and Support portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. Workflows automate two things: "inactivity" (create a task if a client hasn't had a note in N days) and "schedule" (create a task on a recurring cadence, for one client or a whole portfolio) — if someone describes an automation idea in plain English, translate it into the right workflow fields yourself rather than making them fill out a form. For questions about company policy, procedures, "how do we...", or what the website/docs say, search the Knowledge Base — it contains SOPs, docs, and website content the team has fed in, separate from live client data. You can read and explain every chart in the Hub: get_portfolio_summary explains a portfolio's Product Adoption Rate and Products Per Client charts, get_product_adoption explains the Voice Agent / Text Agent charts, get_collections_summary explains the Collections breakdown (always separated into Outstanding Balances vs Card Fails, each with its own status breakdown — never collapse these into one number), get_adspend_summary explains Ad Spend's promo/budget breakdown, and get_kpi_summary explains the Client Success Playbook scores. When someone asks you to break down, interpret, or explain any data or chart, always call the specific tool that has that breakdown built in rather than answering from a vaguer or more general tool — if a user asks for a split by category/status/type, that split should already be in the tool result; use it. Prefer the data tools above for explaining charts — they're faster and more precise. Only use view_chart when the question is genuinely about the chart's visual appearance itself (e.g. "does this look right," "what do you see," "describe this chart visually") — calling it will switch the user's screen to that chart's page, so mention that you're pulling it up. Whenever asked to check for discrepancies, duplicates, mismatches, or whether numbers add up anywhere in the Hub (including client counts, Collections, Ad Spend, or the Knowledge Base), always call audit_data_integrity rather than speculating about possible causes — it actually reconciles the numbers and reports genuine findings, so use what it returns instead of guessing at explanations like "could be duplicates" or "could be stale data." When summarizing data, only use the real numbers/content returned by tools — never estimate or make things up. If a tool returns an error (e.g. client not found, or nothing in the knowledge base matches), tell the user plainly rather than guessing.`;
+  const systemPrompt = `You are Nirvana, the AI Agent inside Niche Inc.'s Client Success Hub, helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the SMB, White Label, and Support portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. Whenever a request would affect MORE THAN ONE client (e.g. "create a follow-up task for every client that hasn't been touched in 30 days," or a list of specific client names), always use bulk_create_tasks or bulk_add_note instead of calling create_task/add_note in a loop — looping individual calls would force a separate confirmation click per client, while the bulk tools show one confirmation with the full affected list. Workflows automate two things: "inactivity" (create a task if a client hasn't had a note in N days) and "schedule" (create a task on a recurring cadence, for one client or a whole portfolio) — if someone describes an automation idea in plain English, translate it into the right workflow fields yourself rather than making them fill out a form. For questions about company policy, procedures, "how do we...", or what the website/docs say, search the Knowledge Base — it contains SOPs, docs, and website content the team has fed in, separate from live client data. You can read and explain every chart in the Hub: get_portfolio_summary explains a portfolio's Product Adoption Rate and Products Per Client charts, get_product_adoption explains the Voice Agent / Text Agent charts, get_collections_summary explains the Collections breakdown (always separated into Outstanding Balances vs Card Fails, each with its own status breakdown — never collapse these into one number), get_adspend_summary explains Ad Spend's promo/budget breakdown, and get_kpi_summary explains the Client Success Playbook scores. When someone asks you to break down, interpret, or explain any data or chart, always call the specific tool that has that breakdown built in rather than answering from a vaguer or more general tool — if a user asks for a split by category/status/type, that split should already be in the tool result; use it. Prefer the data tools above for explaining charts — they're faster and more precise. Only use view_chart when the question is genuinely about the chart's visual appearance itself (e.g. "does this look right," "what do you see," "describe this chart visually") — calling it will switch the user's screen to that chart's page, so mention that you're pulling it up. Whenever asked to check for discrepancies, duplicates, mismatches, or whether numbers add up anywhere in the Hub (including client counts, Collections, Ad Spend, or the Knowledge Base), always call audit_data_integrity rather than speculating about possible causes — it actually reconciles the numbers and reports genuine findings, so use what it returns instead of guessing at explanations like "could be duplicates" or "could be stale data." When summarizing data, only use the real numbers/content returned by tools — never estimate or make things up. If a tool returns an error (e.g. client not found, or nothing in the knowledge base matches), tell the user plainly rather than guessing.`;
+
+  let streamBubble = null;
+  const onTextDelta = (fullTextSoFar) => {
+    if (!streamBubble) {
+      showAiAgentTyping(false); // real text is arriving now — swap the "..." indicator for it
+      streamBubble = createStreamingBubble(toolTagForNextText);
+    }
+    updateStreamingBubble(streamBubble, fullTextSoFar);
+  };
+
   try {
-    const res = await fetch(AI_AGENT_ENDPOINT, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ system: systemPrompt, messages: aiAgentMessages, tools: AI_AGENT_TOOLS }),
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error((data && (data.error && data.error.message || data.error)) || `Request failed (${res.status})`);
-    await handleAiAgentResponse(data, toolTagForNextText);
+    const result = await streamAiAgentResponse(systemPrompt, onTextDelta);
+    if (streamBubble) finalizeStreamingBubble(streamBubble);
+    await handleAiAgentResponse(result, toolTagForNextText, !!streamBubble);
   } catch(e) {
+    if (streamBubble) finalizeStreamingBubble(streamBubble);
     appendAiAgentMessage('assistant', `⚠️ I couldn't reach the assistant backend: ${e.message}. If this keeps happening, an Admin may need to check the Netlify Function setup.`);
   } finally {
     showAiAgentTyping(false);
@@ -10613,10 +10849,13 @@ async function runAiAgentTurn(toolTagForNextText) {
   }
 }
 
-async function handleAiAgentResponse(data, toolTag) {
+async function handleAiAgentResponse(data, toolTag, skipTextRender) {
   aiAgentMessages.push({ role: 'assistant', content: data.content });
   const textBlocks = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n');
-  if (textBlocks) { appendAiAgentMessage('assistant', textBlocks, toolTag); speakNirvanaReply(textBlocks); }
+  if (textBlocks) {
+    if (!skipTextRender) appendAiAgentMessage('assistant', textBlocks, toolTag); // fallback path (e.g. no text ever streamed — shouldn't normally happen, but safe either way)
+    speakNirvanaReply(textBlocks);
+  }
 
   const toolUses = (data.content || []).filter(b => b.type === 'tool_use');
   if (toolUses.length === 0) return; // conversation turn complete
