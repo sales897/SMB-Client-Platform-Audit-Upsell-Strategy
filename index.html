@@ -7387,6 +7387,26 @@ function capitalizeSpeechText(text) {
   return out;
 }
 
+// Voice-only convenience: say "...tag Kevin" (or "at Kevin") while dictating
+// a note instead of needing to say "at-sign Kevin" literally, which speech
+// recognition has no way to produce on its own. Only converts a name that
+// actually matches a real teammate — everything else is left exactly as
+// spoken, so ordinary sentences using the words "tag" or "at" are unaffected
+// (e.g. "the price tag was wrong" or "call at noon" both pass through untouched).
+function convertSpokenTagsToMentions(text) {
+  if (!text) return text;
+  return text.replace(/\b(?:tag|at)\s+([a-z]+(?:\s*(?:,|and)\s*[a-z]+)*)\b/gi, (match, namesPart) => {
+    const rawNames = namesPart.split(/\s*(?:,|and)\s*/i).map(n => n.trim()).filter(Boolean);
+    const resolved = rawNames.map(n => {
+      const member = TEAM_MEMBERS.find(m => m.name.toLowerCase() === n.toLowerCase());
+      return member ? { mention: '@' + member.name, email: member.email } : null;
+    });
+    if (resolved.length === 0 || resolved.some(r => !r)) return match; // not every name matched a real teammate — leave it as spoken
+    resolved.forEach(r => { if (!cntTaggedEmails.includes(r.email)) cntTaggedEmails.push(r.email); });
+    return resolved.map(r => r.mention).join(' ');
+  });
+}
+
 function toggleVoiceInput(targetId, btnId) {
   const btn = document.getElementById(btnId);
 
@@ -7453,9 +7473,11 @@ function toggleVoiceInput(targetId, btnId) {
     let dictated = accumulatedFinal.trim();
     if (dictated) {
       dictated = capitalizeSpeechText(dictated);
+      if (targetId === 'cntNewNoteText') dictated = convertSpokenTagsToMentions(dictated);
       dictated = addSpeechPunctuation(dictated);
     }
     input.value = (baseText + dictated).trim();
+    if (targetId === 'cntNewNoteText') renderCntTagPicker(); // reflect any names just tagged by voice
     if (!autoSendWhenDone && dictated) showPolishButton(targetId);
     if (autoSendWhenDone && input.value.trim()) sendAiAgentMessage();
   };
