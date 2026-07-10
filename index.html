@@ -9898,6 +9898,11 @@ const AI_AGENT_TOOLS = [
     input_schema: { type: 'object', properties: {} },
   },
   {
+    name: 'get_daily_briefing',
+    description: 'Get a fresh rundown of what needs attention right now: the current user\'s tasks due today or overdue, today\'s Client Spotlight status per portfolio, Collections needing attention, open automated workflow tasks, and current KPI scores. Use this whenever asked for a summary, rundown, "what should I focus on today," or anything similar.',
+    input_schema: { type: 'object', properties: {} },
+  },
+  {
     name: 'navigate_to',
     description: 'Switch the Hub to a different page for the user.',
     input_schema: { type: 'object', properties: { page: { type: 'string', enum: ['home', 'smb', 'whitelabel', 'support', 'clients', 'collections', 'adspend', 'action', 'workflows', 'knowledge', 'voice', 'textagent'] } }, required: ['page'] },
@@ -10152,6 +10157,8 @@ async function executeAiTool(name, input) {
     }
     case 'audit_data_integrity':
       return auditDataIntegrity();
+    case 'get_daily_briefing':
+      return gatherDailyBriefingData();
     case 'get_collections_summary': {
       const list = typeof COLLECTIONS_ACCOUNTS !== 'undefined' ? COLLECTIONS_ACCOUNTS : [];
       const byStatus = (arr) => COLLECTIONS_STATUSES.map(s => ({
@@ -10502,6 +10509,7 @@ const AI_TOOL_LABELS = {
   get_product_adoption: '📈 Checked product adoption data',
   view_chart: '👁️ Looked at the chart',
   audit_data_integrity: '🔍 Ran a data integrity check',
+  get_daily_briefing: '☀️ Pulled the daily briefing',
   navigate_to: '🧭 Navigated the Hub',
   open_client_profile: '👤 Opened client profile',
   add_note: '📝 Added a note',
@@ -10554,6 +10562,104 @@ function speakNirvanaReply(text) {
   window.speechSynthesis.speak(utterance);
 }
 
+// ─── Daily Briefing — proactive summary shown once per day ────────────────
+// Computed entirely client-side from data already loaded (no API call, so
+// it's instant and works even if the backend has a hiccup). Shown once per
+// calendar day per user; also available on-demand via the get_daily_briefing
+// tool so it can be asked for again mid-conversation.
+function getBriefingDateKey() {
+  const u = getCurrentUser();
+  return 'csh_nirvana_briefing_date_v1_' + (u ? u.email : 'anon');
+}
+function shouldShowDailyBriefingToday() {
+  return localStorage.getItem(getBriefingDateKey()) !== todayStr();
+}
+function markDailyBriefingShown() {
+  localStorage.setItem(getBriefingDateKey(), todayStr());
+}
+function getTimeOfDayGreeting() {
+  const h = new Date().getHours();
+  if (h < 12) return 'morning';
+  if (h < 17) return 'afternoon';
+  return 'evening';
+}
+
+function gatherDailyBriefingData() {
+  const u = getCurrentUser();
+  const today = todayStr();
+
+  const myOpenTasks = u ? CLIENT_TASKS.filter(t => t.assigned_to_email === u.email && t.status !== 'done' && t.due_date && t.due_date.slice(0, 10) <= today) : [];
+  myOpenTasks.sort((a, b) => (a.due_date || '').localeCompare(b.due_date || ''));
+
+  const spotlight = ['smb', 'whitelabel', 'support'].map(pk => {
+    const entry = CLIENT_SPOTLIGHT[`${pk}_${today}`];
+    if (!entry) return null;
+    return { portfolio: PORTFOLIO_LABELS[pk], client: entry.client_name, worked_today: getWorkedTodayNames().has(entry.client_name.trim().toLowerCase()) };
+  }).filter(Boolean);
+
+  const collList = typeof COLLECTIONS_ACCOUNTS !== 'undefined' ? COLLECTIONS_ACCOUNTS : [];
+  const collectionsNeedingAttention = collList.filter(a => ['escalated', 'pending'].includes(a.status));
+
+  const workflowTasksOpen = CLIENT_TASKS.filter(t => t.workflow_id && t.status !== 'done');
+
+  const kpis = KPI_KEYS.map(k => ({ kpi: KPI_META[k].label, score: getLatestKpiScore(k), trend: getKpiTrend(k) > 0 ? 'improved' : getKpiTrend(k) < 0 ? 'declined' : 'stable' }));
+
+  return {
+    my_tasks_due_today_or_overdue: myOpenTasks.map(t => ({ title: t.title, client_name: t.client_name, due_date: t.due_date, overdue: t.due_date.slice(0, 10) < today })),
+    client_spotlight_status: spotlight,
+    collections_needing_attention_count: collectionsNeedingAttention.length,
+    collections_needing_attention_total: collectionsNeedingAttention.reduce((s, a) => s + (a.amount || 0), 0),
+    automated_workflow_tasks_still_open: workflowTasksOpen.length,
+    kpi_scores: kpis,
+  };
+}
+
+function buildDailyBriefingText() {
+  const data = gatherDailyBriefingData();
+  const u = getCurrentUser();
+  const lines = [];
+  lines.push(`Good ${getTimeOfDayGreeting()}${u ? ', ' + u.name : ''}! Here's what's worth knowing today:`);
+  lines.push('');
+
+  if (data.my_tasks_due_today_or_overdue.length > 0) {
+    lines.push(`**📌 Your tasks due today or overdue (${data.my_tasks_due_today_or_overdue.length}):**`);
+    data.my_tasks_due_today_or_overdue.slice(0, 8).forEach(t => {
+      lines.push(`- ${t.title} — ${t.client_name}${t.overdue ? ' (⚠️ overdue)' : ' (due today)'}`);
+    });
+    if (data.my_tasks_due_today_or_overdue.length > 8) lines.push(`- …and ${data.my_tasks_due_today_or_overdue.length - 8} more`);
+    lines.push('');
+  }
+
+  if (data.client_spotlight_status.length) {
+    lines.push(`**🔦 Today's Client Spotlight:**`);
+    data.client_spotlight_status.forEach(s => {
+      lines.push(`- ${s.portfolio}: **${s.client}** ${s.worked_today ? '✅ already touched today' : '⏳ not touched yet'}`);
+    });
+    lines.push('');
+  }
+
+  if (data.collections_needing_attention_count > 0) {
+    lines.push(`**🧾 Collections needing attention:** ${data.collections_needing_attention_count} account${data.collections_needing_attention_count === 1 ? '' : 's'}, ${fmtMoney(data.collections_needing_attention_total)} total`);
+    lines.push('');
+  }
+
+  if (data.automated_workflow_tasks_still_open > 0) {
+    lines.push(`**🤖 Automated tasks still open:** ${data.automated_workflow_tasks_still_open} (created by your workflows)`);
+    lines.push('');
+  }
+
+  if (data.kpi_scores.length) {
+    const arrowMap = { improved: '▲', declined: '▼', stable: '→' };
+    const kpiLine = data.kpi_scores.map(k => `${k.kpi}: ${k.score}/5 ${arrowMap[k.trend]}`).join(' · ');
+    lines.push(`**⭐ Client Success Playbook:** ${kpiLine}`);
+    lines.push('');
+  }
+
+  if (lines.length <= 2) lines.push('Nothing urgent stands out today — a good day to get ahead on a growth opportunity or two. 🚀');
+
+  return lines.join('\n');
+}
+
 function toggleAiAgentPanel() {
   const panel = document.getElementById('aiAgentPanel');
   const willShow = panel.style.display === 'none';
@@ -10563,9 +10669,17 @@ function toggleAiAgentPanel() {
     updateNirvanaVoiceButton();
     if (!aiAgentPanelInitialized) {
       aiAgentPanelInitialized = true;
-      if (aiAgentMessages.length > 0) {
-        renderStoredNirvanaHistory();
-      } else {
+      const hasHistory = aiAgentMessages.length > 0;
+      if (hasHistory) renderStoredNirvanaHistory();
+
+      if (shouldShowDailyBriefingToday()) {
+        // Purely visual — not pushed into aiAgentMessages, since Claude never
+        // actually generated this (it's computed locally); keeps the real API
+        // conversation history clean and accurate.
+        appendAiAgentMessage('assistant', buildDailyBriefingText(), '☀️ Daily Briefing');
+        markDailyBriefingShown();
+        if (!hasHistory) renderAiQuickSuggestions();
+      } else if (!hasHistory) {
         const u = getCurrentUser();
         appendAiAgentMessage('assistant', `Hey${u ? ' ' + u.name : ''}! I am Nirvana, your AI Agent inside the Client Success Hub. I can find clients, pull up their details, check KPIs/Collections/Ad Spend, take you to a page, or add a note/task if you tell me to. What do you need?`);
         renderAiQuickSuggestions();
@@ -10825,7 +10939,7 @@ async function streamAiAgentResponse(systemPrompt, onTextDelta) {
 async function runAiAgentTurn(toolTagForNextText) {
   showAiAgentTyping(true);
   const u = getCurrentUser();
-  const systemPrompt = `You are Nirvana, the AI Agent inside Niche Inc.'s Client Success Hub, helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the SMB, White Label, and Support portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. Whenever a request would affect MORE THAN ONE client (e.g. "create a follow-up task for every client that hasn't been touched in 30 days," or a list of specific client names), always use bulk_create_tasks or bulk_add_note instead of calling create_task/add_note in a loop — looping individual calls would force a separate confirmation click per client, while the bulk tools show one confirmation with the full affected list. Workflows automate two things: "inactivity" (create a task if a client hasn't had a note in N days) and "schedule" (create a task on a recurring cadence, for one client or a whole portfolio) — if someone describes an automation idea in plain English, translate it into the right workflow fields yourself rather than making them fill out a form. For questions about company policy, procedures, "how do we...", or what the website/docs say, search the Knowledge Base — it contains SOPs, docs, and website content the team has fed in, separate from live client data. You can read and explain every chart in the Hub: get_portfolio_summary explains a portfolio's Product Adoption Rate and Products Per Client charts, get_product_adoption explains the Voice Agent / Text Agent charts, get_collections_summary explains the Collections breakdown (always separated into Outstanding Balances vs Card Fails, each with its own status breakdown — never collapse these into one number), get_adspend_summary explains Ad Spend's promo/budget breakdown, and get_kpi_summary explains the Client Success Playbook scores. When someone asks you to break down, interpret, or explain any data or chart, always call the specific tool that has that breakdown built in rather than answering from a vaguer or more general tool — if a user asks for a split by category/status/type, that split should already be in the tool result; use it. Prefer the data tools above for explaining charts — they're faster and more precise. Only use view_chart when the question is genuinely about the chart's visual appearance itself (e.g. "does this look right," "what do you see," "describe this chart visually") — calling it will switch the user's screen to that chart's page, so mention that you're pulling it up. Whenever asked to check for discrepancies, duplicates, mismatches, or whether numbers add up anywhere in the Hub (including client counts, Collections, Ad Spend, or the Knowledge Base), always call audit_data_integrity rather than speculating about possible causes — it actually reconciles the numbers and reports genuine findings, so use what it returns instead of guessing at explanations like "could be duplicates" or "could be stale data." When summarizing data, only use the real numbers/content returned by tools — never estimate or make things up. If a tool returns an error (e.g. client not found, or nothing in the knowledge base matches), tell the user plainly rather than guessing.`;
+  const systemPrompt = `You are Nirvana, the AI Agent inside Niche Inc.'s Client Success Hub, helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the SMB, White Label, and Support portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. Whenever a request would affect MORE THAN ONE client (e.g. "create a follow-up task for every client that hasn't been touched in 30 days," or a list of specific client names), always use bulk_create_tasks or bulk_add_note instead of calling create_task/add_note in a loop — looping individual calls would force a separate confirmation click per client, while the bulk tools show one confirmation with the full affected list. Workflows automate two things: "inactivity" (create a task if a client hasn't had a note in N days) and "schedule" (create a task on a recurring cadence, for one client or a whole portfolio) — if someone describes an automation idea in plain English, translate it into the right workflow fields yourself rather than making them fill out a form. For questions about company policy, procedures, "how do we...", or what the website/docs say, search the Knowledge Base — it contains SOPs, docs, and website content the team has fed in, separate from live client data. You can read and explain every chart in the Hub: get_portfolio_summary explains a portfolio's Product Adoption Rate and Products Per Client charts, get_product_adoption explains the Voice Agent / Text Agent charts, get_collections_summary explains the Collections breakdown (always separated into Outstanding Balances vs Card Fails, each with its own status breakdown — never collapse these into one number), get_adspend_summary explains Ad Spend's promo/budget breakdown, and get_kpi_summary explains the Client Success Playbook scores. When someone asks you to break down, interpret, or explain any data or chart, always call the specific tool that has that breakdown built in rather than answering from a vaguer or more general tool — if a user asks for a split by category/status/type, that split should already be in the tool result; use it. Prefer the data tools above for explaining charts — they're faster and more precise. Only use view_chart when the question is genuinely about the chart's visual appearance itself (e.g. "does this look right," "what do you see," "describe this chart visually") — calling it will switch the user's screen to that chart's page, so mention that you're pulling it up. Whenever asked to check for discrepancies, duplicates, mismatches, or whether numbers add up anywhere in the Hub (including client counts, Collections, Ad Spend, or the Knowledge Base), always call audit_data_integrity rather than speculating about possible causes — it actually reconciles the numbers and reports genuine findings, so use what it returns instead of guessing at explanations like "could be duplicates" or "could be stale data." A daily briefing already gets shown automatically once per day when the chat is first opened — if asked for a summary, rundown, or "what should I focus on" at any other point, use get_daily_briefing to pull the same live data fresh rather than referencing whatever was shown earlier, since it may be out of date by then. When summarizing data, only use the real numbers/content returned by tools — never estimate or make things up. If a tool returns an error (e.g. client not found, or nothing in the knowledge base matches), tell the user plainly rather than guessing.`;
 
   let streamBubble = null;
   const onTextDelta = (fullTextSoFar) => {
