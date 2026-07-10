@@ -1210,6 +1210,9 @@ tr.hidden-row { display: none; }
     <div class="nav-item" onclick="showPage('action')">
       <span class="icon">🎯</span> Client Success Playbook
     </div>
+    <div class="nav-item" onclick="showPage('workflows')">
+      <span class="icon">🔁</span> Workflows
+    </div>
     <div class="nav-item" id="navProductsItem" onclick="showPage('products')">
       <span class="icon">📦</span> Manage Products
     </div>
@@ -1334,6 +1337,22 @@ tr.hidden-row { display: none; }
             <option value="10080">1 week before</option>
           </select></div>
         </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;align-items:start;margin-bottom:10px">
+          <div><label class="field-label">Repeat</label><select id="cntNewTaskRecurrence" class="field-select" style="height:38px" onchange="toggleCustomRecurrenceFields()">
+            <option value="">Does not repeat</option>
+            <option value="daily">Daily</option>
+            <option value="weekdays">Weekdays (Mon–Fri)</option>
+            <option value="biweekly">Bi-weekly</option>
+            <option value="monthly">Monthly</option>
+            <option value="custom">Custom…</option>
+          </select></div>
+          <div id="cntRecurrenceCustomN" style="display:none"><label class="field-label">Every</label><input type="number" id="cntNewTaskRecurrenceN" class="field-input" style="height:38px" min="1" value="2"></div>
+          <div id="cntRecurrenceCustomUnit" style="display:none"><label class="field-label">&nbsp;</label><select id="cntNewTaskRecurrenceUnit" class="field-select" style="height:38px">
+            <option value="days">Days</option>
+            <option value="weeks">Weeks</option>
+            <option value="months">Months</option>
+          </select></div>
+        </div>
         <div style="display:flex;justify-content:flex-end">
           <button class="btn btn-primary btn-sm" id="cntTasksSubmitBtn" onclick="addClientTask()">＋ Add Task</button>
         </div>
@@ -1397,6 +1416,7 @@ tr.hidden-row { display: none; }
           <span class="notif-badge" id="notifBadge" style="display:none">0</span>
         </div>
       </div>
+      <div class="theme-toggle" id="moneyToggleBtn" onclick="toggleMoneyVisibility()" title="Show/hide dollar amounts">👁️</div>
       <div class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Switch light/dark mode">🌙</div>
       <div style="position:relative">
         <div class="user-badge" id="userBadge" onclick="toggleProfileMenu()" title="Account">
@@ -2037,6 +2057,40 @@ tr.hidden-row { display: none; }
     <div class="page-footer">Client Success Hub · Niche Inc. · Client Success Playbook</div>
   </div>
 
+  <div class="page" id="page-workflows">
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-icon">🔁</div><div class="kpi-val" id="wf-active-count">0</div><div class="kpi-lbl">Active Workflows</div><div class="kpi-sub">Running automations</div></div>
+      <div class="kpi"><div class="kpi-icon">🤖</div><div class="kpi-val orange" id="wf-tasks-created">0</div><div class="kpi-lbl">Tasks Created So Far</div><div class="kpi-sub">By all workflows combined</div></div>
+      <div class="kpi"><div class="kpi-icon">😴</div><div class="kpi-val red" id="wf-inactivity-count">0</div><div class="kpi-lbl">Inactivity Alerts</div><div class="kpi-sub">Watching for cold clients</div></div>
+      <div class="kpi"><div class="kpi-icon">📅</div><div class="kpi-val" id="wf-schedule-count">0</div><div class="kpi-lbl">Scheduled Tasks</div><div class="kpi-sub">Running on a recurring schedule</div></div>
+    </div>
+
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header">
+        <div><div class="card-title">Your Workflows</div><div class="card-sub">Checked automatically while the Hub is open — every ~30 minutes, and whenever it loads</div></div>
+        <button class="btn btn-primary btn-sm" id="addWorkflowBtn" onclick="openAddWorkflowModal()">＋ New Workflow</button>
+      </div>
+      <div id="workflowsList"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <div><div class="card-title">💡 Ask Nirvana</div><div class="card-sub">You can also just describe what you want in plain English</div></div>
+      </div>
+      <div style="font-size:12px;color:var(--text2);line-height:1.7">
+        Open ✨ Nirvana (bottom right) and try things like:
+        <ul style="margin:8px 0 0 18px">
+          <li>"Create a workflow that reminds us if an SMB client hasn't been touched in 21 days"</li>
+          <li>"Set up a task every Monday to review Ad Spend for [client name]"</li>
+          <li>"Show me all my active workflows"</li>
+          <li>"Turn off the inactivity workflow for Support"</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="page-footer">Client Success Hub · Niche Inc. · Workflows</div>
+  </div>
+
   <!-- ═══════════════════════════════════════════════════════════════════
        PAGE 8: MANAGE PRODUCTS
   ════════════════════════════════════════════════════════════════════════ -->
@@ -2528,6 +2582,38 @@ tr.hidden-row { display: none; }
   </div>
 </div>
 
+<!-- WORKFLOW MODAL -->
+<div class="modal-overlay" id="workflowModal">
+  <div class="modal wide">
+    <h3 id="workflowModalTitle">🔁 New Workflow</h3>
+    <p>Automate a repetitive check so nobody has to remember to do it manually.</p>
+
+    <label class="field-label">Workflow Name <span style="color:var(--orange)">*</span></label>
+    <input type="text" id="wfName" class="field-input" style="height:38px;margin-bottom:16px" placeholder="e.g. SMB inactivity alert">
+
+    <label class="field-label">When should it trigger? <span style="color:var(--orange)">*</span></label>
+    <div style="display:flex;gap:18px;margin-bottom:14px">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfTriggerType" value="inactivity" checked onchange="renderWorkflowTriggerFields()"> 😴 Client inactivity</label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfTriggerType" value="schedule" onchange="renderWorkflowTriggerFields()"> 📅 On a schedule</label>
+    </div>
+
+    <div id="workflowTriggerFields"></div>
+
+    <div class="cnt-divider"></div>
+
+    <div style="font-size:11px;color:var(--text3);margin-bottom:12px">Action — what should happen when it triggers</div>
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:4px">
+      <div><label class="field-label">Create a task titled</label><input type="text" id="wfActionTitle" class="field-input" style="height:38px" placeholder="e.g. Check in — no recent contact"></div>
+      <div><label class="field-label">Assign to</label><select id="wfActionAssignee" class="field-select" style="height:38px"></select></div>
+    </div>
+
+    <div class="modal-btns" style="margin-top:18px">
+      <button class="btn btn-ghost" onclick="closeWorkflowModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveWorkflow()">💾 Save Workflow</button>
+    </div>
+  </div>
+</div>
+
 <!-- ADD CLIENT MODAL -->
 <div class="modal-overlay" id="addClientModal">
   <div class="modal wide">
@@ -2657,6 +2743,7 @@ const pageMeta = {
   textagent:  { title: 'Text Agent',           sub: 'Performance & messaging metrics' },
   upsell:     { title: 'Upsell Playbook',      sub: 'By product · prioritized action cards' },
   action:     { title: 'Client Success Playbook', sub: 'Our KPIs, SOPs, and the plan to earn 5 stars on every one' },
+  workflows:  { title: 'Workflows', sub: 'Automate the busywork — inactivity alerts and scheduled recurring tasks' },
   products:   { title: 'Manage Products',      sub: 'Add, remove, and configure your product catalog' },
   adspend:    { title: 'Ad Spend Management', sub: 'Business-by-business budget, promo status, and recommendations' },
   collections:{ title: 'Collections',              sub: 'Outstanding balances and card fails, with status and notes' },
@@ -3233,6 +3320,7 @@ function rebuildAll() {
   rebuildClientsDirectory(); // All Clients — unified directory across every portfolio
   if (typeof rebuildAdSpendPage === 'function') rebuildAdSpendPage();
   if (typeof rebuildCollectionsPage === 'function') rebuildCollectionsPage();
+  if (typeof rebuildWorkflowsPage === 'function') rebuildWorkflowsPage();
   refreshNavBadges(); // final guaranteed pass — always correct, never a cached/stale number
 }
 
@@ -4112,6 +4200,9 @@ function cellToExportText(td) {
 // rows are skipped, and columns export in whatever order they're currently in.
 function exportTableToCSV(tableEl, filename) {
   if (!tableEl) { showToast('Nothing to export.', 'warning'); return; }
+  if (moneyHidden) {
+    showToast('Dollar amounts are currently hidden — click 👁️ in the top bar to show them first if you want real numbers in this export.', 'warning');
+  }
   const headers = Array.from(tableEl.querySelectorAll('thead th')).map(headerToExportText);
   const bodyRows = Array.from(tableEl.querySelectorAll('tbody tr')).filter(tr =>
     !tr.classList.contains('hidden-row') && getComputedStyle(tr).display !== 'none'
@@ -5756,7 +5847,24 @@ function setAdSpendFilter(val, btn) {
   rebuildAdSpendTable();
 }
 
-function fmtMoney(n) { return '$' + Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+// Privacy toggle — one flip masks every dollar amount across the whole Hub,
+// since every single money display already routes through fmtMoney() below.
+let moneyHidden = (localStorage.getItem('csh_money_hidden_v1') === '1');
+function fmtMoney(n) {
+  if (moneyHidden) return '•••••';
+  return '$' + Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function toggleMoneyVisibility() {
+  moneyHidden = !moneyHidden;
+  localStorage.setItem('csh_money_hidden_v1', moneyHidden ? '1' : '0');
+  updateMoneyToggleIcon();
+  rebuildAll(); // re-render everything so every fmtMoney() call re-evaluates with the new state
+}
+function updateMoneyToggleIcon() {
+  const btn = document.getElementById('moneyToggleBtn');
+  if (btn) { btn.textContent = moneyHidden ? '🙈' : '👁️'; btn.title = moneyHidden ? 'Show dollar amounts' : 'Hide dollar amounts'; }
+}
+
 function fmtDate(d) {
   if (!d) return '—';
   const dt = new Date(d + 'T00:00:00');
@@ -5772,7 +5880,7 @@ function fmtDateTime(d) {
   if (isNaN(dt)) return d;
   const dateStr = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   if (!hasTime) return dateStr;
-  return `${dateStr} at ${dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
+  return `${dateStr} at ${dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}`;
 }
 function promoPillClass(p) { return p === 'Yes' ? 'yes' : p === 'Already Using' ? 'using' : 'no'; }
 
@@ -5832,7 +5940,7 @@ function rebuildAdSpendCharts() {
               callbacks: { label: ctx => ` ${fmtMoney(ctx.parsed.x)}/mo` } },
           },
           scales: {
-            x: { beginAtZero: true, grid: { color: C.grid }, ticks: { color: C.tick, font: { size: 11 }, callback: v => '$' + v.toLocaleString() }, border: { display: false } },
+            x: { beginAtZero: true, grid: { color: C.grid }, ticks: { color: C.tick, font: { size: 11 }, callback: v => moneyHidden ? '••••' : '$' + v.toLocaleString() }, border: { display: false } },
             y: { grid: { display: false }, ticks: { color: C.text, font: { size: 11 } }, border: { display: false } },
           },
         },
@@ -6344,7 +6452,7 @@ function saveCollectionsEdit() {
 function fmtNoteTime(ts) {
   const d = new Date(ts);
   if (isNaN(d)) return '';
-  return d.toLocaleDateString('en-US', { month:'short', day:'numeric' }) + ' at ' + d.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' });
+  return d.toLocaleDateString('en-US', { month:'short', day:'numeric' }) + ' at ' + d.toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit', hour12: true });
 }
 
 function setCollectionsFilter(key, btn) {
@@ -6451,7 +6559,7 @@ function rebuildCollectionsCharts() {
               callbacks: { label: ctx => ` ${fmtMoney(ctx.parsed.x)}` } },
           },
           scales: {
-            x: { beginAtZero: true, grid: { color: C.grid }, ticks: { color: C.tick, font: { size: 11 }, callback: v => '$' + v.toLocaleString() }, border: { display: false } },
+            x: { beginAtZero: true, grid: { color: C.grid }, ticks: { color: C.tick, font: { size: 11 }, callback: v => moneyHidden ? '••••' : '$' + v.toLocaleString() }, border: { display: false } },
             y: { grid: { display: false }, ticks: { color: C.text, font: { size: 11 } }, border: { display: false } },
           },
         },
@@ -7410,6 +7518,70 @@ function populateCntTaskAssigneeSelect() {
   sel.innerHTML = TEAM_MEMBERS.map(m => `<option value="${escAttr(m.email)}" ${u && m.email === u.email ? 'selected' : ''}>${escAttr(m.name)}${u && m.email === u.email ? ' (Myself)' : ''}</option>`).join('');
 }
 
+const RECURRENCE_LABELS = { daily: 'Daily', weekdays: 'Weekdays', biweekly: 'Bi-weekly', monthly: 'Monthly' };
+function recurrenceLabel(task) {
+  if (!task.recurrence) return '';
+  if (task.recurrence === 'custom') return `Every ${task.recurrence_custom_n} ${task.recurrence_custom_unit}`;
+  return RECURRENCE_LABELS[task.recurrence] || '';
+}
+function toggleCustomRecurrenceFields() {
+  const val = (document.getElementById('cntNewTaskRecurrence') || {}).value;
+  const show = val === 'custom';
+  const nEl = document.getElementById('cntRecurrenceCustomN');
+  const uEl = document.getElementById('cntRecurrenceCustomUnit');
+  if (nEl) nEl.style.display = show ? '' : 'none';
+  if (uEl) uEl.style.display = show ? '' : 'none';
+}
+
+// Computes the next due date for a recurring task, preserving time-of-day if
+// one was set. Handles weekday-skipping (Sat/Sun -> next Mon) and clamps
+// month-end overflow (e.g. Jan 31 + 1 month lands on the last day of Feb,
+// not rolling into March like JS's raw setMonth() would).
+function computeNextOccurrence(dueDateStr, recurrence, customN, customUnit) {
+  if (!dueDateStr || !recurrence) return null;
+  const hasTime = dueDateStr.includes('T');
+  const d = new Date(hasTime ? dueDateStr : dueDateStr + 'T00:00:00');
+  if (isNaN(d)) return null;
+
+  const addMonthsClamped = (n) => {
+    const day = d.getDate();
+    d.setDate(1); // avoid overflow while changing month
+    d.setMonth(d.getMonth() + n);
+    const daysInNewMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+    d.setDate(Math.min(day, daysInNewMonth));
+  };
+
+  switch (recurrence) {
+    case 'daily':
+      d.setDate(d.getDate() + 1);
+      break;
+    case 'weekdays': {
+      d.setDate(d.getDate() + 1);
+      const day = d.getDay(); // 0 = Sun, 6 = Sat
+      if (day === 6) d.setDate(d.getDate() + 2);
+      else if (day === 0) d.setDate(d.getDate() + 1);
+      break;
+    }
+    case 'biweekly':
+      d.setDate(d.getDate() + 14);
+      break;
+    case 'monthly':
+      addMonthsClamped(1);
+      break;
+    case 'custom': {
+      const n = Math.max(1, parseInt(customN) || 1);
+      if (customUnit === 'weeks') d.setDate(d.getDate() + n * 7);
+      else if (customUnit === 'months') addMonthsClamped(n);
+      else d.setDate(d.getDate() + n);
+      break;
+    }
+    default:
+      return null;
+  }
+
+  return hasTime ? dateToDatetimeLocalString(d) : `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
 async function addClientTask() {
   const titleEl = document.getElementById('cntNewTaskTitle');
   const title = titleEl.value.trim();
@@ -7418,6 +7590,10 @@ async function addClientTask() {
   const assignee = TEAM_MEMBERS.find(m => m.email === assigneeEmail);
   const due = document.getElementById('cntNewTaskDue').value || '';
   const reminderVal = document.getElementById('cntNewTaskReminder').value;
+  const recurrence = document.getElementById('cntNewTaskRecurrence').value || null;
+  const recurrenceN = document.getElementById('cntNewTaskRecurrenceN').value;
+  const recurrenceUnit = document.getElementById('cntNewTaskRecurrenceUnit').value;
+  if (recurrence && !due) { showToast('A repeating task needs a due date to repeat from.', 'warning'); return; }
   const u = getCurrentUser();
   const task = {
     id: (crypto.randomUUID ? crypto.randomUUID() : 't_' + Date.now()),
@@ -7429,6 +7605,9 @@ async function addClientTask() {
     created_by_name: u ? u.name : 'Guest',
     due_date: due,
     reminder_minutes: reminderVal === '' ? null : parseInt(reminderVal),
+    recurrence: recurrence || null,
+    recurrence_custom_n: recurrence === 'custom' ? (parseInt(recurrenceN) || 1) : null,
+    recurrence_custom_unit: recurrence === 'custom' ? recurrenceUnit : null,
     status: 'open',
     created_at: new Date().toISOString(),
   };
@@ -7446,6 +7625,8 @@ async function addClientTask() {
   titleEl.value = '';
   document.getElementById('cntNewTaskDue').value = '';
   document.getElementById('cntNewTaskReminder').value = '';
+  document.getElementById('cntNewTaskRecurrence').value = '';
+  toggleCustomRecurrenceFields();
   renderClientTasksList();
   rebuildHomePage();
   showToast('Task created.', 'success');
@@ -7464,7 +7645,7 @@ function renderClientTasksList() {
       <input type="checkbox" ${t.status === 'done' ? 'checked' : ''} onchange="toggleClientTaskStatus('${t.id}')">
       <div class="task-info">
         <div class="task-title">${escAttr(t.title)}</div>
-        <div class="task-meta">Assigned to ${escAttr(t.assigned_to_name || '—')}${t.due_date ? ' · Due ' + fmtDateTime(t.due_date) : ''}</div>
+        <div class="task-meta">Assigned to ${escAttr(t.assigned_to_name || '—')}${t.due_date ? ' · Due ' + fmtDateTime(t.due_date) : ''}${t.recurrence ? ' · 🔁 ' + recurrenceLabel(t) : ''}${t.workflow_id ? ' · 🤖 Automated' : ''}</div>
       </div>
       ${t.due_date ? `<a href="${gcalQuickAddUrl(t)}" target="_blank" rel="noopener" class="row-action-btn" title="Add to Google Calendar">📅</a>` : ''}
       <button class="row-action-btn danger" onclick="deleteClientTask('${t.id}')">🗑️</button>
@@ -7474,6 +7655,7 @@ function renderClientTasksList() {
 async function toggleClientTaskStatus(id) {
   const task = CLIENT_TASKS.find(t => t.id === id);
   if (!task) return;
+  const wasOpen = task.status !== 'done';
   task.status = task.status === 'done' ? 'open' : 'done';
   localStorage.setItem(CLIENT_TASKS_CACHE_KEY, JSON.stringify(CLIENT_TASKS));
   try { await sbUpsert('client_tasks', task); } catch(e) {}
@@ -7482,6 +7664,33 @@ async function toggleClientTaskStatus(id) {
   } else if (task.status === 'open' && task.due_date && !task.gcal_event_id) {
     pushTaskToGoogleCalendar(task); // reopened — re-sync if it's eligible and not already on the calendar
   }
+
+  // Recurring task completed — spawn the next occurrence automatically
+  if (wasOpen && task.status === 'done' && task.recurrence) {
+    const nextDue = computeNextOccurrence(task.due_date, task.recurrence, task.recurrence_custom_n, task.recurrence_custom_unit);
+    if (nextDue) {
+      const nextTask = {
+        id: (crypto.randomUUID ? crypto.randomUUID() : 't_' + Date.now() + Math.random().toString(16).slice(2)),
+        client_name: task.client_name, title: task.title,
+        assigned_to_email: task.assigned_to_email, assigned_to_name: task.assigned_to_name,
+        created_by_email: task.created_by_email, created_by_name: task.created_by_name,
+        due_date: nextDue, reminder_minutes: task.reminder_minutes,
+        recurrence: task.recurrence, recurrence_custom_n: task.recurrence_custom_n, recurrence_custom_unit: task.recurrence_custom_unit,
+        status: 'open', created_at: new Date().toISOString(),
+      };
+      CLIENT_TASKS.unshift(nextTask);
+      localStorage.setItem(CLIENT_TASKS_CACHE_KEY, JSON.stringify(CLIENT_TASKS));
+      try { await sbUpsert('client_tasks', nextTask); } catch(e) {}
+      const cu = getCurrentUser();
+      if (nextTask.assigned_to_email && nextTask.assigned_to_email !== (cu && cu.email)) {
+        await createNotification(nextTask.assigned_to_email, 'task_assigned', `Recurring task on ${nextTask.client_name}: "${nextTask.title}" — next due ${fmtDateTime(nextTask.due_date)}`, nextTask.client_name);
+      } else if (nextTask.due_date) {
+        pushTaskToGoogleCalendar(nextTask);
+      }
+      showToast(`Recurring task — next one scheduled for ${fmtDateTime(nextTask.due_date)}.`, 'info');
+    }
+  }
+
   renderClientTasksList();
   rebuildHomePage();
 }
@@ -8628,6 +8837,327 @@ async function autoRefreshSheets(urls) {
 }
 
 // ════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════
+// WORKFLOWS — simple automations: "if a client goes quiet for N days, create
+// a task" or "every [schedule], create a task for X." Evaluated client-side
+// while the Hub is open (on load, and every ~30 min) — same honest tradeoff
+// as the Google Calendar sync: no server, so nothing fires while everyone's
+// logged out, but zero extra infrastructure needed either.
+// ════════════════════════════════════════════════════════════════════════
+const WORKFLOWS_CACHE_KEY = 'csh_workflows_v1';
+let WORKFLOWS = [];
+let editingWorkflowId = null;
+
+async function loadWorkflows() {
+  try {
+    WORKFLOWS = await sbSelect('workflows');
+    localStorage.setItem(WORKFLOWS_CACHE_KEY, JSON.stringify(WORKFLOWS));
+  } catch(e) {
+    console.warn('workflows table unavailable, using local cache:', e.message);
+    try { WORKFLOWS = JSON.parse(localStorage.getItem(WORKFLOWS_CACHE_KEY) || '[]'); } catch(e2) { WORKFLOWS = []; }
+  }
+  rebuildWorkflowsPage();
+}
+
+async function persistWorkflow(wf) {
+  const idx = WORKFLOWS.findIndex(w => w.id === wf.id);
+  if (idx >= 0) WORKFLOWS[idx] = wf; else WORKFLOWS.push(wf);
+  localStorage.setItem(WORKFLOWS_CACHE_KEY, JSON.stringify(WORKFLOWS));
+  try { await sbUpsert('workflows', wf); } catch(e) { console.warn('Could not save workflow:', e.message); }
+}
+
+async function deleteWorkflowById(id) {
+  WORKFLOWS = WORKFLOWS.filter(w => w.id !== id);
+  localStorage.setItem(WORKFLOWS_CACHE_KEY, JSON.stringify(WORKFLOWS));
+  try { await sbDelete('workflows', `id=eq.${id}`); } catch(e) {}
+  rebuildWorkflowsPage();
+}
+
+function getPortfolioClientList(scope) {
+  if (scope === 'all') return ['smb', 'whitelabel', 'support'].flatMap(pk => getClients(pk).map(c => c.name).filter(Boolean));
+  return getClients(scope).map(c => c.name).filter(Boolean);
+}
+
+function describeWorkflowTrigger(wf) {
+  if (wf.trigger_type === 'inactivity') {
+    const scope = wf.scope_portfolio === 'all' ? 'any portfolio' : PORTFOLIO_LABELS[wf.scope_portfolio] || wf.scope_portfolio;
+    return `😴 If a client in ${scope} hasn't had a note in ${wf.inactivity_days} days`;
+  }
+  const freq = wf.schedule_type === 'custom' ? `every ${wf.schedule_custom_n} ${wf.schedule_custom_unit}` : { daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly' }[wf.schedule_type] || wf.schedule_type;
+  const target = wf.scope_type === 'client' ? `for ${wf.scope_client_name}` : `for every client in ${wf.scope_portfolio === 'all' ? 'any portfolio' : PORTFOLIO_LABELS[wf.scope_portfolio]}`;
+  return `📅 ${freq} ${target}`;
+}
+function describeWorkflowAction(wf) {
+  const assignee = TEAM_MEMBERS.find(m => m.email === wf.action_assignee_email);
+  return `Create a task: "${wf.action_title}"${assignee ? ' → ' + assignee.name : ''}`;
+}
+
+function rebuildWorkflowsPage() {
+  const addBtn = document.getElementById('addWorkflowBtn');
+  if (addBtn) addBtn.style.display = canEdit() ? '' : 'none';
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  set('wf-active-count', WORKFLOWS.filter(w => w.active).length);
+  set('wf-tasks-created', CLIENT_TASKS.filter(t => t.workflow_id).length);
+  set('wf-inactivity-count', WORKFLOWS.filter(w => w.trigger_type === 'inactivity').length);
+  set('wf-schedule-count', WORKFLOWS.filter(w => w.trigger_type === 'schedule').length);
+
+  const list = document.getElementById('workflowsList');
+  if (!list) return;
+  if (WORKFLOWS.length === 0) {
+    list.innerHTML = emptyStateHTML({ icon: '🔁', title: 'No workflows yet', sub: 'Create one below, or ask Nirvana to set one up for you.', compact: true });
+    return;
+  }
+  list.innerHTML = WORKFLOWS.map(wf => `
+    <div class="edit-client-row" style="margin-bottom:8px;padding:14px;align-items:center">
+      <div style="flex:1">
+        <div style="font-weight:700;color:var(--text);font-size:13px;margin-bottom:4px">${escAttr(wf.name)} ${wf.active ? '' : '<span style="color:var(--text3);font-weight:400">(paused)</span>'}</div>
+        <div style="font-size:11.5px;color:var(--text2)">${escAttr(describeWorkflowTrigger(wf))} → ${escAttr(describeWorkflowAction(wf))}</div>
+        ${wf.last_run_at ? `<div style="font-size:10.5px;color:var(--text3);margin-top:2px">Last ran ${fmtNoteTime(wf.last_run_at)}</div>` : ''}
+      </div>
+      ${canEdit() ? `
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;margin-right:8px">
+        <input type="checkbox" ${wf.active ? 'checked' : ''} onchange="toggleWorkflowActive('${wf.id}')">
+        <span style="font-size:11px;color:var(--text3)">Active</span>
+      </label>
+      <button class="row-action-btn" onclick="openEditWorkflowModal('${wf.id}')">✏️ Edit</button>
+      <button class="row-action-btn danger" onclick="confirmDeleteWorkflow('${wf.id}')">🗑️</button>` : ''}
+    </div>`).join('');
+}
+
+async function toggleWorkflowActive(id) {
+  const wf = WORKFLOWS.find(w => w.id === id);
+  if (!wf) return;
+  wf.active = !wf.active;
+  await persistWorkflow(wf);
+  rebuildWorkflowsPage();
+}
+
+async function confirmDeleteWorkflow(id) {
+  const wf = WORKFLOWS.find(w => w.id === id);
+  if (!wf) return;
+  if (!(await showConfirmDialog(`Delete the workflow "${wf.name}"? This won't remove tasks it already created.`, { danger: true, confirmLabel: 'Delete' }))) return;
+  await deleteWorkflowById(id);
+  showToast('Workflow deleted.', 'success');
+}
+
+function populateWorkflowAssigneeSelect() {
+  const sel = document.getElementById('wfActionAssignee');
+  if (!sel) return;
+  const u = getCurrentUser();
+  sel.innerHTML = `<option value="">Whoever owns the account</option>` + TEAM_MEMBERS.map(m => `<option value="${escAttr(m.email)}" ${u && m.email === u.email ? 'selected' : ''}>${escAttr(m.name)}</option>`).join('');
+}
+
+function renderWorkflowTriggerFields(existing) {
+  const triggerType = (document.querySelector('input[name="wfTriggerType"]:checked') || {}).value || 'inactivity';
+  const box = document.getElementById('workflowTriggerFields');
+  if (!box) return;
+  const portfolioOptions = `<option value="all">Any portfolio</option><option value="smb">SMB</option><option value="whitelabel">White Label</option><option value="support">Support</option>`;
+  if (triggerType === 'inactivity') {
+    box.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+        <div><label class="field-label">No note logged in (days)</label><input type="number" id="wfInactivityDays" class="field-input" style="height:38px" min="1" value="${existing && existing.inactivity_days || 14}"></div>
+        <div><label class="field-label">Scope</label><select id="wfScopePortfolio" class="field-select" style="height:38px">${portfolioOptions}</select></div>
+      </div>`;
+    if (existing) document.getElementById('wfScopePortfolio').value = existing.scope_portfolio || 'all';
+  } else {
+    box.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+        <div><label class="field-label">Frequency</label><select id="wfScheduleType" class="field-select" style="height:38px" onchange="toggleWorkflowCustomSchedule()">
+          <option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="custom">Custom…</option>
+        </select></div>
+        <div id="wfCustomScheduleBox" style="display:none;grid-template-columns:1fr 1fr;gap:8px">
+          <div><label class="field-label">Every</label><input type="number" id="wfScheduleCustomN" class="field-input" style="height:38px" min="1" value="7"></div>
+          <div><label class="field-label">&nbsp;</label><select id="wfScheduleCustomUnit" class="field-select" style="height:38px"><option value="days">Days</option><option value="weeks">Weeks</option><option value="months">Months</option></select></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:18px;margin-bottom:12px">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfScopeType" value="client" checked onchange="toggleWorkflowScopeType()"> One specific client</label>
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfScopeType" value="portfolio" onchange="toggleWorkflowScopeType()"> Every client in a portfolio</label>
+      </div>
+      <div id="wfScopeClientBox"><label class="field-label">Client name</label><input type="text" id="wfScopeClientName" class="field-input" style="height:38px" placeholder="e.g. Summit Roofing Co."></div>
+      <div id="wfScopePortfolioBox" style="display:none;margin-bottom:16px"><label class="field-label">Portfolio</label><select id="wfScopePortfolio2" class="field-select" style="height:38px">${portfolioOptions.replace('Any portfolio', 'Choose a portfolio')}</select></div>`;
+    if (existing) {
+      document.getElementById('wfScheduleType').value = existing.schedule_type || 'daily';
+      toggleWorkflowCustomSchedule();
+      if (existing.schedule_custom_n) document.getElementById('wfScheduleCustomN').value = existing.schedule_custom_n;
+      if (existing.schedule_custom_unit) document.getElementById('wfScheduleCustomUnit').value = existing.schedule_custom_unit;
+      if (existing.scope_type === 'portfolio') {
+        document.querySelector('input[name="wfScopeType"][value="portfolio"]').checked = true;
+        toggleWorkflowScopeType();
+        document.getElementById('wfScopePortfolio2').value = existing.scope_portfolio || 'smb';
+      } else {
+        document.getElementById('wfScopeClientName').value = existing.scope_client_name || '';
+      }
+    }
+  }
+}
+function toggleWorkflowCustomSchedule() {
+  const val = (document.getElementById('wfScheduleType') || {}).value;
+  const box = document.getElementById('wfCustomScheduleBox');
+  if (box) box.style.display = val === 'custom' ? 'grid' : 'none';
+}
+function toggleWorkflowScopeType() {
+  const val = (document.querySelector('input[name="wfScopeType"]:checked') || {}).value;
+  document.getElementById('wfScopeClientBox').style.display = val === 'client' ? '' : 'none';
+  document.getElementById('wfScopePortfolioBox').style.display = val === 'portfolio' ? '' : 'none';
+}
+
+function openAddWorkflowModal() {
+  if (!requirePermission('edit')) return;
+  editingWorkflowId = null;
+  document.getElementById('workflowModalTitle').textContent = '🔁 New Workflow';
+  document.getElementById('wfName').value = '';
+  document.getElementById('wfActionTitle').value = '';
+  document.querySelector('input[name="wfTriggerType"][value="inactivity"]').checked = true;
+  populateWorkflowAssigneeSelect();
+  renderWorkflowTriggerFields();
+  document.getElementById('workflowModal').classList.add('open');
+}
+
+function openEditWorkflowModal(id) {
+  if (!requirePermission('edit')) return;
+  const wf = WORKFLOWS.find(w => w.id === id);
+  if (!wf) return;
+  editingWorkflowId = id;
+  document.getElementById('workflowModalTitle').textContent = '✏️ Edit Workflow';
+  document.getElementById('wfName').value = wf.name;
+  document.getElementById('wfActionTitle').value = wf.action_title;
+  document.querySelector(`input[name="wfTriggerType"][value="${wf.trigger_type}"]`).checked = true;
+  populateWorkflowAssigneeSelect();
+  document.getElementById('wfActionAssignee').value = wf.action_assignee_email || '';
+  renderWorkflowTriggerFields(wf);
+  document.getElementById('workflowModal').classList.add('open');
+}
+
+function closeWorkflowModal() {
+  document.getElementById('workflowModal').classList.remove('open');
+  editingWorkflowId = null;
+}
+
+async function saveWorkflow() {
+  const name = document.getElementById('wfName').value.trim();
+  if (!name) { showToast('Please name this workflow.', 'warning'); return; }
+  const actionTitle = document.getElementById('wfActionTitle').value.trim();
+  if (!actionTitle) { showToast('Please enter what the created task should say.', 'warning'); return; }
+  const triggerType = document.querySelector('input[name="wfTriggerType"]:checked').value;
+  const assigneeEmail = document.getElementById('wfActionAssignee').value;
+  const assignee = TEAM_MEMBERS.find(m => m.email === assigneeEmail);
+
+  const wf = editingWorkflowId ? WORKFLOWS.find(w => w.id === editingWorkflowId) : {
+    id: (crypto.randomUUID ? crypto.randomUUID() : 'wf_' + Date.now()),
+    active: true, created_at: new Date().toISOString(), created_by: (getCurrentUser() || {}).name || 'Guest',
+  };
+  wf.name = name;
+  wf.trigger_type = triggerType;
+  wf.action_title = actionTitle;
+  wf.action_assignee_email = assigneeEmail;
+  wf.action_assignee_name = assignee ? assignee.name : '';
+
+  if (triggerType === 'inactivity') {
+    wf.inactivity_days = Math.max(1, parseInt(document.getElementById('wfInactivityDays').value) || 14);
+    wf.scope_portfolio = document.getElementById('wfScopePortfolio').value;
+  } else {
+    wf.schedule_type = document.getElementById('wfScheduleType').value;
+    wf.schedule_custom_n = wf.schedule_type === 'custom' ? Math.max(1, parseInt(document.getElementById('wfScheduleCustomN').value) || 7) : null;
+    wf.schedule_custom_unit = wf.schedule_type === 'custom' ? document.getElementById('wfScheduleCustomUnit').value : null;
+    wf.scope_type = document.querySelector('input[name="wfScopeType"]:checked').value;
+    if (wf.scope_type === 'client') {
+      wf.scope_client_name = document.getElementById('wfScopeClientName').value.trim();
+      if (!wf.scope_client_name) { showToast('Please enter which client this schedule is for.', 'warning'); return; }
+    } else {
+      wf.scope_portfolio = document.getElementById('wfScopePortfolio2').value;
+    }
+  }
+
+  await persistWorkflow(wf);
+  closeWorkflowModal();
+  rebuildWorkflowsPage();
+  showToast(`Workflow "${name}" saved.`, 'success');
+}
+
+// ─── Engine — evaluates all active workflows against live data ────────────
+async function createWorkflowTask(wf, clientName) {
+  // Don't pile up duplicate tasks — skip if this workflow already has an open task for this client
+  const alreadyHas = CLIENT_TASKS.some(t => t.client_name === clientName && t.workflow_id === wf.id && t.status !== 'done');
+  if (alreadyHas) return;
+  const assignee = TEAM_MEMBERS.find(m => m.email === wf.action_assignee_email);
+  const task = {
+    id: (crypto.randomUUID ? crypto.randomUUID() : 't_' + Date.now() + Math.random().toString(16).slice(2)),
+    client_name: clientName, title: wf.action_title,
+    assigned_to_email: wf.action_assignee_email || '', assigned_to_name: assignee ? assignee.name : '',
+    created_by_email: 'workflow', created_by_name: `🔁 ${wf.name}`,
+    due_date: '', reminder_minutes: null, recurrence: null,
+    status: 'open', created_at: new Date().toISOString(), workflow_id: wf.id,
+  };
+  CLIENT_TASKS.unshift(task);
+  localStorage.setItem(CLIENT_TASKS_CACHE_KEY, JSON.stringify(CLIENT_TASKS));
+  try { await sbUpsert('client_tasks', task); } catch(e) { console.warn('Could not save workflow task:', e.message); }
+  if (task.assigned_to_email) {
+    await createNotification(task.assigned_to_email, 'task_assigned', `🔁 Automated task from "${wf.name}" on ${clientName}: "${task.title}"`, clientName);
+  }
+}
+
+async function runInactivityWorkflow(wf) {
+  const clientNames = getPortfolioClientList(wf.scope_portfolio || 'all');
+  const now = Date.now();
+  for (const name of clientNames) {
+    const notes = getClientNotes(name); // sorted newest-first
+    const lastNoteMs = notes.length ? new Date(notes[0].created_at).getTime() : 0;
+    const daysSince = (now - lastNoteMs) / (24 * 60 * 60 * 1000);
+    if (daysSince >= wf.inactivity_days) await createWorkflowTask(wf, name);
+  }
+}
+
+async function runScheduleWorkflow(wf, now) {
+  const last = wf.last_run_at ? new Date(wf.last_run_at) : null;
+  let due = !last;
+  if (last) {
+    const msSince = now - last;
+    if (wf.schedule_type === 'daily') due = msSince >= 24 * 60 * 60 * 1000;
+    else if (wf.schedule_type === 'weekly') due = msSince >= 7 * 24 * 60 * 60 * 1000;
+    else if (wf.schedule_type === 'monthly') due = now.getFullYear() !== last.getFullYear() || now.getMonth() !== last.getMonth();
+    else if (wf.schedule_type === 'custom') {
+      const n = Math.max(1, wf.schedule_custom_n || 1);
+      const unitMs = wf.schedule_custom_unit === 'weeks' ? 7 * 24 * 60 * 60 * 1000 : wf.schedule_custom_unit === 'months' ? 30 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
+      due = msSince >= n * unitMs;
+    }
+  }
+  if (!due) return;
+
+  if (wf.scope_type === 'client' && wf.scope_client_name) {
+    await createWorkflowTask(wf, wf.scope_client_name);
+  } else if (wf.scope_type === 'portfolio') {
+    const clientNames = getPortfolioClientList(wf.scope_portfolio || 'all');
+    for (const name of clientNames) await createWorkflowTask(wf, name);
+  }
+  wf.last_run_at = now.toISOString();
+  await persistWorkflow(wf);
+}
+
+let workflowEngineInFlight = false;
+async function runWorkflowEngine() {
+  if (!WORKFLOWS || WORKFLOWS.length === 0 || workflowEngineInFlight) return;
+  workflowEngineInFlight = true;
+  const now = new Date();
+  try {
+    for (const wf of WORKFLOWS) {
+      if (!wf.active) continue;
+      try {
+        if (wf.trigger_type === 'inactivity') await runInactivityWorkflow(wf);
+        else if (wf.trigger_type === 'schedule') await runScheduleWorkflow(wf, now);
+      } catch(e) { console.warn('Workflow failed to run:', wf.name, e.message); }
+    }
+    renderClientTasksList();
+    rebuildHomePage();
+    rebuildWorkflowsPage();
+  } finally {
+    workflowEngineInFlight = false;
+  }
+}
+
+setInterval(() => runWorkflowEngine(), 30 * 60 * 1000); // re-check every 30 minutes while the Hub is open
+
+// ════════════════════════════════════════════════════════════════════════
 // AI AGENT — a chat assistant that can find/navigate/show/edit/suggest
 // across the Hub's real live data. Talks to Claude through a small Netlify
 // Function backend (netlify/functions/ai-agent.js) which holds the actual
@@ -8655,7 +9185,7 @@ const AI_AGENT_TOOLS = [
   },
   {
     name: 'create_task',
-    description: 'Create a task for a client, optionally assigned to a teammate with a due date. This changes data — the user will be asked to confirm before it is actually saved.',
+    description: 'Create a task for a client, optionally assigned to a teammate with a due date and/or a repeat schedule. This changes data — the user will be asked to confirm before it is actually saved.',
     input_schema: {
       type: 'object',
       properties: {
@@ -8663,6 +9193,7 @@ const AI_AGENT_TOOLS = [
         title: { type: 'string' },
         assigned_to: { type: 'string', description: 'Team member name or email; defaults to the current user if omitted' },
         due_date: { type: 'string', description: 'yyyy-mm-dd or yyyy-mm-ddThh:mm, optional' },
+        recurrence: { type: 'string', enum: ['daily', 'weekdays', 'biweekly', 'monthly'], description: 'Optional — makes this a repeating task. Requires due_date to be set.' },
       },
       required: ['client_name', 'title'],
     },
@@ -8682,16 +9213,59 @@ const AI_AGENT_TOOLS = [
   {
     name: 'navigate_to',
     description: 'Switch the Hub to a different page for the user.',
-    input_schema: { type: 'object', properties: { page: { type: 'string', enum: ['home', 'smb', 'whitelabel', 'support', 'clients', 'collections', 'adspend', 'action', 'voice', 'textagent'] } }, required: ['page'] },
+    input_schema: { type: 'object', properties: { page: { type: 'string', enum: ['home', 'smb', 'whitelabel', 'support', 'clients', 'collections', 'adspend', 'action', 'workflows', 'voice', 'textagent'] } }, required: ['page'] },
   },
   {
     name: 'open_client_profile',
     description: 'Open the full client profile popup (Contact Info / Notes / Tasks) for a specific client.',
     input_schema: { type: 'object', properties: { client_name: { type: 'string' } }, required: ['client_name'] },
   },
+  { name: 'list_workflows', description: 'List all existing automation workflows (inactivity alerts and scheduled recurring tasks), including whether each is active.', input_schema: { type: 'object', properties: {} } },
+  {
+    name: 'create_workflow',
+    description: 'Create a new automation workflow. Two trigger types: "inactivity" (creates a task if a client in a portfolio has had no note logged in N days) or "schedule" (creates a task on a recurring schedule, either for one specific client or for every client in a portfolio). This changes data — the user will be asked to confirm first.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string' },
+        trigger_type: { type: 'string', enum: ['inactivity', 'schedule'] },
+        inactivity_days: { type: 'integer', description: 'Required if trigger_type is inactivity' },
+        scope_portfolio: { type: 'string', enum: ['all', 'smb', 'whitelabel', 'support'], description: 'Which portfolio(s) this applies to' },
+        schedule_type: { type: 'string', enum: ['daily', 'weekly', 'monthly', 'custom'], description: 'Required if trigger_type is schedule' },
+        schedule_custom_n: { type: 'integer', description: 'Required if schedule_type is custom' },
+        schedule_custom_unit: { type: 'string', enum: ['days', 'weeks', 'months'], description: 'Required if schedule_type is custom' },
+        scope_type: { type: 'string', enum: ['client', 'portfolio'], description: 'Required if trigger_type is schedule — whether it targets one client or a whole portfolio' },
+        scope_client_name: { type: 'string', description: 'Required if scope_type is client' },
+        action_title: { type: 'string', description: 'The title of the task to create when this workflow triggers' },
+        action_assignee: { type: 'string', description: 'Team member name or email to assign the created task to; optional' },
+      },
+      required: ['name', 'trigger_type', 'action_title'],
+    },
+  },
+  {
+    name: 'update_workflow',
+    description: 'Update an existing workflow by name — e.g. change its active status, threshold, schedule, or action. Only include the fields being changed plus the workflow_name to identify it. This changes data — the user will be asked to confirm first.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        workflow_name: { type: 'string', description: 'The existing workflow\'s current name, used to find it' },
+        active: { type: 'boolean' },
+        inactivity_days: { type: 'integer' },
+        scope_portfolio: { type: 'string', enum: ['all', 'smb', 'whitelabel', 'support'] },
+        action_title: { type: 'string' },
+        action_assignee: { type: 'string' },
+      },
+      required: ['workflow_name'],
+    },
+  },
+  {
+    name: 'delete_workflow',
+    description: 'Permanently delete a workflow by name. This changes data — the user will be asked to confirm first.',
+    input_schema: { type: 'object', properties: { workflow_name: { type: 'string' } }, required: ['workflow_name'] },
+  },
 ];
 
-const AI_ACTION_TOOLS = ['add_note', 'create_task', 'log_kpi_score']; // tools that change data — always confirmed
+const AI_ACTION_TOOLS = ['add_note', 'create_task', 'log_kpi_score', 'create_workflow', 'update_workflow', 'delete_workflow']; // tools that change data — always confirmed
 
 function aiFindMergedClient(name) {
   const merged = buildMergedClients();
@@ -8777,6 +9351,8 @@ async function executeAiTool(name, input) {
       cntActiveClientName = entry.displayName;
       document.getElementById('cntNewTaskTitle').value = input.title;
       document.getElementById('cntNewTaskDue').value = input.due_date || '';
+      document.getElementById('cntNewTaskRecurrence').value = input.recurrence || '';
+      toggleCustomRecurrenceFields();
       if (input.assigned_to) {
         const m = TEAM_MEMBERS.find(m => m.name.toLowerCase() === input.assigned_to.toLowerCase() || m.email.toLowerCase() === input.assigned_to.toLowerCase());
         if (m) document.getElementById('cntNewTaskAssignee').value = m.email;
@@ -8787,6 +9363,54 @@ async function executeAiTool(name, input) {
     case 'log_kpi_score':
       await logKpiScore(input.kpi_key, input.score);
       return { ok: true };
+    case 'list_workflows':
+      if (WORKFLOWS.length === 0) return { workflows: [], note: 'No workflows exist yet.' };
+      return { workflows: WORKFLOWS.map(wf => ({ name: wf.name, active: wf.active, trigger: describeWorkflowTrigger(wf), action: describeWorkflowAction(wf), last_ran: wf.last_run_at || 'never' })) };
+    case 'create_workflow': {
+      const assignee = input.action_assignee ? TEAM_MEMBERS.find(m => m.name.toLowerCase() === input.action_assignee.toLowerCase() || m.email.toLowerCase() === input.action_assignee.toLowerCase()) : null;
+      const wf = {
+        id: (crypto.randomUUID ? crypto.randomUUID() : 'wf_' + Date.now()),
+        name: input.name, active: true, trigger_type: input.trigger_type,
+        action_title: input.action_title, action_assignee_email: assignee ? assignee.email : '', action_assignee_name: assignee ? assignee.name : '',
+        created_at: new Date().toISOString(), created_by: (getCurrentUser() || {}).name || 'Nirvana',
+      };
+      if (input.trigger_type === 'inactivity') {
+        wf.inactivity_days = input.inactivity_days || 14;
+        wf.scope_portfolio = input.scope_portfolio || 'all';
+      } else {
+        wf.schedule_type = input.schedule_type || 'weekly';
+        wf.schedule_custom_n = input.schedule_custom_n || null;
+        wf.schedule_custom_unit = input.schedule_custom_unit || null;
+        wf.scope_type = input.scope_type || (input.scope_client_name ? 'client' : 'portfolio');
+        wf.scope_client_name = input.scope_client_name || null;
+        wf.scope_portfolio = input.scope_portfolio || 'all';
+      }
+      await persistWorkflow(wf);
+      rebuildWorkflowsPage();
+      return { ok: true, created: wf.name };
+    }
+    case 'update_workflow': {
+      const wf = WORKFLOWS.find(w => w.name.toLowerCase() === (input.workflow_name || '').toLowerCase());
+      if (!wf) return { error: 'Workflow not found' };
+      if (input.active !== undefined) wf.active = input.active;
+      if (input.inactivity_days !== undefined) wf.inactivity_days = input.inactivity_days;
+      if (input.scope_portfolio !== undefined) wf.scope_portfolio = input.scope_portfolio;
+      if (input.action_title !== undefined) wf.action_title = input.action_title;
+      if (input.action_assignee !== undefined) {
+        const m = TEAM_MEMBERS.find(m => m.name.toLowerCase() === input.action_assignee.toLowerCase() || m.email.toLowerCase() === input.action_assignee.toLowerCase());
+        wf.action_assignee_email = m ? m.email : '';
+        wf.action_assignee_name = m ? m.name : '';
+      }
+      await persistWorkflow(wf);
+      rebuildWorkflowsPage();
+      return { ok: true, updated: wf.name };
+    }
+    case 'delete_workflow': {
+      const wf = WORKFLOWS.find(w => w.name.toLowerCase() === (input.workflow_name || '').toLowerCase());
+      if (!wf) return { error: 'Workflow not found' };
+      await deleteWorkflowById(wf.id);
+      return { ok: true, deleted: wf.name };
+    }
     default:
       return { error: 'Unknown tool: ' + name };
   }
@@ -8795,8 +9419,11 @@ async function executeAiTool(name, input) {
 function describeAiAction(tool) {
   const i = tool.input;
   if (tool.name === 'add_note') return `📝 Add a note to <b>${escAttr(i.client_name)}</b>: "${escAttr(i.text)}"`;
-  if (tool.name === 'create_task') return `✅ Create a task for <b>${escAttr(i.client_name)}</b>: "${escAttr(i.title)}"${i.due_date ? ' — due ' + escAttr(i.due_date) : ''}${i.assigned_to ? ' — assigned to ' + escAttr(i.assigned_to) : ''}`;
+  if (tool.name === 'create_task') return `✅ Create a task for <b>${escAttr(i.client_name)}</b>: "${escAttr(i.title)}"${i.due_date ? ' — due ' + escAttr(i.due_date) : ''}${i.assigned_to ? ' — assigned to ' + escAttr(i.assigned_to) : ''}${i.recurrence ? ' — repeats ' + escAttr(i.recurrence) : ''}`;
   if (tool.name === 'log_kpi_score') return `⭐ Set <b>${escAttr((KPI_META[i.kpi_key] || {}).label || i.kpi_key)}</b> to ${i.score} star${i.score === 1 ? '' : 's'}`;
+  if (tool.name === 'create_workflow') return `🔁 Create workflow <b>${escAttr(i.name)}</b> — ${i.trigger_type === 'inactivity' ? `alert if inactive ${escAttr(i.inactivity_days || 14)} days` : `on a ${escAttr(i.schedule_type || 'weekly')} schedule`}, action: "${escAttr(i.action_title)}"`;
+  if (tool.name === 'update_workflow') return `🔁 Update workflow <b>${escAttr(i.workflow_name)}</b>`;
+  if (tool.name === 'delete_workflow') return `🗑️ Delete workflow <b>${escAttr(i.workflow_name)}</b>`;
   return `Run ${escAttr(tool.name)}?`;
 }
 
@@ -8821,7 +9448,7 @@ const AI_QUICK_SUGGESTIONS = [
   { label: '📊 KPI scores', msg: 'Show me our current KPI scores' },
   { label: '⚠️ Needs attention', msg: 'What needs attention right now across Collections and clients?' },
   { label: '🔍 Find a client', msg: 'Help me find a client' },
-  { label: '🚀 Growth ideas', msg: 'Which clients look like the best growth opportunities right now?' },
+  { label: '🔁 Set up a workflow', msg: 'Help me set up a workflow to automate something' },
 ];
 
 const AI_TOOL_LABELS = {
@@ -8835,6 +9462,10 @@ const AI_TOOL_LABELS = {
   add_note: '📝 Added a note',
   create_task: '✅ Created a task',
   log_kpi_score: '⭐ Logged a KPI score',
+  list_workflows: '🔁 Checked workflows',
+  create_workflow: '🔁 Created a workflow',
+  update_workflow: '🔁 Updated a workflow',
+  delete_workflow: '🗑️ Deleted a workflow',
 };
 
 function toggleAiAgentPanel() {
@@ -8959,7 +9590,7 @@ function appendAiAgentMessage(role, text, toolTag) {
   row.appendChild(bubble);
   const time = document.createElement('div');
   time.className = 'ai-msg-time';
-  time.textContent = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  time.textContent = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
   row.appendChild(time);
   wrap.appendChild(row);
   wrap.scrollTop = wrap.scrollHeight;
@@ -8997,7 +9628,7 @@ async function sendAiAgentMessage() {
 async function runAiAgentTurn(toolTagForNextText) {
   showAiAgentTyping(true);
   const u = getCurrentUser();
-  const systemPrompt = `You are Nirvana, the AI Agent inside Niche Inc.'s Client Success Hub, helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the SMB, White Label, and Support portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When asked to add a note, create a task, or log a KPI score, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. When summarizing data, only use the real numbers returned by tools — never estimate or make numbers up. If a tool returns an error (e.g. client not found), tell the user plainly rather than guessing.`;
+  const systemPrompt = `You are Nirvana, the AI Agent inside Niche Inc.'s Client Success Hub, helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the SMB, White Label, and Support portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. Workflows automate two things: "inactivity" (create a task if a client hasn't had a note in N days) and "schedule" (create a task on a recurring cadence, for one client or a whole portfolio) — if someone describes an automation idea in plain English, translate it into the right workflow fields yourself rather than making them fill out a form. When summarizing data, only use the real numbers returned by tools — never estimate or make numbers up. If a tool returns an error (e.g. client not found), tell the user plainly rather than guessing.`;
   try {
     const res = await fetch(AI_AGENT_ENDPOINT, {
       method: 'POST',
@@ -9057,6 +9688,7 @@ async function handleAiAgentResponse(data, toolTag) {
 async function bootApp() {
   // Apply saved theme before anything renders, so charts draw with correct colors from the start
   applyTheme(getSavedTheme(), false);
+  updateMoneyToggleIcon();
 
   // Apply cached role instantly so upload/edit controls are correct before network calls finish
   applyPermissionsToUI();
@@ -9091,6 +9723,10 @@ async function bootApp() {
     // Client Spotlight (daily focus client per portfolio)
     await loadClientSpotlight();
 
+    // Workflows (automated inactivity alerts and scheduled recurring tasks)
+    await loadWorkflows();
+    runWorkflowEngine();
+
     // Final pass now that every data source (notes, contacts, collections, ad
     // spend) has loaded — ensures cards like the Client Spotlight, which pull
     // from all of the above, render with full context instead of partial data.
@@ -9117,6 +9753,8 @@ async function bootApp() {
     migrateOldCollectionsNotes();
     await loadKpiHistory();
     await loadClientSpotlight();
+    await loadWorkflows();
+    runWorkflowEngine();
     rebuildAll();
   }
 }
