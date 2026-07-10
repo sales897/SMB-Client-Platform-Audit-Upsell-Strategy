@@ -787,15 +787,33 @@ tr.hidden-row { display: none; }
 .spotlight-card {
   background: linear-gradient(135deg, rgba(226,84,31,.07), rgba(226,84,31,.02));
   border: 1px solid rgba(226,84,31,.25); border-radius: var(--radius); padding: 22px;
+  transition: background .3s, border-color .3s;
 }
+/* Dynamic tone by health category — the card's urgency is now visually honest
+   instead of always the same color regardless of the situation. */
+.spotlight-card.risk-high { background: linear-gradient(135deg, rgba(239,68,68,.09), rgba(239,68,68,.02)); border-color: rgba(239,68,68,.35); }
+.spotlight-card.risk-medium { background: linear-gradient(135deg, rgba(245,158,11,.08), rgba(245,158,11,.02)); border-color: rgba(245,158,11,.3); }
+.spotlight-card.risk-low { background: linear-gradient(135deg, rgba(34,197,94,.06), rgba(34,197,94,.02)); border-color: rgba(34,197,94,.25); }
 .spotlight-hd { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
 .spotlight-title { font-size: 13px; font-weight: 800; color: var(--orange); text-transform: uppercase; letter-spacing: .04em; display: flex; align-items: center; gap: 8px; }
-.spotlight-name-row { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+.spotlight-name-row { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
 .spotlight-name { font-size: 22px; font-weight: 800; color: var(--text); }
 .spotlight-org { font-size: 12px; color: var(--text3); margin-top: 2px; }
 .spotlight-worked-badge { font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 12px; white-space: nowrap; }
 .spotlight-worked-yes { background: rgba(34,197,94,.15); color: var(--green); }
 .spotlight-worked-no { background: rgba(245,158,11,.15); color: var(--yellow); }
+.spotlight-health-badge { font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 12px; white-space: nowrap; cursor: help; }
+.spotlight-health-risk-high { background: rgba(239,68,68,.15); color: var(--red); }
+.spotlight-health-risk-medium { background: rgba(245,158,11,.15); color: var(--yellow); }
+.spotlight-health-risk-low { background: rgba(34,197,94,.15); color: var(--green); }
+.spotlight-why-box {
+  font-size: 12.5px; color: var(--text2); line-height: 1.6; border-radius: 10px; padding: 12px 14px;
+  margin-bottom: 16px; border: 1px solid;
+}
+.spotlight-why-box b { color: var(--text); }
+.spotlight-why-risk-high { background: rgba(239,68,68,.07); border-color: rgba(239,68,68,.25); }
+.spotlight-why-risk-medium { background: rgba(245,158,11,.07); border-color: rgba(245,158,11,.25); }
+.spotlight-why-risk-low { background: rgba(34,197,94,.06); border-color: rgba(34,197,94,.2); }
 .spotlight-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
 .spotlight-block-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--text3); margin-bottom: 8px; }
 .spotlight-block { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
@@ -808,6 +826,17 @@ tr.hidden-row { display: none; }
 .spotlight-flag-line { font-size: 12px; color: var(--text2); margin-bottom: 6px; }
 .spotlight-flag-line:last-child { margin-bottom: 0; }
 .spotlight-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.spotlight-quick-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+.spotlight-quick-form {
+  display: none; margin-top: 12px; padding: 14px; background: var(--bg2);
+  border: 1px solid var(--border); border-radius: 10px;
+}
+.spotlight-quick-form.open { display: block; animation: fadeIn .15s ease; }
+.spotlight-suggestion-box {
+  margin-top: 14px; padding: 12px 14px; border-radius: 10px; font-size: 12.5px; color: var(--text2); line-height: 1.6;
+  background: rgba(226,84,31,.06); border: 1px dashed rgba(226,84,31,.3);
+}
+.spotlight-suggestion-box b { color: var(--orange); }
 @media (max-width: 900px) { .spotlight-grid { grid-template-columns: 1fr; } }
 
 /* ─── VOICE AGENT PAGE ─────────────────────────────────────────────────── */
@@ -3365,6 +3394,23 @@ function getEligibleSpotlightClients(pk, excludeName) {
   return eligible;
 }
 
+// Picks from among the worst-scoring 20% of eligible clients (health-score
+// driven), rather than pure randomness — so the daily spotlight is genuinely
+// whoever needs the team's attention most, not an arbitrary pick. Still keeps
+// some randomness within that worst tier so it's not the same client every
+// single day once they're touched.
+function pickSpotlightClientSmart(pk, excludeName) {
+  const eligibleNames = new Set(getEligibleSpotlightClients(pk, excludeName).map(c => c.name));
+  const allScores = computeAllClientHealthScores(pk); // pre-indexed, efficient even at scale
+  const eligible = allScores.filter(c => eligibleNames.has(c.client_name));
+  if (eligible.length === 0) return null;
+  eligible.sort((a, b) => a.score - b.score);
+  const poolSize = Math.max(1, Math.ceil(eligible.length * 0.2));
+  const pool = eligible.slice(0, poolSize);
+  const chosen = pool[Math.floor(Math.random() * pool.length)];
+  return { name: chosen.client_name, health: chosen };
+}
+
 async function ensureSpotlightForToday(pk) {
   const today = todayStr();
   const id = `${pk}_${today}`;
@@ -3372,9 +3418,8 @@ async function ensureSpotlightForToday(pk) {
   const clients = getClients(pk);
   const stillExists = entry && clients.some(c => c.name === entry.client_name);
   if (!entry || !stillExists) {
-    const eligible = getEligibleSpotlightClients(pk);
-    if (eligible.length === 0) return null;
-    const pick = eligible[Math.floor(Math.random() * eligible.length)];
+    const pick = pickSpotlightClientSmart(pk);
+    if (!pick) return null;
     entry = { id, portfolio: pk, date: today, client_name: pick.name, updated_at: new Date().toISOString() };
     await persistSpotlight(entry);
   }
@@ -3385,9 +3430,8 @@ async function shuffleSpotlightClient(pk) {
   const today = todayStr();
   const id = `${pk}_${today}`;
   const current = CLIENT_SPOTLIGHT[id];
-  const eligible = getEligibleSpotlightClients(pk, current ? current.client_name : null);
-  if (eligible.length === 0) { showToast('No other clients available to spotlight right now.', 'info'); return; }
-  const pick = eligible[Math.floor(Math.random() * eligible.length)];
+  const pick = pickSpotlightClientSmart(pk, current ? current.client_name : null);
+  if (!pick) { showToast('No other clients available to spotlight right now.', 'info'); return; }
   const entry = { id, portfolio: pk, date: today, client_name: pick.name, updated_at: new Date().toISOString() };
   await persistSpotlight(entry);
   await renderClientSpotlight(pk);
@@ -3420,6 +3464,7 @@ async function renderClientSpotlight(pk) {
   const memberPks = mergedEntry ? Object.keys(mergedEntry.portfolios) : [pk];
   const portfolioChipsHtml = memberPks.map(mpk => `<span class="portfolio-chip chip-${mpk}">${PORTFOLIO_ICONS[mpk]} ${PORTFOLIO_LABELS[mpk]}</span>`).join('');
   const health = computeClientHealthScore(client.name, notes.length ? notes[0].created_at : null, tasks, collectionsEntry);
+  const riskClass = health.score < 60 ? 'risk-high' : health.score < 80 ? 'risk-medium' : 'risk-low';
 
   const usingHtml = using.length
     ? `<div class="product-icon-row">${using.map(p => `<span class="product-icon-chip" title="${escAttr(p.label)}">${renderProductIcon(p.icon, 14)}</span>`).join('')}</div>`
@@ -3452,8 +3497,12 @@ async function renderClientSpotlight(pk) {
     ? tasks.map(t => `<div class="spotlight-task-line">☐ ${escAttr(t.title)}${t.due_date ? ` · Due ${fmtDateTime(t.due_date)}` : ''}</div>`).join('')
     : `<div class="spotlight-empty-line">No open tasks</div>`;
 
+  const whyHtml = health.reasons.length
+    ? `<div class="spotlight-why-box spotlight-why-${riskClass}">🎯 <b>Why this client:</b> ${health.reasons.join(' · ')}</div>`
+    : `<div class="spotlight-why-box spotlight-why-risk-low">🎯 <b>Why this client:</b> Randomly featured today — no red flags found, nothing urgent here right now.</div>`;
+
   el.innerHTML = `
-    <div class="spotlight-card">
+    <div class="spotlight-card ${riskClass}">
       <div class="spotlight-hd">
         <div class="spotlight-title">🔦 Today's Client Spotlight</div>
         <div class="spotlight-actions">
@@ -3469,11 +3518,14 @@ async function renderClientSpotlight(pk) {
             ${client.org ? `<span class="spotlight-org">🏢 ${escAttr(client.org)}</span>` : ''}
           </div>
         </div>
-        <span class="spotlight-worked-badge ${workedToday ? 'spotlight-worked-yes' : 'spotlight-worked-no'}">${workedToday ? '✅ Worked today' : '⏳ Not touched yet today'}</span>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+          <span class="spotlight-worked-badge ${workedToday ? 'spotlight-worked-yes' : 'spotlight-worked-no'}">${workedToday ? '✅ Worked today' : '⏳ Not touched yet today'}</span>
+          <span class="spotlight-health-badge spotlight-health-${riskClass}">🏥 ${health.score}/100 — ${health.category}</span>
+        </div>
       </div>
-      <div style="margin-bottom:16px">
-        <span class="spotlight-worked-badge" style="background:rgba(163,154,146,.12);color:var(--text2)" title="${escAttr(health.reasons.join(' · ') || 'No risk factors detected')}">🏥 Health: ${health.score}/100 — ${health.category}</span>
-      </div>
+
+      ${whyHtml}
+
       <div class="spotlight-grid">
         <div class="spotlight-block"><div class="spotlight-block-label">✅ Using (${using.length})</div>${usingHtml}</div>
         <div class="spotlight-block"><div class="spotlight-block-label">🎯 Upsell Opportunity (${notUsing.length})</div>${notUsingHtml}</div>
@@ -3484,7 +3536,138 @@ async function renderClientSpotlight(pk) {
         <div class="spotlight-block"><div class="spotlight-block-label">✅ Open Tasks</div>${tasksHtml}</div>
         <div class="spotlight-block"><div class="spotlight-block-label">⚠️ Billing &amp; Ad Spend</div>${flagsHtml}</div>
       </div>
+
+      <div class="spotlight-quick-actions">
+        <button class="btn btn-ghost btn-sm" onclick="toggleSpotlightQuickForm('${pk}','note')">📝 Quick Note</button>
+        <button class="btn btn-ghost btn-sm" onclick="toggleSpotlightQuickForm('${pk}','task')">✅ Quick Task</button>
+        <button class="btn btn-ghost btn-sm" onclick="askNirvanaAboutSpotlight('${pk}')">🤖 Ask Nirvana</button>
+        <button class="btn btn-ghost btn-sm" id="spotlightSuggestBtn-${pk}" onclick="getSpotlightAiSuggestion('${pk}', this)">💡 Get a Suggestion</button>
+      </div>
+
+      <div class="spotlight-quick-form" id="spotlightNoteForm-${pk}">
+        <textarea id="spotlightNoteText-${pk}" rows="2" class="field-input" style="margin-bottom:8px;resize:vertical;font-family:inherit" placeholder="Quick note about ${escAttr(client.name)}…"></textarea>
+        <div style="display:flex;justify-content:flex-end;gap:8px">
+          <button class="btn btn-ghost btn-sm" onclick="toggleSpotlightQuickForm('${pk}','note')">Cancel</button>
+          <button class="btn btn-primary btn-sm" onclick="submitSpotlightQuickNote('${pk}','${safe}')">Add Note</button>
+        </div>
+      </div>
+      <div class="spotlight-quick-form" id="spotlightTaskForm-${pk}">
+        <input type="text" id="spotlightTaskTitle-${pk}" class="field-input" style="height:36px;margin-bottom:8px" placeholder="Quick task for ${escAttr(client.name)}…">
+        <div style="display:flex;justify-content:flex-end;gap:8px">
+          <button class="btn btn-ghost btn-sm" onclick="toggleSpotlightQuickForm('${pk}','task')">Cancel</button>
+          <button class="btn btn-primary btn-sm" onclick="submitSpotlightQuickTask('${pk}','${safe}')">Add Task</button>
+        </div>
+      </div>
+      <div class="spotlight-suggestion-box" id="spotlightSuggestion-${pk}" style="display:none"></div>
     </div>`;
+}
+
+// ─── Client Spotlight quick actions — reduce friction to zero for the most
+// common follow-ups, and wire two of them directly to Nirvana. ────────────
+function toggleSpotlightQuickForm(pk, type) {
+  const noteForm = document.getElementById(`spotlightNoteForm-${pk}`);
+  const taskForm = document.getElementById(`spotlightTaskForm-${pk}`);
+  if (!noteForm || !taskForm) return;
+  if (type === 'note') {
+    taskForm.classList.remove('open');
+    noteForm.classList.toggle('open');
+    if (noteForm.classList.contains('open')) document.getElementById(`spotlightNoteText-${pk}`).focus();
+  } else {
+    noteForm.classList.remove('open');
+    taskForm.classList.toggle('open');
+    if (taskForm.classList.contains('open')) document.getElementById(`spotlightTaskTitle-${pk}`).focus();
+  }
+}
+
+async function submitSpotlightQuickNote(pk, clientNameEscaped) {
+  const clientName = clientNameEscaped.replace(/\\'/g, "'");
+  const ta = document.getElementById(`spotlightNoteText-${pk}`);
+  const text = ta.value.trim();
+  if (!text) { showToast('Write something first.', 'warning'); return; }
+  const u = getCurrentUser();
+  const mentionedEmails = parseMentionsFromText(text);
+  const note = {
+    id: (crypto.randomUUID ? crypto.randomUUID() : 'n_' + Date.now()),
+    client_name: clientName, author_email: u ? u.email : '', author_name: u ? u.name : 'Guest',
+    text, tagged_emails: mentionedEmails, created_at: new Date().toISOString(),
+  };
+  CLIENT_NOTES.unshift(note);
+  localStorage.setItem(CLIENT_NOTES_CACHE_KEY, JSON.stringify(CLIENT_NOTES));
+  try { await sbUpsert('client_notes', note); } catch(e) { console.warn('Could not save note:', e.message); }
+  for (const email of mentionedEmails) {
+    await createNotification(email, 'tagged', `${u ? u.name : 'Someone'} tagged you in a note on ${clientName}`, clientName);
+  }
+  ta.value = '';
+  showToast('Note added.', 'success');
+  renderClientSpotlight(pk); // refresh — this also updates the worked-today status and health score live
+  rebuildHomePage();
+}
+
+async function submitSpotlightQuickTask(pk, clientNameEscaped) {
+  const clientName = clientNameEscaped.replace(/\\'/g, "'");
+  const titleEl = document.getElementById(`spotlightTaskTitle-${pk}`);
+  const title = titleEl.value.trim();
+  if (!title) { showToast('Enter a task first.', 'warning'); return; }
+  const u = getCurrentUser();
+  const task = {
+    id: (crypto.randomUUID ? crypto.randomUUID() : 't_' + Date.now()),
+    client_name: clientName, title,
+    assigned_to_email: u ? u.email : '', assigned_to_name: u ? u.name : '',
+    created_by_email: u ? u.email : '', created_by_name: u ? u.name : 'Guest',
+    due_date: '', reminder_minutes: null, recurrence: null,
+    status: 'open', created_at: new Date().toISOString(),
+  };
+  CLIENT_TASKS.unshift(task);
+  localStorage.setItem(CLIENT_TASKS_CACHE_KEY, JSON.stringify(CLIENT_TASKS));
+  try { await sbUpsert('client_tasks', task); } catch(e) { console.warn('Could not save task:', e.message); }
+  titleEl.value = '';
+  showToast('Task added, assigned to you.', 'success');
+  renderClientSpotlight(pk);
+  rebuildHomePage();
+}
+
+// Opens Nirvana and immediately asks her about today's spotlighted client —
+// she already has get_client_health and get_client_details tools, so this
+// just triggers the same conversation you'd have typed yourself.
+function askNirvanaAboutSpotlight(pk) {
+  const today = todayStr();
+  const spotlightEntry = CLIENT_SPOTLIGHT[`${pk}_${today}`];
+  if (!spotlightEntry) return;
+  const panel = document.getElementById('aiAgentPanel');
+  if (panel.style.display === 'none') toggleAiAgentPanel();
+  const input = document.getElementById('aiAgentInput');
+  input.value = `Tell me about ${spotlightEntry.client_name} — their health score, recent activity, and what I should prioritize with them today.`;
+  sendAiAgentMessage();
+}
+
+// One-off, tool-free AI call (via quickAiCompletion) for a punchy, specific
+// next step — not part of the ongoing Nirvana conversation, just a fast,
+// contained suggestion shown right in the card.
+async function getSpotlightAiSuggestion(pk, btn) {
+  const today = todayStr();
+  const spotlightEntry = CLIENT_SPOTLIGHT[`${pk}_${today}`];
+  if (!spotlightEntry) return;
+  const box = document.getElementById(`spotlightSuggestion-${pk}`);
+  const health = getClientHealthForOne(spotlightEntry.client_name);
+  const notes = getClientNotes(spotlightEntry.client_name).slice(0, 2);
+  const originalLabel = btn.textContent;
+  btn.textContent = '💡 Thinking…';
+  btn.disabled = true;
+  try {
+    const suggestion = await quickAiCompletion(
+      'You are a concise client success advisor. Given a client\'s health data and recent notes, give ONE short, specific, actionable suggestion (max 2 sentences) for what to do with them today. No preamble, no "I suggest" — just the direct action to take.',
+      `Client: ${spotlightEntry.client_name}\nHealth score: ${health.score}/100 (${health.category})\nReasons: ${health.reasons.join(', ') || 'none — healthy account'}\nRecent notes: ${notes.map(n => n.text).join(' | ') || 'none logged yet'}`
+    );
+    if (box) {
+      box.innerHTML = `💡 <b>Nirvana suggests:</b> ${renderAiMarkdown(suggestion)}`;
+      box.style.display = 'block';
+    }
+  } catch(e) {
+    showToast('Could not get a suggestion: ' + e.message, 'warning');
+  } finally {
+    btn.textContent = originalLabel;
+    btn.disabled = false;
+  }
 }
 
 function rebuildPortfolio(pk) {
@@ -7735,6 +7918,45 @@ function showPolishButton(targetId) {
   toolbar.appendChild(btn);
 }
 
+// Shared helper for a lightweight, tool-free, one-off AI completion — not
+// part of the ongoing Nirvana conversation, just "ask Claude one thing, get
+// text back." Since the backend always streams now (Block 3), this parses
+// that stream and returns the final accumulated text — used by both the
+// Notes "Polish with AI" button and the Client Spotlight's AI suggestion.
+async function quickAiCompletion(systemPrompt, userText) {
+  const res = await fetch(AI_AGENT_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ system: systemPrompt, messages: [{ role: 'user', content: userText }] }),
+  });
+  const contentType = res.headers.get('content-type') || '';
+  if (!res.ok || contentType.includes('application/json') || !res.body) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error((errData && (errData.error && errData.error.message || errData.error)) || `Request failed (${res.status})`);
+  }
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let text = '';
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const frames = buffer.split('\n\n');
+    buffer = frames.pop();
+    for (const frame of frames) {
+      let dataStr = null;
+      for (const line of frame.split('\n')) if (line.startsWith('data:')) dataStr = line.slice(5).trim();
+      if (!dataStr) continue;
+      let data;
+      try { data = JSON.parse(dataStr); } catch(e) { continue; }
+      if (data.type === 'content_block_delta' && data.delta && data.delta.type === 'text_delta') text += data.delta.text;
+      else if (data.type === 'error') throw new Error((data.error && data.error.message) || 'Stream error');
+    }
+  }
+  return text.trim();
+}
+
 async function polishTextWithAI(targetId, btn) {
   const input = document.getElementById(targetId);
   const text = input.value.trim();
@@ -7743,17 +7965,10 @@ async function polishTextWithAI(targetId, btn) {
   btn.textContent = '✨ Polishing…';
   btn.disabled = true;
   try {
-    const res = await fetch(AI_AGENT_ENDPOINT, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        system: 'Fix only spelling, grammar, capitalization, and punctuation in the text the user gives you. Do not change the meaning, tone, or add/remove information. Reply with ONLY the corrected text and nothing else — no preamble, no quotes, no explanation.',
-        messages: [{ role: 'user', content: text }],
-      }),
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error((data && (data.error && data.error.message || data.error)) || `Request failed (${res.status})`);
-    const cleaned = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('').trim();
+    const cleaned = await quickAiCompletion(
+      'Fix only spelling, grammar, capitalization, and punctuation in the text the user gives you. Do not change the meaning, tone, or add/remove information. Reply with ONLY the corrected text and nothing else — no preamble, no quotes, no explanation.',
+      text
+    );
     if (cleaned) { input.value = cleaned; showToast('Cleaned up with AI.', 'success'); }
   } catch(e) {
     showToast('Could not reach the cleanup service: ' + e.message, 'warning');
