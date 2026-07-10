@@ -3262,6 +3262,100 @@ function getWorkedTodayNames() {
   return names;
 }
 
+// ─── Client Health Score ────────────────────────────────────────────────────
+// Combines the same risk factors the Client Success Playbook's Preempting
+// Risks SOP already names — declining engagement and billing friction — plus
+// task backlog, into one 0-100 score with a transparent, itemized breakdown
+// (never a black box). 100 = perfectly healthy; penalties stack.
+function computeClientHealthScore(clientName, lastNoteDate, tasksForClient, collectionsEntry) {
+  let score = 100;
+  const reasons = [];
+  const today = Date.now();
+
+  if (!lastNoteDate) {
+    score -= 40; reasons.push('No notes logged yet (-40)');
+  } else {
+    const daysSince = Math.floor((today - new Date(lastNoteDate).getTime()) / (24 * 60 * 60 * 1000));
+    if (daysSince > 60) { score -= 40; reasons.push(`No note in ${daysSince} days (-40)`); }
+    else if (daysSince > 30) { score -= 30; reasons.push(`No note in ${daysSince} days (-30)`); }
+    else if (daysSince > 14) { score -= 20; reasons.push(`No note in ${daysSince} days (-20)`); }
+    else if (daysSince > 7) { score -= 10; reasons.push(`No note in ${daysSince} days (-10)`); }
+  }
+
+  const openTasks = (tasksForClient || []).filter(t => t.status !== 'done');
+  const overdueTasks = openTasks.filter(t => t.due_date && t.due_date.slice(0, 10) < todayStr());
+  if (overdueTasks.length > 0) {
+    const penalty = Math.min(overdueTasks.length * 10, 30);
+    score -= penalty; reasons.push(`${overdueTasks.length} overdue task${overdueTasks.length === 1 ? '' : 's'} (-${penalty})`);
+  }
+  if (openTasks.length > 2) {
+    const penalty = Math.min((openTasks.length - 2) * 5, 15);
+    score -= penalty; reasons.push(`${openTasks.length} open tasks — backlog building up (-${penalty})`);
+  }
+
+  if (collectionsEntry) {
+    const statusPenalties = { escalated: 30, pending: 15, contacted: 10, inreview: 10, paymentplan: 10, resolved: 0, writeoff: 20 };
+    const penalty = statusPenalties[collectionsEntry.status] ?? 10;
+    if (penalty > 0) { score -= penalty; reasons.push(`Collections status: ${statusMeta(collectionsEntry.status).label} (-${penalty})`); }
+    if (collectionsEntry.type === 'cardfail' && collectionsEntry.status !== 'resolved') { score -= 5; reasons.push('Active card fail (-5)'); }
+  }
+
+  score = Math.max(0, Math.min(100, score));
+  const category = score >= 80 ? '🟢 Healthy' : score >= 60 ? '🟡 Watch' : '🔴 At Risk';
+  return { score, category, reasons };
+}
+
+// Convenience wrapper for a single client — used by both the Client
+// Spotlight card and Nirvana's get_client_health tool.
+function getClientHealthForOne(clientName) {
+  const notes = getClientNotes(clientName); // already sorted newest-first
+  const lastNoteDate = notes.length ? notes[0].created_at : null;
+  const tasksForClient = CLIENT_TASKS.filter(t => t.client_name === clientName);
+  const normName = clientName.trim().toLowerCase();
+  const collectionsEntry = (typeof COLLECTIONS_ACCOUNTS !== 'undefined' ? COLLECTIONS_ACCOUNTS : []).find(a => (a.name || '').trim().toLowerCase() === normName);
+  return computeClientHealthScore(clientName, lastNoteDate, tasksForClient, collectionsEntry);
+}
+
+// Efficient bulk version for "which clients are at risk" — pre-indexes
+// notes/tasks/collections once instead of re-scanning per client, since this
+// may run across the entire client base (1000+ clients).
+function computeAllClientHealthScores(scopePortfolio) {
+  const names = getPortfolioClientList(scopePortfolio || 'all');
+
+  const lastNoteByClient = {};
+  CLIENT_NOTES.forEach(n => {
+    const key = (n.client_name || '').trim().toLowerCase();
+    if (!key) return;
+    if (!lastNoteByClient[key] || new Date(n.created_at) > new Date(lastNoteByClient[key])) lastNoteByClient[key] = n.created_at;
+  });
+
+  const tasksByClient = {};
+  CLIENT_TASKS.forEach(t => {
+    const key = (t.client_name || '').trim().toLowerCase();
+    if (!key) return;
+    (tasksByClient[key] = tasksByClient[key] || []).push(t);
+  });
+
+  const collectionsByClient = {};
+  (typeof COLLECTIONS_ACCOUNTS !== 'undefined' ? COLLECTIONS_ACCOUNTS : []).forEach(a => {
+    const key = (a.name || '').trim().toLowerCase();
+    if (key && !collectionsByClient[key]) collectionsByClient[key] = a;
+  });
+
+  return names.map(name => {
+    const key = name.trim().toLowerCase();
+    const result = computeClientHealthScore(name, lastNoteByClient[key], tasksByClient[key] || [], collectionsByClient[key]);
+    return { client_name: name, ...result };
+  });
+}
+
+function getAtRiskClients(scopePortfolio, maxScore) {
+  const threshold = maxScore || 60;
+  return computeAllClientHealthScores(scopePortfolio || 'all')
+    .filter(c => c.score < threshold)
+    .sort((a, b) => a.score - b.score);
+}
+
 function getEligibleSpotlightClients(pk, excludeName) {
   const worked = getWorkedTodayNames();
   const all = getClients(pk).filter(c => c.name && c.name.trim());
@@ -3325,6 +3419,7 @@ async function renderClientSpotlight(pk) {
   const mergedEntry = buildMergedClients()[normName];
   const memberPks = mergedEntry ? Object.keys(mergedEntry.portfolios) : [pk];
   const portfolioChipsHtml = memberPks.map(mpk => `<span class="portfolio-chip chip-${mpk}">${PORTFOLIO_ICONS[mpk]} ${PORTFOLIO_LABELS[mpk]}</span>`).join('');
+  const health = computeClientHealthScore(client.name, notes.length ? notes[0].created_at : null, tasks, collectionsEntry);
 
   const usingHtml = using.length
     ? `<div class="product-icon-row">${using.map(p => `<span class="product-icon-chip" title="${escAttr(p.label)}">${renderProductIcon(p.icon, 14)}</span>`).join('')}</div>`
@@ -3375,6 +3470,9 @@ async function renderClientSpotlight(pk) {
           </div>
         </div>
         <span class="spotlight-worked-badge ${workedToday ? 'spotlight-worked-yes' : 'spotlight-worked-no'}">${workedToday ? '✅ Worked today' : '⏳ Not touched yet today'}</span>
+      </div>
+      <div style="margin-bottom:16px">
+        <span class="spotlight-worked-badge" style="background:rgba(163,154,146,.12);color:var(--text2)" title="${escAttr(health.reasons.join(' · ') || 'No risk factors detected')}">🏥 Health: ${health.score}/100 — ${health.category}</span>
       </div>
       <div class="spotlight-grid">
         <div class="spotlight-block"><div class="spotlight-block-label">✅ Using (${using.length})</div>${usingHtml}</div>
@@ -9903,6 +10001,22 @@ const AI_AGENT_TOOLS = [
     input_schema: { type: 'object', properties: {} },
   },
   {
+    name: 'get_client_health',
+    description: 'Get a combined health score (0-100, plus 🟢 Healthy / 🟡 Watch / 🔴 At Risk category) for ONE specific client, based on note recency (engagement), task backlog/overdue items, and Collections/billing friction — with a plain-language, itemized breakdown of exactly what\'s driving the score, never a black box. Use this when asked "how healthy is [client]" or "is [client] at risk."',
+    input_schema: { type: 'object', properties: { client_name: { type: 'string' } }, required: ['client_name'] },
+  },
+  {
+    name: 'get_at_risk_clients',
+    description: 'Get every client scoring below a health threshold (default 60/100), sorted worst-first, each with the specific reasons driving their score. This is the holistic "which accounts are actually at risk" view — combining engagement + task backlog + billing friction into one signal, rather than checking just one of those in isolation. Use this whenever asked "which accounts are at risk," "who needs attention," or similar.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        portfolio: { type: 'string', enum: ['all', 'smb', 'whitelabel', 'support'] },
+        max_score: { type: 'integer', description: 'Health score threshold — clients scoring below this are included. Defaults to 60.' },
+      },
+    },
+  },
+  {
     name: 'navigate_to',
     description: 'Switch the Hub to a different page for the user.',
     input_schema: { type: 'object', properties: { page: { type: 'string', enum: ['home', 'smb', 'whitelabel', 'support', 'clients', 'collections', 'adspend', 'action', 'workflows', 'knowledge', 'voice', 'textagent'] } }, required: ['page'] },
@@ -10159,6 +10273,16 @@ async function executeAiTool(name, input) {
       return auditDataIntegrity();
     case 'get_daily_briefing':
       return gatherDailyBriefingData();
+    case 'get_client_health': {
+      const entry = aiFindMergedClient(input.client_name);
+      if (!entry) return { error: 'Client not found' };
+      return { client_name: entry.displayName, ...getClientHealthForOne(entry.displayName) };
+    }
+    case 'get_at_risk_clients': {
+      const results = getAtRiskClients(input.portfolio, input.max_score);
+      if (results.length === 0) return { at_risk_clients: [], note: 'No clients currently score below the threshold — that\'s a good sign.' };
+      return { at_risk_clients: results.slice(0, 30), total_at_risk: results.length };
+    }
     case 'get_collections_summary': {
       const list = typeof COLLECTIONS_ACCOUNTS !== 'undefined' ? COLLECTIONS_ACCOUNTS : [];
       const byStatus = (arr) => COLLECTIONS_STATUSES.map(s => ({
@@ -10493,8 +10617,8 @@ function renderStoredNirvanaHistory() {
 }
 
 const AI_QUICK_SUGGESTIONS = [
-  { label: '📊 KPI scores', msg: 'Show me our current KPI scores' },
-  { label: '⚠️ Needs attention', msg: 'What needs attention right now across Collections and clients?' },
+  { label: '🏥 Who\'s at risk?', msg: 'Which accounts are at risk right now?' },
+  { label: '☀️ Today\'s briefing', msg: 'Give me a rundown of what needs attention today' },
   { label: '🔍 Find a client', msg: 'Help me find a client' },
   { label: '🔁 Set up a workflow', msg: 'Help me set up a workflow to automate something' },
 ];
@@ -10510,6 +10634,8 @@ const AI_TOOL_LABELS = {
   view_chart: '👁️ Looked at the chart',
   audit_data_integrity: '🔍 Ran a data integrity check',
   get_daily_briefing: '☀️ Pulled the daily briefing',
+  get_client_health: '🏥 Checked client health score',
+  get_at_risk_clients: '🏥 Checked which accounts are at risk',
   navigate_to: '🧭 Navigated the Hub',
   open_client_profile: '👤 Opened client profile',
   add_note: '📝 Added a note',
@@ -10681,7 +10807,7 @@ function toggleAiAgentPanel() {
         if (!hasHistory) renderAiQuickSuggestions();
       } else if (!hasHistory) {
         const u = getCurrentUser();
-        appendAiAgentMessage('assistant', `Hey${u ? ' ' + u.name : ''}! I am Nirvana, your AI Agent inside the Client Success Hub. I can find clients, pull up their details, check KPIs/Collections/Ad Spend, take you to a page, or add a note/task if you tell me to. What do you need?`);
+        appendAiAgentMessage('assistant', `Hey${u ? ' ' + u.name : ''}! I am Nirvana, your AI Agent inside the Client Success Hub. I can find clients, pull up their details, check KPIs/Collections/Ad Spend, flag which accounts are at risk, take you to a page, or add a note/task if you tell me to. What do you need?`);
         renderAiQuickSuggestions();
       }
     }
@@ -10939,7 +11065,7 @@ async function streamAiAgentResponse(systemPrompt, onTextDelta) {
 async function runAiAgentTurn(toolTagForNextText) {
   showAiAgentTyping(true);
   const u = getCurrentUser();
-  const systemPrompt = `You are Nirvana, the AI Agent inside Niche Inc.'s Client Success Hub, helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the SMB, White Label, and Support portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. Whenever a request would affect MORE THAN ONE client (e.g. "create a follow-up task for every client that hasn't been touched in 30 days," or a list of specific client names), always use bulk_create_tasks or bulk_add_note instead of calling create_task/add_note in a loop — looping individual calls would force a separate confirmation click per client, while the bulk tools show one confirmation with the full affected list. Workflows automate two things: "inactivity" (create a task if a client hasn't had a note in N days) and "schedule" (create a task on a recurring cadence, for one client or a whole portfolio) — if someone describes an automation idea in plain English, translate it into the right workflow fields yourself rather than making them fill out a form. For questions about company policy, procedures, "how do we...", or what the website/docs say, search the Knowledge Base — it contains SOPs, docs, and website content the team has fed in, separate from live client data. You can read and explain every chart in the Hub: get_portfolio_summary explains a portfolio's Product Adoption Rate and Products Per Client charts, get_product_adoption explains the Voice Agent / Text Agent charts, get_collections_summary explains the Collections breakdown (always separated into Outstanding Balances vs Card Fails, each with its own status breakdown — never collapse these into one number), get_adspend_summary explains Ad Spend's promo/budget breakdown, and get_kpi_summary explains the Client Success Playbook scores. When someone asks you to break down, interpret, or explain any data or chart, always call the specific tool that has that breakdown built in rather than answering from a vaguer or more general tool — if a user asks for a split by category/status/type, that split should already be in the tool result; use it. Prefer the data tools above for explaining charts — they're faster and more precise. Only use view_chart when the question is genuinely about the chart's visual appearance itself (e.g. "does this look right," "what do you see," "describe this chart visually") — calling it will switch the user's screen to that chart's page, so mention that you're pulling it up. Whenever asked to check for discrepancies, duplicates, mismatches, or whether numbers add up anywhere in the Hub (including client counts, Collections, Ad Spend, or the Knowledge Base), always call audit_data_integrity rather than speculating about possible causes — it actually reconciles the numbers and reports genuine findings, so use what it returns instead of guessing at explanations like "could be duplicates" or "could be stale data." A daily briefing already gets shown automatically once per day when the chat is first opened — if asked for a summary, rundown, or "what should I focus on" at any other point, use get_daily_briefing to pull the same live data fresh rather than referencing whatever was shown earlier, since it may be out of date by then. When summarizing data, only use the real numbers/content returned by tools — never estimate or make things up. If a tool returns an error (e.g. client not found, or nothing in the knowledge base matches), tell the user plainly rather than guessing.`;
+  const systemPrompt = `You are Nirvana, the AI Agent inside Niche Inc.'s Client Success Hub, helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the SMB, White Label, and Support portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. Whenever a request would affect MORE THAN ONE client (e.g. "create a follow-up task for every client that hasn't been touched in 30 days," or a list of specific client names), always use bulk_create_tasks or bulk_add_note instead of calling create_task/add_note in a loop — looping individual calls would force a separate confirmation click per client, while the bulk tools show one confirmation with the full affected list. Workflows automate two things: "inactivity" (create a task if a client hasn't had a note in N days) and "schedule" (create a task on a recurring cadence, for one client or a whole portfolio) — if someone describes an automation idea in plain English, translate it into the right workflow fields yourself rather than making them fill out a form. For questions about company policy, procedures, "how do we...", or what the website/docs say, search the Knowledge Base — it contains SOPs, docs, and website content the team has fed in, separate from live client data. You can read and explain every chart in the Hub: get_portfolio_summary explains a portfolio's Product Adoption Rate and Products Per Client charts, get_product_adoption explains the Voice Agent / Text Agent charts, get_collections_summary explains the Collections breakdown (always separated into Outstanding Balances vs Card Fails, each with its own status breakdown — never collapse these into one number), get_adspend_summary explains Ad Spend's promo/budget breakdown, and get_kpi_summary explains the Client Success Playbook scores. When someone asks you to break down, interpret, or explain any data or chart, always call the specific tool that has that breakdown built in rather than answering from a vaguer or more general tool — if a user asks for a split by category/status/type, that split should already be in the tool result; use it. Prefer the data tools above for explaining charts — they're faster and more precise. Only use view_chart when the question is genuinely about the chart's visual appearance itself (e.g. "does this look right," "what do you see," "describe this chart visually") — calling it will switch the user's screen to that chart's page, so mention that you're pulling it up. Whenever asked to check for discrepancies, duplicates, mismatches, or whether numbers add up anywhere in the Hub (including client counts, Collections, Ad Spend, or the Knowledge Base), always call audit_data_integrity rather than speculating about possible causes — it actually reconciles the numbers and reports genuine findings, so use what it returns instead of guessing at explanations like "could be duplicates" or "could be stale data." A daily briefing already gets shown automatically once per day when the chat is first opened — if asked for a summary, rundown, or "what should I focus on" at any other point, use get_daily_briefing to pull the same live data fresh rather than referencing whatever was shown earlier, since it may be out of date by then. Whenever asked "which accounts are at risk," "who needs attention," or how healthy a specific client is, use get_at_risk_clients or get_client_health rather than checking just one signal (like Collections alone, or note recency alone) — those tools already combine engagement, task backlog, and billing friction into one score with a transparent breakdown of exactly why, which is a more honest answer than picking one factor and guessing at the rest. When summarizing data, only use the real numbers/content returned by tools — never estimate or make things up. If a tool returns an error (e.g. client not found, or nothing in the knowledge base matches), tell the user plainly rather than guessing.`;
 
   let streamBubble = null;
   const onTextDelta = (fullTextSoFar) => {
