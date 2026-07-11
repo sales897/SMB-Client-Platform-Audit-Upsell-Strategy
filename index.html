@@ -4391,7 +4391,7 @@ function rebuildTableHeaders(pk) {
     const w = widths[origIdx];
     const sortAttrs = sortableHeaderAttrs(tableId, c.key, `() => resortClientTable('${pk}')`);
     const style = (w ? `width:${w}px;` : '') + sortAttrs.style;
-    return `<th draggable="true" data-orig-idx="${origIdx}"${style ? ` style="${style}"` : ''}${sortAttrs.click}>${c.icon ? renderProductIcon(c.icon, 14) + ' ' : ''}${escAttr(c.label)}${sortAttrs.arrow}<span class="col-resize-handle"></span></th>`;
+    return `<th draggable="true" data-orig-idx="${origIdx}"${style ? ` style="${style}"` : ''}${sortAttrs.click}${sortAttrs.a11y}>${c.icon ? renderProductIcon(c.icon, 14) + ' ' : ''}${escAttr(c.label)}${sortAttrs.arrow}<span class="col-resize-handle"></span></th>`;
   }).join('');
   makeColumnsInteractive(headRow, tableId, () => rebuildPortfolio(pk));
 }
@@ -4800,7 +4800,30 @@ document.addEventListener('keydown', (e) => {
     if (closeFn) closeFn();
     return;
   }
+  if (handleA11yActivationKeydown(e)) return;
   handleGlobalShortcutKeys(e);
+});
+
+// Foundation follow-up, 2026-07-10: sidebar nav items and sortable table
+// headers are <div>/<th> elements with an onclick, not real buttons or
+// links -- Tab skipped over them entirely (no tabindex) and Enter/Space did
+// nothing even if focus somehow landed on them. Both now carry
+// tabindex="0" + role="button" (nav items further down, sortable headers
+// via sortableHeaderAttrs()); this makes Enter/Space activate any such
+// element the same way a real <button> already does natively for free.
+function handleA11yActivationKeydown(e) {
+  if (e.key !== 'Enter' && e.key !== ' ') return false;
+  const el = e.target;
+  if (el.getAttribute && el.getAttribute('role') === 'button' && el.tagName !== 'BUTTON') {
+    e.preventDefault();
+    el.click();
+    return true;
+  }
+  return false;
+}
+document.querySelectorAll('.nav-item').forEach(el => {
+  el.setAttribute('tabindex', '0');
+  el.setAttribute('role', 'button');
 });
 
 // ─── GLOBAL KEYBOARD SHORTCUTS (Block 4.1) ─────────────────────────────────
@@ -5057,7 +5080,7 @@ function handleSortableHeaderClick(tableId, key, rebuildFn) {
 // sortable-columns-aware header — shared by every table that supports it.
 function sortableHeaderAttrs(tableId, colKey, rebuildFnName) {
   const sortableType = SORTABLE_COLUMNS[tableId] && SORTABLE_COLUMNS[tableId][colKey];
-  if (!sortableType) return { click: '', style: '', arrow: '' };
+  if (!sortableType) return { click: '', style: '', arrow: '', a11y: '' };
   const sort = TABLE_SORT_STATE[tableId];
   const isSorted = sort && sort.key === colKey;
   const arrow = isSorted ? (sort.dir === 'asc' ? ' ▲' : ' ▼') : '';
@@ -5065,6 +5088,12 @@ function sortableHeaderAttrs(tableId, colKey, rebuildFnName) {
     click: ` onclick="handleSortableHeaderClick('${tableId}','${colKey}', ${rebuildFnName})"`,
     style: 'cursor:pointer;',
     arrow,
+    // Foundation follow-up, 2026-07-10: sortable <th> elements are plain
+    // table headers with an onclick -- with no tabindex/role, Tab skipped
+    // over them entirely and Enter/Space did nothing. This makes them
+    // real keyboard-operable controls; see the shared keydown handler
+    // (handleA11yActivationKeydown) further down for the Enter/Space part.
+    a11y: ' tabindex="0" role="button"',
   };
 }
 
@@ -6803,7 +6832,7 @@ function rebuildAdSpendTableHeaders() {
     const w = widths[origIdx];
     const sortAttrs = sortableHeaderAttrs('adspend', c.key, 'rebuildAdSpendTable');
     const style = (w ? `width:${w}px;` : '') + sortAttrs.style;
-    return `<th draggable="true" data-orig-idx="${origIdx}"${style ? ` style="${style}"` : ''}${sortAttrs.click}>${escAttr(c.label)}${sortAttrs.arrow}<span class="col-resize-handle"></span></th>`;
+    return `<th draggable="true" data-orig-idx="${origIdx}"${style ? ` style="${style}"` : ''}${sortAttrs.click}${sortAttrs.a11y}>${escAttr(c.label)}${sortAttrs.arrow}<span class="col-resize-handle"></span></th>`;
   }).join('');
   makeColumnsInteractive(headRow, tableId, () => { rebuildAdSpendTableHeaders(); rebuildAdSpendTable(); });
 }
@@ -7399,7 +7428,7 @@ function rebuildCollectionsTableHeaders() {
     const w = widths[origIdx];
     const sortAttrs = sortableHeaderAttrs('collections', c.key, 'rebuildCollectionsTable');
     const style = (w ? `width:${w}px;` : '') + sortAttrs.style;
-    return `<th draggable="true" data-orig-idx="${origIdx}"${style ? ` style="${style}"` : ''}${sortAttrs.click}>${escAttr(c.label)}${sortAttrs.arrow}<span class="col-resize-handle"></span></th>`;
+    return `<th draggable="true" data-orig-idx="${origIdx}"${style ? ` style="${style}"` : ''}${sortAttrs.click}${sortAttrs.a11y}>${escAttr(c.label)}${sortAttrs.arrow}<span class="col-resize-handle"></span></th>`;
   }).join('');
   makeColumnsInteractive(headRow, tableId, () => { rebuildCollectionsTableHeaders(); rebuildCollectionsTable(); });
 }
