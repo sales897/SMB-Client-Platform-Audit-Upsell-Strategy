@@ -1257,7 +1257,7 @@ tr.hidden-row { display: none; }
   background: rgba(226,84,31,.05); border: 1px dashed rgba(226,84,31,.35); border-radius: var(--radius-sm);
   padding: 12px 14px; margin-bottom: 16px;
 }
-.kb-badge { font-size: 9.5px; font-weight: 700; padding: 3px 8px; border-radius: var(--radius-sm); text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+.kb-badge { font-size: var(--font-2xs); font-weight: 700; padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
 .kb-badge-sop { background: rgba(34,197,94,.15); color: var(--green); }
 .kb-badge-docs { background: rgba(59,130,246,.15); color: var(--blue); }
 .kb-badge-website { background: rgba(226,84,31,.15); color: var(--orange); }
@@ -2400,12 +2400,12 @@ tr.hidden-row { display: none; }
       <div class="kpi"><div class="kpi-icon">📋</div><div class="kpi-val green" id="kb-sop-count">0</div><div class="kpi-lbl">SOPs</div><div class="kpi-sub">Standard procedures</div></div>
     </div>
 
-    <div class="card" style="margin-bottom:20px">
+    <div class="card" style="margin-bottom:var(--space-5)">
       <div class="card-header">
         <div><div class="card-title">What Nirvana Knows</div><div class="card-sub">Ask it things like "What's our SOP for onboarding?" or "What does our website say about pricing?"</div></div>
         <button class="btn btn-primary btn-sm" id="addKnowledgeBtn" onclick="openAddKnowledgeModal()">＋ Add Knowledge</button>
       </div>
-      <input type="text" id="kbSearchBox" class="search-box" placeholder="Search entries…" style="margin-bottom:16px" oninput="debouncedRebuildKnowledgePage()">
+      <input type="text" id="kbSearchBox" class="search-box" placeholder="Search entries…" style="margin-bottom:var(--space-4)" oninput="debouncedRebuildKnowledgePage()">
       <div id="knowledgeList"></div>
     </div>
 
@@ -10821,14 +10821,14 @@ function rebuildKnowledgePage() {
   list.innerHTML = entries.map(k => {
     const excerpt = (k.content || '').slice(0, 160).trim();
     return `
-    <div class="edit-client-row" style="margin-bottom:8px;padding:14px;align-items:flex-start">
+    <div class="edit-client-row" style="margin-bottom:var(--space-2);padding:var(--space-3);align-items:flex-start">
       <div style="flex:1">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+        <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:4px">
           <span class="kb-badge kb-badge-${k.category}">${escAttr(KB_CATEGORY_LABELS[k.category] || k.category)}</span>
-          <span style="font-weight:700;color:var(--text);font-size:13px">${escAttr(k.title)}</span>
+          <span style="font-weight:700;color:var(--text);font-size:var(--font-base)">${escAttr(k.title)}</span>
         </div>
-        <div style="font-size:11.5px;color:var(--text2);line-height:1.5">${escAttr(excerpt)}${(k.content || '').length > 160 ? '…' : ''}</div>
-        ${k.source_url ? `<div style="font-size:10.5px;color:var(--text3);margin-top:4px">🔗 <a href="${escAttr(k.source_url)}" target="_blank" rel="noopener noreferrer" style="color:var(--text3)">${escAttr(k.source_url)}</a></div>` : ''}
+        <div style="font-size:var(--font-xs);color:var(--text2);line-height:1.5">${escAttr(excerpt)}${(k.content || '').length > 160 ? '…' : ''}</div>
+        ${k.source_url ? `<div style="font-size:var(--font-2xs);color:var(--text3);margin-top:4px">🔗 <a href="${escAttr(k.source_url)}" target="_blank" rel="noopener noreferrer" style="color:var(--text3)">${escAttr(k.source_url)}</a></div>` : ''}
       </div>
       ${canEdit() ? `
       <button class="row-action-btn" onclick="openEditKnowledgeModal('${k.id}')">✏️ Edit</button>
