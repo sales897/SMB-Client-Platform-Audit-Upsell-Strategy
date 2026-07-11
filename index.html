@@ -524,6 +524,23 @@ body {
 #allClientsTable tbody tr td:last-child { border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
 #allClientsTable tbody tr td:first-child:last-child { border-radius: var(--radius-sm); }
 
+/* Pill-shaped rows for SMB / White Label / Support (Block UI-1.4) -- same
+   treatment as Client Directory, scoped to this new shared class rather
+   than .resizable-table itself, since Ad Spend/Collections also use that
+   class but haven't had their own Phase 1 pass yet. */
+.client-portfolio-table { border-collapse: separate; border-spacing: 0 var(--space-2); }
+.client-portfolio-table thead th {
+  border-bottom: 1px solid var(--border); padding-bottom: var(--space-2);
+  color: var(--text3); font-weight: 600; font-size: var(--font-xs);
+  text-transform: uppercase; letter-spacing: .04em;
+}
+.client-portfolio-table tbody tr { background: var(--bg2); transition: background-color var(--transition-slow); }
+.client-portfolio-table tbody tr:hover { background: var(--bg3); }
+.client-portfolio-table tbody td { padding: var(--space-3); }
+.client-portfolio-table tbody tr td:first-child { border-radius: var(--radius-sm) 0 0 var(--radius-sm); }
+.client-portfolio-table tbody tr td:last-child { border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+.client-portfolio-table tbody tr td:first-child:last-child { border-radius: var(--radius-sm); }
+
 /* ─── RESIZABLE / REORDERABLE COLUMN HEADERS ──────────────────────────────── */
 .resizable-table { table-layout: fixed; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 .resizable-table th {
@@ -850,21 +867,21 @@ tr.hidden-row { display: none; }
 .ai-agent-panel {
   position: fixed; bottom: 96px; right: 24px; z-index: 4000;
   width: 420px; max-width: calc(100vw - 32px); height: 600px; max-height: 75vh;
-  background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  background: var(--gradient-card); border: 1px solid var(--border); border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg); display: flex; flex-direction: column; overflow: hidden;
 }
 .ai-agent-header {
-  display: flex; align-items: center; justify-content: space-between; padding: 14px 16px;
+  display: flex; align-items: center; justify-content: space-between; padding: var(--space-3) var(--space-4);
   border-bottom: 1px solid var(--border); flex-shrink: 0;
   background: linear-gradient(135deg, rgba(226,84,31,.1), rgba(123,47,247,.06));
 }
-.ai-agent-header-title { font-weight: 800; color: var(--text); font-size: 15px; display: flex; align-items: center; gap: 8px; }
+.ai-agent-header-title { font-weight: 800; color: var(--text); font-size: var(--font-md); display: flex; align-items: center; gap: var(--space-2); }
 .ai-agent-header-icon { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; object-position: 50% 15%; box-shadow: 0 0 0 2px rgba(226,84,31,.35); }
 .ai-agent-header-actions { display: flex; gap: 4px; }
-.ai-agent-header button { background: none; border: none; color: var(--text3); font-size: 15px; cursor: pointer; padding: 4px 6px; border-radius: var(--radius-xs); transition: background var(--transition-base); }
+.ai-agent-header button { background: none; border: none; color: var(--text3); font-size: var(--font-md); cursor: pointer; padding: var(--space-1) var(--space-2); border-radius: var(--radius-xs); transition: background var(--transition-base); }
 .ai-agent-header button:hover { background: var(--bg3); color: var(--text); }
 .ai-agent-header button.active { background: rgba(226,84,31,.18); color: var(--orange); }
-.ai-agent-messages { flex: 1; overflow-y: auto; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+.ai-agent-messages { flex: 1; overflow-y: auto; padding: var(--space-3) var(--space-4); display: flex; flex-direction: column; gap: var(--space-3); }
 .ai-msg-row { display: flex; flex-direction: column; max-width: 88%; }
 .ai-msg-row.ai-msg-row-user { align-self: flex-end; align-items: flex-end; }
 .ai-msg-row.ai-msg-row-assistant {
@@ -879,35 +896,36 @@ tr.hidden-row { display: none; }
   box-shadow: 0 0 0 2px rgba(226,84,31,.3);
 }
 .nirvana-inline-icon { width: 16px; height: 16px; border-radius: 50%; object-fit: cover; object-position: 50% 15%; vertical-align: -3px; margin-right: 2px; box-shadow: 0 0 0 1px rgba(226,84,31,.3); }
-.ai-msg { font-size: 13px; line-height: 1.55; padding: 10px 13px; border-radius: 12px; word-wrap: break-word; overflow-wrap: break-word; }
-.ai-msg-user { background: var(--orange); color: #fff; white-space: pre-wrap; }
+.ai-msg { font-family: var(--font-mono); font-size: var(--font-base); line-height: 1.55; padding: var(--space-2) var(--space-3); border-radius: var(--radius); word-wrap: break-word; overflow-wrap: break-word; }
+.ai-msg-user { background: var(--gradient-accent); color: #fff; white-space: pre-wrap; }
 .ai-msg-assistant { background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
 .ai-msg-assistant > div { margin-bottom: 6px; }
 .ai-msg-assistant > div:last-child { margin-bottom: 0; }
 .ai-msg-assistant ul, .ai-msg-assistant ol { margin: 4px 0 8px 18px; }
 .ai-msg-assistant li { margin-bottom: 3px; }
-.ai-msg-assistant code { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-xs); padding: 1px 5px; font-size: 12px; }
-.ai-msg-assistant pre { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 10px; overflow-x: auto; margin: 6px 0; }
+.ai-msg-assistant code { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-xs); padding: 1px 5px; font-size: var(--font-sm); }
+.ai-msg-assistant pre { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--space-2) var(--space-3); overflow-x: auto; margin: var(--space-2) 0; }
 .ai-msg-assistant pre code { border: none; padding: 0; background: none; }
 .ai-msg-assistant a { color: var(--blue); text-decoration: underline; }
 .ai-msg-time { font-size: var(--font-2xs); color: var(--text3); margin-top: 3px; padding: 0 2px; }
-.ai-table-wrap { overflow-x: auto; margin: 6px 0; }
-.ai-table { border-collapse: collapse; width: 100%; font-size: 12px; }
-.ai-table th, .ai-table td { border: 1px solid var(--border); padding: 6px 8px; text-align: left; white-space: nowrap; }
+.ai-table-wrap { overflow-x: auto; margin: var(--space-2) 0; }
+.ai-table { border-collapse: collapse; width: 100%; font-size: var(--font-sm); }
+.ai-table th, .ai-table td { border: 1px solid var(--border); padding: var(--space-2); text-align: left; white-space: nowrap; }
 .ai-table th { background: var(--bg); color: var(--text3); font-weight: 700; }
-.ai-suggestions { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 16px 12px; flex-shrink: 0; }
+.ai-suggestions { display: flex; flex-wrap: wrap; gap: var(--space-2); padding: 0 var(--space-4) var(--space-3); flex-shrink: 0; }
 .ai-suggestion-chip {
-  background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-pill); padding: 6px 12px;
-  font-size: 11.5px; color: var(--text2); cursor: pointer; transition: all var(--transition-base); white-space: nowrap;
+  background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-pill); padding: var(--space-2) var(--space-3);
+  font-size: var(--font-xs); color: var(--text2); cursor: pointer; transition: all var(--transition-base); white-space: nowrap;
 }
 .ai-suggestion-chip:hover { border-color: var(--orange); color: var(--text); background: var(--bg2); }
-.ai-agent-confirm { padding: 12px 16px; border-top: 1px solid var(--border); background: rgba(226,84,31,.06); flex-shrink: 0; }
-.ai-confirm-text { font-size: 12px; color: var(--text2); margin-bottom: 8px; line-height: 1.5; }
-.ai-confirm-btns { display: flex; gap: 8px; justify-content: flex-end; }
-.ai-agent-input-row { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--border); flex-shrink: 0; }
-.ai-agent-input-row input { flex: 1; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 9px 12px; color: var(--text); font-size: 13px; outline: none; }
+.ai-agent-confirm { padding: var(--space-3) var(--space-4); border-top: 1px solid var(--border); background: rgba(226,84,31,.06); flex-shrink: 0; }
+.ai-confirm-text { font-size: var(--font-sm); color: var(--text2); margin-bottom: var(--space-2); line-height: 1.5; }
+.ai-confirm-btns { display: flex; gap: var(--space-2); justify-content: flex-end; }
+.ai-agent-input-row { display: flex; gap: var(--space-2); padding: var(--space-3); border-top: 1px solid var(--border); flex-shrink: 0; }
+.ai-agent-input-row input { flex: 1; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--space-2) var(--space-3); color: var(--text); font-size: var(--font-base); outline: none; }
 .ai-agent-input-row input:focus { border-color: var(--orange); }
-.ai-agent-input-row button { background: var(--orange); color: #fff; border: none; border-radius: var(--radius-sm); padding: 9px 16px; font-size: 13px; font-weight: 700; cursor: pointer; }
+.ai-agent-input-row button { background: var(--gradient-accent); color: #fff; border: none; border-radius: var(--radius-sm); padding: var(--space-2) var(--space-4); font-size: var(--font-base); font-weight: 700; cursor: pointer; transition: transform var(--transition-base); }
+.ai-agent-input-row button:hover:not(:disabled) { transform: translateY(-1px); }
 .ai-agent-input-row button:disabled { opacity: .5; cursor: default; }
 .ai-typing-dots { display: inline-flex; gap: 3px; align-items: center; padding: 2px 0; }
 .ai-typing-dots span { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--text3); animation: aiTypingBounce 1.2s infinite ease-in-out; }
@@ -1892,7 +1910,7 @@ tr.hidden-row { display: none; }
         <button class="btn btn-ghost btn-sm" onclick="clearClientSelection('smb')" style="margin-left:auto">Clear Selection</button>
       </div>
       <div class="tbl-scroll">
-        <table class="resizable-table" id="clientTable-smb">
+        <table class="resizable-table client-portfolio-table" id="clientTable-smb">
           <thead><tr id="tableHead-smb">
             <th>Client Name</th><th># Prods</th>
           </tr></thead>
@@ -2015,7 +2033,7 @@ tr.hidden-row { display: none; }
         <button class="btn btn-ghost btn-sm" onclick="clearClientSelection('whitelabel')" style="margin-left:auto">Clear Selection</button>
       </div>
       <div class="tbl-scroll">
-        <table class="resizable-table" id="clientTable-whitelabel">
+        <table class="resizable-table client-portfolio-table" id="clientTable-whitelabel">
           <thead><tr id="tableHead-whitelabel">
             <th>Client Name</th><th># Prods</th>
           </tr></thead>
@@ -2259,7 +2277,7 @@ tr.hidden-row { display: none; }
         <button class="btn btn-ghost btn-sm" onclick="clearClientSelection('support')" style="margin-left:auto">Clear Selection</button>
       </div>
       <div class="tbl-scroll">
-        <table class="resizable-table" id="clientTable-support">
+        <table class="resizable-table client-portfolio-table" id="clientTable-support">
           <thead><tr id="tableHead-support">
             <th>Client Name</th><th># Prods</th>
           </tr></thead>
@@ -5162,7 +5180,7 @@ function rebuildClientTable(pk, resortOnly = false) {
     const attrs = keys.map(k => `data-${k}="${!!c[k]}"`).join(' ');
     const orgAttr = `data-org="${escAttr((c.org || '').toLowerCase())}"`;
     const safeName = escOnclickArg(c.name);
-    const checkboxTd = `<td style="padding-left:14px"><input type="checkbox" class="cl-${pk}-row-check" data-client="${escAttr(c.name)}" onchange="toggleClientRowSelect('${pk}', '${safeName}', this.checked)" ${BULK_SELECTION_SETS[pk].has(c.name) ? 'checked' : ''} aria-label="Select ${escAttr(c.name)}"></td>`;
+    const checkboxTd = `<td><input type="checkbox" class="cl-${pk}-row-check" data-client="${escAttr(c.name)}" onchange="toggleClientRowSelect('${pk}', '${safeName}', this.checked)" ${BULK_SELECTION_SETS[pk].has(c.name) ? 'checked' : ''} aria-label="Select ${escAttr(c.name)}"></td>`;
 
     const cellByIdx = cols.map(col => {
       if (col.key === 'name') {
