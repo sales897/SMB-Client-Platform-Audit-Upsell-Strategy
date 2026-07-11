@@ -455,10 +455,10 @@ body {
 .search-box:focus { border-color: var(--orange); }
 .search-box::placeholder { color: var(--text3); }
 .filter-pill {
-  padding: 6px 13px;
+  padding: var(--space-2) var(--space-3);
   border: 1px solid var(--border);
   border-radius: var(--radius-pill);
-  font-size: 11px; font-weight: 600;
+  font-size: var(--font-xs); font-weight: 600;
   cursor: pointer;
   color: var(--text2);
   background: var(--bg3);
@@ -466,7 +466,7 @@ body {
   white-space: nowrap;
 }
 .filter-pill:hover { border-color: var(--orange); color: var(--orange); }
-.filter-pill.active { background: var(--orange); border-color: var(--orange); color: white; }
+.filter-pill.active { background: var(--gradient-accent); border-color: var(--orange); color: white; }
 
 .pm-tab {
   padding: 9px 18px;
@@ -506,6 +506,23 @@ body {
 .tbl-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
 .tbl-scroll::-webkit-scrollbar-track { background: var(--bg3); }
 .tbl-scroll::-webkit-scrollbar-thumb { background: var(--orange); border-radius: 3px; }
+
+/* Pill-shaped rows (Direction B "Copilot", mixed with Terminal's monospace/
+   dot-status, 2026-07-11) -- Client Directory is the first table to get
+   this treatment; other data tables pick it up as their own Phase 1 blocks
+   come up, rather than a one-shot retrofit of every table at once. */
+#allClientsTable { border-collapse: separate; border-spacing: 0 var(--space-2); }
+#allClientsTable thead th {
+  border-bottom: 1px solid var(--border); padding-bottom: var(--space-2);
+  color: var(--text3); font-weight: 600; font-size: var(--font-xs);
+  text-transform: uppercase; letter-spacing: .04em;
+}
+#allClientsTable tbody tr { background: var(--bg2); transition: background-color var(--transition-slow); }
+#allClientsTable tbody tr:hover { background: var(--bg3); }
+#allClientsTable tbody td { padding: var(--space-3); }
+#allClientsTable tbody tr td:first-child { border-radius: var(--radius-sm) 0 0 var(--radius-sm); }
+#allClientsTable tbody tr td:last-child { border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+#allClientsTable tbody tr td:first-child:last-child { border-radius: var(--radius-sm); }
 
 /* ─── RESIZABLE / REORDERABLE COLUMN HEADERS ──────────────────────────────── */
 .resizable-table { table-layout: fixed; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
@@ -1701,8 +1718,8 @@ tr.hidden-row { display: none; }
         <span class="row-count" id="clientsRowCount">0 clients</span>
         <button class="export-csv-btn" onclick="exportAllClientsTable()" title="Download the currently visible rows as a CSV file">⬇ Export CSV</button>
       </div>
-      <div class="card" id="clDirBulkBar" style="display:none;margin-bottom:12px;padding:10px 14px;background:var(--orange-dim);border-color:rgba(226,84,31,.3);align-items:center;gap:12px">
-        <span style="font-weight:700;color:var(--text);font-size:13px"><span id="clDirSelectedCount">0</span> selected</span>
+      <div class="card" id="clDirBulkBar" style="display:none;margin-bottom:var(--space-3);padding:var(--space-2) var(--space-3);background:var(--orange-dim);border-color:rgba(226,84,31,.3);align-items:center;gap:var(--space-3)">
+        <span style="font-weight:700;color:var(--text);font-size:var(--font-base)"><span id="clDirSelectedCount">0</span> selected</span>
         <button class="btn btn-primary btn-sm" onclick="openBulkActionModal('task')">➕ Add Task to Selected</button>
         <button class="btn btn-ghost btn-sm" onclick="openBulkActionModal('note')">📝 Add Note to Selected</button>
         <button class="btn btn-ghost btn-sm" onclick="clearDirectorySelection()" style="margin-left:auto">Clear Selection</button>
@@ -1710,7 +1727,7 @@ tr.hidden-row { display: none; }
       <div class="tbl-scroll" style="max-height:560px">
         <table style="table-layout:auto" id="allClientsTable">
           <thead><tr>
-            <th style="width:34px;padding-left:14px"><input type="checkbox" id="clDirSelectAll" onchange="toggleDirectorySelectAll(this.checked)" aria-label="Select all clients"></th>
+            <th style="width:34px"><input type="checkbox" id="clDirSelectAll" onchange="toggleDirectorySelectAll(this.checked)" aria-label="Select all clients"></th>
             <th id="clDirSortName" onclick="handleClientsDirectorySort('name')" style="text-align:left;width:19%;cursor:pointer">Client Name</th>
             <th style="width:23%">Portfolios</th>
             <th id="clDirSortProducts" onclick="handleClientsDirectorySort('products')" style="width:25%;cursor:pointer"># Products</th>
@@ -9943,7 +9960,7 @@ function rebuildClientsDirectory() {
       ? `<div style="font-size:11px;color:var(--text3);font-weight:400;margin-top:1px">${escAttr(contact.contact_name || '')}${contact.contact_name && (contact.email || contact.phone) ? ' · ' : ''}${escAttr(contact.phone || contact.email || '')}</div>`
       : '';
     return `<tr data-name="${escAttr(row.displayName.toLowerCase())}" data-portfolio-count="${pks.length}" data-products="${Object.keys(activeProducts).join(' ')}" ${attrs}>
-      <td style="padding-left:14px"><input type="checkbox" class="cl-dir-row-check" data-client="${escAttr(row.displayName)}" onchange="toggleDirectoryRowSelect('${safe}', this.checked)" ${selectedDirectoryClients.has(row.displayName) ? 'checked' : ''} aria-label="Select ${escAttr(row.displayName)}"></td>
+      <td><input type="checkbox" class="cl-dir-row-check" data-client="${escAttr(row.displayName)}" onchange="toggleDirectoryRowSelect('${safe}', this.checked)" ${selectedDirectoryClients.has(row.displayName) ? 'checked' : ''} aria-label="Select ${escAttr(row.displayName)}"></td>
       <td style="color:var(--text);font-weight:600">
         <a href="#" onclick="openClientNotesTasksModal('${safe}');return false;" style="color:inherit;text-decoration:none" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${escAttr(row.displayName)}</a>
         ${contactHint}
