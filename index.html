@@ -343,7 +343,7 @@ body {
   box-shadow: 0 0 0 1px rgba(34,197,94,.3), 0 0 24px rgba(34,197,94,.35);
 }
 .kpi-glow-green::before { background: linear-gradient(90deg, var(--green), #16a34a); }
-.kpi-trend { position: absolute; top: 18px; right: 18px; font-size: 11px; font-weight: 700; }
+.kpi-trend { position: absolute; top: var(--space-4); right: var(--space-4); font-size: var(--font-xs); font-weight: 700; }
 .kpi-trend.up { color: var(--green); }
 .kpi-trend.down { color: var(--red); }
 
@@ -469,10 +469,10 @@ body {
 .filter-pill.active { background: var(--gradient-accent); border-color: var(--orange); color: white; }
 
 .pm-tab {
-  padding: 9px 18px;
+  padding: var(--space-2) var(--space-4);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  font-size: 13px; font-weight: 700;
+  font-size: var(--font-base); font-weight: 700;
   cursor: pointer;
   color: var(--text2);
   background: var(--bg3);
@@ -540,6 +540,25 @@ body {
 .client-portfolio-table tbody tr td:first-child { border-radius: var(--radius-sm) 0 0 var(--radius-sm); }
 .client-portfolio-table tbody tr td:last-child { border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
 .client-portfolio-table tbody tr td:first-child:last-child { border-radius: var(--radius-sm); }
+
+/* Generic pill-row utility (Block UI-1.5) -- same treatment as
+   .client-portfolio-table/#allClientsTable above, but named generically so
+   any future table's Phase 1 block can opt in with one shared class instead
+   of inventing its own specifically-named variant each time. Ad Spend is
+   the first to use it; Collections is a natural next candidate given how
+   similar its structure is. */
+.pill-rows { border-collapse: separate; border-spacing: 0 var(--space-2); }
+.pill-rows thead th {
+  border-bottom: 1px solid var(--border); padding-bottom: var(--space-2);
+  color: var(--text3); font-weight: 600; font-size: var(--font-xs);
+  text-transform: uppercase; letter-spacing: .04em;
+}
+.pill-rows tbody tr { background: var(--bg2); transition: background-color var(--transition-slow); }
+.pill-rows tbody tr:hover { background: var(--bg3); }
+.pill-rows tbody td { padding: var(--space-3); }
+.pill-rows tbody tr td:first-child { border-radius: var(--radius-sm) 0 0 var(--radius-sm); }
+.pill-rows tbody tr td:last-child { border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+.pill-rows tbody tr td:first-child:last-child { border-radius: var(--radius-sm); }
 
 /* ─── RESIZABLE / REORDERABLE COLUMN HEADERS ──────────────────────────────── */
 .resizable-table { table-layout: fixed; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
@@ -1176,7 +1195,7 @@ tr.hidden-row { display: none; }
 .role-pill.admin { background: rgba(226,84,31,.18); color: var(--orange2); }
 .role-pill.superuser { background: rgba(59,130,246,.18); color: var(--blue); }
 .role-pill.user { background: rgba(163,154,146,.18); color: var(--text2); }
-.promo-pill { font-size: var(--font-2xs); font-weight: 700; padding: 3px 9px; border-radius: 12px; white-space: nowrap; display: inline-block; }
+.promo-pill { font-size: var(--font-2xs); font-weight: 700; padding: var(--space-1) var(--space-2); border-radius: var(--radius); white-space: nowrap; display: inline-block; }
 .promo-pill.yes { background: rgba(34,197,94,.15); color: var(--green); }
 .promo-pill.no { background: rgba(239,68,68,.15); color: var(--red); }
 .promo-pill.using { background: rgba(59,130,246,.15); color: var(--blue); }
@@ -2480,8 +2499,8 @@ tr.hidden-row { display: none; }
         <div class="chart-wrap h300" style="position:relative">
           <canvas id="adSpendPromoDonut"></canvas>
           <div style="position:absolute;top:50%;left:36%;transform:translate(-50%,-50%);text-align:center;pointer-events:none">
-            <div id="adSpendPromoCenterNum" style="font-size:26px;font-weight:800;color:var(--text);line-height:1">0</div>
-            <div style="font-size:10px;color:var(--text3);margin-top:2px">businesses</div>
+            <div id="adSpendPromoCenterNum" style="font-family:var(--font-mono);font-size:var(--font-2xl);font-weight:800;color:var(--text);line-height:1">0</div>
+            <div style="font-size:var(--font-2xs);color:var(--text3);margin-top:2px">businesses</div>
           </div>
         </div>
       </div>
@@ -2550,7 +2569,7 @@ tr.hidden-row { display: none; }
         <button class="export-csv-btn" onclick="exportAdSpendTable_()" title="Download the currently visible rows as a CSV file">⬇ Export CSV</button>
       </div>
       <div style="overflow-x:auto">
-        <table class="resizable-table" id="adSpendTable">
+        <table class="resizable-table pill-rows" id="adSpendTable">
           <thead><tr id="asTableHead"></tr></thead>
           <tbody id="asTableBody"></tbody>
         </table>
@@ -2640,9 +2659,9 @@ tr.hidden-row { display: none; }
        PAGE: COLLECTIONS — Outstanding Balances & Card Fails
   ════════════════════════════════════════════════════════════════════════ -->
   <div class="page" id="page-collections">
-    <div class="card" style="margin-bottom:20px;padding:14px 18px">
-      <div style="font-size:11px;color:var(--text3);margin-bottom:10px;letter-spacing:.5px;text-transform:uppercase;font-weight:700">Viewing</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <div class="card" style="margin-bottom:var(--space-5);padding:var(--space-3) var(--space-4)">
+      <div style="font-size:var(--font-xs);color:var(--text3);margin-bottom:var(--space-2);letter-spacing:.5px;text-transform:uppercase;font-weight:700">Viewing</div>
+      <div style="display:flex;gap:var(--space-2);flex-wrap:wrap">
         <button class="pm-tab active" data-pk="outstanding" onclick="switchCollectionsType('outstanding')">💵 Outstanding Balances</button>
         <button class="pm-tab" data-pk="cardfail" onclick="switchCollectionsType('cardfail')">💳 Card Fails</button>
       </div>
@@ -2666,8 +2685,8 @@ tr.hidden-row { display: none; }
         <div class="chart-wrap h300" style="position:relative">
           <canvas id="collectionsStatusDonut"></canvas>
           <div style="position:absolute;top:50%;left:36%;transform:translate(-50%,-50%);text-align:center;pointer-events:none">
-            <div id="collectionsStatusCenterNum" style="font-size:26px;font-weight:800;color:var(--text);line-height:1">0</div>
-            <div style="font-size:10px;color:var(--text3);margin-top:2px">accounts</div>
+            <div id="collectionsStatusCenterNum" style="font-family:var(--font-mono);font-size:var(--font-2xl);font-weight:800;color:var(--text);line-height:1">0</div>
+            <div style="font-size:var(--font-2xs);color:var(--text3);margin-top:2px">accounts</div>
           </div>
         </div>
       </div>
@@ -2724,7 +2743,7 @@ tr.hidden-row { display: none; }
         <button class="export-csv-btn" onclick="exportCollectionsTable_()" title="Download the currently visible rows as a CSV file">⬇ Export CSV</button>
       </div>
       <div style="overflow-x:auto">
-        <table class="resizable-table" id="collectionsTable">
+        <table class="resizable-table pill-rows" id="collectionsTable">
           <thead><tr id="colTableHead"></tr></thead>
           <tbody id="colTableBody"></tbody>
         </table>
