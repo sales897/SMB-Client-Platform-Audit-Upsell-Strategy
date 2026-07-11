@@ -163,7 +163,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   box-shadow: var(--focus-ring);
 }
 body {
-  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-family: var(--font-mono);
   background: var(--bg);
   color: var(--text);
   display: flex;
@@ -221,6 +221,7 @@ body {
   margin-left: auto;
   background: var(--orange);
   color: white;
+  font-family: var(--font-mono);
   font-size: 9px;
   font-weight: 800;
   padding: 2px 6px;
@@ -331,7 +332,7 @@ body {
   background: linear-gradient(90deg, var(--orange), var(--orange2));
 }
 .kpi-icon { font-size: 22px; margin-bottom: 10px; }
-.kpi-val { font-family: var(--font-display); font-size: var(--font-3xl); font-weight: 800; color: var(--text); line-height: 1; }
+.kpi-val { font-family: var(--font-mono); font-size: var(--font-3xl); font-weight: 800; color: var(--text); line-height: 1; }
 .kpi-val.orange { color: var(--orange); }
 .kpi-val.green { color: var(--green); }
 .kpi-val.red { color: var(--red); }
@@ -660,7 +661,7 @@ tr.hidden-row { display: none; }
 .dot-no { background: var(--bg3); color: var(--text3); border: 1px solid var(--border); }
 
 .pc-badge {
-  display: inline-block; padding: 2px 8px;
+  display: inline-block; padding: 2px 8px; font-family: var(--font-mono);
   border-radius: var(--radius-sm); font-size: var(--font-2xs); font-weight: 700;
 }
 .pc-1 { background: rgba(239,68,68,.12); color: #ef4444; }
@@ -1250,7 +1251,7 @@ tr.hidden-row { display: none; }
 .quick-link-card:hover { border-color: var(--orange); transform: translateY(-2px); }
 .quick-link-icon { font-size: 22px; margin-bottom: var(--space-3); }
 .quick-link-label { font-size: var(--font-base); font-weight: 700; color: var(--text); margin-bottom: 4px; }
-.quick-link-count { font-family: var(--font-display); font-size: var(--font-2xl); font-weight: 800; color: var(--orange); }
+.quick-link-count { font-family: var(--font-mono); font-size: var(--font-2xl); font-weight: 800; color: var(--orange); }
 .quick-link-sub { font-size: var(--font-xs); color: var(--text3); margin-top: 2px; }
 .quick-link-flag {
   position: absolute; top: 14px; right: 14px; background: var(--red); color: #fff;
