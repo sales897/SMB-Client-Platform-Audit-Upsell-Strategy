@@ -16,7 +16,7 @@
      existing system-font stack; see --font-display usage in the stylesheet. -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
 /* ─── RESET & BASE ─────────────────────────────────────────────────────── */
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -97,6 +97,13 @@
      headings/page titles/modal titles/KPI values only. Body text, table
      data, and labels stay on the system-font stack below. */
   --font-display: 'Bricolage Grotesque', 'Segoe UI', system-ui, sans-serif;
+  /* Mixed in from the Terminal (C) direction, 2026-07-11 -- Oscar liked the
+     monospace data-table look and the dot-style status indicator from that
+     mockup and wanted both folded into the Copilot (B) direction rather than
+     switching wholesale. Applied to every shared data table via
+     .resizable-table (Client Directory, SMB/White Label/Support, Ad Spend,
+     Collections all use this class, so this lands everywhere at once). */
+  --font-mono: 'JetBrains Mono', 'Consolas', monospace;
 }
 /* Section headers (h2 is used throughout for "Quick Access", "Today's
    Focus", etc.) previously had zero shared base styling — relying entirely
@@ -500,7 +507,7 @@ body {
 .tbl-scroll::-webkit-scrollbar-thumb { background: var(--orange); border-radius: 3px; }
 
 /* ─── RESIZABLE / REORDERABLE COLUMN HEADERS ──────────────────────────────── */
-.resizable-table { table-layout: fixed; }
+.resizable-table { table-layout: fixed; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 .resizable-table th {
   position: relative;
   cursor: grab;
@@ -1138,6 +1145,18 @@ tr.hidden-row { display: none; }
 .promo-pill.no { background: rgba(239,68,68,.15); color: var(--red); }
 .promo-pill.using { background: rgba(59,130,246,.15); color: var(--blue); }
 .status-pill { font-size: var(--font-2xs); font-weight: 700; padding: 3px 9px; border-radius: 12px; white-space: nowrap; display: inline-block; border: none; cursor: pointer; }
+/* Dot-style status indicator (mixed in from the Terminal/C direction,
+   2026-07-11) -- a simple binary/small-state indicator: a colored dot plus
+   colored text, no filled background. Deliberately separate from
+   .status-pill above rather than replacing it -- that one already handles
+   Ad Spend/Collections' multi-state system (pending/in-review/escalated/
+   resolved, each with its own established color), and retrofitting it into
+   a dot style wasn't asked for. This is for simpler cases, starting with
+   Client Directory's active/inactive column. */
+.status-dot { display: inline-flex; align-items: center; gap: 5px; font-size: var(--font-2xs); font-weight: 700; font-family: var(--font-mono); }
+.status-dot::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+.status-dot.active { color: var(--green); }
+.status-dot.inactive { color: var(--text3); }
 .status-select { font-size: var(--font-2xs); font-weight: 700; padding: 4px 8px; border-radius: 12px; border: none; cursor: pointer; outline: none; -webkit-appearance: none; appearance: none; }
 .notes-thread { max-height: 260px; overflow-y: auto; margin-bottom: 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); }
 .note-entry { padding: 10px 14px; border-top: 1px solid var(--border); }
