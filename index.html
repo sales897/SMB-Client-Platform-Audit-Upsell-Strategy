@@ -26,7 +26,7 @@
   --orange-dim: rgba(226,84,31,.14);
   --text:     #f0f0f0;
   --text2:    #a3a3a3;
-  --text3:    #6b6b6b;
+  --text3:    #848484;
   --green:    #22c55e;
   --red:      #ef4444;
   --yellow:   #f59e0b;
@@ -48,7 +48,7 @@ html[data-theme="light"] {
   --orange-dim: rgba(226,84,31,.08);
   --text:     #1a1714;
   --text2:    #5c554d;
-  --text3:    #8c8378;
+  --text3:    #6c655d;
   --green:    #16a34a;
   --red:      #dc2626;
   --yellow:   #d97706;
@@ -1186,6 +1186,39 @@ tr.hidden-row { display: none; }
   .cover-stats { flex-wrap: wrap; gap: 12px; }
   .cover h1 { font-size: 32px; }
 }
+
+/* ─── PRINT ────────────────────────────────────────────────────────────────
+   Prints whatever page is currently open (verified against SuccessOS, Ad
+   Spend, and Collections, but the rules below are general-purpose — app
+   chrome, buttons, and form controls hidden; light background + dark text
+   forced regardless of the active theme; scroll containers and chart
+   heights unlocked so content flows across pages instead of clipping. */
+@media print {
+  body { background: #fff !important; color: #111 !important; display: block; }
+  .sidebar, .sidebar-overlay, .topbar, .hamburger,
+  .ai-agent-fab, .ai-agent-panel, .modal-overlay, .notif-panel,
+  .table-controls, .filter-pill, .export-csv-btn, .row-action-btn,
+  .col-resize-handle, #clDirBulkBar, #addWorkflowBtn, #addClientBtn,
+  button, input, select, textarea, .search-box,
+  .upload-btn, .kb-dropzone, .page-footer {
+    display: none !important;
+  }
+  .main { margin-left: 0 !important; }
+  .page { display: none !important; padding: 0 !important; animation: none !important; }
+  .page.active { display: block !important; }
+  .card, .kpi, .kpi-hero-card, .kpi-playbook-card {
+    background: #fff !important; border: 1px solid #ccc !important; color: #111 !important;
+    box-shadow: none !important; break-inside: avoid;
+  }
+  .card-title, .kpi-val, h1, h2, h3, .section-num { color: #000 !important; }
+  .card-sub, .kpi-lbl, .kpi-sub, .text3, [style*="var(--text3)"] { color: #555 !important; }
+  .tbl-scroll { max-height: none !important; overflow: visible !important; }
+  .chart-wrap { break-inside: avoid; }
+  table { break-inside: auto; }
+  tr { break-inside: avoid; }
+  th input[type="checkbox"], td input[type="checkbox"] { display: none !important; }
+  a { color: #111 !important; text-decoration: none !important; }
+}
 </style>
 </head>
 <body>
@@ -1206,12 +1239,12 @@ tr.hidden-row { display: none; }
 
     <div id="loginFormError" class="login-error" style="display:none"></div>
 
-    <label class="login-label">Email</label>
+    <label for="loginEmail" class="login-label">Email</label>
     <input type="email" id="loginEmail" class="login-input" placeholder="you@getniche.ai" autocomplete="username">
-    <label class="login-label">Password</label>
+    <label for="loginPassword" class="login-label">Password</label>
     <div style="position:relative">
       <input type="password" id="loginPassword" class="login-input" placeholder="••••••••" autocomplete="current-password" style="padding-right:40px">
-      <button type="button" class="password-toggle-btn" id="passwordToggleBtn" onclick="togglePasswordVisibility()" title="Show password" tabindex="-1">👁️</button>
+      <button type="button" class="password-toggle-btn" id="passwordToggleBtn" onclick="togglePasswordVisibility()" title="Show password" aria-label="Show password" tabindex="-1">👁️</button>
     </div>
 
     <button class="btn btn-primary" id="loginSubmitBtn" style="width:100%;margin-top:14px" onclick="submitLoginForm()">Sign In</button>
@@ -1328,7 +1361,7 @@ tr.hidden-row { display: none; }
 
 <!-- GENERIC CONFIRM DIALOG -->
 <div class="modal-overlay" id="confirmDialogModal">
-  <div class="modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="confirmDialogTitle">
     <h3 id="confirmDialogTitle">⚠️ Are you sure?</h3>
     <p id="confirmDialogMessage" style="white-space:pre-wrap"></p>
     <div class="modal-btns">
@@ -1340,7 +1373,7 @@ tr.hidden-row { display: none; }
 
 <!-- CLIENT NOTES & TASKS MODAL -->
 <div class="modal-overlay" id="clientNotesTasksModal">
-  <div class="modal xwide">
+  <div class="modal xwide" role="dialog" aria-modal="true" aria-labelledby="cntTitle">
     <h3 id="cntTitle">👤 Client Profile</h3>
 
     <div class="cnt-section" style="margin-top:10px">
@@ -1352,10 +1385,10 @@ tr.hidden-row { display: none; }
         <input type="text" id="cntSmartPaste" class="field-input" style="height:34px;margin-bottom:0" placeholder="📋 Paste a signature, business card, or spreadsheet row to auto-fill →" onpaste="setTimeout(() => handleSmartPaste('cnt', this.value), 0)">
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1.2fr 1fr auto;gap:10px;align-items:end">
-        <div><label class="field-label">Contact Name</label><input type="text" id="cntContactName" class="field-input" style="height:36px" placeholder="e.g. Jamie Rivera"></div>
-        <div><label class="field-label">Title</label><input type="text" id="cntContactTitle" class="field-input" style="height:36px" placeholder="e.g. Owner"></div>
-        <div><label class="field-label">Email</label><input type="email" id="cntContactEmail" class="field-input" style="height:36px" placeholder="e.g. jamie@business.com"></div>
-        <div><label class="field-label">Phone</label><input type="tel" id="cntContactPhone" class="field-input" style="height:36px" placeholder="(555) 123-4567"></div>
+        <div><label for="cntContactName" class="field-label">Contact Name</label><input type="text" id="cntContactName" class="field-input" style="height:36px" placeholder="e.g. Jamie Rivera"></div>
+        <div><label for="cntContactTitle" class="field-label">Title</label><input type="text" id="cntContactTitle" class="field-input" style="height:36px" placeholder="e.g. Owner"></div>
+        <div><label for="cntContactEmail" class="field-label">Email</label><input type="email" id="cntContactEmail" class="field-input" style="height:36px" placeholder="e.g. jamie@business.com"></div>
+        <div><label for="cntContactPhone" class="field-label">Phone</label><input type="tel" id="cntContactPhone" class="field-input" style="height:36px" placeholder="(555) 123-4567"></div>
         <button class="btn btn-primary btn-sm" id="cntContactSubmitBtn" style="height:36px" onclick="saveClientContactInfo()">💾 Save</button>
       </div>
     </div>
@@ -1366,13 +1399,13 @@ tr.hidden-row { display: none; }
       <div class="cnt-section">
         <div class="cnt-section-title">📝 Notes</div>
         <div class="notes-thread cnt-column-scroll" id="cntNotesThread"></div>
-        <label class="field-label" style="margin-top:12px">Add a Note</label>
+        <label for="cntNewNoteText" class="field-label" style="margin-top:12px">Add a Note</label>
         <div class="note-toolbar">
           <button type="button" class="note-fmt-btn" onclick="wrapNoteSelection('**','**','bold text')" title="Bold"><b>B</b></button>
           <button type="button" class="note-fmt-btn" onclick="wrapNoteSelection('*','*','italic text')" title="Italic"><i>I</i></button>
-          <button type="button" class="note-fmt-btn" onclick="wrapNoteSelection('==','==','highlighted text')" title="Highlight">🖍️</button>
-          <button type="button" class="note-fmt-btn" onclick="insertNoteLink()" title="Insert Link">🔗</button>
-          <button type="button" class="note-fmt-btn voice-btn" id="noteVoiceBtn" onclick="toggleVoiceInput('cntNewNoteText','noteVoiceBtn')" title="Speak your note">🎤</button>
+          <button type="button" class="note-fmt-btn" onclick="wrapNoteSelection('==','==','highlighted text')" title="Highlight" aria-label="Highlight selected text">🖍️</button>
+          <button type="button" class="note-fmt-btn" onclick="insertNoteLink()" title="Insert Link" aria-label="Insert link">🔗</button>
+          <button type="button" class="note-fmt-btn voice-btn" id="noteVoiceBtn" onclick="toggleVoiceInput('cntNewNoteText','noteVoiceBtn')" title="Speak your note" aria-label="Speak your note">🎤</button>
         </div>
         <div style="position:relative;margin-bottom:10px">
           <textarea id="cntNewNoteText" rows="2" placeholder="What's happening? Type @ to tag a teammate" class="field-input" style="margin-bottom:0;resize:vertical;font-family:inherit" oninput="handleNoteMentionInput(event)" onkeydown="handleNoteMentionKeydown(event)"></textarea>
@@ -1390,7 +1423,7 @@ tr.hidden-row { display: none; }
           <span id="gcalStatusPill"></span>
         </div>
         <div id="cntTasksList" class="cnt-column-scroll" style="margin-bottom:12px"></div>
-        <label class="field-label">Add a Task</label>
+        <label for="cntNewTaskTitle" class="field-label">Add a Task</label>
         <input type="text" id="cntNewTaskTitle" class="field-input" style="height:36px;margin-bottom:8px" placeholder="e.g. Follow up about renewal">
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
           <select id="cntNewTaskAssignee" class="field-select" style="height:36px"></select>
@@ -1437,7 +1470,7 @@ tr.hidden-row { display: none; }
 
 <!-- NOTIFICATIONS PANEL -->
 <!-- AI AGENT — "Nirvana" -->
-<button class="ai-agent-fab" id="aiAgentFab" onclick="toggleAiAgentPanel()" title="Ask Nirvana">
+<button class="ai-agent-fab" id="aiAgentFab" onclick="toggleAiAgentPanel()" title="Ask Nirvana (Ctrl/Cmd+K)">
   <span class="ai-agent-fab-glow"></span>
   <img class="ai-agent-fab-icon" src="data:image/jpeg;base64,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" alt="Nirvana">
 </button>
@@ -1445,16 +1478,16 @@ tr.hidden-row { display: none; }
   <div class="ai-agent-header">
     <div class="ai-agent-header-title"><img class="ai-agent-header-icon" src="data:image/jpeg;base64,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" alt="Nirvana"> Nirvana</div>
     <div class="ai-agent-header-actions">
-      <button id="aiVoiceReplyBtn" onclick="toggleNirvanaVoiceReply()" title="Voice replies: Off (click to enable)">🔇</button>
-      <button onclick="clearAiAgentChat()" title="Clear conversation">🗑️</button>
-      <button onclick="toggleAiAgentPanel()" title="Close">✕</button>
+      <button id="aiVoiceReplyBtn" onclick="toggleNirvanaVoiceReply()" title="Voice replies: Off (click to enable)" aria-label="Voice replies: Off (click to enable)">🔇</button>
+      <button onclick="clearAiAgentChat()" title="Clear conversation" aria-label="Clear conversation">🗑️</button>
+      <button onclick="toggleAiAgentPanel()" title="Close" aria-label="Close Nirvana">✕</button>
     </div>
   </div>
   <div class="ai-agent-messages" id="aiAgentMessages"></div>
   <div class="ai-agent-confirm" id="aiAgentConfirm" style="display:none"></div>
   <div class="ai-agent-input-row">
     <input type="text" id="aiAgentInput" placeholder="Find a client, ask a question, or tell me what to do…" onkeydown="if(event.key==='Enter') sendAiAgentMessage()">
-    <button id="aiVoiceBtn" class="ai-voice-btn" onclick="toggleVoiceInput('aiAgentInput','aiVoiceBtn')" title="Speak to Nirvana">🎤</button>
+    <button id="aiVoiceBtn" class="ai-voice-btn" onclick="toggleVoiceInput('aiAgentInput','aiVoiceBtn')" title="Speak to Nirvana" aria-label="Speak to Nirvana">🎤</button>
     <button id="aiAgentSendBtn" onclick="sendAiAgentMessage()">Send</button>
   </div>
 </div>
@@ -1472,7 +1505,7 @@ tr.hidden-row { display: none; }
 
   <!-- TOP BAR -->
   <div class="topbar">
-    <button class="hamburger" onclick="toggleSidebar()">☰</button>
+    <button class="hamburger" onclick="toggleSidebar()" aria-label="Toggle navigation menu">☰</button>
     <div>
       <div class="topbar-title" id="topbarTitle">Home</div>
       <div class="topbar-sub" id="topbarSub">Your daily snapshot across the Hub</div>
@@ -1487,8 +1520,8 @@ tr.hidden-row { display: none; }
           <span class="notif-badge" id="notifBadge" style="display:none">0</span>
         </div>
       </div>
-      <div class="theme-toggle" id="moneyToggleBtn" onclick="toggleMoneyVisibility()" title="Show/hide dollar amounts">👁️</div>
-      <div class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Switch light/dark mode">🌙</div>
+      <div class="theme-toggle" id="moneyToggleBtn" onclick="toggleMoneyVisibility()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}" title="Show/hide dollar amounts" aria-label="Show/hide dollar amounts" role="button" tabindex="0">👁️</div>
+      <div class="theme-toggle" id="themeToggle" onclick="toggleTheme()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}" title="Switch light/dark mode" aria-label="Switch light/dark mode" role="button" tabindex="0">🌙</div>
       <div style="position:relative">
         <div class="user-badge" id="userBadge" onclick="toggleProfileMenu()" title="Account">
           <span class="user-avatar" id="userAvatar">?</span>
@@ -1538,7 +1571,7 @@ tr.hidden-row { display: none; }
         <button class="btn btn-primary btn-sm" id="addClientBtn" onclick="openAddClientModal()">＋ Add Client</button>
       </div>
       <div class="table-controls">
-        <input type="text" class="search-box" id="clientsSearch" placeholder="Search all clients..." oninput="filterClientsDirectory()">
+        <input type="text" class="search-box" id="clientsSearch" placeholder="Search all clients..." oninput="debouncedFilterClientsDirectory()">
         <div style="display:flex;gap:6px;flex-wrap:wrap" id="clientsFilterPills">
           <button class="filter-pill active" onclick="filterClientsByPortfolio('all',this)">All Portfolios</button>
           <button class="filter-pill" onclick="filterClientsByPortfolio('smb',this)">📊 SMB</button>
@@ -1552,13 +1585,20 @@ tr.hidden-row { display: none; }
         <span class="row-count" id="clientsRowCount">0 clients</span>
         <button class="export-csv-btn" onclick="exportAllClientsTable()" title="Download the currently visible rows as a CSV file">⬇ Export CSV</button>
       </div>
+      <div class="card" id="clDirBulkBar" style="display:none;margin-bottom:12px;padding:10px 14px;background:var(--orange-dim);border-color:rgba(226,84,31,.3);align-items:center;gap:12px">
+        <span style="font-weight:700;color:var(--text);font-size:13px"><span id="clDirSelectedCount">0</span> selected</span>
+        <button class="btn btn-primary btn-sm" onclick="openBulkActionModal('task')">➕ Add Task to Selected</button>
+        <button class="btn btn-ghost btn-sm" onclick="openBulkActionModal('note')">📝 Add Note to Selected</button>
+        <button class="btn btn-ghost btn-sm" onclick="clearDirectorySelection()" style="margin-left:auto">Clear Selection</button>
+      </div>
       <div class="tbl-scroll" style="max-height:560px">
         <table style="table-layout:auto" id="allClientsTable">
           <thead><tr>
-            <th style="text-align:left;padding-left:14px;width:20%">Client Name</th>
-            <th style="width:24%">Portfolios</th>
-            <th style="width:26%"># Products</th>
-            <th style="width:30%">Actions</th>
+            <th style="width:34px;padding-left:14px"><input type="checkbox" id="clDirSelectAll" onchange="toggleDirectorySelectAll(this.checked)" aria-label="Select all clients"></th>
+            <th id="clDirSortName" onclick="handleClientsDirectorySort('name')" style="text-align:left;width:19%;cursor:pointer">Client Name</th>
+            <th style="width:23%">Portfolios</th>
+            <th id="clDirSortProducts" onclick="handleClientsDirectorySort('products')" style="width:25%;cursor:pointer"># Products</th>
+            <th style="width:29%">Actions</th>
           </tr></thead>
           <tbody id="clientsDirectoryBody"></tbody>
         </table>
@@ -1701,7 +1741,7 @@ tr.hidden-row { display: none; }
     <div class="card" id="orgRollup-smb" style="display:none;margin-bottom:16px"></div>
     <div class="card">
       <div class="table-controls">
-        <input type="text" class="search-box" id="clientSearch-smb" placeholder="Search clients..." oninput="filterTable('smb')">
+        <input type="text" class="search-box" id="clientSearch-smb" placeholder="Search clients..." oninput="debouncedFilterTable('smb')">
         <select id="orgFilter-smb" onchange="filterByOrg('smb', this.value)" style="width:auto;max-width:240px">
           <option value="">🏢 All Businesses</option>
         </select>
@@ -1818,7 +1858,7 @@ tr.hidden-row { display: none; }
     <div class="card" id="orgRollup-whitelabel" style="display:none;margin-bottom:16px"></div>
     <div class="card">
       <div class="table-controls">
-        <input type="text" class="search-box" id="clientSearch-whitelabel" placeholder="Search clients..." oninput="filterTable('whitelabel')">
+        <input type="text" class="search-box" id="clientSearch-whitelabel" placeholder="Search clients..." oninput="debouncedFilterTable('whitelabel')">
         <select id="orgFilter-whitelabel" onchange="filterByOrg('whitelabel', this.value)" style="width:auto;max-width:240px">
           <option value="">🏢 All Businesses</option>
         </select>
@@ -1867,7 +1907,7 @@ tr.hidden-row { display: none; }
         <div><div class="card-title">Voice Agent Notes</div><div class="card-sub" id="va-flagged-sub">Pulled from comments attached to the Voice Agent column during upload</div></div>
       </div>
       <div class="table-controls">
-        <input type="text" class="search-box" id="vaFlagSearch" placeholder="Search flagged clients..." oninput="rebuildVoiceAgentFlagged()">
+        <input type="text" class="search-box" id="vaFlagSearch" placeholder="Search flagged clients..." oninput="debouncedRebuildVoiceAgentFlagged()">
         <div style="display:flex;gap:6px;flex-wrap:wrap" id="vaFlagPills">
           <button class="filter-pill active" onclick="setVoiceAgentPortfolioFilter('all',this)">All Portfolios</button>
           <button class="filter-pill" onclick="setVoiceAgentPortfolioFilter('smb',this)">📊 SMB</button>
@@ -1924,7 +1964,7 @@ tr.hidden-row { display: none; }
         <div><div class="card-title">Businesses with a Stale Last Lead</div><div class="card-sub">Automatically detected from comments mentioning when the last lead was handled — flagged when that's anywhere from 7 days to 6 months ago</div></div>
       </div>
       <div class="table-controls">
-        <input type="text" class="search-box" id="taStaleSearch" placeholder="Search clients..." oninput="rebuildTextAgentStale()">
+        <input type="text" class="search-box" id="taStaleSearch" placeholder="Search clients..." oninput="debouncedRebuildTextAgentStale()">
         <div style="display:flex;gap:6px;flex-wrap:wrap" id="taStalePortfolioPills">
           <button class="filter-pill active" onclick="setTextAgentStaleFilter('all',this)">All Portfolios</button>
           <button class="filter-pill" onclick="setTextAgentStaleFilter('smb',this)">📊 SMB</button>
@@ -1942,7 +1982,7 @@ tr.hidden-row { display: none; }
         <div><div class="card-title">Yelp / Google LSA / Thumbtack Notes</div><div class="card-sub" id="ta-notes-sub">Pulled from comments attached to these columns during upload, across SMB, White Label, and Support</div></div>
       </div>
       <div class="table-controls">
-        <input type="text" class="search-box" id="taNotesSearch" placeholder="Search clients..." oninput="rebuildTextAgentNotes()">
+        <input type="text" class="search-box" id="taNotesSearch" placeholder="Search clients..." oninput="debouncedRebuildTextAgentNotes()">
         <div style="display:flex;gap:6px;flex-wrap:wrap" id="taNotesProductPills">
           <button class="filter-pill active" onclick="setTextAgentProductFilter('all',this)">All Products</button>
           <button class="filter-pill" id="taPillYelp" onclick="setTextAgentProductFilter('yelp',this)">⭐ Yelp</button>
@@ -2056,7 +2096,7 @@ tr.hidden-row { display: none; }
     <div class="card" id="orgRollup-support" style="display:none;margin-bottom:16px"></div>
     <div class="card">
       <div class="table-controls">
-        <input type="text" class="search-box" id="clientSearch-support" placeholder="Search clients..." oninput="filterTable('support')">
+        <input type="text" class="search-box" id="clientSearch-support" placeholder="Search clients..." oninput="debouncedFilterTable('support')">
         <select id="orgFilter-support" onchange="filterByOrg('support', this.value)" style="width:auto;max-width:240px">
           <option value="">🏢 All Businesses</option>
         </select>
@@ -2177,7 +2217,7 @@ tr.hidden-row { display: none; }
         <div><div class="card-title">What Nirvana Knows</div><div class="card-sub">Ask it things like "What's our SOP for onboarding?" or "What does our website say about pricing?"</div></div>
         <button class="btn btn-primary btn-sm" id="addKnowledgeBtn" onclick="openAddKnowledgeModal()">＋ Add Knowledge</button>
       </div>
-      <input type="text" id="kbSearchBox" class="search-box" placeholder="Search entries…" style="margin-bottom:16px" oninput="rebuildKnowledgePage()">
+      <input type="text" id="kbSearchBox" class="search-box" placeholder="Search entries…" style="margin-bottom:16px" oninput="debouncedRebuildKnowledgePage()">
       <div id="knowledgeList"></div>
     </div>
 
@@ -2210,15 +2250,15 @@ tr.hidden-row { display: none; }
       </div>
       <div style="display:grid;grid-template-columns:1fr 90px 1fr 1fr;gap:10px;align-items:end;margin-bottom:14px">
         <div>
-          <label class="field-label">Product Name</label>
+          <label for="newProductName" class="field-label">Product Name</label>
           <input type="text" id="newProductName" placeholder="e.g. SMS Marketing" class="field-input">
         </div>
         <div>
-          <label class="field-label">Icon</label>
+          <label for="newProductIcon" class="field-label">Icon</label>
           <input type="text" id="newProductIcon" placeholder="📦" maxlength="2" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;text-align:center">
         </div>
         <div>
-          <label class="field-label">Priority</label>
+          <label for="newProductPriority" class="field-label">Priority</label>
           <select id="newProductPriority" class="field-input">
             <option value="high">🔥 High Priority</option>
             <option value="medium" selected>Medium Priority</option>
@@ -2228,7 +2268,7 @@ tr.hidden-row { display: none; }
         <button class="btn btn-primary" onclick="addProduct()">＋ Add Product</button>
       </div>
       <div>
-        <label class="field-label">Upsell Description <span style="color:var(--text3)">(optional — shown on the Upsell Playbook card)</span></label>
+        <label for="newProductDesc" class="field-label">Upsell Description <span style="color:var(--text3)">(optional — shown on the Upsell Playbook card)</span></label>
         <input type="text" id="newProductDesc" placeholder="e.g. not using — new product launch" class="field-input">
       </div>
     </div>
@@ -2288,23 +2328,23 @@ tr.hidden-row { display: none; }
       </div>
       <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr 1.2fr;gap:10px;align-items:end;margin-bottom:10px">
         <div>
-          <label class="field-label">Business Name</label>
+          <label for="asName" class="field-label">Business Name</label>
           <input type="text" id="asName" placeholder="e.g. Summit Roofing Co." class="field-input">
         </div>
         <div>
-          <label class="field-label">Budget ($/mo)</label>
+          <label for="asBudget" class="field-label">Budget ($/mo)</label>
           <input type="number" id="asBudget" placeholder="2500" min="0" step="1" class="field-input">
         </div>
         <div>
-          <label class="field-label">Watermark ($)</label>
+          <label for="asWatermark" class="field-label">Watermark ($)</label>
           <input type="number" id="asWatermark" placeholder="1000" min="0" step="1" class="field-input">
         </div>
         <div>
-          <label class="field-label">Start Date</label>
+          <label for="asStartDate" class="field-label">Start Date</label>
           <input type="date" id="asStartDate" class="field-input">
         </div>
         <div>
-          <label class="field-label">Promo Eligible</label>
+          <label for="asPromo" class="field-label">Promo Eligible</label>
           <select id="asPromo" class="field-input">
             <option value="Yes">Yes</option>
             <option value="No">No</option>
@@ -2314,11 +2354,11 @@ tr.hidden-row { display: none; }
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end">
         <div>
-          <label class="field-label">Add-Ons <span style="color:var(--text3)">(comma-separated)</span></label>
+          <label for="asAddons" class="field-label">Add-Ons <span style="color:var(--text3)">(comma-separated)</span></label>
           <input type="text" id="asAddons" placeholder="e.g. Rank Tracker, Extra Landing Page" class="field-input">
         </div>
         <div>
-          <label class="field-label">Recommendations</label>
+          <label for="asRecs" class="field-label">Recommendations</label>
           <input type="text" id="asRecs" placeholder="e.g. Increase budget 20% after 30 days" class="field-input">
         </div>
         <button class="btn btn-primary" onclick="addAdSpendBusiness()">＋ Add Business</button>
@@ -2330,7 +2370,7 @@ tr.hidden-row { display: none; }
         <div><div class="card-title">Businesses</div><div class="card-sub" id="asCountSub">0 businesses</div></div>
       </div>
       <div class="table-controls">
-        <input type="text" class="search-box" id="asSearch" placeholder="Search businesses..." oninput="rebuildAdSpendTable()">
+        <input type="text" class="search-box" id="asSearch" placeholder="Search businesses..." oninput="debouncedRebuildAdSpendTable()">
         <div style="display:flex;gap:6px;flex-wrap:wrap" id="asFilterPills">
           <button class="filter-pill active" onclick="setAdSpendFilter('all',this)">All</button>
           <button class="filter-pill" onclick="setAdSpendFilter('Yes',this)">🎁 Promo Eligible</button>
@@ -2352,27 +2392,27 @@ tr.hidden-row { display: none; }
 
   <!-- EDIT AD SPEND BUSINESS MODAL -->
   <div class="modal-overlay" id="editAdSpendModal">
-    <div class="modal wide">
-      <h3>✏️ Edit Business</h3>
+    <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="editAdSpendModalTitle">
+      <h3 id="editAdSpendModalTitle">✏️ Edit Business</h3>
       <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr 1.2fr;gap:10px;align-items:end;margin-bottom:12px">
         <div>
-          <label class="field-label">Business Name</label>
+          <label for="asEditName" class="field-label">Business Name</label>
           <input type="text" id="asEditName" style="margin-bottom:0">
         </div>
         <div>
-          <label class="field-label">Budget ($/mo)</label>
+          <label for="asEditBudget" class="field-label">Budget ($/mo)</label>
           <input type="number" id="asEditBudget" min="0" step="1" style="margin-bottom:0">
         </div>
         <div>
-          <label class="field-label">Watermark ($)</label>
+          <label for="asEditWatermark" class="field-label">Watermark ($)</label>
           <input type="number" id="asEditWatermark" min="0" step="1" style="margin-bottom:0">
         </div>
         <div>
-          <label class="field-label">Start Date</label>
+          <label for="asEditStartDate" class="field-label">Start Date</label>
           <input type="date" id="asEditStartDate" style="margin-bottom:0">
         </div>
         <div>
-          <label class="field-label">Promo Eligible</label>
+          <label for="asEditPromo" class="field-label">Promo Eligible</label>
           <select id="asEditPromo">
             <option value="Yes">Yes</option>
             <option value="No">No</option>
@@ -2380,9 +2420,9 @@ tr.hidden-row { display: none; }
           </select>
         </div>
       </div>
-      <label class="field-label">Add-Ons <span style="color:var(--text3)">(comma-separated)</span></label>
+      <label for="asEditAddons" class="field-label">Add-Ons <span style="color:var(--text3)">(comma-separated)</span></label>
       <input type="text" id="asEditAddons">
-      <label class="field-label">Recommendations</label>
+      <label for="asEditRecs" class="field-label">Recommendations</label>
       <textarea id="asEditRecs" rows="3" style="width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;margin-bottom:14px;resize:vertical;font-family:inherit"></textarea>
       <div class="modal-btns">
         <button class="btn btn-ghost" onclick="closeEditAdSpendModal()">Cancel</button>
@@ -2393,8 +2433,8 @@ tr.hidden-row { display: none; }
 
   <!-- AD SPEND: COLUMN MAPPING MODAL (step 1 of import) -->
   <div class="modal-overlay" id="adSpendMappingModal">
-    <div class="modal wide">
-      <h3>🧩 Map Your Columns</h3>
+    <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="adSpendMappingModalTitle">
+      <h3 id="adSpendMappingModalTitle">🧩 Map Your Columns</h3>
       <p id="asMappingFileLabel">We auto-detected these columns from your file. Fix anything that looks wrong, then continue.</p>
       <div class="modal-scroll">
         <table class="map-table">
@@ -2412,8 +2452,8 @@ tr.hidden-row { display: none; }
 
   <!-- AD SPEND: REVIEW & DUPLICATES MODAL (step 2 of import) -->
   <div class="modal-overlay" id="adSpendDuplicatesModal">
-    <div class="modal wide">
-      <h3>🔎 Review Import</h3>
+    <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="adSpendDuplicatesModalTitle">
+      <h3 id="adSpendDuplicatesModalTitle">🔎 Review Import</h3>
       <p id="asDupSummaryText">Here's what we found before saving.</p>
       <div class="import-summary" id="asImportSummaryStats"></div>
       <div id="asDupSection">
@@ -2481,23 +2521,23 @@ tr.hidden-row { display: none; }
       </div>
       <div style="display:grid;grid-template-columns:1.3fr 0.85fr 0.85fr 0.85fr 0.85fr auto;gap:10px;align-items:end">
         <div>
-          <label class="field-label">Business Name</label>
+          <label for="colName" class="field-label">Business Name</label>
           <input type="text" id="colName" placeholder="e.g. Summit Roofing Co." class="field-input">
         </div>
         <div>
-          <label class="field-label">Amount ($)</label>
+          <label for="colAmount" class="field-label">Amount ($)</label>
           <input type="number" id="colAmount" placeholder="450" min="0" step="0.01" class="field-input">
         </div>
         <div>
-          <label class="field-label" id="colDateLabel">Due Date</label>
+          <label for="colDate" class="field-label" id="colDateLabel">Due Date</label>
           <input type="date" id="colDate" class="field-input">
         </div>
         <div>
-          <label class="field-label">Resolved Date</label>
+          <label for="colResolvedDate" class="field-label">Resolved Date</label>
           <input type="date" id="colResolvedDate" class="field-input">
         </div>
         <div>
-          <label class="field-label">Status</label>
+          <label for="colStatus" class="field-label">Status</label>
           <select id="colStatus" class="field-input"></select>
         </div>
         <button class="btn btn-primary" onclick="addCollectionsAccount()">＋ Add Account</button>
@@ -2509,7 +2549,7 @@ tr.hidden-row { display: none; }
         <div><div class="card-title" id="colListTitle">Outstanding Balances</div><div class="card-sub" id="colCountSub">0 accounts</div></div>
       </div>
       <div class="table-controls">
-        <input type="text" class="search-box" id="colSearch" placeholder="Search accounts..." oninput="rebuildCollectionsTable()">
+        <input type="text" class="search-box" id="colSearch" placeholder="Search accounts..." oninput="debouncedRebuildCollectionsTable()">
         <div style="display:flex;gap:6px;flex-wrap:wrap" id="colFilterPills"></div>
         <button class="reset-columns-btn" onclick="resetColumnPrefs('collections'); rebuildCollectionsPage()" title="Reset column order and widths back to default">↺ Columns</button>
         <button class="export-csv-btn" onclick="exportCollectionsTable_()" title="Download the currently visible rows as a CSV file">⬇ Export CSV</button>
@@ -2526,27 +2566,27 @@ tr.hidden-row { display: none; }
 
   <!-- COLLECTIONS: EDIT ACCOUNT MODAL -->
   <div class="modal-overlay" id="editCollectionsModal">
-    <div class="modal wide">
-      <h3>✏️ Edit Account</h3>
+    <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="editCollectionsModalTitle">
+      <h3 id="editCollectionsModalTitle">✏️ Edit Account</h3>
       <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr 1.2fr;gap:10px;align-items:end;margin-bottom:12px">
         <div>
-          <label class="field-label">Business Name</label>
+          <label for="colEditName" class="field-label">Business Name</label>
           <input type="text" id="colEditName" style="margin-bottom:0">
         </div>
         <div>
-          <label class="field-label">Amount ($)</label>
+          <label for="colEditAmount" class="field-label">Amount ($)</label>
           <input type="number" id="colEditAmount" min="0" step="0.01" style="margin-bottom:0">
         </div>
         <div>
-          <label class="field-label" id="colEditDateLabel">Due Date</label>
+          <label for="colEditDate" class="field-label" id="colEditDateLabel">Due Date</label>
           <input type="date" id="colEditDate" style="margin-bottom:0">
         </div>
         <div>
-          <label class="field-label">Resolved Date</label>
+          <label for="colEditResolvedDate" class="field-label">Resolved Date</label>
           <input type="date" id="colEditResolvedDate" style="margin-bottom:0">
         </div>
         <div>
-          <label class="field-label">Status</label>
+          <label for="colEditStatus" class="field-label">Status</label>
           <select id="colEditStatus"></select>
         </div>
       </div>
@@ -2559,8 +2599,8 @@ tr.hidden-row { display: none; }
 
   <!-- COLLECTIONS: COLUMN MAPPING MODAL (step 1 of import) -->
   <div class="modal-overlay" id="collectionsMappingModal">
-    <div class="modal wide">
-      <h3>🧩 Map Your Columns</h3>
+    <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="collectionsMappingModalTitle">
+      <h3 id="collectionsMappingModalTitle">🧩 Map Your Columns</h3>
       <p id="colMappingFileLabel">We auto-detected these columns from your file. Fix anything that looks wrong, then continue.</p>
       <div class="modal-scroll">
         <table class="map-table">
@@ -2578,8 +2618,8 @@ tr.hidden-row { display: none; }
 
   <!-- COLLECTIONS: REVIEW & DUPLICATES MODAL (step 2 of import) -->
   <div class="modal-overlay" id="collectionsDuplicatesModal">
-    <div class="modal wide">
-      <h3>🔎 Review Import</h3>
+    <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="collectionsDuplicatesModalTitle">
+      <h3 id="collectionsDuplicatesModalTitle">🔎 Review Import</h3>
       <p id="colDupSummaryText">Here's what we found before saving.</p>
       <div class="import-summary" id="colImportSummaryStats"></div>
       <div id="colDupSection">
@@ -2603,15 +2643,15 @@ tr.hidden-row { display: none; }
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 160px 120px;gap:10px;align-items:end">
         <div>
-          <label class="field-label">Email <span style="color:var(--orange)">(required — this is their login)</span></label>
+          <label for="newMemberEmail" class="field-label">Email <span style="color:var(--orange)">(required — this is their login)</span></label>
           <input type="text" id="newMemberEmail" placeholder="jordan@getniche.ai" class="field-input">
         </div>
         <div>
-          <label class="field-label">Name <span style="color:var(--text3)">(optional — fills in automatically on first sign-in)</span></label>
+          <label for="newMemberName" class="field-label">Name <span style="color:var(--text3)">(optional — fills in automatically on first sign-in)</span></label>
           <input type="text" id="newMemberName" placeholder="e.g. Jordan Lee" class="field-input">
         </div>
         <div>
-          <label class="field-label">Role</label>
+          <label for="newMemberRole" class="field-label">Role</label>
           <select id="newMemberRole" class="field-input">
             <option value="user">User — view only</option>
             <option value="superuser">Super user — upload & edit</option>
@@ -2647,8 +2687,8 @@ tr.hidden-row { display: none; }
 
 <!-- REMOVE PRODUCT CONFIRMATION MODAL -->
 <div class="modal-overlay" id="removeProductModal">
-  <div class="modal">
-    <h3>🗑️ Remove Product</h3>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="removeProductModalTitle">
+    <h3 id="removeProductModalTitle">🗑️ Remove Product</h3>
     <p id="removeProductText">Are you sure you want to remove this product?</p>
     <div style="font-size:12px;color:var(--text2);margin-bottom:18px;background:var(--bg3);padding:12px 14px;border-radius:8px;border:1px solid var(--border)">
       What should happen to existing client adoption data for this product?
@@ -2663,8 +2703,8 @@ tr.hidden-row { display: none; }
 
 <!-- EDIT CLIENT MODAL -->
 <div class="modal-overlay" id="editClientModal">
-  <div class="modal" style="width:560px">
-    <h3>✏️ Edit Client</h3>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="editClientModalTitle" style="width:560px">
+    <h3 id="editClientModalTitle">✏️ Edit Client</h3>
     <p id="editClientName" style="font-weight:700;color:var(--text);font-size:15px;margin-bottom:4px"></p>
     <p style="margin-bottom:16px">Toggle which products this client has, per portfolio. Changes are saved automatically.</p>
     <div id="editClientGroups"></div>
@@ -2677,11 +2717,11 @@ tr.hidden-row { display: none; }
 
 <!-- WORKFLOW MODAL -->
 <div class="modal-overlay" id="workflowModal">
-  <div class="modal wide">
+  <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="workflowModalTitle">
     <h3 id="workflowModalTitle">🔁 New Workflow</h3>
     <p>Automate a repetitive check so nobody has to remember to do it manually.</p>
 
-    <label class="field-label">Workflow Name <span style="color:var(--orange)">*</span></label>
+    <label for="wfName" class="field-label">Workflow Name <span style="color:var(--orange)">*</span></label>
     <input type="text" id="wfName" class="field-input" style="height:38px;margin-bottom:16px" placeholder="e.g. SMB inactivity alert">
 
     <label class="field-label">When should it trigger? <span style="color:var(--orange)">*</span></label>
@@ -2696,8 +2736,8 @@ tr.hidden-row { display: none; }
 
     <div style="font-size:11px;color:var(--text3);margin-bottom:12px">Action — what should happen when it triggers</div>
     <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:4px">
-      <div><label class="field-label">Create a task titled</label><input type="text" id="wfActionTitle" class="field-input" style="height:38px" placeholder="e.g. Check in — no recent contact"></div>
-      <div><label class="field-label">Assign to</label><select id="wfActionAssignee" class="field-select" style="height:38px"></select></div>
+      <div><label for="wfActionTitle" class="field-label">Create a task titled</label><input type="text" id="wfActionTitle" class="field-input" style="height:38px" placeholder="e.g. Check in — no recent contact"></div>
+      <div><label for="wfActionAssignee" class="field-label">Assign to</label><select id="wfActionAssignee" class="field-select" style="height:38px"></select></div>
     </div>
 
     <div class="modal-btns" style="margin-top:18px">
@@ -2709,13 +2749,13 @@ tr.hidden-row { display: none; }
 
 <!-- KNOWLEDGE BASE MODAL -->
 <div class="modal-overlay" id="knowledgeModal">
-  <div class="modal wide">
+  <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="knowledgeModalTitle">
     <h3 id="knowledgeModalTitle">📚 Add Knowledge</h3>
     <p>Feed Nirvana something to learn — upload a file, fetch a webpage, or paste text directly.</p>
 
     <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:14px">
-      <div><label class="field-label">Title <span style="color:var(--orange)">*</span></label><input type="text" id="kbTitle" class="field-input" style="height:38px" placeholder="e.g. New Client Onboarding SOP"></div>
-      <div><label class="field-label">Category</label><select id="kbCategory" class="field-select" style="height:38px">
+      <div><label for="kbTitle" class="field-label">Title <span style="color:var(--orange)">*</span></label><input type="text" id="kbTitle" class="field-input" style="height:38px" placeholder="e.g. New Client Onboarding SOP"></div>
+      <div><label for="kbCategory" class="field-label">Category</label><select id="kbCategory" class="field-select" style="height:38px">
         <option value="sop">📋 SOP</option>
         <option value="docs">📄 Docs</option>
         <option value="website">🌐 Website</option>
@@ -2723,7 +2763,7 @@ tr.hidden-row { display: none; }
       </select></div>
     </div>
 
-    <label class="field-label">Source URL <span style="color:var(--text3);font-weight:400">(optional — needed only if you want to auto-fetch a page's text)</span></label>
+    <label for="kbSourceUrl" class="field-label">Source URL <span style="color:var(--text3);font-weight:400">(optional — needed only if you want to auto-fetch a page's text)</span></label>
     <div style="display:flex;gap:8px;margin-bottom:16px">
       <input type="text" id="kbSourceUrl" class="field-input" style="height:38px" placeholder="https://example.com/page">
       <button class="btn btn-ghost btn-sm" id="kbFetchBtn" onclick="fetchKnowledgeFromUrl()" style="white-space:nowrap">🌐 Fetch Page Text</button>
@@ -2736,7 +2776,7 @@ tr.hidden-row { display: none; }
       <div style="font-size:10.5px;color:var(--text3);margin-top:2px">.txt · .md · .pdf · .docx · .xlsx · .csv</div>
     </div>
 
-    <label class="field-label">Content <span style="color:var(--orange)">*</span></label>
+    <label for="kbContent" class="field-label">Content <span style="color:var(--orange)">*</span></label>
     <textarea id="kbContent" class="field-input" rows="10" style="resize:vertical;font-family:inherit;margin-bottom:4px" placeholder="Paste the SOP, doc content, or webpage text here…"></textarea>
     <div id="kbContentMeta" style="font-size:11px;color:var(--text3);margin-bottom:16px"></div>
 
@@ -2749,13 +2789,13 @@ tr.hidden-row { display: none; }
 
 <!-- ADD CLIENT MODAL -->
 <div class="modal-overlay" id="addClientModal">
-  <div class="modal wide">
-    <h3>➕ Add Client</h3>
+  <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="addClientModalTitle">
+    <h3 id="addClientModalTitle">➕ Add Client</h3>
     <p>Create a new client manually — pick which portfolio(s) they belong to, toggle their products, and add contact info if you have it.</p>
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
-      <div><label class="field-label">Client / Business Name <span style="color:var(--orange)">*</span></label><input type="text" id="acName" class="field-input" style="height:38px" placeholder="e.g. Summit Roofing Co."></div>
-      <div><label class="field-label">Organization <span style="color:var(--text3);font-weight:400">(optional — groups multi-location businesses)</span></label><input type="text" id="acOrg" class="field-input" style="height:38px" placeholder="e.g. Summit Holdings"></div>
+      <div><label for="acName" class="field-label">Client / Business Name <span style="color:var(--orange)">*</span></label><input type="text" id="acName" class="field-input" style="height:38px" placeholder="e.g. Summit Roofing Co."></div>
+      <div><label for="acOrg" class="field-label">Organization <span style="color:var(--text3);font-weight:400">(optional — groups multi-location businesses)</span></label><input type="text" id="acOrg" class="field-input" style="height:38px" placeholder="e.g. Summit Holdings"></div>
     </div>
 
     <label class="field-label">Portfolio(s) <span style="color:var(--orange)">*</span></label>
@@ -2771,14 +2811,14 @@ tr.hidden-row { display: none; }
 
     <div style="font-size:11px;color:var(--text3);margin-bottom:12px">Primary contact (optional)</div>
     <div class="smart-paste-box">
-      <label class="field-label">📋 Smart Paste <span style="color:var(--text3);font-weight:400">— paste a signature, business card text, or a spreadsheet row and it'll auto-fill the fields below</span></label>
+      <label for="acSmartPaste" class="field-label">📋 Smart Paste <span style="color:var(--text3);font-weight:400">— paste a signature, business card text, or a spreadsheet row and it'll auto-fill the fields below</span></label>
       <input type="text" id="acSmartPaste" class="field-input" style="height:38px" placeholder="Paste here…" onpaste="setTimeout(() => handleSmartPaste('ac', this.value), 0)">
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-      <div><label class="field-label">Contact Name</label><input type="text" id="acContactName" class="field-input" style="height:38px" placeholder="e.g. Jamie Rivera"></div>
-      <div><label class="field-label">Title</label><input type="text" id="acContactTitle" class="field-input" style="height:38px" placeholder="e.g. Owner / Office Manager"></div>
-      <div><label class="field-label">Email</label><input type="email" id="acContactEmail" class="field-input" style="height:38px" placeholder="e.g. jamie@business.com"></div>
-      <div><label class="field-label">Phone</label><input type="tel" id="acContactPhone" class="field-input" style="height:38px" placeholder="e.g. (555) 123-4567"></div>
+      <div><label for="acContactName" class="field-label">Contact Name</label><input type="text" id="acContactName" class="field-input" style="height:38px" placeholder="e.g. Jamie Rivera"></div>
+      <div><label for="acContactTitle" class="field-label">Title</label><input type="text" id="acContactTitle" class="field-input" style="height:38px" placeholder="e.g. Owner / Office Manager"></div>
+      <div><label for="acContactEmail" class="field-label">Email</label><input type="email" id="acContactEmail" class="field-input" style="height:38px" placeholder="e.g. jamie@business.com"></div>
+      <div><label for="acContactPhone" class="field-label">Phone</label><input type="tel" id="acContactPhone" class="field-input" style="height:38px" placeholder="e.g. (555) 123-4567"></div>
     </div>
 
     <div class="modal-btns" style="margin-top:18px">
@@ -2790,8 +2830,8 @@ tr.hidden-row { display: none; }
 
 <!-- DELETE CLIENT CONFIRMATION MODAL -->
 <div class="modal-overlay" id="deleteClientModal">
-  <div class="modal">
-    <h3>🗑️ Remove Client</h3>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="deleteClientModalTitle">
+    <h3 id="deleteClientModalTitle">🗑️ Remove Client</h3>
     <p id="deleteClientText">Are you sure?</p>
     <div style="font-size:12px;color:var(--text2);margin-bottom:18px;background:var(--bg3);padding:12px 14px;border-radius:8px;border:1px solid var(--border)" id="deleteClientPortfolioList"></div>
     <div class="modal-btns">
@@ -2803,8 +2843,8 @@ tr.hidden-row { display: none; }
 
 <!-- GOOGLE SHEETS MODAL -->
 <div class="modal-overlay" id="sheetsModal">
-  <div class="modal">
-    <h3>🔗 Connect Google Sheets</h3>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="sheetsModalTitle">
+    <h3 id="sheetsModalTitle">🔗 Connect Google Sheets</h3>
     <p>Publish your sheet to the web as CSV, then paste that link below. The hub will fetch live data and rebuild every chart, KPI, and table automatically.</p>
     <input type="text" id="sheetsUrl" placeholder="https://docs.google.com/spreadsheets/d/.../pub?output=csv">
     <div style="font-size:11px;color:var(--text3);margin-bottom:14px;background:var(--bg3);padding:10px 12px;border-radius:8px;border:1px solid var(--border)">
@@ -2828,8 +2868,8 @@ tr.hidden-row { display: none; }
 
 <!-- COLUMN MAPPING MODAL (step 1 of import) -->
 <div class="modal-overlay" id="mappingModal">
-  <div class="modal wide">
-    <h3>🧩 Map Your Columns</h3>
+  <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="mappingModalTitle">
+    <h3 id="mappingModalTitle">🧩 Map Your Columns</h3>
     <p id="mappingFileLabel">We auto-detected these columns from your file. Fix anything that looks wrong, then continue.</p>
     <div class="modal-scroll">
       <table class="map-table">
@@ -2847,8 +2887,8 @@ tr.hidden-row { display: none; }
 
 <!-- REVIEW & DUPLICATES MODAL (step 2 of import) -->
 <div class="modal-overlay" id="duplicatesModal">
-  <div class="modal wide">
-    <h3>🔎 Review Import</h3>
+  <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="duplicatesModalTitle">
+    <h3 id="duplicatesModalTitle">🔎 Review Import</h3>
     <p id="dupSummaryText">Here's what we found before saving.</p>
     <div class="import-summary" id="importSummaryStats"></div>
     <div id="dupSection">
@@ -2858,6 +2898,34 @@ tr.hidden-row { display: none; }
     <div class="modal-btns">
       <button class="btn btn-ghost" onclick="backToMapping()">← Back</button>
       <button class="btn btn-primary" onclick="applyImport()">Save Import</button>
+    </div>
+  </div>
+</div>
+
+<!-- BULK ACTION MODAL (Clients Directory — add a task or note to multiple selected clients at once) -->
+<div class="modal-overlay" id="bulkActionModal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="bulkActionModalTitle">
+    <h3 id="bulkActionModalTitle">➕ Add Task to Selected Clients</h3>
+    <p id="bulkActionModalSub" style="margin-bottom:16px">This will be added to every client currently selected.</p>
+    <div id="bulkActionModalClientList" style="font-size:11.5px;color:var(--text2);margin-bottom:14px;max-height:80px;overflow-y:auto"></div>
+
+    <div id="bulkActionTaskFields">
+      <label class="field-label" for="bulkTaskTitle">Task Title <span style="color:var(--orange)">*</span></label>
+      <input type="text" id="bulkTaskTitle" class="field-input" style="height:38px" placeholder="e.g. Check in — no recent contact">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px">
+        <div><label class="field-label" for="bulkTaskAssignee">Assign to</label><select id="bulkTaskAssignee" class="field-select" style="height:38px"></select></div>
+        <div><label class="field-label" for="bulkTaskDueDate">Due Date</label><input type="date" id="bulkTaskDueDate" class="field-input" style="height:38px"></div>
+      </div>
+    </div>
+
+    <div id="bulkActionNoteFields" style="display:none">
+      <label class="field-label" for="bulkNoteText">Note</label>
+      <textarea id="bulkNoteText" class="field-input" rows="4" style="resize:vertical;font-family:inherit" placeholder="What's happening with these clients?"></textarea>
+    </div>
+
+    <div class="modal-btns" style="margin-top:18px">
+      <button class="btn btn-ghost" onclick="closeBulkActionModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveBulkAction()">Save</button>
     </div>
   </div>
 </div>
@@ -3233,7 +3301,7 @@ function applyTheme(theme, redrawCharts) {
   document.documentElement.setAttribute('data-theme', theme);
   try { localStorage.setItem(THEME_KEY, theme); } catch(e) {}
   const btn = document.getElementById('themeToggle');
-  if (btn) { btn.textContent = theme === 'light' ? '☀️' : '🌙'; btn.title = theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'; }
+  if (btn) { btn.textContent = theme === 'light' ? '☀️' : '🌙'; btn.title = theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'; btn.setAttribute('aria-label', btn.title); }
   refreshChartColors();
   if (redrawCharts && typeof rebuildAll === 'function') rebuildAll();
 }
@@ -3472,7 +3540,7 @@ async function renderClientSpotlight(pk) {
   const collectionsEntry = (typeof COLLECTIONS_ACCOUNTS !== 'undefined' ? COLLECTIONS_ACCOUNTS : []).find(a => (a.name || '').trim().toLowerCase() === normName);
   const adSpendEntry = (typeof AD_SPEND_BUSINESSES !== 'undefined' ? AD_SPEND_BUSINESSES : []).find(b => (b.name || '').trim().toLowerCase() === normName);
   const workedToday = getWorkedTodayNames().has(normName);
-  const safe = client.name.replace(/'/g, "\\'");
+  const safe = escOnclickArg(client.name);
   const mergedEntry = buildMergedClients()[normName];
   const memberPks = mergedEntry ? Object.keys(mergedEntry.portfolios) : [pk];
   const portfolioChipsHtml = memberPks.map(mpk => `<span class="portfolio-chip chip-${mpk}">${PORTFOLIO_ICONS[mpk]} ${PORTFOLIO_LABELS[mpk]}</span>`).join('');
@@ -4183,7 +4251,7 @@ function renderHomeActivityList() {
     return;
   }
   wrap.innerHTML = top.map(n => `
-    <div class="support-item" style="cursor:pointer" onclick="openClientNotesTasksModal('${(n.client_name || '').replace(/'/g,"\\'")}')">
+    <div class="support-item" style="cursor:pointer" onclick="openClientNotesTasksModal('${escOnclickArg(n.client_name)}')">
       <div class="support-avatar" style="background:var(--bg4);color:var(--text2)">${initials(n.author_name)}</div>
       <div class="support-info">
         <div class="support-name">${escAttr(n.client_name)}</div>
@@ -4215,9 +4283,23 @@ function rebuildTableHeaders(pk) {
   headRow.innerHTML = order.map(origIdx => {
     const c = cols[origIdx];
     const w = widths[origIdx];
-    return `<th draggable="true" data-orig-idx="${origIdx}" style="${w ? `width:${w}px;` : ''}">${c.icon ? renderProductIcon(c.icon, 14) + ' ' : ''}${escAttr(c.label)}<span class="col-resize-handle"></span></th>`;
+    const sortAttrs = sortableHeaderAttrs(tableId, c.key, `() => resortClientTable('${pk}')`);
+    const style = (w ? `width:${w}px;` : '') + sortAttrs.style;
+    return `<th draggable="true" data-orig-idx="${origIdx}"${style ? ` style="${style}"` : ''}${sortAttrs.click}>${c.icon ? renderProductIcon(c.icon, 14) + ' ' : ''}${escAttr(c.label)}${sortAttrs.arrow}<span class="col-resize-handle"></span></th>`;
   }).join('');
   makeColumnsInteractive(headRow, tableId, () => rebuildPortfolio(pk));
+}
+
+// Click-to-sort entry point for the SMB/White Label/Support tables (Block 4.2a).
+// Deliberately NOT rebuildPortfolio() — that does a full data reload and resets
+// the search box + active filter pill back to "All", which would wipe out
+// whatever the person was searching/filtering on just to sort a column.
+// This refreshes the header (so the sort arrow updates) and re-renders the
+// body in resort-only mode, which re-applies the existing search/filter
+// state afterward instead of clearing it.
+function resortClientTable(pk) {
+  rebuildTableHeaders(pk);
+  rebuildClientTable(pk, true);
 }
 
 // ─── FILTER PILLS ─────────────────────────────────────────────────────────────
@@ -4446,8 +4528,39 @@ function rebuildGapBar(pk) {
   });
 }
 
+// ─── DEBOUNCE ─────────────────────────────────────────────────────────────────
+// Generic debounce helper — used to keep live-search inputs (which re-render
+// a whole table/list on every keystroke) smooth as lists grow, without
+// changing what any of the underlying render functions do.
+function debounce(fn, wait = 200) {
+  let timer;
+  return function(...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), wait);
+  };
+}
+const debouncedFilterClientsDirectory = debounce(filterClientsDirectory);
+const debouncedFilterTable = debounce(filterTable);
+const debouncedRebuildVoiceAgentFlagged = debounce(rebuildVoiceAgentFlagged);
+const debouncedRebuildTextAgentStale = debounce(rebuildTextAgentStale);
+const debouncedRebuildTextAgentNotes = debounce(rebuildTextAgentNotes);
+const debouncedRebuildKnowledgePage = debounce(rebuildKnowledgePage);
+const debouncedRebuildAdSpendTable = debounce(rebuildAdSpendTable);
+const debouncedRebuildCollectionsTable = debounce(rebuildCollectionsTable);
+
 // ─── CLIENT TABLE ─────────────────────────────────────────────────────────────
 function escAttr(s) { return String(s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
+// Escapes a value for safe use as a single-quoted argument inside an
+// onclick="..." (or similar) HTML attribute — e.g. onclick="doThing('${escOnclickArg(name)}')".
+// Handles both boundaries a raw name could otherwise break out of: the JS
+// string literal (single quotes, backslashes) and the surrounding HTML
+// attribute itself (double quotes). A plain .replace(/'/g, "\\'") only
+// handles the first of those, so a name containing a double-quote could
+// still terminate the attribute early.
+function escOnclickArg(s) {
+  return String(s || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
 
 // ════════════════════════════════════════════════════════════════════════
 // EMPTY STATES & SKELETON LOADING — shared components for a consistent,
@@ -4541,6 +4654,87 @@ function showConfirmDialog(message, opts = {}) {
     confirmBtn.addEventListener('click', onConfirm);
     cancelBtn.addEventListener('click', onCancel);
   });
+}
+
+// ─── ESCAPE-TO-CLOSE FOR MODALS ────────────────────────────────────────────
+// One global listener rather than a handler on every modal — finds whichever
+// modal (if any) is currently open and closes it the same way its own
+// Cancel/close button would, so any cleanup those functions do still runs.
+const MODAL_CLOSE_FNS = {
+  clientNotesTasksModal: closeClientNotesTasksModal,
+  bulkActionModal: closeBulkActionModal,
+  editAdSpendModal: closeEditAdSpendModal,
+  adSpendMappingModal: closeAdSpendMappingModal,
+  adSpendDuplicatesModal: closeAdSpendDuplicatesModal,
+  editCollectionsModal: closeEditCollectionsModal,
+  collectionsMappingModal: closeCollectionsMappingModal,
+  collectionsDuplicatesModal: closeCollectionsDuplicatesModal,
+  removeProductModal: closeRemoveProductModal,
+  editClientModal: closeEditClientModal,
+  workflowModal: closeWorkflowModal,
+  knowledgeModal: closeKnowledgeModal,
+  addClientModal: closeAddClientModal,
+  deleteClientModal: closeDeleteClientModal,
+  sheetsModal: closeSheetsModal,
+  mappingModal: closeMappingModal,
+  duplicatesModal: closeDuplicatesModal,
+};
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const openOverlay = document.querySelector('.modal-overlay.open');
+    if (!openOverlay) return;
+    if (openOverlay.id === 'confirmDialogModal') {
+      // Route through the existing Cancel button so the pending
+      // showConfirmDialog() promise resolves (false) instead of hanging forever.
+      const cancelBtn = document.getElementById('confirmDialogCancelBtn');
+      if (cancelBtn) cancelBtn.click();
+      return;
+    }
+    const closeFn = MODAL_CLOSE_FNS[openOverlay.id];
+    if (closeFn) closeFn();
+    return;
+  }
+  handleGlobalShortcutKeys(e);
+});
+
+// ─── GLOBAL KEYBOARD SHORTCUTS (Block 4.1) ─────────────────────────────────
+// Cmd/Ctrl+K -> open Nirvana and focus its input, from anywhere in the app.
+// "/" -> focus the current page's search box, mirroring the Gmail/Linear/
+// Slack convention. Both are ignored while the person is already typing
+// somewhere (input/textarea/select/contenteditable) so normal typing -
+// including literally typing a "/" or a "k" - is never hijacked.
+function isTypingTarget(el) {
+  if (!el) return false;
+  const tag = el.tagName;
+  return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || !!el.isContentEditable;
+}
+
+function handleGlobalShortcutKeys(e) {
+  const modalOpen = !!document.querySelector('.modal-overlay.open');
+
+  // Cmd/Ctrl+K - toggle-open Nirvana, focus its input. Works even if a modal
+  // is open (matches Slack/Linear-style "always reachable" command shortcuts).
+  if ((e.metaKey || e.ctrlKey) && !e.altKey && e.key.toLowerCase() === 'k') {
+    e.preventDefault();
+    const panel = document.getElementById('aiAgentPanel');
+    if (panel && panel.style.display === 'none') toggleAiAgentPanel();
+    const input = document.getElementById('aiAgentInput');
+    if (input) input.focus();
+    return;
+  }
+
+  // "/" - focus the current page's search box. Skipped while typing anywhere,
+  // and while a modal is open (the visible page underneath isn't what the
+  // person is looking at, so stealing focus there would be confusing).
+  if (e.key === '/' && !modalOpen && !isTypingTarget(e.target)) {
+    const activePage = document.querySelector('.page.active');
+    const searchBox = activePage && activePage.querySelector('.search-box');
+    if (searchBox) {
+      e.preventDefault();
+      searchBox.focus();
+      searchBox.select();
+    }
+  }
 }
 
 // ════════════════════════════════════════════════════════════════════════
@@ -4695,6 +4889,9 @@ function makeColumnsInteractive(headRowEl, tableId, onChange) {
 
     const handle = th.querySelector('.col-resize-handle');
     if (!handle) return;
+    // Stop resize-handle clicks from bubbling up to the <th> — otherwise
+    // finishing a resize would also fire the header's click-to-sort handler.
+    handle.addEventListener('click', (e) => e.stopPropagation());
     handle.addEventListener('mousedown', (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -4719,12 +4916,60 @@ function makeColumnsInteractive(headRowEl, tableId, onChange) {
   });
 }
 
-function rebuildClientTable(pk) {
-  const cl = getClients(pk);
+// ─── CLICK-TO-SORT ──────────────────────────────────────────────────────────
+// Which columns can be sorted, per table, and how to compare their values.
+// Columns not listed here (Add-Ons, Recommendations, Latest Note, Actions —
+// anything that isn't a single plain value) are left as plain, unsortable headers.
+const SORTABLE_COLUMNS = {
+  adspend: { name: 'string', budget: 'number', watermark: 'number', startDate: 'date', promo: 'string' },
+  collections: { name: 'string', amount: 'number', date: 'date', resolvedDate: 'date', status: 'string' },
+  'client-smb': { name: 'string', org: 'string', __count: 'number' },
+  'client-whitelabel': { name: 'string', org: 'string', __count: 'number' },
+  'client-support': { name: 'string', org: 'string', __count: 'number' },
+};
+const TABLE_SORT_STATE = {}; // tableId -> { key, dir } | undefined (undefined = default order)
+
+function sortRowsByColumn(rows, key, dir, type) {
+  const mult = dir === 'desc' ? -1 : 1;
+  return [...rows].sort((a, b) => {
+    let av = a[key], bv = b[key];
+    if (type === 'number') { av = Number(av) || 0; bv = Number(bv) || 0; return (av - bv) * mult; }
+    if (type === 'date') { av = av ? new Date(av).getTime() : 0; bv = bv ? new Date(bv).getTime() : 0; return (av - bv) * mult; }
+    av = String(av || '').toLowerCase(); bv = String(bv || '').toLowerCase();
+    return av.localeCompare(bv) * mult;
+  });
+}
+
+function handleSortableHeaderClick(tableId, key, rebuildFn) {
+  const current = TABLE_SORT_STATE[tableId];
+  const dir = (current && current.key === key && current.dir === 'asc') ? 'desc' : 'asc';
+  TABLE_SORT_STATE[tableId] = { key, dir };
+  rebuildFn();
+}
+
+// Renders the <th> attributes (click handler, cursor, sort arrow) for a
+// sortable-columns-aware header — shared by every table that supports it.
+function sortableHeaderAttrs(tableId, colKey, rebuildFnName) {
+  const sortableType = SORTABLE_COLUMNS[tableId] && SORTABLE_COLUMNS[tableId][colKey];
+  if (!sortableType) return { click: '', style: '', arrow: '' };
+  const sort = TABLE_SORT_STATE[tableId];
+  const isSorted = sort && sort.key === colKey;
+  const arrow = isSorted ? (sort.dir === 'asc' ? ' ▲' : ' ▼') : '';
+  return {
+    click: ` onclick="handleSortableHeaderClick('${tableId}','${colKey}', ${rebuildFnName})"`,
+    style: 'cursor:pointer;',
+    arrow,
+  };
+}
+
+function rebuildClientTable(pk, resortOnly = false) {
+  let cl = getClients(pk);
+  const tableId = 'client-' + pk;
+  const sort = TABLE_SORT_STATE[tableId];
+  if (sort) cl = sortRowsByColumn(cl, sort.key, sort.dir, SORTABLE_COLUMNS[tableId][sort.key]);
   const keys = getProdKeys(pk);
   const tbody = document.getElementById('clientTableBody-' + pk);
   if (!tbody) return;
-  const tableId = 'client-' + pk;
   const cols = getClientColumns(pk);
   const order = getColumnOrder(tableId, cols.length);
 
@@ -4736,7 +4981,7 @@ function rebuildClientTable(pk) {
     const cellByIdx = cols.map(col => {
       if (col.key === 'name') {
         const nameNote = c.cellNotes && c.cellNotes.name;
-        return `<td>${c.name || '—'}${nameNote ? ` <span class="cell-note" data-tooltip="${escAttr(nameNote)}">💬</span>` : ''}</td>`;
+        return `<td>${escAttr(c.name) || '—'}${nameNote ? ` <span class="cell-note" data-tooltip="${escAttr(nameNote)}">💬</span>` : ''}</td>`;
       }
       if (col.key === 'org') {
         return `<td>${c.org ? `<span class="portfolio-chip chip-addon">🏢 ${escAttr(c.org)}</span>` : '<span style="color:var(--text3)">—</span>'}</td>`;
@@ -4753,7 +4998,7 @@ function rebuildClientTable(pk) {
     });
 
     const orderedCells = order.map(i => cellByIdx[i]).join('');
-    return `<tr data-name="${(c.name||'').toLowerCase()}" data-count="${pc}" ${orgAttr} ${attrs}>${orderedCells}</tr>`;
+    return `<tr data-name="${escAttr((c.name||'').toLowerCase())}" data-count="${pc}" ${orgAttr} ${attrs}>${orderedCells}</tr>`;
   });
   tbody.innerHTML = rowsHtml.length > 0 ? rowsHtml.join('') : emptyStateRow(cols.length, {
     icon: '📋',
@@ -4763,11 +5008,17 @@ function rebuildClientTable(pk) {
 
   rebuildOrgFilter(pk);
 
-  const searchEl = document.getElementById('clientSearch-' + pk);
-  if (searchEl) searchEl.value = '';
-  document.querySelectorAll(`#filterPills-${pk} .filter-pill`).forEach((b,i) => b.classList.toggle('active', i===0));
-  activeFilters[pk] = 'all';
-  filterTable(pk);
+  if (resortOnly) {
+    // Sort-only refresh — leave the search box and active filter pill exactly
+    // as the person left them, just re-apply them against the newly-sorted rows.
+    filterTable(pk);
+  } else {
+    const searchEl = document.getElementById('clientSearch-' + pk);
+    if (searchEl) searchEl.value = '';
+    document.querySelectorAll(`#filterPills-${pk} .filter-pill`).forEach((b,i) => b.classList.toggle('active', i===0));
+    activeFilters[pk] = 'all';
+    filterTable(pk);
+  }
 }
 
 // ─── ORGANIZATION GROUPING (multi-location clients) ───────────────────────────
@@ -6040,6 +6291,7 @@ function togglePasswordVisibility() {
   input.type = showing ? 'password' : 'text';
   btn.textContent = showing ? '👁️' : '🙈';
   btn.title = showing ? 'Show password' : 'Hide password';
+  btn.setAttribute('aria-label', btn.title);
 }
 
 function toggleLoginMode(e) {
@@ -6297,7 +6549,7 @@ function toggleMoneyVisibility() {
 }
 function updateMoneyToggleIcon() {
   const btn = document.getElementById('moneyToggleBtn');
-  if (btn) { btn.textContent = moneyHidden ? '🙈' : '👁️'; btn.title = moneyHidden ? 'Show dollar amounts' : 'Hide dollar amounts'; }
+  if (btn) { btn.textContent = moneyHidden ? '🙈' : '👁️'; btn.title = moneyHidden ? 'Show dollar amounts' : 'Hide dollar amounts'; btn.setAttribute('aria-label', btn.title); }
 }
 
 function fmtDate(d) {
@@ -6434,7 +6686,9 @@ function rebuildAdSpendTableHeaders() {
   headRow.innerHTML = order.map(origIdx => {
     const c = AD_SPEND_COLUMNS[origIdx];
     const w = widths[origIdx];
-    return `<th draggable="true" data-orig-idx="${origIdx}" style="${w ? `width:${w}px;` : ''}">${escAttr(c.label)}<span class="col-resize-handle"></span></th>`;
+    const sortAttrs = sortableHeaderAttrs('adspend', c.key, 'rebuildAdSpendTable');
+    const style = (w ? `width:${w}px;` : '') + sortAttrs.style;
+    return `<th draggable="true" data-orig-idx="${origIdx}"${style ? ` style="${style}"` : ''}${sortAttrs.click}>${escAttr(c.label)}${sortAttrs.arrow}<span class="col-resize-handle"></span></th>`;
   }).join('');
   makeColumnsInteractive(headRow, tableId, () => { rebuildAdSpendTableHeaders(); rebuildAdSpendTable(); });
 }
@@ -6443,9 +6697,11 @@ function rebuildAdSpendTable() {
   const tbody = document.getElementById('asTableBody');
   if (!tbody) return;
   const q = (document.getElementById('asSearch') || {}).value?.toLowerCase().trim() || '';
-  const rows = AD_SPEND_BUSINESSES
+  let rows = AD_SPEND_BUSINESSES
     .filter(b => adSpendFilter === 'all' || b.promo === adSpendFilter)
     .filter(b => !q || b.name.toLowerCase().includes(q));
+  const asSort = TABLE_SORT_STATE.adspend;
+  if (asSort) rows = sortRowsByColumn(rows, asSort.key, asSort.dir, SORTABLE_COLUMNS.adspend[asSort.key]);
 
   const tableId = 'adspend';
   const order = getColumnOrder(tableId, AD_SPEND_COLUMNS.length);
@@ -6472,7 +6728,7 @@ function rebuildAdSpendTable() {
     const recsShort = b.recs ? (b.recs.length > 50 ? b.recs.slice(0, 50) + '…' : b.recs) : '—';
     const safeId = b.id;
     const cellByIdx = [
-      `<td style="font-weight:600;color:var(--text)">${b.name}</td>`,
+      `<td style="font-weight:600;color:var(--text)">${escAttr(b.name)}</td>`,
       `<td>${fmtMoney(b.budget)}</td>`,
       `<td>${fmtMoney(b.watermark)}</td>`,
       `<td>${addonsHtml}</td>`,
@@ -6480,8 +6736,8 @@ function rebuildAdSpendTable() {
       `<td><span class="promo-pill ${promoPillClass(b.promo)}">${b.promo}</span></td>`,
       `<td title="${(b.recs || '').replace(/"/g, '&quot;')}" style="color:var(--text2)">${recsShort}</td>`,
       `<td>${canEdit() ? `
-        <button class="row-action-btn" onclick="openEditAdSpendModal('${safeId}')">✏️</button>
-        <button class="row-action-btn danger" onclick="removeAdSpendBusiness('${safeId}')">🗑️</button>` : `<span style="font-size:11px;color:var(--text3)">View only</span>`}</td>`,
+        <button class="row-action-btn" onclick="openEditAdSpendModal('${safeId}')" aria-label="Edit business">✏️</button>
+        <button class="row-action-btn danger" onclick="removeAdSpendBusiness('${safeId}')" aria-label="Remove business">🗑️</button>` : `<span style="font-size:11px;color:var(--text3)">View only</span>`}</td>`,
     ];
     return `<tr>${order.map(i => cellByIdx[i]).join('')}</tr>`;
   }).join('');
@@ -6655,7 +6911,7 @@ function renderAdSpendDuplicatesReview() {
     dupSection.style.display = '';
     dupList.innerHTML = dups.map((d,i) => `
       <div class="dup-row">
-        <div class="dup-name">${d.name}<span class="dup-sub">Already in Ad Spend Management — choose what to do</span></div>
+        <div class="dup-name">${escAttr(d.name)}<span class="dup-sub">Already in Ad Spend Management — choose what to do</span></div>
         <select onchange="setAdSpendDupAction(${i}, this.value)" style="width:220px">
           <option value="replace" ${d.action === 'replace' ? 'selected' : ''}>🔄 Replace existing record</option>
           <option value="skip" ${d.action === 'skip' ? 'selected' : ''}>⏭️ Skip — keep existing as-is</option>
@@ -7026,7 +7282,9 @@ function rebuildCollectionsTableHeaders() {
   headRow.innerHTML = order.map(origIdx => {
     const c = cols[origIdx];
     const w = widths[origIdx];
-    return `<th draggable="true" data-orig-idx="${origIdx}" style="${w ? `width:${w}px;` : ''}">${escAttr(c.label)}<span class="col-resize-handle"></span></th>`;
+    const sortAttrs = sortableHeaderAttrs('collections', c.key, 'rebuildCollectionsTable');
+    const style = (w ? `width:${w}px;` : '') + sortAttrs.style;
+    return `<th draggable="true" data-orig-idx="${origIdx}"${style ? ` style="${style}"` : ''}${sortAttrs.click}>${escAttr(c.label)}${sortAttrs.arrow}<span class="col-resize-handle"></span></th>`;
   }).join('');
   makeColumnsInteractive(headRow, tableId, () => { rebuildCollectionsTableHeaders(); rebuildCollectionsTable(); });
 }
@@ -7035,10 +7293,12 @@ function rebuildCollectionsTable() {
   const tbody = document.getElementById('colTableBody');
   if (!tbody) return;
   const q = (document.getElementById('colSearch') || {}).value?.toLowerCase().trim() || '';
-  const rows = COLLECTIONS_ACCOUNTS
+  let rows = COLLECTIONS_ACCOUNTS
     .filter(a => a.type === activeCollectionsType)
     .filter(a => collectionsFilter === 'all' || a.status === collectionsFilter)
     .filter(a => !q || a.name.toLowerCase().includes(q));
+  const colSort = TABLE_SORT_STATE.collections;
+  if (colSort) rows = sortRowsByColumn(rows, colSort.key, colSort.dir, SORTABLE_COLUMNS.collections[colSort.key]);
 
   const tableId = 'collections';
   const cols = getCollectionsColumns();
@@ -7066,24 +7326,25 @@ function rebuildCollectionsTable() {
     const meta = statusMeta(a.status);
     const accountNotes = getClientNotes(a.name);
     const latestNote = accountNotes[0] ? accountNotes[0].text : '';
-    const noteShort = latestNote ? (latestNote.length > 44 ? latestNote.slice(0,44) + '…' : latestNote) : '<span style="color:var(--text3)">No notes yet</span>';
+    const noteTruncated = latestNote && latestNote.length > 44 ? latestNote.slice(0,44) + '…' : latestNote;
+    const noteShort = latestNote ? escAttr(noteTruncated) : '<span style="color:var(--text3)">No notes yet</span>';
     const statusCell = editable
       ? `<select class="status-select" style="background:${meta.bg};color:${meta.color}" onchange="updateCollectionsStatus('${a.id}', this.value)">
           ${COLLECTIONS_STATUSES.map(s => `<option value="${s.key}" ${s.key === a.status ? 'selected' : ''}>${s.label}</option>`).join('')}
         </select>`
       : `<span class="status-pill" style="background:${meta.bg};color:${meta.color}">${meta.label}</span>`;
-    const safeName = a.name.replace(/'/g,"\\'");
+    const safeName = escOnclickArg(a.name);
     const cellByIdx = [
-      `<td style="font-weight:600;color:var(--text)">${a.name}</td>`,
+      `<td style="font-weight:600;color:var(--text)">${escAttr(a.name)}</td>`,
       `<td>${fmtMoney(a.amount)}</td>`,
       `<td>${fmtDate(a.date)}</td>`,
       `<td>${a.resolvedDate ? fmtDate(a.resolvedDate) : '<span style="color:var(--text3)">—</span>'}</td>`,
       `<td>${statusCell}</td>`,
-      `<td title="${(latestNote || '').replace(/"/g,'&quot;')}" style="color:var(--text2)">${noteShort}</td>`,
+      `<td title="${escAttr(latestNote)}" style="color:var(--text2)">${noteShort}</td>`,
       `<td style="white-space:nowrap">
         <button class="row-action-btn" onclick="openClientNotesTasksModal('${safeName}')">📝 ${accountNotes.length}</button>
-        ${editable ? `<button class="row-action-btn" onclick="openEditCollectionsModal('${a.id}')">✏️</button>` : ''}
-        ${editable ? `<button class="row-action-btn danger" onclick="removeCollectionsAccount('${a.id}')">🗑️</button>` : ''}
+        ${editable ? `<button class="row-action-btn" onclick="openEditCollectionsModal('${a.id}')" aria-label="Edit account">✏️</button>` : ''}
+        ${editable ? `<button class="row-action-btn danger" onclick="removeCollectionsAccount('${a.id}')" aria-label="Remove account">🗑️</button>` : ''}
       </td>`,
     ];
     return `<tr>${order.map(i => cellByIdx[i]).join('')}</tr>`;
@@ -7269,7 +7530,7 @@ function renderCollectionsDuplicatesReview() {
     dupSection.style.display = '';
     dupList.innerHTML = dups.map((d,i) => `
       <div class="dup-row">
-        <div class="dup-name">${d.name}<span class="dup-sub">Already in ${typeLabel} — choose what to do</span></div>
+        <div class="dup-name">${escAttr(d.name)}<span class="dup-sub">Already in ${typeLabel} — choose what to do</span></div>
         <select onchange="setCollectionsDupAction(${i}, this.value)" style="width:220px">
           <option value="replace" ${d.action === 'replace' ? 'selected' : ''}>🔄 Replace existing record</option>
           <option value="skip" ${d.action === 'skip' ? 'selected' : ''}>⏭️ Skip — keep existing as-is</option>
@@ -8339,7 +8600,7 @@ function renderClientTasksList() {
         <div class="task-meta">Assigned to ${escAttr(t.assigned_to_name || '—')}${t.due_date ? ' · Due ' + fmtDateTime(t.due_date) : ''}${t.recurrence ? ' · 🔁 ' + recurrenceLabel(t) : ''}${t.workflow_id ? ' · 🤖 Automated' : ''}</div>
       </div>
       ${t.due_date ? `<a href="${gcalQuickAddUrl(t)}" target="_blank" rel="noopener" class="row-action-btn" title="Add to Google Calendar">📅</a>` : ''}
-      <button class="row-action-btn danger" onclick="deleteClientTask('${t.id}')">🗑️</button>
+      <button class="row-action-btn danger" onclick="deleteClientTask('${t.id}')" aria-label="Delete task">🗑️</button>
     </div>`).join('');
 }
 
@@ -8419,7 +8680,7 @@ function renderHomeMyTasks() {
   const today = new Date().toISOString().slice(0, 10);
   wrap.innerHTML = tasks.map(t => {
     const overdue = t.due_date && t.due_date < today;
-    const safeClient = (t.client_name || '').replace(/'/g, "\\'");
+    const safeClient = escOnclickArg(t.client_name);
     return `<div class="support-item" style="cursor:pointer" onclick="openClientNotesTasksModal('${safeClient}')">
       <div class="support-avatar" style="background:var(--bg4);color:${overdue ? 'var(--red)' : 'var(--orange)'}">✅</div>
       <div class="support-info">
@@ -8921,7 +9182,7 @@ function renderDuplicatesReview() {
     dupSection.style.display = '';
     dupList.innerHTML = dups.map((d, i) => `
       <div class="dup-row">
-        <div class="dup-name">${d.name}<span class="dup-sub">Already exists in ${PORTFOLIOS[pk].name} — choose what to do</span></div>
+        <div class="dup-name">${escAttr(d.name)}<span class="dup-sub">Already exists in ${PORTFOLIOS[pk].name} — choose what to do</span></div>
         <select onchange="setDupAction(${i}, this.value)" style="width:220px">
           <option value="replace" ${d.action === 'replace' ? 'selected' : ''}>🔄 Replace existing with new data</option>
           <option value="skip" ${d.action === 'skip' ? 'selected' : ''}>⏭️ Skip — keep existing as-is</option>
@@ -9230,10 +9491,161 @@ function buildMergedClients() {
   return merged;
 }
 
+let clientsDirectorySort = { key: 'name', dir: 'asc' }; // default matches the previous always-alphabetical behavior
+let selectedDirectoryClients = new Set(); // client display names currently checked in the bulk-select column
+
+function toggleDirectoryRowSelect(name, checked) {
+  if (checked) selectedDirectoryClients.add(name); else selectedDirectoryClients.delete(name);
+  updateBulkActionBar();
+}
+
+function toggleDirectorySelectAll(checked) {
+  document.querySelectorAll('.cl-dir-row-check').forEach(cb => {
+    cb.checked = checked;
+    if (checked) selectedDirectoryClients.add(cb.dataset.client); else selectedDirectoryClients.delete(cb.dataset.client);
+  });
+  updateBulkActionBar();
+}
+
+function clearDirectorySelection() {
+  selectedDirectoryClients.clear();
+  document.querySelectorAll('.cl-dir-row-check').forEach(cb => { cb.checked = false; });
+  updateBulkActionBar();
+}
+
+function updateBulkActionBar() {
+  const bar = document.getElementById('clDirBulkBar');
+  const countEl = document.getElementById('clDirSelectedCount');
+  const selectAll = document.getElementById('clDirSelectAll');
+  const count = selectedDirectoryClients.size;
+  if (countEl) countEl.textContent = count;
+  if (bar) bar.style.display = count > 0 ? 'flex' : 'none';
+  if (selectAll) {
+    const boxes = document.querySelectorAll('.cl-dir-row-check');
+    const checkedCount = document.querySelectorAll('.cl-dir-row-check:checked').length;
+    selectAll.checked = boxes.length > 0 && checkedCount === boxes.length;
+    selectAll.indeterminate = checkedCount > 0 && checkedCount < boxes.length;
+  }
+}
+
+let bulkActionMode = 'task';
+function openBulkActionModal(mode) {
+  if (selectedDirectoryClients.size === 0) { showToast('Select at least one client first.', 'warning'); return; }
+  bulkActionMode = mode;
+  const names = Array.from(selectedDirectoryClients);
+  document.getElementById('bulkActionModalTitle').textContent = mode === 'task'
+    ? `➕ Add Task to ${names.length} Client${names.length === 1 ? '' : 's'}`
+    : `📝 Add Note to ${names.length} Client${names.length === 1 ? '' : 's'}`;
+  document.getElementById('bulkActionModalSub').textContent = mode === 'task'
+    ? 'This task will be created for every client listed below.'
+    : 'This note will be added to every client listed below.';
+  document.getElementById('bulkActionModalClientList').textContent = names.join(', ');
+  document.getElementById('bulkActionTaskFields').style.display = mode === 'task' ? '' : 'none';
+  document.getElementById('bulkActionNoteFields').style.display = mode === 'note' ? '' : 'none';
+  if (mode === 'task') {
+    document.getElementById('bulkTaskTitle').value = '';
+    document.getElementById('bulkTaskDueDate').value = '';
+    const sel = document.getElementById('bulkTaskAssignee');
+    const u = getCurrentUser();
+    sel.innerHTML = TEAM_MEMBERS.map(m => `<option value="${escAttr(m.email)}" ${u && m.email === u.email ? 'selected' : ''}>${escAttr(m.name)}${u && m.email === u.email ? ' (Myself)' : ''}</option>`).join('');
+  } else {
+    document.getElementById('bulkNoteText').value = '';
+  }
+  document.getElementById('bulkActionModal').classList.add('open');
+}
+function closeBulkActionModal() {
+  document.getElementById('bulkActionModal').classList.remove('open');
+}
+async function saveBulkAction() {
+  const names = Array.from(selectedDirectoryClients);
+  if (names.length === 0) { closeBulkActionModal(); return; }
+  if (names.length > BULK_ACTION_MAX) { showToast(`That's ${names.length} clients, over the ${BULK_ACTION_MAX}-client safety limit. Select fewer and try again.`, 'warning'); return; }
+  const u = getCurrentUser();
+
+  if (bulkActionMode === 'task') {
+    const title = document.getElementById('bulkTaskTitle').value.trim();
+    if (!title) { showToast('Please give the task a title.', 'warning'); return; }
+    const assigneeEmail = document.getElementById('bulkTaskAssignee').value;
+    const assignee = TEAM_MEMBERS.find(m => m.email === assigneeEmail);
+    const dueDate = document.getElementById('bulkTaskDueDate').value;
+    const newTasks = names.map(name => ({
+      id: (crypto.randomUUID ? crypto.randomUUID() : 't_' + Date.now() + Math.random().toString(16).slice(2) + name.length),
+      client_name: name, title,
+      assigned_to_email: assigneeEmail, assigned_to_name: assignee ? assignee.name : '',
+      created_by_email: u ? u.email : '', created_by_name: u ? u.name : 'Guest',
+      due_date: dueDate || '', reminder_minutes: null, recurrence: null,
+      status: 'open', created_at: new Date().toISOString(),
+    }));
+    CLIENT_TASKS.unshift(...newTasks);
+    localStorage.setItem(CLIENT_TASKS_CACHE_KEY, JSON.stringify(CLIENT_TASKS));
+    try { await Promise.all(newTasks.map(t => sbUpsert('client_tasks', t))); } catch(e) { console.warn('Bulk task save had errors:', e.message); }
+    if (assigneeEmail && assigneeEmail !== (u && u.email)) {
+      await createNotification(assigneeEmail, 'task_assigned', `${u ? u.name : 'Someone'} assigned you ${newTasks.length} task${newTasks.length === 1 ? '' : 's'}: "${title}"`, newTasks.map(t => t.client_name).slice(0, 5).join(', '));
+    }
+    renderClientTasksList();
+    rebuildHomePage();
+    showToast(`Task added to ${newTasks.length} client${newTasks.length === 1 ? '' : 's'}.`, 'success');
+  } else {
+    const text = document.getElementById('bulkNoteText').value.trim();
+    if (!text) { showToast('Please write a note first.', 'warning'); return; }
+    const mentionedEmails = parseMentionsFromText(text);
+    const newNotes = names.map(name => ({
+      id: (crypto.randomUUID ? crypto.randomUUID() : 'n_' + Date.now() + Math.random().toString(16).slice(2) + name.length),
+      client_name: name, author_email: u ? u.email : '', author_name: u ? u.name : 'Guest',
+      text, tagged_emails: mentionedEmails, created_at: new Date().toISOString(),
+    }));
+    CLIENT_NOTES.unshift(...newNotes);
+    localStorage.setItem(CLIENT_NOTES_CACHE_KEY, JSON.stringify(CLIENT_NOTES));
+    try { await Promise.all(newNotes.map(n => sbUpsert('client_notes', n))); } catch(e) { console.warn('Bulk note save had errors:', e.message); }
+    for (const email of mentionedEmails) {
+      await createNotification(email, 'tagged', `${u ? u.name : 'Someone'} tagged you in ${newNotes.length} note${newNotes.length === 1 ? '' : 's'}`, newNotes.map(n => n.client_name).slice(0, 5).join(', '));
+    }
+    renderClientNotesThread();
+    rebuildHomePage();
+    showToast(`Note added to ${newNotes.length} client${newNotes.length === 1 ? '' : 's'}.`, 'success');
+  }
+  closeBulkActionModal();
+  clearDirectorySelection();
+}
+
+function handleClientsDirectorySort(key) {
+  const dir = (clientsDirectorySort.key === key && clientsDirectorySort.dir === 'asc') ? 'desc' : 'asc';
+  clientsDirectorySort = { key, dir };
+  rebuildClientsDirectory();
+}
+
 function rebuildClientsDirectory() {
   const merged = buildMergedClients();
-  const rows = Object.values(merged).sort((a,b) => a.displayName.localeCompare(b.displayName));
-  const multiCount = rows.filter(r => Object.keys(r.portfolios).length >= 2).length;
+  // Compute each row's sortable values (portfolio count, product count) up
+  // front, before sorting, since those aren't raw fields on the merged record.
+  let rows = Object.values(merged).map(row => {
+    const pks = Object.keys(row.portfolios);
+    let total = 0;
+    const activeProducts = {};
+    pks.forEach(pk => {
+      getCatalog(pk).forEach(p => {
+        if (row.portfolios[pk].client[p.key]) {
+          total++;
+          if (!activeProducts[p.key]) activeProducts[p.key] = p;
+        }
+      });
+    });
+    return { row, pks, total, activeProducts };
+  });
+  const validNames = new Set(rows.map(r => r.row.displayName));
+  selectedDirectoryClients.forEach(name => { if (!validNames.has(name)) selectedDirectoryClients.delete(name); });
+  const mult = clientsDirectorySort.dir === 'desc' ? -1 : 1;
+  if (clientsDirectorySort.key === 'products') {
+    rows.sort((a, b) => (a.total - b.total) * mult);
+  } else {
+    rows.sort((a, b) => a.row.displayName.localeCompare(b.row.displayName) * mult);
+  }
+  const nameHead = document.getElementById('clDirSortName');
+  const productsHead = document.getElementById('clDirSortProducts');
+  if (nameHead) nameHead.innerHTML = 'Client Name' + (clientsDirectorySort.key === 'name' ? (clientsDirectorySort.dir === 'asc' ? ' ▲' : ' ▼') : '');
+  if (productsHead) productsHead.innerHTML = '# Products' + (clientsDirectorySort.key === 'products' ? (clientsDirectorySort.dir === 'asc' ? ' ▲' : ' ▼') : '');
+
+  const multiCount = rows.filter(r => r.pks.length >= 2).length;
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
   set('cl-total', rows.length);
   set('cl-smb-count', getClients('smb').length);
@@ -9246,20 +9658,9 @@ function rebuildClientsDirectory() {
   populateClientsProductFilter();
   const tbody = document.getElementById('clientsDirectoryBody');
   if (!tbody) return;
-  const rowsHtml = rows.map(row => {
-    const pks = Object.keys(row.portfolios);
-    let total = 0;
-    const activeProducts = {}; // key -> catalog entry, de-duped across portfolios
-    pks.forEach(pk => {
-      getCatalog(pk).forEach(p => {
-        if (row.portfolios[pk].client[p.key]) {
-          total++;
-          if (!activeProducts[p.key]) activeProducts[p.key] = p;
-        }
-      });
-    });
+  const rowsHtml = rows.map(({ row, pks, total, activeProducts }) => {
     const chips = pks.map(pk => `<span class="portfolio-chip chip-${pk}">${PORTFOLIO_ICONS[pk]} ${PORTFOLIO_LABELS[pk]}</span>`).join('');
-    const safe = row.displayName.replace(/'/g,"\\'");
+    const safe = escOnclickArg(row.displayName);
     const attrs = pks.map(pk => `data-has-${pk}="true"`).join(' ');
     const productList = Object.values(activeProducts);
     const iconsHtml = productList.length
@@ -9271,9 +9672,10 @@ function rebuildClientsDirectory() {
     const contactHint = contact && (contact.contact_name || contact.email || contact.phone)
       ? `<div style="font-size:11px;color:var(--text3);font-weight:400;margin-top:1px">${escAttr(contact.contact_name || '')}${contact.contact_name && (contact.email || contact.phone) ? ' · ' : ''}${escAttr(contact.phone || contact.email || '')}</div>`
       : '';
-    return `<tr data-name="${row.displayName.toLowerCase()}" data-portfolio-count="${pks.length}" data-products="${Object.keys(activeProducts).join(' ')}" ${attrs}>
-      <td style="padding-left:14px;color:var(--text);font-weight:600">
-        <a href="#" onclick="openClientNotesTasksModal('${safe}');return false;" style="color:inherit;text-decoration:none" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${row.displayName}</a>
+    return `<tr data-name="${escAttr(row.displayName.toLowerCase())}" data-portfolio-count="${pks.length}" data-products="${Object.keys(activeProducts).join(' ')}" ${attrs}>
+      <td style="padding-left:14px"><input type="checkbox" class="cl-dir-row-check" data-client="${escAttr(row.displayName)}" onchange="toggleDirectoryRowSelect('${safe}', this.checked)" ${selectedDirectoryClients.has(row.displayName) ? 'checked' : ''} aria-label="Select ${escAttr(row.displayName)}"></td>
+      <td style="color:var(--text);font-weight:600">
+        <a href="#" onclick="openClientNotesTasksModal('${safe}');return false;" style="color:inherit;text-decoration:none" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${escAttr(row.displayName)}</a>
         ${contactHint}
       </td>
       <td>${chips}</td>
@@ -9285,12 +9687,13 @@ function rebuildClientsDirectory() {
         <button class="row-action-btn danger" onclick="openDeleteClientModal('${safe}')">🗑️ Remove</button>` : ''}
       </td></tr>`;
   });
-  tbody.innerHTML = rowsHtml.length > 0 ? rowsHtml.join('') : emptyStateRow(4, {
+  tbody.innerHTML = rowsHtml.length > 0 ? rowsHtml.join('') : emptyStateRow(5, {
     icon: '👥',
     title: 'No clients yet',
     sub: 'Once clients are uploaded to any portfolio, they\'ll show up here in one unified directory.',
   });
   filterClientsDirectory();
+  updateBulkActionBar();
 }
 
 function populateClientsProductFilter() {
@@ -9611,7 +10014,7 @@ function rebuildWorkflowsPage() {
         <span style="font-size:11px;color:var(--text3)">Active</span>
       </label>
       <button class="row-action-btn" onclick="openEditWorkflowModal('${wf.id}')">✏️ Edit</button>
-      <button class="row-action-btn danger" onclick="confirmDeleteWorkflow('${wf.id}')">🗑️</button>` : ''}
+      <button class="row-action-btn danger" onclick="confirmDeleteWorkflow('${wf.id}')" aria-label="Delete workflow">🗑️</button>` : ''}
     </div>`).join('');
 }
 
@@ -9646,27 +10049,27 @@ function renderWorkflowTriggerFields(existing) {
   if (triggerType === 'inactivity') {
     box.innerHTML = `
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
-        <div><label class="field-label">No note logged in (days)</label><input type="number" id="wfInactivityDays" class="field-input" style="height:38px" min="1" value="${existing && existing.inactivity_days || 14}"></div>
-        <div><label class="field-label">Scope</label><select id="wfScopePortfolio" class="field-select" style="height:38px">${portfolioOptions}</select></div>
+        <div><label for="wfInactivityDays" class="field-label">No note logged in (days)</label><input type="number" id="wfInactivityDays" class="field-input" style="height:38px" min="1" value="${existing && existing.inactivity_days || 14}"></div>
+        <div><label for="wfScopePortfolio" class="field-label">Scope</label><select id="wfScopePortfolio" class="field-select" style="height:38px">${portfolioOptions}</select></div>
       </div>`;
     if (existing) document.getElementById('wfScopePortfolio').value = existing.scope_portfolio || 'all';
   } else {
     box.innerHTML = `
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
-        <div><label class="field-label">Frequency</label><select id="wfScheduleType" class="field-select" style="height:38px" onchange="toggleWorkflowCustomSchedule()">
+        <div><label for="wfScheduleType" class="field-label">Frequency</label><select id="wfScheduleType" class="field-select" style="height:38px" onchange="toggleWorkflowCustomSchedule()">
           <option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="custom">Custom…</option>
         </select></div>
         <div id="wfCustomScheduleBox" style="display:none;grid-template-columns:1fr 1fr;gap:8px">
-          <div><label class="field-label">Every</label><input type="number" id="wfScheduleCustomN" class="field-input" style="height:38px" min="1" value="7"></div>
-          <div><label class="field-label">&nbsp;</label><select id="wfScheduleCustomUnit" class="field-select" style="height:38px"><option value="days">Days</option><option value="weeks">Weeks</option><option value="months">Months</option></select></div>
+          <div><label for="wfScheduleCustomN" class="field-label">Every</label><input type="number" id="wfScheduleCustomN" class="field-input" style="height:38px" min="1" value="7"></div>
+          <div><label for="wfScheduleCustomUnit" class="field-label">&nbsp;</label><select id="wfScheduleCustomUnit" class="field-select" style="height:38px"><option value="days">Days</option><option value="weeks">Weeks</option><option value="months">Months</option></select></div>
         </div>
       </div>
       <div style="display:flex;gap:18px;margin-bottom:12px">
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfScopeType" value="client" checked onchange="toggleWorkflowScopeType()"> One specific client</label>
         <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfScopeType" value="portfolio" onchange="toggleWorkflowScopeType()"> Every client in a portfolio</label>
       </div>
-      <div id="wfScopeClientBox"><label class="field-label">Client name</label><input type="text" id="wfScopeClientName" class="field-input" style="height:38px" placeholder="e.g. Summit Roofing Co."></div>
-      <div id="wfScopePortfolioBox" style="display:none;margin-bottom:16px"><label class="field-label">Portfolio</label><select id="wfScopePortfolio2" class="field-select" style="height:38px">${portfolioOptions.replace('Any portfolio', 'Choose a portfolio')}</select></div>`;
+      <div id="wfScopeClientBox"><label for="wfScopeClientName" class="field-label">Client name</label><input type="text" id="wfScopeClientName" class="field-input" style="height:38px" placeholder="e.g. Summit Roofing Co."></div>
+      <div id="wfScopePortfolioBox" style="display:none;margin-bottom:16px"><label for="wfScopePortfolio2" class="field-label">Portfolio</label><select id="wfScopePortfolio2" class="field-select" style="height:38px">${portfolioOptions.replace('Any portfolio', 'Choose a portfolio')}</select></div>`;
     if (existing) {
       document.getElementById('wfScheduleType').value = existing.schedule_type || 'daily';
       toggleWorkflowCustomSchedule();
@@ -10084,7 +10487,7 @@ function rebuildKnowledgePage() {
       </div>
       ${canEdit() ? `
       <button class="row-action-btn" onclick="openEditKnowledgeModal('${k.id}')">✏️ Edit</button>
-      <button class="row-action-btn danger" onclick="confirmDeleteKnowledge('${k.id}')">🗑️</button>` : ''}
+      <button class="row-action-btn danger" onclick="confirmDeleteKnowledge('${k.id}')" aria-label="Delete knowledge entry">🗑️</button>` : ''}
     </div>`;
   }).join('');
 }
@@ -11079,6 +11482,7 @@ function updateNirvanaVoiceButton() {
   if (!btn) return;
   btn.textContent = nirvanaVoiceReplyEnabled ? '🔊' : '🔇';
   btn.title = nirvanaVoiceReplyEnabled ? 'Voice replies: On (click to mute)' : 'Voice replies: Off (click to enable)';
+  btn.setAttribute('aria-label', btn.title);
   btn.classList.toggle('active', nirvanaVoiceReplyEnabled);
 }
 
@@ -11251,7 +11655,7 @@ function renderAiQuickSuggestions() {
     box.className = 'ai-suggestions';
     panel.insertBefore(box, document.getElementById('aiAgentConfirm'));
   }
-  box.innerHTML = AI_QUICK_SUGGESTIONS.map(s => `<button class="ai-suggestion-chip" onclick="sendAiAgentQuickMessage('${s.msg.replace(/'/g, "\\'")}')">${s.label}</button>`).join('');
+  box.innerHTML = AI_QUICK_SUGGESTIONS.map(s => `<button class="ai-suggestion-chip" onclick="sendAiAgentQuickMessage('${escOnclickArg(s.msg)}')">${s.label}</button>`).join('');
 }
 
 function sendAiAgentQuickMessage(text) {
@@ -11575,69 +11979,55 @@ async function bootApp() {
   }
 
   try {
-    // Load latest from Supabase
-    const loaded = await loadFromSupabase();
+    // Load latest client/catalog data from Supabase (the "master" load the rest
+    // of the page depends on for portfolio structure)
+    await loadFromSupabase();
     rebuildAll();
     updateDataSourcePill();
-
-    // Call Ad Spend Management
-    await loadAdSpendBusinesses();
-
-    // Collections
-    await loadCollectionsAccounts();
-
-    // Client Notes & Tasks
-    await loadClientNotesTasks();
-    migrateOldCollectionsNotes();
-
-    // Client Success KPIs (Anticipating Needs / Preempting Risks / Growth Opportunities)
-    await loadKpiHistory();
-
-    // Client Spotlight (daily focus client per portfolio)
-    await loadClientSpotlight();
-
-    // Workflows (automated inactivity alerts and scheduled recurring tasks)
-    await loadWorkflows();
-    runWorkflowEngine();
-
-    // Knowledge Base (SOPs, docs, website content Nirvana can search)
-    await loadKnowledgeBase();
-
-    // Nirvana's saved conversation history (persistent memory across sessions)
-    await loadNirvanaConversation();
-
-    // Final pass now that every data source (notes, contacts, collections, ad
-    // spend) has loaded — ensures cards like the Client Spotlight, which pull
-    // from all of the above, render with full context instead of partial data.
-    rebuildAll();
-
-    // Auto-refresh any connected Google Sheets
-    let sheetsUrls = {};
-    try {
-      const rows = await sbSelect('sheets_connections');
-      rows.forEach(r => sheetsUrls[r.portfolio] = r.url);
-    } catch(e) {
-      try { sheetsUrls = JSON.parse(localStorage.getItem(SHEETS_KEY)||'{}'); } catch(e2) {}
-    }
-    const hasSheets = Object.keys(sheetsUrls).some(pk => sheetsUrls[pk]);
-    if (hasSheets) await autoRefreshSheets(sheetsUrls);
   } catch(e) {
+    // loadFromSupabase() already falls back to localStorage internally and
+    // never rethrows, so this is just a last-resort safety net.
     console.warn('Supabase load failed:', e);
     if (!cachedLoaded) rebuildAll();
     const pill = document.getElementById('dataSourcePill');
     if (pill) { pill.innerHTML = '<span class="dot" style="background:var(--red)"></span> Database offline · using cache'; pill.style.color = 'var(--red)'; }
-    await loadAdSpendBusinesses();
-    await loadCollectionsAccounts();
-    await loadClientNotesTasks();
-    migrateOldCollectionsNotes();
-    await loadKpiHistory();
-    await loadClientSpotlight();
-    await loadWorkflows();
-    runWorkflowEngine();
-    await loadKnowledgeBase();
-    await loadNirvanaConversation();
-    rebuildAll();
   }
+
+  // These eight loads each fetch their own table(s) into their own state and
+  // don't read from one another, so they run concurrently instead of one
+  // after another — this used to be ~8 sequential round trips end-to-end;
+  // now the total wait is roughly the slowest one of the eight.
+  await Promise.allSettled([
+    loadAdSpendBusinesses(),      // Ad Spend Management
+    loadCollectionsAccounts(),    // Collections
+    loadClientNotesTasks(),       // Client Notes & Tasks
+    loadKpiHistory(),             // Client Success KPIs (SuccessOS)
+    loadClientSpotlight(),        // Client Spotlight (daily focus client per portfolio)
+    loadWorkflows(),              // Workflow automation engine
+    loadKnowledgeBase(),          // Knowledge Base (SOPs, docs, website content Nirvana can search)
+    loadNirvanaConversation(),    // Nirvana's saved conversation history
+  ]);
+
+  // Genuine dependencies: these read the in-memory results of the batch above,
+  // so they have to run after it, not inside it.
+  migrateOldCollectionsNotes();  // reads CLIENT_NOTES + COLLECTIONS_ACCOUNTS
+  runWorkflowEngine();           // reads WORKFLOWS
+
+  // Final pass now that every data source (notes, contacts, collections, ad
+  // spend) has loaded — ensures cards like the Client Spotlight, which pull
+  // from all of the above, render with full context instead of partial data.
+  rebuildAll();
+
+  // Auto-refresh any connected Google Sheets
+  let sheetsUrls = {};
+  try {
+    const rows = await sbSelect('sheets_connections');
+    rows.forEach(r => sheetsUrls[r.portfolio] = r.url);
+  } catch(e) {
+    try { sheetsUrls = JSON.parse(localStorage.getItem(SHEETS_KEY)||'{}'); } catch(e2) {}
+  }
+  const hasSheets = Object.keys(sheetsUrls).some(pk => sheetsUrls[pk]);
+  if (hasSheets) await autoRefreshSheets(sheetsUrls);
 }
 
 // ════════════════════════════════════════════════════════════════════════
