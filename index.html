@@ -1198,7 +1198,7 @@ tr.hidden-row { display: none; }
   .sidebar, .sidebar-overlay, .topbar, .hamburger,
   .ai-agent-fab, .ai-agent-panel, .modal-overlay, .notif-panel,
   .table-controls, .filter-pill, .export-csv-btn, .row-action-btn,
-  .col-resize-handle, #clDirBulkBar, #addWorkflowBtn, #addClientBtn,
+  .col-resize-handle, #clDirBulkBar, #smbBulkBar, #whitelabelBulkBar, #supportBulkBar, #addWorkflowBtn, #addClientBtn,
   button, input, select, textarea, .search-box,
   .upload-btn, .kb-dropzone, .page-footer {
     display: none !important;
@@ -1752,6 +1752,12 @@ tr.hidden-row { display: none; }
         <button class="reset-columns-btn" onclick="resetColumnPrefs('client-smb'); rebuildPortfolio('smb')" title="Reset column order and widths back to default">↺ Columns</button>
         <button class="export-csv-btn" onclick="exportClientTable('smb')" title="Download the currently visible rows as a CSV file">⬇ Export CSV</button>
       </div>
+      <div class="card" id="smbBulkBar" style="display:none;margin-bottom:12px;padding:10px 14px;background:var(--orange-dim);border-color:rgba(226,84,31,.3);align-items:center;gap:12px">
+        <span style="font-weight:700;color:var(--text);font-size:13px"><span id="smbSelectedCount">0</span> selected</span>
+        <button class="btn btn-primary btn-sm" onclick="openBulkActionModal('task','smb')">➕ Add Task to Selected</button>
+        <button class="btn btn-ghost btn-sm" onclick="openBulkActionModal('note','smb')">📝 Add Note to Selected</button>
+        <button class="btn btn-ghost btn-sm" onclick="clearClientSelection('smb')" style="margin-left:auto">Clear Selection</button>
+      </div>
       <div class="tbl-scroll">
         <table class="resizable-table" id="clientTable-smb">
           <thead><tr id="tableHead-smb">
@@ -1868,6 +1874,12 @@ tr.hidden-row { display: none; }
         <span class="row-count" id="rowCount-whitelabel">0 clients</span>
         <button class="reset-columns-btn" onclick="resetColumnPrefs('client-whitelabel'); rebuildPortfolio('whitelabel')" title="Reset column order and widths back to default">↺ Columns</button>
         <button class="export-csv-btn" onclick="exportClientTable('whitelabel')" title="Download the currently visible rows as a CSV file">⬇ Export CSV</button>
+      </div>
+      <div class="card" id="whitelabelBulkBar" style="display:none;margin-bottom:12px;padding:10px 14px;background:var(--orange-dim);border-color:rgba(226,84,31,.3);align-items:center;gap:12px">
+        <span style="font-weight:700;color:var(--text);font-size:13px"><span id="whitelabelSelectedCount">0</span> selected</span>
+        <button class="btn btn-primary btn-sm" onclick="openBulkActionModal('task','whitelabel')">➕ Add Task to Selected</button>
+        <button class="btn btn-ghost btn-sm" onclick="openBulkActionModal('note','whitelabel')">📝 Add Note to Selected</button>
+        <button class="btn btn-ghost btn-sm" onclick="clearClientSelection('whitelabel')" style="margin-left:auto">Clear Selection</button>
       </div>
       <div class="tbl-scroll">
         <table class="resizable-table" id="clientTable-whitelabel">
@@ -2106,6 +2118,12 @@ tr.hidden-row { display: none; }
         <span class="row-count" id="rowCount-support">0 clients</span>
         <button class="reset-columns-btn" onclick="resetColumnPrefs('client-support'); rebuildPortfolio('support')" title="Reset column order and widths back to default">↺ Columns</button>
         <button class="export-csv-btn" onclick="exportClientTable('support')" title="Download the currently visible rows as a CSV file">⬇ Export CSV</button>
+      </div>
+      <div class="card" id="supportBulkBar" style="display:none;margin-bottom:12px;padding:10px 14px;background:var(--orange-dim);border-color:rgba(226,84,31,.3);align-items:center;gap:12px">
+        <span style="font-weight:700;color:var(--text);font-size:13px"><span id="supportSelectedCount">0</span> selected</span>
+        <button class="btn btn-primary btn-sm" onclick="openBulkActionModal('task','support')">➕ Add Task to Selected</button>
+        <button class="btn btn-ghost btn-sm" onclick="openBulkActionModal('note','support')">📝 Add Note to Selected</button>
+        <button class="btn btn-ghost btn-sm" onclick="clearClientSelection('support')" style="margin-left:auto">Clear Selection</button>
       </div>
       <div class="tbl-scroll">
         <table class="resizable-table" id="clientTable-support">
@@ -4280,7 +4298,11 @@ function rebuildTableHeaders(pk) {
   const cols = getClientColumns(pk);
   const order = getColumnOrder(tableId, cols.length);
   const widths = getColumnWidths(tableId);
-  headRow.innerHTML = order.map(origIdx => {
+  // Bulk-select column (Block 4.2b) — a fixed, non-draggable/non-resizable
+  // <th> ahead of the dynamic columns, same visual treatment as Client
+  // Directory's select-all checkbox.
+  const selectAllTh = `<th style="width:34px;padding-left:14px"><input type="checkbox" id="${pk}SelectAll" onchange="toggleClientSelectAll('${pk}', this.checked)" aria-label="Select all clients"></th>`;
+  headRow.innerHTML = selectAllTh + order.map(origIdx => {
     const c = cols[origIdx];
     const w = widths[origIdx];
     const sortAttrs = sortableHeaderAttrs(tableId, c.key, `() => resortClientTable('${pk}')`);
@@ -4977,6 +4999,8 @@ function rebuildClientTable(pk, resortOnly = false) {
     const pc = keys.filter(k => c[k]).length;
     const attrs = keys.map(k => `data-${k}="${!!c[k]}"`).join(' ');
     const orgAttr = `data-org="${escAttr((c.org || '').toLowerCase())}"`;
+    const safeName = escOnclickArg(c.name);
+    const checkboxTd = `<td style="padding-left:14px"><input type="checkbox" class="cl-${pk}-row-check" data-client="${escAttr(c.name)}" onchange="toggleClientRowSelect('${pk}', '${safeName}', this.checked)" ${BULK_SELECTION_SETS[pk].has(c.name) ? 'checked' : ''} aria-label="Select ${escAttr(c.name)}"></td>`;
 
     const cellByIdx = cols.map(col => {
       if (col.key === 'name') {
@@ -4998,13 +5022,19 @@ function rebuildClientTable(pk, resortOnly = false) {
     });
 
     const orderedCells = order.map(i => cellByIdx[i]).join('');
-    return `<tr data-name="${escAttr((c.name||'').toLowerCase())}" data-count="${pc}" ${orgAttr} ${attrs}>${orderedCells}</tr>`;
+    return `<tr data-name="${escAttr((c.name||'').toLowerCase())}" data-count="${pc}" ${orgAttr} ${attrs}>${checkboxTd}${orderedCells}</tr>`;
   });
-  tbody.innerHTML = rowsHtml.length > 0 ? rowsHtml.join('') : emptyStateRow(cols.length, {
+  tbody.innerHTML = rowsHtml.length > 0 ? rowsHtml.join('') : emptyStateRow(cols.length + 1, {
     icon: '📋',
     title: `No clients in ${PORTFOLIOS[pk].name} yet`,
     sub: canEdit() ? 'Upload a spreadsheet or connect a Google Sheet using the buttons in the top right to get started.' : 'Ask an Admin or Super user to upload client data for this dashboard.',
   });
+
+  // Drop any selected names that no longer exist in this portfolio (renamed,
+  // removed, or filtered out entirely) so a stale selection can't silently
+  // carry into a bulk action against a client that's no longer there.
+  const validNames = new Set(cl.map(c => c.name));
+  BULK_SELECTION_SETS[pk].forEach(name => { if (!validNames.has(name)) BULK_SELECTION_SETS[pk].delete(name); });
 
   rebuildOrgFilter(pk);
 
@@ -5019,6 +5049,7 @@ function rebuildClientTable(pk, resortOnly = false) {
     activeFilters[pk] = 'all';
     filterTable(pk);
   }
+  updateClientBulkActionBar(pk);
 }
 
 // ─── ORGANIZATION GROUPING (multi-location clients) ───────────────────────────
@@ -8421,7 +8452,7 @@ function renderClientNotesThread() {
   }
   const u = getCurrentUser();
   wrap.innerHTML = notes.map(n => {
-    const canEditNote = isAdmin() || (u && u.email === n.author_email);
+    const canEditNote = canModifyNote(n);
     const taggedNames = (n.tagged_emails || []).map(e => { const m = TEAM_MEMBERS.find(x => x.email === e); return m ? m.name : e; }).join(', ');
     return `<div class="note-entry">
       <div class="note-meta"><b>${escAttr(n.author_name)}</b> · ${fmtNoteTime(n.created_at)}${taggedNames ? ` · tagged ${escAttr(taggedNames)}` : ''}
@@ -8435,6 +8466,10 @@ function renderClientNotesThread() {
 function editClientNote(id) {
   const note = CLIENT_NOTES.find(n => n.id === id);
   if (!note) return;
+  // Same rule as deleteClientNote — enforced here too, not just by hiding
+  // the Edit link, so calling editClientNote(id) directly can't open the
+  // editor for someone else's note.
+  if (!canModifyNote(note)) { showToast('🔒 You can only edit your own notes (or be an Admin).', 'warning'); return; }
   const el = document.getElementById('noteText-' + id);
   if (!el) return;
   el.innerHTML = `<textarea id="editArea-${id}" class="field-input" style="margin-bottom:6px;resize:vertical;font-family:inherit">${escAttr(note.text)}</textarea>
@@ -8446,6 +8481,11 @@ function editClientNote(id) {
 async function saveClientNoteEdit(id) {
   const note = CLIENT_NOTES.find(n => n.id === id);
   if (!note) return;
+  // Same rule again — the textarea/Save button only appears after
+  // editClientNote's check above already passed, but this function is a
+  // separate entry point (onclick="saveClientNoteEdit(...)"), so it gets
+  // its own enforcement rather than trusting that the UI path was followed.
+  if (!canModifyNote(note)) { showToast('🔒 You can only edit your own notes (or be an Admin).', 'warning'); return; }
   const ta = document.getElementById('editArea-' + id);
   const newText = ta.value.trim();
   if (!newText) { showToast('Note can\'t be empty.', 'warning'); return; }
@@ -8456,7 +8496,21 @@ async function saveClientNoteEdit(id) {
   renderClientNotesThread();
   showToast('Note updated.', 'success');
 }
+// Same author-or-admin rule used to decide whether to show the Edit/Delete
+// links (renderClientNotesThread, above) — factored out so the enforcement
+// inside deleteClientNote can't silently drift from what the UI displays.
+function canModifyNote(note) {
+  const u = getCurrentUser();
+  return isAdmin() || !!(u && note && u.email === note.author_email);
+}
+
 async function deleteClientNote(id) {
+  const note = CLIENT_NOTES.find(n => n.id === id);
+  if (!note) return;
+  // Block 4.3 — enforced here, not just by hiding the Delete link: without
+  // this, calling deleteClientNote(id) directly (e.g. from devtools) would
+  // delete any client's note regardless of who's signed in.
+  if (!canModifyNote(note)) { showToast('🔒 You can only delete your own notes (or be an Admin).', 'warning'); return; }
   if (!(await showConfirmDialog('Delete this note?', { danger: true, confirmLabel: 'Delete' }))) return;
   CLIENT_NOTES = CLIENT_NOTES.filter(n => n.id !== id);
   localStorage.setItem(CLIENT_NOTES_CACHE_KEY, JSON.stringify(CLIENT_NOTES));
@@ -8600,7 +8654,7 @@ function renderClientTasksList() {
         <div class="task-meta">Assigned to ${escAttr(t.assigned_to_name || '—')}${t.due_date ? ' · Due ' + fmtDateTime(t.due_date) : ''}${t.recurrence ? ' · 🔁 ' + recurrenceLabel(t) : ''}${t.workflow_id ? ' · 🤖 Automated' : ''}</div>
       </div>
       ${t.due_date ? `<a href="${gcalQuickAddUrl(t)}" target="_blank" rel="noopener" class="row-action-btn" title="Add to Google Calendar">📅</a>` : ''}
-      <button class="row-action-btn danger" onclick="deleteClientTask('${t.id}')" aria-label="Delete task">🗑️</button>
+      ${canModifyTask(t) ? `<button class="row-action-btn danger" onclick="deleteClientTask('${t.id}')" aria-label="Delete task">🗑️</button>` : ''}
     </div>`).join('');
 }
 
@@ -8647,10 +8701,24 @@ async function toggleClientTaskStatus(id) {
   rebuildHomePage();
 }
 
+// Task-deletion rule, decided 2026-07-10 (Block 4.3 follow-up): admin, the
+// task's original creator, or whoever it's assigned to. Used both to decide
+// whether to render the Delete button (renderClientTasksList, above) and
+// enforced again inside deleteClientTask so the two can't drift apart.
+function canModifyTask(task) {
+  const u = getCurrentUser();
+  return isAdmin() || !!(u && task && (u.email === task.created_by_email || u.email === task.assigned_to_email));
+}
+
 async function deleteClientTask(id) {
-  if (!(await showConfirmDialog('Delete this task?', { danger: true, confirmLabel: 'Delete' }))) return;
   const task = CLIENT_TASKS.find(t => t.id === id);
-  if (task && task.gcal_event_id) deleteGoogleCalendarEvent(task);
+  if (!task) return;
+  // Block 4.3 follow-up — enforced here, not just by hiding the Delete
+  // button. Without this, calling deleteClientTask(id) directly would delete
+  // any client's task regardless of who's signed in.
+  if (!canModifyTask(task)) { showToast('🔒 You can only delete tasks you created or are assigned to (or be an Admin).', 'warning'); return; }
+  if (!(await showConfirmDialog('Delete this task?', { danger: true, confirmLabel: 'Delete' }))) return;
+  if (task.gcal_event_id) deleteGoogleCalendarEvent(task);
   CLIENT_TASKS = CLIENT_TASKS.filter(t => t.id !== id);
   localStorage.setItem(CLIENT_TASKS_CACHE_KEY, JSON.stringify(CLIENT_TASKS));
   try { await sbDelete('client_tasks', `id=eq.${id}`); } catch(e) {}
@@ -9528,11 +9596,67 @@ function updateBulkActionBar() {
   }
 }
 
+// ─── BULK ACTIONS — SMB / White Label / Support (Block 4.2b) ──────────────
+// Same shape as the Client Directory selection above, but one independent
+// Set per portfolio page so selecting rows on one page never bleeds into
+// another. BULK_SELECTION_SETS is the shared lookup the bulk-action modal
+// (openBulkActionModal/saveBulkAction, further below) reads from regardless
+// of which page triggered it — Directory included, so there's one modal/save
+// code path rather than four near-duplicates.
+let selectedSmbClients = new Set();
+let selectedWhitelabelClients = new Set();
+let selectedSupportClients = new Set();
+const BULK_SELECTION_SETS = {
+  directory: selectedDirectoryClients,
+  smb: selectedSmbClients,
+  whitelabel: selectedWhitelabelClients,
+  support: selectedSupportClients,
+};
+
+function toggleClientRowSelect(pk, name, checked) {
+  const set = BULK_SELECTION_SETS[pk];
+  if (checked) set.add(name); else set.delete(name);
+  updateClientBulkActionBar(pk);
+}
+
+function toggleClientSelectAll(pk, checked) {
+  const set = BULK_SELECTION_SETS[pk];
+  document.querySelectorAll(`.cl-${pk}-row-check`).forEach(cb => {
+    cb.checked = checked;
+    if (checked) set.add(cb.dataset.client); else set.delete(cb.dataset.client);
+  });
+  updateClientBulkActionBar(pk);
+}
+
+function clearClientSelection(pk) {
+  BULK_SELECTION_SETS[pk].clear();
+  document.querySelectorAll(`.cl-${pk}-row-check`).forEach(cb => { cb.checked = false; });
+  updateClientBulkActionBar(pk);
+}
+
+function updateClientBulkActionBar(pk) {
+  const bar = document.getElementById(`${pk}BulkBar`);
+  const countEl = document.getElementById(`${pk}SelectedCount`);
+  const selectAll = document.getElementById(`${pk}SelectAll`);
+  const count = BULK_SELECTION_SETS[pk].size;
+  if (countEl) countEl.textContent = count;
+  if (bar) bar.style.display = count > 0 ? 'flex' : 'none';
+  if (selectAll) {
+    const boxes = document.querySelectorAll(`.cl-${pk}-row-check`);
+    const checkedCount = document.querySelectorAll(`.cl-${pk}-row-check:checked`).length;
+    selectAll.checked = boxes.length > 0 && checkedCount === boxes.length;
+    selectAll.indeterminate = checkedCount > 0 && checkedCount < boxes.length;
+  }
+}
+
 let bulkActionMode = 'task';
-function openBulkActionModal(mode) {
-  if (selectedDirectoryClients.size === 0) { showToast('Select at least one client first.', 'warning'); return; }
+let activeBulkScope = 'directory'; // which page's selection the open modal is currently acting on
+function openBulkActionModal(mode, scope = 'directory') {
+  activeBulkScope = scope;
+  const selectedSet = BULK_SELECTION_SETS[scope];
+  if (selectedSet.size === 0) { showToast('Select at least one client first.', 'warning'); return; }
   bulkActionMode = mode;
-  const names = Array.from(selectedDirectoryClients);
+  const names = Array.from(selectedSet);
   document.getElementById('bulkActionModalTitle').textContent = mode === 'task'
     ? `➕ Add Task to ${names.length} Client${names.length === 1 ? '' : 's'}`
     : `📝 Add Note to ${names.length} Client${names.length === 1 ? '' : 's'}`;
@@ -9557,7 +9681,7 @@ function closeBulkActionModal() {
   document.getElementById('bulkActionModal').classList.remove('open');
 }
 async function saveBulkAction() {
-  const names = Array.from(selectedDirectoryClients);
+  const names = Array.from(BULK_SELECTION_SETS[activeBulkScope]);
   if (names.length === 0) { closeBulkActionModal(); return; }
   if (names.length > BULK_ACTION_MAX) { showToast(`That's ${names.length} clients, over the ${BULK_ACTION_MAX}-client safety limit. Select fewer and try again.`, 'warning'); return; }
   const u = getCurrentUser();
@@ -9605,7 +9729,8 @@ async function saveBulkAction() {
     showToast(`Note added to ${newNotes.length} client${newNotes.length === 1 ? '' : 's'}.`, 'success');
   }
   closeBulkActionModal();
-  clearDirectorySelection();
+  if (activeBulkScope === 'directory') clearDirectorySelection();
+  else clearClientSelection(activeBulkScope);
 }
 
 function handleClientsDirectorySort(key) {
@@ -9961,10 +10086,19 @@ async function persistWorkflow(wf) {
 }
 
 async function deleteWorkflowById(id) {
+  // Block 4.3 — enforced here, not just by hiding the Delete button (and not
+  // just at Nirvana's tool-call layer, which already checks separately
+  // before ever reaching this function). Without this, calling
+  // deleteWorkflowById(id) directly would delete any workflow for any
+  // signed-in user, regardless of role. Returns false (instead of throwing
+  // or silently no-oping) so callers can tell the difference between "denied"
+  // and "deleted" rather than assuming success either way.
+  if (!requirePermission('edit')) return false;
   WORKFLOWS = WORKFLOWS.filter(w => w.id !== id);
   localStorage.setItem(WORKFLOWS_CACHE_KEY, JSON.stringify(WORKFLOWS));
   try { await sbDelete('workflows', `id=eq.${id}`); } catch(e) {}
   rebuildWorkflowsPage();
+  return true;
 }
 
 function getPortfolioClientList(scope) {
@@ -10019,6 +10153,10 @@ function rebuildWorkflowsPage() {
 }
 
 async function toggleWorkflowActive(id) {
+  // Same canEdit() rule the Active checkbox is already gated by at render —
+  // enforced here too so a direct call can't flip a workflow's active state
+  // without the checkbox ever being shown.
+  if (!requirePermission('edit')) return;
   const wf = WORKFLOWS.find(w => w.id === id);
   if (!wf) return;
   wf.active = !wf.active;
@@ -10030,8 +10168,8 @@ async function confirmDeleteWorkflow(id) {
   const wf = WORKFLOWS.find(w => w.id === id);
   if (!wf) return;
   if (!(await showConfirmDialog(`Delete the workflow "${wf.name}"? This won't remove tasks it already created.`, { danger: true, confirmLabel: 'Delete' }))) return;
-  await deleteWorkflowById(id);
-  showToast('Workflow deleted.', 'success');
+  const deleted = await deleteWorkflowById(id);
+  if (deleted) showToast('Workflow deleted.', 'success');
 }
 
 function populateWorkflowAssigneeSelect() {
@@ -10430,10 +10568,15 @@ async function persistKnowledgeEntry(entry) {
 }
 
 async function deleteKnowledgeEntry(id) {
+  // Block 4.3 — enforced here, not just by hiding the Delete button. Without
+  // this, calling deleteKnowledgeEntry(id) directly would delete any
+  // knowledge-base entry for any signed-in user, regardless of role.
+  if (!requirePermission('edit')) return false;
   KNOWLEDGE_BASE = KNOWLEDGE_BASE.filter(k => k.id !== id);
   localStorage.setItem(KNOWLEDGE_CACHE_KEY, JSON.stringify(KNOWLEDGE_BASE));
   try { await sbDelete('knowledge_base', `id=eq.${id}`); } catch(e) {}
   rebuildKnowledgePage();
+  return true;
 }
 
 // Simple keyword scoring — no embeddings needed. Scores each entry by how
@@ -10496,8 +10639,8 @@ async function confirmDeleteKnowledge(id) {
   const entry = KNOWLEDGE_BASE.find(k => k.id === id);
   if (!entry) return;
   if (!(await showConfirmDialog(`Delete "${entry.title}" from the knowledge base?`, { danger: true, confirmLabel: 'Delete' }))) return;
-  await deleteKnowledgeEntry(id);
-  showToast('Knowledge entry deleted.', 'success');
+  const deleted = await deleteKnowledgeEntry(id);
+  if (deleted) showToast('Knowledge entry deleted.', 'success');
 }
 
 function openAddKnowledgeModal() {
@@ -11295,7 +11438,8 @@ async function executeAiTool(name, input) {
       if (!requirePermission('edit')) return { error: 'This account doesn\'t have permission to delete workflows.' };
       const wf = WORKFLOWS.find(w => w.name.toLowerCase() === (input.workflow_name || '').toLowerCase());
       if (!wf) return { error: 'Workflow not found' };
-      await deleteWorkflowById(wf.id);
+      const deleted = await deleteWorkflowById(wf.id);
+      if (!deleted) return { error: 'Permission check failed when deleting the workflow.' };
       return { ok: true, deleted: wf.name };
     }
     default:
