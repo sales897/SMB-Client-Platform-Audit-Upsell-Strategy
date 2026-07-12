@@ -1816,6 +1816,13 @@ tr.hidden-row { display: none; }
       </div>
       <div id="homeMyTasksList"></div>
     </div>
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header">
+        <div><div class="card-title">⏰ My Reminders</div><div class="card-sub">Personal reminders, just for you — not shared with the team</div></div>
+        <button class="btn btn-primary btn-sm" onclick="openAddReminderModal()">＋ Remind Me</button>
+      </div>
+      <div id="homeMyRemindersList"></div>
+    </div>
     <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:20px;align-items:start">
       <div class="card">
         <div class="card-header">
@@ -2941,6 +2948,7 @@ tr.hidden-row { display: none; }
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfActionType" value="create_task" checked onchange="toggleWorkflowActionType()"> ✅ Create a task</label>
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfActionType" value="notify_only" onchange="toggleWorkflowActionType()"> 🔔 Just notify (no task)</label>
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfActionType" value="log_note" onchange="toggleWorkflowActionType()"> 📝 Log a note (no task)</label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfActionType" value="draft_with_nirvana" onchange="toggleWorkflowActionType()"> ✨ Draft with Nirvana</label>
     </div>
     <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:4px">
       <div><label for="wfActionTitle" class="field-label" id="wfActionTitleLabel">Create a task titled</label><input type="text" id="wfActionTitle" class="field-input" style="height:38px" placeholder="e.g. Check in — no recent contact"></div>
@@ -2955,6 +2963,28 @@ tr.hidden-row { display: none; }
     <div class="modal-btns" style="margin-top:18px">
       <button class="btn btn-ghost" onclick="closeWorkflowModal()">Cancel</button>
       <button class="btn btn-primary" onclick="saveWorkflow()">💾 Save Workflow</button>
+    </div>
+  </div>
+</div>
+
+<!-- SET A REMINDER MODAL (Workflows v2, Block 9) -->
+<div class="modal-overlay" id="reminderModal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="reminderModalTitle">
+    <h3 id="reminderModalTitle">⏰ Remind Me</h3>
+    <p>Personal — only you'll see this, and only you get notified.</p>
+
+    <label for="remTitle" class="field-label">Remind me to… <span style="color:var(--orange)">*</span></label>
+    <input type="text" id="remTitle" class="field-input" style="height:38px;margin-bottom:14px" placeholder="e.g. Follow up on the renewal call">
+
+    <label for="remWhen" class="field-label">When <span style="color:var(--orange)">*</span></label>
+    <input type="datetime-local" id="remWhen" class="field-input" style="height:38px;margin-bottom:14px">
+
+    <label for="remClientName" class="field-label">Client <span style="color:var(--text3)">(optional)</span></label>
+    <input type="text" id="remClientName" class="field-input" style="height:38px;margin-bottom:4px" placeholder="e.g. Summit Roofing Co.">
+
+    <div class="modal-btns" style="margin-top:18px">
+      <button class="btn btn-ghost" onclick="closeAddReminderModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveReminder()">⏰ Set Reminder</button>
     </div>
   </div>
 </div>
@@ -4010,6 +4040,7 @@ function rebuildHomePage() {
   renderHomeKPIs();
   renderHomeQuickLinks();
   renderHomeMyTasks();
+  renderMyRemindersWidget();
   renderHomeAttentionList();
   renderHomeActivityList();
 }
@@ -6672,6 +6703,7 @@ async function authorizeSession(session) {
   hideLoginGate();
   applyPermissionsToUI();
   loadNotifications();
+  loadReminders();
   subscribeToRealtimeNotifications();
   requestNotificationPermissionOnce();
   initGoogleCalendarClient();
@@ -7891,10 +7923,12 @@ const CLIENT_NOTES_CACHE_KEY = 'csh_client_notes_v1';
 const CLIENT_TASKS_CACHE_KEY = 'csh_client_tasks_v1';
 const CLIENT_CONTACTS_CACHE_KEY = 'csh_client_contacts_v1';
 const NOTIFICATIONS_CACHE_KEY = 'csh_notifications_v1';
+const REMINDERS_CACHE_KEY = 'csh_reminders_v1';
 let CLIENT_NOTES = [];
 let CLIENT_TASKS = [];
 let CLIENT_CONTACTS = []; // one row per client: { id, client_name, contact_name, title, email, phone, updated_at }
 let NOTIFICATIONS = [];
+let REMINDERS = []; // personal reminders for the CURRENT user only — owner-scoped by RLS, unlike most other cached arrays here
 let cntActiveClientName = null;
 let cntTaggedEmails = [];
 
@@ -8086,6 +8120,127 @@ function renderNotificationBell() {
   const badge = document.getElementById('notifBadge');
   const unread = NOTIFICATIONS.filter(n => !n.read).length;
   if (badge) { badge.style.display = unread > 0 ? '' : 'none'; badge.textContent = unread; }
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// REMINDERS (Workflows v2, Block 9, 2026-07-11) — personal, time-specific
+// reminders, distinct from client_tasks: owned by exactly one person (RLS
+// enforces owner_email = the caller's own JWT email for read/update), not a
+// shared Hub-wide record. Delivery works two ways, deliberately redundant
+// like the rest of this rebuild: the server-side run-workflows.mjs
+// scheduled function is the PRIMARY guarantee (delivers due reminders every
+// 30 min regardless of whether anyone has a tab open); checkDueReminders()
+// below is a supplementary client-side check so delivery feels instant for
+// anyone who happens to have the Hub open right when a reminder comes due,
+// rather than waiting for the next scheduled tick.
+// ════════════════════════════════════════════════════════════════════════
+async function loadReminders() {
+  const u = getCurrentUser();
+  if (!u || !u.email) return;
+  try {
+    REMINDERS = await sbSelect('reminders', `owner_email=eq.${encodeURIComponent(u.email)}&delivered=eq.false&order=remind_at.asc`);
+  } catch(e) {
+    console.warn('reminders table unavailable:', e.message);
+    try { REMINDERS = JSON.parse(localStorage.getItem(REMINDERS_CACHE_KEY) || '[]'); } catch(e2) { REMINDERS = []; }
+  }
+  renderMyRemindersWidget();
+}
+
+async function createReminder(title, remindAtIso, clientName, ownerEmail) {
+  const u = getCurrentUser();
+  const owner = (ownerEmail || (u ? u.email : '')).trim().toLowerCase();
+  if (!owner || !title || !remindAtIso) return null;
+  const reminder = {
+    id: (crypto.randomUUID ? crypto.randomUUID() : 'rem_' + Date.now() + Math.random().toString(16).slice(2)),
+    owner_email: owner,
+    client_name: clientName || null,
+    title,
+    remind_at: remindAtIso,
+    delivered: false,
+    created_by: u ? u.name : 'Guest',
+    created_at: new Date().toISOString(),
+  };
+  try {
+    await sbUpsert('reminders', reminder);
+  } catch(e) {
+    console.warn('Could not create reminder:', e.message);
+    return null;
+  }
+  // Only add to the local cache/widget if it's for the CURRENT user — RLS
+  // would refuse to even let us read back someone else's reminder anyway,
+  // and REMINDERS is scoped to "my reminders" specifically, not everyone's.
+  if (u && owner === u.email.trim().toLowerCase()) {
+    REMINDERS.push(reminder);
+    REMINDERS.sort((a, b) => new Date(a.remind_at) - new Date(b.remind_at));
+    localStorage.setItem(REMINDERS_CACHE_KEY, JSON.stringify(REMINDERS));
+    renderMyRemindersWidget();
+  }
+  return reminder;
+}
+
+async function deleteReminder(id) {
+  REMINDERS = REMINDERS.filter(r => r.id !== id);
+  localStorage.setItem(REMINDERS_CACHE_KEY, JSON.stringify(REMINDERS));
+  renderMyRemindersWidget();
+  try { await sbDelete('reminders', `id=eq.${id}`); } catch(e) { console.warn('Could not delete reminder:', e.message); }
+}
+
+async function checkDueReminders() {
+  const u = getCurrentUser();
+  if (!u || !u.email) return;
+  const now = Date.now();
+  const due = REMINDERS.filter(r => !r.delivered && new Date(r.remind_at).getTime() <= now);
+  if (due.length === 0) return;
+  for (const r of due) {
+    await createNotification(r.owner_email, 'reminder', `⏰ Reminder: ${r.title}`, r.client_name);
+    try { await sbUpsert('reminders', { id: r.id, delivered: true }); } catch(e) { console.warn('Could not mark reminder delivered:', e.message); }
+  }
+  REMINDERS = REMINDERS.filter(r => !due.includes(r));
+  localStorage.setItem(REMINDERS_CACHE_KEY, JSON.stringify(REMINDERS));
+  await loadNotifications();
+  renderMyRemindersWidget();
+}
+
+function openAddReminderModal() {
+  document.getElementById('remTitle').value = '';
+  document.getElementById('remWhen').value = '';
+  document.getElementById('remClientName').value = '';
+  document.getElementById('reminderModal').classList.add('open');
+}
+
+function closeAddReminderModal() {
+  document.getElementById('reminderModal').classList.remove('open');
+}
+
+async function saveReminder() {
+  const title = document.getElementById('remTitle').value.trim();
+  if (!title) { showToast('Please say what to remind you about.', 'warning'); return; }
+  const when = document.getElementById('remWhen').value;
+  if (!when) { showToast('Please pick when.', 'warning'); return; }
+  if (new Date(when).getTime() <= Date.now()) { showToast('That time is in the past — pick a future time.', 'warning'); return; }
+  const clientName = document.getElementById('remClientName').value.trim();
+  const reminder = await createReminder(title, when, clientName || null);
+  if (!reminder) { showToast('Could not save the reminder — please try again.', 'error'); return; }
+  closeAddReminderModal();
+  showToast('Reminder set.', 'success');
+}
+
+function renderMyRemindersWidget() {
+  const wrap = document.getElementById('homeMyRemindersList');
+  if (!wrap) return;
+  if (REMINDERS.length === 0) {
+    wrap.innerHTML = emptyStateHTML({ icon: '⏰', title: 'No reminders set', sub: 'Click "Remind Me" to set a personal reminder — only you\'ll see it.', compact: true });
+    return;
+  }
+  wrap.innerHTML = REMINDERS.map(r => `
+    <div class="support-item">
+      <div class="support-avatar" style="background:var(--bg4);color:var(--orange)">⏰</div>
+      <div class="support-info">
+        <div class="support-name">${escAttr(r.title)}</div>
+        <div class="support-detail">${fmtDateTime(r.remind_at)}${r.client_name ? ' · ' + escAttr(r.client_name) : ''}</div>
+      </div>
+      <button class="row-action-btn danger" onclick="deleteReminder('${r.id}')" aria-label="Cancel this reminder">🗑️</button>
+    </div>`).join('');
 }
 
 function toggleNotificationPanel() {
@@ -10397,6 +10552,9 @@ function describeWorkflowAction(wf) {
   const dueDesc = wf.action_due_offset_days != null
     ? ` — due ${wf.action_due_offset_days === 0 ? 'the same day' : wf.action_due_offset_days + ' day(s) later'}${wf.action_due_time ? ' at ' + wf.action_due_time : ''}`
     : '';
+  if (wf.action_type === 'draft_with_nirvana') {
+    return `Draft a task with Nirvana (instruction: "${wf.action_title}")${assignee ? ' → ' + assignee.name : ''}${dueDesc}`;
+  }
   return `Create a task: "${wf.action_title}"${assignee ? ' → ' + assignee.name : ''}${dueDesc}`;
 }
 
@@ -10574,6 +10732,12 @@ function toggleWorkflowActionType() {
     assigneeBox.style.display = 'none';
     dueBox.style.display = 'none';
     titleInput.placeholder = 'e.g. Client became inactive — flagged for review';
+  } else if (val === 'draft_with_nirvana') {
+    titleLabel.textContent = 'Drafting instruction for Nirvana';
+    assigneeLabel.textContent = 'Assign to';
+    assigneeBox.style.display = '';
+    dueBox.style.display = 'grid';
+    titleInput.placeholder = 'e.g. Write a short, personalized re-engagement message';
   } else {
     titleLabel.textContent = 'Create a task titled';
     assigneeLabel.textContent = 'Assign to';
@@ -10628,7 +10792,12 @@ async function saveWorkflow() {
   if (!name) { showToast('Please name this workflow.', 'warning'); return; }
   const actionType = document.querySelector('input[name="wfActionType"]:checked').value;
   const actionTitle = document.getElementById('wfActionTitle').value.trim();
-  if (!actionTitle) { showToast(actionType === 'notify_only' ? 'Please enter the notification message.' : 'Please enter what the created task should say.', 'warning'); return; }
+  if (!actionTitle) {
+    const msg = actionType === 'notify_only' ? 'Please enter the notification message.'
+      : actionType === 'draft_with_nirvana' ? 'Please enter a drafting instruction for Nirvana.'
+      : 'Please enter what the created task should say.';
+    showToast(msg, 'warning'); return;
+  }
   const triggerType = document.querySelector('input[name="wfTriggerType"]:checked').value;
   let assigneeEmail = document.getElementById('wfActionAssignee').value;
   if (actionType === 'notify_only' && !assigneeEmail) { showToast('"Just notify" needs someone to notify — please choose who.', 'warning'); return; }
@@ -10646,7 +10815,7 @@ async function saveWorkflow() {
   wf.action_assignee_email = assigneeEmail;
   wf.action_assignee_name = assignee ? assignee.name : '';
 
-  if (actionType === 'create_task') {
+  if (actionType === 'create_task' || actionType === 'draft_with_nirvana') {
     const offsetRaw = document.getElementById('wfActionDueOffset').value;
     wf.action_due_offset_days = offsetRaw === '' ? null : Math.max(0, parseInt(offsetRaw) || 0);
     wf.action_due_time = document.getElementById('wfActionDueTime').value || null;
@@ -10754,25 +10923,33 @@ function computeWorkflowDueDate(wf) {
   return datePart;
 }
 
-async function executeWorkflowAction(wf, clientName, contextNote) {
-  const actionType = wf.action_type || 'create_task';
-  if (actionType === 'notify_only') {
-    if (!wf.action_assignee_email) return; // nothing to notify without a recipient
-    const notifyType = `workflow_notify_${wf.id}`;
-    if (await hasUnreadWorkflowNotification(clientName, notifyType)) return;
-    const detail = contextNote ? `${wf.action_title} (${contextNote})` : wf.action_title;
-    await createNotification(wf.action_assignee_email, notifyType, `🔁 ${wf.name} — ${clientName}: ${detail}`, clientName);
-    return;
+// Draft-with-Nirvana action type (Block 8, Workflows v2, 2026-07-11). Reuses
+// quickAiCompletion() -- the same lightweight, tool-free completion helper
+// already used for note-polishing elsewhere -- rather than building new AI
+// call infrastructure. action_title is repurposed as a DRAFTING INSTRUCTION
+// for this action type (e.g. "write a personalized re-engagement message")
+// instead of literal task text; Nirvana turns that into the actual title
+// using the client name and whatever trigger context is available. Falls
+// back to the same plain-text format the ordinary create_task path uses if
+// the completion call fails for any reason -- a network hiccup or rate
+// limit shouldn't silently drop the task the workflow was supposed to create.
+async function draftTaskTitle(wf, clientName, contextNote) {
+  const systemPrompt = 'You are drafting a short, specific task title for a Client Success rep, based on a drafting instruction and context about why the task is being created. Write ONE concise, natural task title a human would actually write (under 100 characters). Reply with ONLY the task title text — no quotes, no prefixes, no explanation.';
+  const userText = `Drafting instruction: "${wf.action_title}"\nClient: ${clientName}${contextNote ? `\nContext: ${contextNote}` : ''}`;
+  try {
+    const drafted = await quickAiCompletion(systemPrompt, userText);
+    return drafted || (contextNote ? `${wf.action_title} (${contextNote})` : wf.action_title);
+  } catch(e) {
+    console.warn('Nirvana draft failed, falling back to the workflow\'s plain title:', e.message);
+    return contextNote ? `${wf.action_title} (${contextNote})` : wf.action_title;
   }
-  if (actionType === 'log_note') {
-    await logWorkflowNote(wf, clientName, contextNote);
-    return;
-  }
-  // Don't pile up duplicate tasks — skip if this workflow already has an open task for this client
-  const alreadyHas = CLIENT_TASKS.some(t => t.client_name === clientName && t.workflow_id === wf.id && t.status !== 'done');
-  if (alreadyHas) return;
+}
+
+// Shared by the create_task and draft_with_nirvana action types -- they
+// differ only in how `title` gets computed, everything else about actually
+// saving the task and notifying the assignee is identical.
+async function saveWorkflowTask(wf, clientName, title) {
   const assignee = TEAM_MEMBERS.find(m => m.email === wf.action_assignee_email);
-  const title = contextNote ? `${wf.action_title} (${contextNote})` : wf.action_title;
   const task = {
     id: (crypto.randomUUID ? crypto.randomUUID() : 't_' + Date.now() + Math.random().toString(16).slice(2)),
     client_name: clientName, title,
@@ -10787,6 +10964,32 @@ async function executeWorkflowAction(wf, clientName, contextNote) {
   if (task.assigned_to_email) {
     await createNotification(task.assigned_to_email, 'task_assigned', `🔁 Automated task from "${wf.name}" on ${clientName}: "${task.title}"`, clientName);
   }
+}
+
+async function executeWorkflowAction(wf, clientName, contextNote) {
+  const actionType = wf.action_type || 'create_task';
+  if (actionType === 'notify_only') {
+    if (!wf.action_assignee_email) return; // nothing to notify without a recipient
+    const notifyType = `workflow_notify_${wf.id}`;
+    if (await hasUnreadWorkflowNotification(clientName, notifyType)) return;
+    const detail = contextNote ? `${wf.action_title} (${contextNote})` : wf.action_title;
+    await createNotification(wf.action_assignee_email, notifyType, `🔁 ${wf.name} — ${clientName}: ${detail}`, clientName);
+    return;
+  }
+  if (actionType === 'log_note') {
+    await logWorkflowNote(wf, clientName, contextNote);
+    return;
+  }
+  // Don't pile up duplicate tasks — skip if this workflow already has an open task for this client.
+  // Checked BEFORE drafting for draft_with_nirvana specifically, so a
+  // de-duped call doesn't waste a completion request on a title that would
+  // just get thrown away.
+  const alreadyHas = CLIENT_TASKS.some(t => t.client_name === clientName && t.workflow_id === wf.id && t.status !== 'done');
+  if (alreadyHas) return;
+  const title = actionType === 'draft_with_nirvana'
+    ? await draftTaskTitle(wf, clientName, contextNote)
+    : (contextNote ? `${wf.action_title} (${contextNote})` : wf.action_title);
+  await saveWorkflowTask(wf, clientName, title);
 }
 
 // New-client-added trigger (Block 1, Workflows v2, 2026-07-11) -- unlike
@@ -10948,6 +11151,7 @@ async function runWorkflowEngine() {
 }
 
 setInterval(() => runWorkflowEngine(), 30 * 60 * 1000); // re-check every 30 minutes while the Hub is open
+setInterval(() => checkDueReminders(), 60 * 1000); // reminders are time-specific, not day-granular like workflows — checked every minute instead of every 30, but cheap since it's just filtering an already-loaded small array unless something's actually due
 
 // ════════════════════════════════════════════════════════════════════════
 // KNOWLEDGE BASE — lets the team feed Nirvana reference material (SOPs,
@@ -11554,13 +11758,13 @@ const AI_AGENT_TOOLS = [
   },
   {
     name: 'create_workflow',
-    description: 'Create a new automation workflow. Six trigger types: "inactivity" (creates a task if a client in a portfolio has had no note logged in N days), "schedule" (creates a task on a recurring schedule, either for one specific client or for every client in a portfolio), "client_added" (creates a task the moment a new client is added to a portfolio — fires immediately, not on the periodic check), "task_due_soon" (reminds N days before an existing open task\'s due date, for clients in a portfolio), "kpi_drop" (creates a task when a SuccessOS KPI score — Anticipating Client Needs, Preempting Risks, or Growth Opportunities — drops from its previous logged score; this one is team-level, not tied to any specific client, since KPI scores aren\'t per-client data), or "collections_status" (creates a task for any Collections account currently in a specific status, e.g. Escalated). Separately, action_type controls WHAT HAPPENS when any of those trigger: "create_task" (default) creates a task, "notify_only" just sends a notification with no task (action_assignee required, since there\'d be nobody to notify otherwise), or "log_note" logs an audit-trail note on the client with no task and no notification (no assignee needed or used). This changes data — the user will be asked to confirm first.',
+    description: 'Create a new automation workflow. Six trigger types: "inactivity" (creates a task if a client in a portfolio has had no note logged in N days), "schedule" (creates a task on a recurring schedule, either for one specific client or for every client in a portfolio), "client_added" (creates a task the moment a new client is added to a portfolio — fires immediately, not on the periodic check), "task_due_soon" (reminds N days before an existing open task\'s due date, for clients in a portfolio), "kpi_drop" (creates a task when a SuccessOS KPI score — Anticipating Client Needs, Preempting Risks, or Growth Opportunities — drops from its previous logged score; this one is team-level, not tied to any specific client, since KPI scores aren\'t per-client data), or "collections_status" (creates a task for any Collections account currently in a specific status, e.g. Escalated). Separately, action_type controls WHAT HAPPENS when any of those trigger: "create_task" (default) creates a task, "notify_only" just sends a notification with no task (action_assignee required, since there\'d be nobody to notify otherwise), or "log_note" logs an audit-trail note on the client with no task and no notification (no assignee needed or used); "draft_with_nirvana" still creates a task, but action_title is treated as a DRAFTING INSTRUCTION rather than literal text — Nirvana writes the actual task title at the moment the workflow fires, using the client name and trigger context. This changes data — the user will be asked to confirm first.',
     input_schema: {
       type: 'object',
       properties: {
         name: { type: 'string' },
         trigger_type: { type: 'string', enum: ['inactivity', 'schedule', 'client_added', 'task_due_soon', 'kpi_drop', 'collections_status'] },
-        action_type: { type: 'string', enum: ['create_task', 'notify_only', 'log_note'], description: 'What happens when the trigger fires — defaults to create_task if omitted' },
+        action_type: { type: 'string', enum: ['create_task', 'notify_only', 'log_note', 'draft_with_nirvana'], description: 'What happens when the trigger fires — defaults to create_task if omitted' },
         inactivity_days: { type: 'integer', description: 'Required if trigger_type is inactivity' },
         days_before_due: { type: 'integer', description: 'Required if trigger_type is task_due_soon — how many days ahead of an existing task\'s due date to remind' },
         target_kpi_key: { type: 'string', enum: ['anticipating', 'preempting', 'solving'], description: 'Used by kpi_drop — which KPI to watch; omit to watch all three (note: if more than one drops in the same check, only the first produces a task until it\'s resolved, so watching one specific KPI is recommended)' },
@@ -11571,7 +11775,7 @@ const AI_AGENT_TOOLS = [
         schedule_custom_unit: { type: 'string', enum: ['days', 'weeks', 'months'], description: 'Required if schedule_type is custom' },
         scope_type: { type: 'string', enum: ['client', 'portfolio'], description: 'Required if trigger_type is schedule — whether it targets one client or a whole portfolio' },
         scope_client_name: { type: 'string', description: 'Required if scope_type is client' },
-        action_title: { type: 'string', description: 'The title of the task to create, or the message to notify with if action_type is notify_only' },
+        action_title: { type: 'string', description: 'The title of the task to create, the message to notify with if action_type is notify_only, or the drafting instruction for Nirvana if action_type is draft_with_nirvana' },
         action_assignee: { type: 'string', description: 'Team member name or email — optional for create_task, REQUIRED for notify_only' },
         action_due_offset_days: { type: 'integer', description: 'Only used when action_type is create_task (or omitted) — how many days after the workflow fires the created task should be due. Omit for no due date.' },
         action_due_time: { type: 'string', description: 'Only used alongside action_due_offset_days — a time of day in HH:MM (24-hour) format, e.g. "14:30". Optional even when action_due_offset_days is set.' },
@@ -11588,7 +11792,7 @@ const AI_AGENT_TOOLS = [
         workflow_name: { type: 'string', description: 'The existing workflow\'s current name, used to find it' },
         active: { type: 'boolean' },
         trigger_type: { type: 'string', enum: ['inactivity', 'schedule', 'client_added', 'task_due_soon', 'kpi_drop', 'collections_status'] },
-        action_type: { type: 'string', enum: ['create_task', 'notify_only', 'log_note'] },
+        action_type: { type: 'string', enum: ['create_task', 'notify_only', 'log_note', 'draft_with_nirvana'] },
         inactivity_days: { type: 'integer' },
         days_before_due: { type: 'integer' },
         target_kpi_key: { type: 'string', enum: ['anticipating', 'preempting', 'solving'] },
@@ -11640,9 +11844,23 @@ const AI_AGENT_TOOLS = [
       required: ['client_name'],
     },
   },
+  {
+    name: 'create_reminder',
+    description: 'Set a personal reminder for the current user (or, if they explicitly name someone else, for that teammate instead) — a lightweight, time-specific nudge, distinct from a task. Only the owner ever sees it or gets notified about it; it is not a shared Hub-wide record like a task or note. Delivered as a notification once the reminder time arrives — may take up to a minute after the exact time to actually appear, not instant to the second. This changes data — the user will be asked to confirm before it is actually saved.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        title: { type: 'string', description: 'What to be reminded about' },
+        remind_at: { type: 'string', description: 'yyyy-mm-ddThh:mm — must be in the future' },
+        client_name: { type: 'string', description: 'Optional — links the reminder to a specific client' },
+        owner: { type: 'string', description: 'Team member name or email to set this reminder FOR, if the user explicitly asked to remind someone other than themselves. Omit to default to the current user.' },
+      },
+      required: ['title', 'remind_at'],
+    },
+  },
 ];
 
-const AI_ACTION_TOOLS = ['add_note', 'create_task', 'log_kpi_score', 'create_workflow', 'update_workflow', 'delete_workflow', 'bulk_create_tasks', 'bulk_add_note', 'create_client', 'update_client_contact']; // tools that change data — always confirmed
+const AI_ACTION_TOOLS = ['add_note', 'create_task', 'log_kpi_score', 'create_workflow', 'update_workflow', 'delete_workflow', 'bulk_create_tasks', 'bulk_add_note', 'create_client', 'update_client_contact', 'create_reminder']; // tools that change data — always confirmed
 
 // Strips everything except letters/digits, so "1-800 Water Damage" and
 // "1800 Water Damage" (or "Chung, DDS" vs "Chung DDS") compare equal. Used
@@ -12030,16 +12248,17 @@ async function executeAiTool(name, input) {
     }
     case 'create_workflow': {
       if (!requirePermission('edit')) return { error: 'This account doesn\'t have permission to create workflows.' };
-      const actionType = ['notify_only', 'log_note'].includes(input.action_type) ? input.action_type : 'create_task';
+      const actionType = ['notify_only', 'log_note', 'draft_with_nirvana'].includes(input.action_type) ? input.action_type : 'create_task';
       const assignee = input.action_assignee ? TEAM_MEMBERS.find(m => m.name.toLowerCase() === input.action_assignee.toLowerCase() || m.email.toLowerCase() === input.action_assignee.toLowerCase()) : null;
       if (actionType === 'notify_only' && !assignee) return { error: '"notify_only" requires action_assignee — there needs to be someone to notify.' };
       if (input.action_due_time && !/^\d{2}:\d{2}$/.test(input.action_due_time)) return { error: 'action_due_time must be in HH:MM 24-hour format, e.g. "14:30".' };
+      const usesDueDate = actionType === 'create_task' || actionType === 'draft_with_nirvana';
       const wf = {
         id: (crypto.randomUUID ? crypto.randomUUID() : 'wf_' + Date.now()),
         name: input.name, active: true, trigger_type: input.trigger_type, action_type: actionType,
         action_title: input.action_title, action_assignee_email: assignee ? assignee.email : '', action_assignee_name: assignee ? assignee.name : '',
-        action_due_offset_days: actionType === 'create_task' && input.action_due_offset_days != null ? input.action_due_offset_days : null,
-        action_due_time: actionType === 'create_task' ? (input.action_due_time || null) : null,
+        action_due_offset_days: usesDueDate && input.action_due_offset_days != null ? input.action_due_offset_days : null,
+        action_due_time: usesDueDate ? (input.action_due_time || null) : null,
         created_at: new Date().toISOString(), created_by: (getCurrentUser() || {}).name || 'Nirvana',
       };
       if (input.trigger_type === 'inactivity') {
@@ -12171,6 +12390,21 @@ async function executeAiTool(name, input) {
       if (typeof cntActiveClientName !== 'undefined' && cntActiveClientName === entry.displayName) renderClientContactInfo();
       return { ok: true, client: entry.displayName, updated_fields: providedKeys.map(k => fieldMap[k]) };
     }
+    case 'create_reminder': {
+      const title = (input.title || '').trim();
+      if (!title) return { error: 'A reminder title is required.' };
+      if (!input.remind_at || isNaN(new Date(input.remind_at).getTime())) return { error: 'remind_at must be a valid date/time (yyyy-mm-ddThh:mm).' };
+      if (new Date(input.remind_at).getTime() <= Date.now()) return { error: 'remind_at must be in the future.' };
+      let ownerEmail = (getCurrentUser() || {}).email || '';
+      if (input.owner) {
+        const m = TEAM_MEMBERS.find(m => m.name.toLowerCase() === input.owner.toLowerCase() || m.email.toLowerCase() === input.owner.toLowerCase());
+        if (!m) return { error: `Could not find a team member matching "${input.owner}".` };
+        ownerEmail = m.email;
+      }
+      const reminder = await createReminder(title, input.remind_at, input.client_name || null, ownerEmail);
+      if (!reminder) return { error: 'Could not save the reminder — please try again.' };
+      return { ok: true, title, remind_at: input.remind_at, owner: ownerEmail };
+    }
     default:
       return { error: 'Unknown tool: ' + name };
   }
@@ -12201,7 +12435,10 @@ function describeAiAction(tool) {
       kpi_drop: `if ${i.target_kpi_key ? escAttr(i.target_kpi_key) : 'any KPI'} score drops`,
       collections_status: `if a Collections account is ${escAttr(i.target_collections_status || 'escalated')}`,
     }[i.trigger_type] || escAttr(i.trigger_type);
-    const actionDesc = i.action_type === 'notify_only' ? `notify: "${escAttr(i.action_title)}"` : i.action_type === 'log_note' ? `log a note: "${escAttr(i.action_title)}"` : `action: "${escAttr(i.action_title)}"`;
+    const actionDesc = i.action_type === 'notify_only' ? `notify: "${escAttr(i.action_title)}"`
+      : i.action_type === 'log_note' ? `log a note: "${escAttr(i.action_title)}"`
+      : i.action_type === 'draft_with_nirvana' ? `draft a task with Nirvana (instruction: "${escAttr(i.action_title)}")`
+      : `action: "${escAttr(i.action_title)}"`;
     return `🔁 Create workflow <b>${escAttr(i.name)}</b> — ${triggerDesc}, ${actionDesc}`;
   }
   if (tool.name === 'update_workflow') return `🔁 Update workflow <b>${escAttr(i.workflow_name)}</b>`;
@@ -12215,6 +12452,9 @@ function describeAiAction(tool) {
     const fields = ['contact_name', 'contact_title', 'contact_email', 'contact_phone'].filter(k => i[k]);
     const preview = fields.map(k => `${k.replace('contact_', '')}: ${escAttr(i[k])}`).join(', ');
     return `✏️ Update contact info for <b>${escAttr(i.client_name)}</b> — ${preview || 'no fields provided'}`;
+  }
+  if (tool.name === 'create_reminder') {
+    return `⏰ Remind ${i.owner ? escAttr(i.owner) : 'you'} to "${escAttr(i.title)}" at ${escAttr(i.remind_at)}${i.client_name ? ' — re: ' + escAttr(i.client_name) : ''}`;
   }
   return `Run ${escAttr(tool.name)}?`;
 }
