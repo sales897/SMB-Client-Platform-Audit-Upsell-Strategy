@@ -2937,13 +2937,19 @@ tr.hidden-row { display: none; }
     <div class="cnt-divider"></div>
 
     <div style="font-size:11px;color:var(--text3);margin-bottom:12px">Action — what should happen when it triggers</div>
-    <div style="display:flex;gap:18px;margin-bottom:12px">
+    <div style="display:flex;gap:18px;margin-bottom:12px;flex-wrap:wrap">
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfActionType" value="create_task" checked onchange="toggleWorkflowActionType()"> ✅ Create a task</label>
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfActionType" value="notify_only" onchange="toggleWorkflowActionType()"> 🔔 Just notify (no task)</label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfActionType" value="log_note" onchange="toggleWorkflowActionType()"> 📝 Log a note (no task)</label>
     </div>
     <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:4px">
       <div><label for="wfActionTitle" class="field-label" id="wfActionTitleLabel">Create a task titled</label><input type="text" id="wfActionTitle" class="field-input" style="height:38px" placeholder="e.g. Check in — no recent contact"></div>
-      <div><label for="wfActionAssignee" class="field-label" id="wfActionAssigneeLabel">Assign to</label><select id="wfActionAssignee" class="field-select" style="height:38px"></select></div>
+      <div id="wfActionAssigneeBox"><label for="wfActionAssignee" class="field-label" id="wfActionAssigneeLabel">Assign to</label><select id="wfActionAssignee" class="field-select" style="height:38px"></select></div>
+    </div>
+    <div id="wfActionDueBox" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:4px">
+      <div><label for="wfActionDueOffset" class="field-label">Due (days after trigger)</label><input type="number" id="wfActionDueOffset" class="field-input" style="height:38px" min="0" placeholder="optional"></div>
+      <div><label for="wfActionDueTime" class="field-label">Time</label><input type="time" id="wfActionDueTime" class="field-input" style="height:38px"></div>
+      <div style="display:flex;align-items:flex-end;padding-bottom:8px"><span style="font-size:var(--font-xs);color:var(--text3)">Leave both blank for no due date, matching existing workflows.</span></div>
     </div>
 
     <div class="modal-btns" style="margin-top:18px">
@@ -6054,7 +6060,7 @@ function disconnectGoogleCalendar() {
 function gcalQuickAddUrl(task) {
   let datesParam = '';
   if (task.due_date) {
-    const hasTime = task.due_date.includes('T');
+    const hasTime = taskHasSpecificTime(task.due_date);
     if (hasTime) {
       const start = new Date(task.due_date);
       const end = new Date(start.getTime() + 60 * 60 * 1000); // default 1hr block
@@ -6079,7 +6085,7 @@ function gcalQuickAddUrl(task) {
 async function pushTaskToGoogleCalendar(task) {
   if (!isGoogleCalendarConnected() || !task.due_date) return false;
   try {
-    const hasTime = task.due_date.includes('T');
+    const hasTime = taskHasSpecificTime(task.due_date);
     const reminders = (task.reminder_minutes === null || task.reminder_minutes === undefined)
       ? { useDefault: true }
       : { useDefault: false, overrides: [{ method: 'popup', minutes: task.reminder_minutes }] };
@@ -6815,9 +6821,28 @@ function fmtDate(d) {
 }
 // Tasks can carry either a plain date (legacy) or a full date+time (datetime-local
 // input) — this shows the time too when one was actually picked.
+// due_date was migrated from `date` to `timestamptz` (2026-07-11, alongside
+// Block 7) specifically so time-of-day could actually be stored instead of
+// being silently dropped by Postgres. One consequence: every value coming
+// back from the database now includes a time component, even tasks that
+// were only ever meant to have a date. The old `.includes('T')` check used
+// everywhere to detect "does this task have a specific time" would now
+// always be true, which would wrongly show "at 12:00 AM" on every date-only
+// task and wrongly create timed (not all-day) Google Calendar events for
+// them. This treats exactly midnight UTC as "no time was set" instead --
+// sacrifices the rare genuine case of someone deliberately choosing literal
+// midnight, in exchange for every previously-correct date-only task
+// continuing to display and sync correctly.
+function taskHasSpecificTime(dueDateStr) {
+  if (!dueDateStr) return false;
+  const match = dueDateStr.match(/T(\d{2}):(\d{2})/);
+  if (!match) return false;
+  return !(match[1] === '00' && match[2] === '00');
+}
+
 function fmtDateTime(d) {
   if (!d) return '—';
-  const hasTime = d.includes('T');
+  const hasTime = taskHasSpecificTime(d);
   const dt = new Date(hasTime ? d : d + 'T00:00:00');
   if (isNaN(dt)) return d;
   const dateStr = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -8769,7 +8794,7 @@ function toggleCustomRecurrenceFields() {
 // not rolling into March like JS's raw setMonth() would).
 function computeNextOccurrence(dueDateStr, recurrence, customN, customUnit) {
   if (!dueDateStr || !recurrence) return null;
-  const hasTime = dueDateStr.includes('T');
+  const hasTime = taskHasSpecificTime(dueDateStr);
   const d = new Date(hasTime ? dueDateStr : dueDateStr + 'T00:00:00');
   if (isNaN(d)) return null;
 
@@ -10366,7 +10391,13 @@ function describeWorkflowAction(wf) {
   if (wf.action_type === 'notify_only') {
     return `Notify${assignee ? ' ' + assignee.name : ''}: "${wf.action_title}"`;
   }
-  return `Create a task: "${wf.action_title}"${assignee ? ' → ' + assignee.name : ''}`;
+  if (wf.action_type === 'log_note') {
+    return `Log a note: "${wf.action_title}"`;
+  }
+  const dueDesc = wf.action_due_offset_days != null
+    ? ` — due ${wf.action_due_offset_days === 0 ? 'the same day' : wf.action_due_offset_days + ' day(s) later'}${wf.action_due_time ? ' at ' + wf.action_due_time : ''}`
+    : '';
+  return `Create a task: "${wf.action_title}"${assignee ? ' → ' + assignee.name : ''}${dueDesc}`;
 }
 
 function rebuildWorkflowsPage() {
@@ -10529,14 +10560,25 @@ function toggleWorkflowActionType() {
   const val = (document.querySelector('input[name="wfActionType"]:checked') || {}).value;
   const titleLabel = document.getElementById('wfActionTitleLabel');
   const assigneeLabel = document.getElementById('wfActionAssigneeLabel');
+  const assigneeBox = document.getElementById('wfActionAssigneeBox');
+  const dueBox = document.getElementById('wfActionDueBox');
   const titleInput = document.getElementById('wfActionTitle');
   if (val === 'notify_only') {
     titleLabel.textContent = 'Notify with message';
     assigneeLabel.textContent = 'Notify';
+    assigneeBox.style.display = '';
+    dueBox.style.display = 'none';
     titleInput.placeholder = 'e.g. This account just escalated in Collections';
+  } else if (val === 'log_note') {
+    titleLabel.textContent = 'Log a note saying';
+    assigneeBox.style.display = 'none';
+    dueBox.style.display = 'none';
+    titleInput.placeholder = 'e.g. Client became inactive — flagged for review';
   } else {
     titleLabel.textContent = 'Create a task titled';
     assigneeLabel.textContent = 'Assign to';
+    assigneeBox.style.display = '';
+    dueBox.style.display = 'grid';
     titleInput.placeholder = 'e.g. Check in — no recent contact';
   }
 }
@@ -10547,6 +10589,8 @@ function openAddWorkflowModal() {
   document.getElementById('workflowModalTitle').textContent = '🔁 New Workflow';
   document.getElementById('wfName').value = '';
   document.getElementById('wfActionTitle').value = '';
+  document.getElementById('wfActionDueOffset').value = '';
+  document.getElementById('wfActionDueTime').value = '';
   document.querySelector('input[name="wfTriggerType"][value="inactivity"]').checked = true;
   document.querySelector('input[name="wfActionType"][value="create_task"]').checked = true;
   toggleWorkflowActionType();
@@ -10563,6 +10607,8 @@ function openEditWorkflowModal(id) {
   document.getElementById('workflowModalTitle').textContent = '✏️ Edit Workflow';
   document.getElementById('wfName').value = wf.name;
   document.getElementById('wfActionTitle').value = wf.action_title;
+  document.getElementById('wfActionDueOffset').value = wf.action_due_offset_days != null ? wf.action_due_offset_days : '';
+  document.getElementById('wfActionDueTime').value = wf.action_due_time || '';
   document.querySelector(`input[name="wfTriggerType"][value="${wf.trigger_type}"]`).checked = true;
   document.querySelector(`input[name="wfActionType"][value="${wf.action_type || 'create_task'}"]`).checked = true;
   toggleWorkflowActionType();
@@ -10584,8 +10630,9 @@ async function saveWorkflow() {
   const actionTitle = document.getElementById('wfActionTitle').value.trim();
   if (!actionTitle) { showToast(actionType === 'notify_only' ? 'Please enter the notification message.' : 'Please enter what the created task should say.', 'warning'); return; }
   const triggerType = document.querySelector('input[name="wfTriggerType"]:checked').value;
-  const assigneeEmail = document.getElementById('wfActionAssignee').value;
+  let assigneeEmail = document.getElementById('wfActionAssignee').value;
   if (actionType === 'notify_only' && !assigneeEmail) { showToast('"Just notify" needs someone to notify — please choose who.', 'warning'); return; }
+  if (actionType === 'log_note') assigneeEmail = ''; // field is hidden for this action type; don't persist a stale selection
   const assignee = TEAM_MEMBERS.find(m => m.email === assigneeEmail);
 
   const wf = editingWorkflowId ? WORKFLOWS.find(w => w.id === editingWorkflowId) : {
@@ -10598,6 +10645,15 @@ async function saveWorkflow() {
   wf.action_title = actionTitle;
   wf.action_assignee_email = assigneeEmail;
   wf.action_assignee_name = assignee ? assignee.name : '';
+
+  if (actionType === 'create_task') {
+    const offsetRaw = document.getElementById('wfActionDueOffset').value;
+    wf.action_due_offset_days = offsetRaw === '' ? null : Math.max(0, parseInt(offsetRaw) || 0);
+    wf.action_due_time = document.getElementById('wfActionDueTime').value || null;
+  } else {
+    wf.action_due_offset_days = null; // due-date fields are hidden/irrelevant for notify_only and log_note
+    wf.action_due_time = null;
+  }
 
   if (triggerType === 'inactivity') {
     wf.inactivity_days = Math.max(1, parseInt(document.getElementById('wfInactivityDays').value) || 14);
@@ -10653,6 +10709,51 @@ async function hasUnreadWorkflowNotification(clientName, notifyType) {
   }
 }
 
+// Auto-log-note action type (Block 6, Workflows v2, 2026-07-11). Notes have
+// no status/read field at all -- unlike tasks (open/done) or notifications
+// (read/unread), there's no "unresolved state" to check for de-dup. Using a
+// time window instead: don't log again if this exact workflow already
+// logged a note for this client within the last 24 hours. This is
+// deliberately different from the other two de-dup strategies -- a running
+// audit-trail log re-confirming "still true" once a day is actually
+// reasonable/expected, unlike a second open task or a second unread
+// notification, which are just clutter.
+function hasRecentWorkflowNote(clientName, wf, withinMs) {
+  const authorName = `🔁 ${wf.name}`;
+  const match = getClientNotes(clientName).find(n => n.author_email === 'workflow' && n.author_name === authorName);
+  if (!match) return false;
+  return (Date.now() - new Date(match.created_at).getTime()) < withinMs;
+}
+
+async function logWorkflowNote(wf, clientName, contextNote) {
+  const DAY_MS = 24 * 60 * 60 * 1000;
+  if (hasRecentWorkflowNote(clientName, wf, DAY_MS)) return;
+  const text = contextNote ? `${wf.action_title} (${contextNote})` : wf.action_title;
+  const note = {
+    id: (crypto.randomUUID ? crypto.randomUUID() : 'n_' + Date.now() + Math.random().toString(16).slice(2)),
+    client_name: clientName,
+    author_email: 'workflow', author_name: `🔁 ${wf.name}`,
+    text, tagged_emails: [],
+    created_at: new Date().toISOString(),
+  };
+  CLIENT_NOTES.unshift(note);
+  localStorage.setItem(CLIENT_NOTES_CACHE_KEY, JSON.stringify(CLIENT_NOTES));
+  try { await sbUpsert('client_notes', note); } catch(e) { console.warn('Could not save workflow note:', e.message); }
+}
+
+// Computes a workflow-created task's due date/time from action_due_offset_days
+// (days after the workflow fires) and action_due_time (an optional "HH:MM").
+// Returns '' (no due date) if action_due_offset_days isn't set, matching the
+// previous always-blank behavior for existing workflows that don't use this.
+function computeWorkflowDueDate(wf) {
+  if (wf.action_due_offset_days == null) return '';
+  const d = new Date();
+  d.setDate(d.getDate() + wf.action_due_offset_days);
+  const datePart = d.toISOString().slice(0, 10);
+  if (wf.action_due_time) return `${datePart}T${wf.action_due_time}`;
+  return datePart;
+}
+
 async function executeWorkflowAction(wf, clientName, contextNote) {
   const actionType = wf.action_type || 'create_task';
   if (actionType === 'notify_only') {
@@ -10661,6 +10762,10 @@ async function executeWorkflowAction(wf, clientName, contextNote) {
     if (await hasUnreadWorkflowNotification(clientName, notifyType)) return;
     const detail = contextNote ? `${wf.action_title} (${contextNote})` : wf.action_title;
     await createNotification(wf.action_assignee_email, notifyType, `🔁 ${wf.name} — ${clientName}: ${detail}`, clientName);
+    return;
+  }
+  if (actionType === 'log_note') {
+    await logWorkflowNote(wf, clientName, contextNote);
     return;
   }
   // Don't pile up duplicate tasks — skip if this workflow already has an open task for this client
@@ -10673,7 +10778,7 @@ async function executeWorkflowAction(wf, clientName, contextNote) {
     client_name: clientName, title,
     assigned_to_email: wf.action_assignee_email || '', assigned_to_name: assignee ? assignee.name : '',
     created_by_email: 'workflow', created_by_name: `🔁 ${wf.name}`,
-    due_date: '', reminder_minutes: null, recurrence: null,
+    due_date: computeWorkflowDueDate(wf), reminder_minutes: null, recurrence: null,
     status: 'open', created_at: new Date().toISOString(), workflow_id: wf.id,
   };
   CLIENT_TASKS.unshift(task);
@@ -10706,7 +10811,14 @@ async function runInactivityWorkflow(wf) {
   const clientNames = getPortfolioClientList(wf.scope_portfolio || 'all');
   const now = Date.now();
   for (const name of clientNames) {
-    const notes = getClientNotes(name); // sorted newest-first
+    // Exclude workflow-authored notes from "last note" -- discovered while
+    // testing Block 6 (log_note): without this, a log_note action's own
+    // audit-trail note would count as "recent activity," resetting the
+    // inactivity clock and silencing the workflow after firing exactly
+    // once. Only real engagement (a person, or Nirvana acting for one)
+    // should reset an inactivity check; the automation logging itself
+    // isn't the client getting attention.
+    const notes = getClientNotes(name).filter(n => n.author_email !== 'workflow'); // sorted newest-first
     const lastNoteMs = notes.length ? new Date(notes[0].created_at).getTime() : 0;
     const daysSince = (now - lastNoteMs) / (24 * 60 * 60 * 1000);
     if (daysSince >= wf.inactivity_days) await executeWorkflowAction(wf, name);
@@ -11442,13 +11554,13 @@ const AI_AGENT_TOOLS = [
   },
   {
     name: 'create_workflow',
-    description: 'Create a new automation workflow. Six trigger types: "inactivity" (creates a task if a client in a portfolio has had no note logged in N days), "schedule" (creates a task on a recurring schedule, either for one specific client or for every client in a portfolio), "client_added" (creates a task the moment a new client is added to a portfolio — fires immediately, not on the periodic check), "task_due_soon" (reminds N days before an existing open task\'s due date, for clients in a portfolio), "kpi_drop" (creates a task when a SuccessOS KPI score — Anticipating Client Needs, Preempting Risks, or Growth Opportunities — drops from its previous logged score; this one is team-level, not tied to any specific client, since KPI scores aren\'t per-client data), or "collections_status" (creates a task for any Collections account currently in a specific status, e.g. Escalated). Separately, action_type controls WHAT HAPPENS when any of those trigger: "create_task" (default) creates a task, or "notify_only" just sends a notification with no task — action_assignee is required for notify_only, since there\'d be nobody to notify otherwise. This changes data — the user will be asked to confirm first.',
+    description: 'Create a new automation workflow. Six trigger types: "inactivity" (creates a task if a client in a portfolio has had no note logged in N days), "schedule" (creates a task on a recurring schedule, either for one specific client or for every client in a portfolio), "client_added" (creates a task the moment a new client is added to a portfolio — fires immediately, not on the periodic check), "task_due_soon" (reminds N days before an existing open task\'s due date, for clients in a portfolio), "kpi_drop" (creates a task when a SuccessOS KPI score — Anticipating Client Needs, Preempting Risks, or Growth Opportunities — drops from its previous logged score; this one is team-level, not tied to any specific client, since KPI scores aren\'t per-client data), or "collections_status" (creates a task for any Collections account currently in a specific status, e.g. Escalated). Separately, action_type controls WHAT HAPPENS when any of those trigger: "create_task" (default) creates a task, "notify_only" just sends a notification with no task (action_assignee required, since there\'d be nobody to notify otherwise), or "log_note" logs an audit-trail note on the client with no task and no notification (no assignee needed or used). This changes data — the user will be asked to confirm first.',
     input_schema: {
       type: 'object',
       properties: {
         name: { type: 'string' },
         trigger_type: { type: 'string', enum: ['inactivity', 'schedule', 'client_added', 'task_due_soon', 'kpi_drop', 'collections_status'] },
-        action_type: { type: 'string', enum: ['create_task', 'notify_only'], description: 'What happens when the trigger fires — defaults to create_task if omitted' },
+        action_type: { type: 'string', enum: ['create_task', 'notify_only', 'log_note'], description: 'What happens when the trigger fires — defaults to create_task if omitted' },
         inactivity_days: { type: 'integer', description: 'Required if trigger_type is inactivity' },
         days_before_due: { type: 'integer', description: 'Required if trigger_type is task_due_soon — how many days ahead of an existing task\'s due date to remind' },
         target_kpi_key: { type: 'string', enum: ['anticipating', 'preempting', 'solving'], description: 'Used by kpi_drop — which KPI to watch; omit to watch all three (note: if more than one drops in the same check, only the first produces a task until it\'s resolved, so watching one specific KPI is recommended)' },
@@ -11461,6 +11573,8 @@ const AI_AGENT_TOOLS = [
         scope_client_name: { type: 'string', description: 'Required if scope_type is client' },
         action_title: { type: 'string', description: 'The title of the task to create, or the message to notify with if action_type is notify_only' },
         action_assignee: { type: 'string', description: 'Team member name or email — optional for create_task, REQUIRED for notify_only' },
+        action_due_offset_days: { type: 'integer', description: 'Only used when action_type is create_task (or omitted) — how many days after the workflow fires the created task should be due. Omit for no due date.' },
+        action_due_time: { type: 'string', description: 'Only used alongside action_due_offset_days — a time of day in HH:MM (24-hour) format, e.g. "14:30". Optional even when action_due_offset_days is set.' },
       },
       required: ['name', 'trigger_type', 'action_title'],
     },
@@ -11474,7 +11588,7 @@ const AI_AGENT_TOOLS = [
         workflow_name: { type: 'string', description: 'The existing workflow\'s current name, used to find it' },
         active: { type: 'boolean' },
         trigger_type: { type: 'string', enum: ['inactivity', 'schedule', 'client_added', 'task_due_soon', 'kpi_drop', 'collections_status'] },
-        action_type: { type: 'string', enum: ['create_task', 'notify_only'] },
+        action_type: { type: 'string', enum: ['create_task', 'notify_only', 'log_note'] },
         inactivity_days: { type: 'integer' },
         days_before_due: { type: 'integer' },
         target_kpi_key: { type: 'string', enum: ['anticipating', 'preempting', 'solving'] },
@@ -11482,6 +11596,8 @@ const AI_AGENT_TOOLS = [
         scope_portfolio: { type: 'string', enum: ['all', 'smb', 'whitelabel', 'support'] },
         action_title: { type: 'string' },
         action_assignee: { type: 'string' },
+        action_due_offset_days: { type: 'integer' },
+        action_due_time: { type: 'string' },
       },
       required: ['workflow_name'],
     },
@@ -11914,13 +12030,16 @@ async function executeAiTool(name, input) {
     }
     case 'create_workflow': {
       if (!requirePermission('edit')) return { error: 'This account doesn\'t have permission to create workflows.' };
-      const actionType = input.action_type === 'notify_only' ? 'notify_only' : 'create_task';
+      const actionType = ['notify_only', 'log_note'].includes(input.action_type) ? input.action_type : 'create_task';
       const assignee = input.action_assignee ? TEAM_MEMBERS.find(m => m.name.toLowerCase() === input.action_assignee.toLowerCase() || m.email.toLowerCase() === input.action_assignee.toLowerCase()) : null;
       if (actionType === 'notify_only' && !assignee) return { error: '"notify_only" requires action_assignee — there needs to be someone to notify.' };
+      if (input.action_due_time && !/^\d{2}:\d{2}$/.test(input.action_due_time)) return { error: 'action_due_time must be in HH:MM 24-hour format, e.g. "14:30".' };
       const wf = {
         id: (crypto.randomUUID ? crypto.randomUUID() : 'wf_' + Date.now()),
         name: input.name, active: true, trigger_type: input.trigger_type, action_type: actionType,
         action_title: input.action_title, action_assignee_email: assignee ? assignee.email : '', action_assignee_name: assignee ? assignee.name : '',
+        action_due_offset_days: actionType === 'create_task' && input.action_due_offset_days != null ? input.action_due_offset_days : null,
+        action_due_time: actionType === 'create_task' ? (input.action_due_time || null) : null,
         created_at: new Date().toISOString(), created_by: (getCurrentUser() || {}).name || 'Nirvana',
       };
       if (input.trigger_type === 'inactivity') {
@@ -11965,6 +12084,9 @@ async function executeAiTool(name, input) {
         wf.action_assignee_email = m ? m.email : '';
         wf.action_assignee_name = m ? m.name : '';
       }
+      if (input.action_due_time !== undefined && input.action_due_time && !/^\d{2}:\d{2}$/.test(input.action_due_time)) return { error: 'action_due_time must be in HH:MM 24-hour format, e.g. "14:30".' };
+      if (input.action_due_offset_days !== undefined) wf.action_due_offset_days = input.action_due_offset_days;
+      if (input.action_due_time !== undefined) wf.action_due_time = input.action_due_time;
       if ((wf.action_type === 'notify_only') && !wf.action_assignee_email) return { error: '"notify_only" requires an assignee — there needs to be someone to notify. Set action_assignee too.' };
       await persistWorkflow(wf);
       rebuildWorkflowsPage();
@@ -12079,7 +12201,7 @@ function describeAiAction(tool) {
       kpi_drop: `if ${i.target_kpi_key ? escAttr(i.target_kpi_key) : 'any KPI'} score drops`,
       collections_status: `if a Collections account is ${escAttr(i.target_collections_status || 'escalated')}`,
     }[i.trigger_type] || escAttr(i.trigger_type);
-    const actionDesc = i.action_type === 'notify_only' ? `notify: "${escAttr(i.action_title)}"` : `action: "${escAttr(i.action_title)}"`;
+    const actionDesc = i.action_type === 'notify_only' ? `notify: "${escAttr(i.action_title)}"` : i.action_type === 'log_note' ? `log a note: "${escAttr(i.action_title)}"` : `action: "${escAttr(i.action_title)}"`;
     return `🔁 Create workflow <b>${escAttr(i.name)}</b> — ${triggerDesc}, ${actionDesc}`;
   }
   if (tool.name === 'update_workflow') return `🔁 Update workflow <b>${escAttr(i.workflow_name)}</b>`;
