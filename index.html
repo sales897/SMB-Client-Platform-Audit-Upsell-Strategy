@@ -933,6 +933,14 @@ tr.hidden-row { display: none; }
 .ai-data-field { display: flex; justify-content: space-between; gap: var(--space-2); font-size: var(--font-xs); padding: 2px 0; }
 .ai-data-field .ai-data-label { color: var(--text3); flex-shrink: 0; }
 .ai-data-field .ai-data-value { color: var(--text2); text-align: right; word-break: break-word; }
+.ai-data-select { display: flex; align-items: center; gap: var(--space-2); cursor: pointer; margin-bottom: 4px; }
+.ai-data-select .ai-data-title { margin-bottom: 0; }
+.ai-select-bar {
+  display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap;
+  background: var(--orange-dim); border: 1px solid rgba(226,84,31,.3); border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+}
+.ai-select-count { font-size: var(--font-xs); font-weight: 700; color: var(--text); margin-right: auto; }
 .ai-suggestions { display: flex; flex-wrap: wrap; gap: var(--space-2); padding: 0 var(--space-4) var(--space-3); flex-shrink: 0; }
 .ai-suggestion-chip {
   background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-pill); padding: var(--space-2) var(--space-3);
@@ -11842,6 +11850,7 @@ function confirmAiAgentAction(tool) {
 }
 
 let aiAgentMessages = [];
+let aiTableCounter = 0; // gives each selectable table a unique DOM id across a session's messages
 let aiAgentPanelInitialized = false; // only render stored history / greeting once per page load, not every open/close
 
 const NIRVANA_CONVO_CACHE_KEY = 'csh_nirvana_convo_v1';
@@ -12181,9 +12190,24 @@ function renderAiMarkdown(raw) {
   let html = '';
   let i = 0;
   while (i < lines.length) {
-    const line = lines[i];
+    let line = lines[i];
 
-    if (/\|/.test(line) && isTableSep(lines[i + 1])) {
+    // Selectable-table marker (added alongside the create_client tool,
+    // 2026-07-11): Nirvana emits a literal "[[selectable:create_client]]"
+    // line immediately before a table specifically when it's listing
+    // businesses/clients the user might want to create. Ordinary tables
+    // (reports, KPI trends, etc.) never carry this marker and stay plain --
+    // adding checkboxes/action buttons to every table Nirvana ever renders
+    // would be actively wrong for tables where "select and create" makes no
+    // sense. See the system prompt for the instruction teaching this.
+    let selectableMode = null;
+    if (/^\s*\[\[selectable:([a-z_]+)\]\]\s*$/i.test(line)) {
+      selectableMode = line.match(/^\s*\[\[selectable:([a-z_]+)\]\]\s*$/i)[1];
+      i++;
+      line = lines[i];
+    }
+
+    if (line !== undefined && /\|/.test(line) && isTableSep(lines[i + 1])) {
       const headerCells = line.split('|').map(c => c.trim()).filter(Boolean);
       let j = i + 2;
       const rows = [];
@@ -12197,14 +12221,23 @@ function renderAiMarkdown(raw) {
       // matter the font size. Each row becomes its own card: first column
       // as a bold title, remaining columns as label:value pairs that wrap
       // naturally instead of overflowing sideways.
-      html += '<div class="ai-table-wrap">' + rows.map(r => {
+      const wrapId = selectableMode ? `ai-table-${++aiTableCounter}` : null;
+      html += `<div class="ai-table-wrap"${wrapId ? ` id="${wrapId}"` : ''}>` + rows.map(r => {
         const title = escapeInline(r[0] || '');
+        const rawTitle = escAttr(r[0] || '');
         const fields = r.slice(1).map((val, idx) => {
           const label = escapeInline(headerCells[idx + 1] || '');
           return `<div class="ai-data-field"><span class="ai-data-label">${label}</span><span class="ai-data-value">${escapeInline(val)}</span></div>`;
         }).join('');
-        return `<div class="ai-data-row"><div class="ai-data-title">${title}</div>${fields}</div>`;
-      }).join('') + '</div>';
+        const titleHtml = selectableMode
+          ? `<label class="ai-data-select"><input type="checkbox" class="ai-select-check" data-title="${rawTitle}" onchange="updateAiTableSelectionBar('${wrapId}')"><span class="ai-data-title">${title}</span></label>`
+          : `<div class="ai-data-title">${title}</div>`;
+        return `<div class="ai-data-row">${titleHtml}${fields}</div>`;
+      }).join('') + (selectableMode ? `<div class="ai-select-bar" id="${wrapId}-bar" style="display:none">
+        <span class="ai-select-count" id="${wrapId}-count">0 selected</span>
+        <button class="btn btn-primary btn-sm" onclick="sendAiTableSelectionAction('${wrapId}', '${selectableMode}')">Create as Clients</button>
+        <button class="btn btn-ghost btn-sm" onclick="clearAiTableSelection('${wrapId}')">Clear</button>
+      </div>` : '') + '</div>';
       i = j;
       continue;
     }
@@ -12241,6 +12274,47 @@ function renderAiMarkdown(raw) {
     html += `<div>${para.map(escapeInline).join('<br>')}</div>`;
   }
   return html;
+}
+
+// Selectable-table interaction (added alongside create_client, 2026-07-11) --
+// lets the person check specific rows from a "these could be created as
+// clients" list Nirvana renders, then send just those back in one message
+// rather than retyping names. Scoped per-table by wrapId so multiple
+// selectable tables across a conversation's history don't interfere with
+// each other.
+function updateAiTableSelectionBar(wrapId) {
+  const wrap = document.getElementById(wrapId);
+  if (!wrap) return;
+  const checked = wrap.querySelectorAll('.ai-select-check:checked');
+  const bar = document.getElementById(wrapId + '-bar');
+  const countEl = document.getElementById(wrapId + '-count');
+  if (countEl) countEl.textContent = `${checked.length} selected`;
+  if (bar) bar.style.display = checked.length > 0 ? 'flex' : 'none';
+}
+
+function clearAiTableSelection(wrapId) {
+  const wrap = document.getElementById(wrapId);
+  if (!wrap) return;
+  wrap.querySelectorAll('.ai-select-check').forEach(cb => { cb.checked = false; });
+  updateAiTableSelectionBar(wrapId);
+}
+
+function sendAiTableSelectionAction(wrapId, mode) {
+  const wrap = document.getElementById(wrapId);
+  if (!wrap) return;
+  const titles = Array.from(wrap.querySelectorAll('.ai-select-check:checked')).map(cb => cb.dataset.title);
+  if (titles.length === 0) return;
+  const input = document.getElementById('aiAgentInput');
+  if (!input) return;
+  if (mode === 'create_client') {
+    input.value = `Please create clients for these businesses: ${titles.join(', ')}. Ask me which portfolio each one should go into before creating anything.`;
+  } else {
+    input.value = `Please continue with these: ${titles.join(', ')}.`;
+  }
+  // Uncheck + hide the bar before sending, so re-opening this same message
+  // later doesn't look like a stale selection is still pending action.
+  clearAiTableSelection(wrapId);
+  sendAiAgentMessage();
 }
 
 function appendAiAgentMessage(role, text, toolTag, atTimestamp) {
@@ -12396,7 +12470,7 @@ async function streamAiAgentResponse(systemPrompt, onTextDelta) {
 async function runAiAgentTurn(toolTagForNextText) {
   showAiAgentTyping(true);
   const u = getCurrentUser();
-  const systemPrompt = `You are Nirvana, the AI Agent inside Niche Inc.'s Client Success Hub, helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the SMB, White Label, and Support portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. Whenever a request would affect MORE THAN ONE client (e.g. "create a follow-up task for every client that hasn't been touched in 30 days," or a list of specific client names), always use bulk_create_tasks or bulk_add_note instead of calling create_task/add_note in a loop — looping individual calls would force a separate confirmation click per client, while the bulk tools show one confirmation with the full affected list. Workflows automate two things: "inactivity" (create a task if a client hasn't had a note in N days) and "schedule" (create a task on a recurring cadence, for one client or a whole portfolio) — if someone describes an automation idea in plain English, translate it into the right workflow fields yourself rather than making them fill out a form. For questions about company policy, procedures, "how do we...", or what the website/docs say, search the Knowledge Base — it contains SOPs, docs, and website content the team has fed in, separate from live client data. You can read and explain every chart in the Hub: get_portfolio_summary explains a portfolio's Product Adoption Rate and Products Per Client charts, get_product_adoption explains the Voice Agent / Text Agent charts, get_collections_summary explains the Collections breakdown (always separated into Outstanding Balances vs Card Fails, each with its own status breakdown — never collapse these into one number), get_adspend_summary explains Ad Spend's promo/budget breakdown, and get_kpi_summary explains the SuccessOS scores. When someone asks you to break down, interpret, or explain any data or chart, always call the specific tool that has that breakdown built in rather than answering from a vaguer or more general tool — if a user asks for a split by category/status/type, that split should already be in the tool result; use it. Prefer the data tools above for explaining charts — they're faster and more precise. Only use view_chart when the question is genuinely about the chart's visual appearance itself (e.g. "does this look right," "what do you see," "describe this chart visually") — calling it will switch the user's screen to that chart's page, so mention that you're pulling it up. Whenever asked to check for discrepancies, duplicates, mismatches, or whether numbers add up anywhere in the Hub (including client counts, Collections, Ad Spend, or the Knowledge Base), always call audit_data_integrity rather than speculating about possible causes — it actually reconciles the numbers and reports genuine findings, so use what it returns instead of guessing at explanations like "could be duplicates" or "could be stale data." A daily briefing already gets shown automatically once per day when the chat is first opened — if asked for a summary, rundown, or "what should I focus on" at any other point, use get_daily_briefing to pull the same live data fresh rather than referencing whatever was shown earlier, since it may be out of date by then. Whenever asked "which accounts are at risk," "who needs attention," or how healthy a specific client is, use get_at_risk_clients or get_client_health rather than checking just one signal (like Collections alone, or note recency alone) — those tools already combine engagement, task backlog, and billing friction into one score with a transparent breakdown of exactly why, which is a more honest answer than picking one factor and guessing at the rest. When summarizing data, only use the real numbers/content returned by tools — never estimate or make things up. If a tool returns an error (e.g. client not found, or nothing in the knowledge base matches), tell the user plainly rather than guessing.`;
+  const systemPrompt = `You are Nirvana, the AI Agent inside Niche Inc.'s Client Success Hub, helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the SMB, White Label, and Support portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. Whenever a request would affect MORE THAN ONE client (e.g. "create a follow-up task for every client that hasn't been touched in 30 days," or a list of specific client names), always use bulk_create_tasks or bulk_add_note instead of calling create_task/add_note in a loop — looping individual calls would force a separate confirmation click per client, while the bulk tools show one confirmation with the full affected list. Workflows automate two things: "inactivity" (create a task if a client hasn't had a note in N days) and "schedule" (create a task on a recurring cadence, for one client or a whole portfolio) — if someone describes an automation idea in plain English, translate it into the right workflow fields yourself rather than making them fill out a form. For questions about company policy, procedures, "how do we...", or what the website/docs say, search the Knowledge Base — it contains SOPs, docs, and website content the team has fed in, separate from live client data. You can read and explain every chart in the Hub: get_portfolio_summary explains a portfolio's Product Adoption Rate and Products Per Client charts, get_product_adoption explains the Voice Agent / Text Agent charts, get_collections_summary explains the Collections breakdown (always separated into Outstanding Balances vs Card Fails, each with its own status breakdown — never collapse these into one number), get_adspend_summary explains Ad Spend's promo/budget breakdown, and get_kpi_summary explains the SuccessOS scores. When someone asks you to break down, interpret, or explain any data or chart, always call the specific tool that has that breakdown built in rather than answering from a vaguer or more general tool — if a user asks for a split by category/status/type, that split should already be in the tool result; use it. Prefer the data tools above for explaining charts — they're faster and more precise. Only use view_chart when the question is genuinely about the chart's visual appearance itself (e.g. "does this look right," "what do you see," "describe this chart visually") — calling it will switch the user's screen to that chart's page, so mention that you're pulling it up. Whenever asked to check for discrepancies, duplicates, mismatches, or whether numbers add up anywhere in the Hub (including client counts, Collections, Ad Spend, or the Knowledge Base), always call audit_data_integrity rather than speculating about possible causes — it actually reconciles the numbers and reports genuine findings, so use what it returns instead of guessing at explanations like "could be duplicates" or "could be stale data." A daily briefing already gets shown automatically once per day when the chat is first opened — if asked for a summary, rundown, or "what should I focus on" at any other point, use get_daily_briefing to pull the same live data fresh rather than referencing whatever was shown earlier, since it may be out of date by then. Whenever asked "which accounts are at risk," "who needs attention," or how healthy a specific client is, use get_at_risk_clients or get_client_health rather than checking just one signal (like Collections alone, or note recency alone) — those tools already combine engagement, task backlog, and billing friction into one score with a transparent breakdown of exactly why, which is a more honest answer than picking one factor and guessing at the rest. When summarizing data, only use the real numbers/content returned by tools — never estimate or make things up. If a tool returns an error (e.g. client not found, or nothing in the knowledge base matches), tell the user plainly rather than guessing. If a tool result includes a "note" field, don't ignore it — mention what it says (for example, a client match that only worked after ignoring punctuation/spacing differences) rather than presenting the result as a clean, unqualified match. When presenting a list of businesses or clients that genuinely don't exist yet in the Hub and could be created (for example, orphaned Ad Spend/Collections entries with no matching client record), format it as a markdown table and put a line reading exactly \`[[selectable:create_client]]\` on its own line immediately before that table — this renders the list with checkboxes so the user can pick specific ones to create instead of you needing to ask about each individually. Only use this marker for that specific "these could be created as clients" scenario — never on ordinary reporting tables (KPI trends, budget breakdowns, adoption rates, etc.), since a "create as clients" action button wouldn't make sense there. If a message says the user selected specific businesses to create as clients, treat that as them already having committed to creating those specific ones — don't re-confirm each one individually, just ask which portfolio(s) each should go into (per the existing rule: never guess a portfolio) and then create them.`;
 
   let streamBubble = null;
   const onTextDelta = (fullTextSoFar) => {
