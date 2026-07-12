@@ -2927,6 +2927,7 @@ tr.hidden-row { display: none; }
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfTriggerType" value="inactivity" checked onchange="renderWorkflowTriggerFields()"> 😴 Client inactivity</label>
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfTriggerType" value="schedule" onchange="renderWorkflowTriggerFields()"> 📅 On a schedule</label>
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfTriggerType" value="client_added" onchange="renderWorkflowTriggerFields()"> ✨ New client added</label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfTriggerType" value="task_due_soon" onchange="renderWorkflowTriggerFields()"> ⏰ Task due soon</label>
     </div>
 
     <div id="workflowTriggerFields"></div>
@@ -10338,6 +10339,10 @@ function describeWorkflowTrigger(wf) {
     const scope = !wf.scope_portfolio || wf.scope_portfolio === 'all' ? 'any portfolio' : PORTFOLIO_LABELS[wf.scope_portfolio] || wf.scope_portfolio;
     return `✨ When a new client is added to ${scope}`;
   }
+  if (wf.trigger_type === 'task_due_soon') {
+    const scope = !wf.scope_portfolio || wf.scope_portfolio === 'all' ? 'any portfolio' : PORTFOLIO_LABELS[wf.scope_portfolio] || wf.scope_portfolio;
+    return `⏰ ${wf.days_before_due || 1} day(s) before a task is due, for clients in ${scope}`;
+  }
   const freq = wf.schedule_type === 'custom' ? `every ${wf.schedule_custom_n} ${wf.schedule_custom_unit}` : { daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly' }[wf.schedule_type] || wf.schedule_type;
   const target = wf.scope_type === 'client' ? `for ${wf.scope_client_name}` : `for every client in ${wf.scope_portfolio === 'all' ? 'any portfolio' : PORTFOLIO_LABELS[wf.scope_portfolio]}`;
   return `📅 ${freq} ${target}`;
@@ -10429,6 +10434,14 @@ function renderWorkflowTriggerFields(existing) {
         <div style="font-size:var(--font-xs);color:var(--text3);margin-top:4px">Fires the moment a new client is added to this portfolio — whether added manually or by Nirvana.</div>
       </div>`;
     if (existing) document.getElementById('wfScopePortfolioClientAdded').value = existing.scope_portfolio || 'all';
+  } else if (triggerType === 'task_due_soon') {
+    box.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:8px">
+        <div><label for="wfDaysBeforeDue" class="field-label">Remind this many days before due</label><input type="number" id="wfDaysBeforeDue" class="field-input" style="height:38px" min="0" value="${existing && existing.days_before_due || 1}"></div>
+        <div><label for="wfScopePortfolioDueSoon" class="field-label">Scope</label><select id="wfScopePortfolioDueSoon" class="field-select" style="height:38px">${portfolioOptions}</select></div>
+      </div>
+      <div style="font-size:var(--font-xs);color:var(--text3);margin-bottom:16px">Watches every open task with a due date for clients in scope — skips tasks that another workflow already created, so automations don't chain-react off each other.</div>`;
+    if (existing) document.getElementById('wfScopePortfolioDueSoon').value = existing.scope_portfolio || 'all';
   } else {
     box.innerHTML = `
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
@@ -10528,6 +10541,9 @@ async function saveWorkflow() {
     wf.scope_portfolio = document.getElementById('wfScopePortfolio').value;
   } else if (triggerType === 'client_added') {
     wf.scope_portfolio = document.getElementById('wfScopePortfolioClientAdded').value;
+  } else if (triggerType === 'task_due_soon') {
+    wf.days_before_due = Math.max(0, parseInt(document.getElementById('wfDaysBeforeDue').value) || 1);
+    wf.scope_portfolio = document.getElementById('wfScopePortfolioDueSoon').value;
   } else {
     wf.schedule_type = document.getElementById('wfScheduleType').value;
     wf.schedule_custom_n = wf.schedule_type === 'custom' ? Math.max(1, parseInt(document.getElementById('wfScheduleCustomN').value) || 7) : null;
@@ -10548,14 +10564,15 @@ async function saveWorkflow() {
 }
 
 // ─── Engine — evaluates all active workflows against live data ────────────
-async function createWorkflowTask(wf, clientName) {
+async function createWorkflowTask(wf, clientName, contextNote) {
   // Don't pile up duplicate tasks — skip if this workflow already has an open task for this client
   const alreadyHas = CLIENT_TASKS.some(t => t.client_name === clientName && t.workflow_id === wf.id && t.status !== 'done');
   if (alreadyHas) return;
   const assignee = TEAM_MEMBERS.find(m => m.email === wf.action_assignee_email);
+  const title = contextNote ? `${wf.action_title} (${contextNote})` : wf.action_title;
   const task = {
     id: (crypto.randomUUID ? crypto.randomUUID() : 't_' + Date.now() + Math.random().toString(16).slice(2)),
-    client_name: clientName, title: wf.action_title,
+    client_name: clientName, title,
     assigned_to_email: wf.action_assignee_email || '', assigned_to_name: assignee ? assignee.name : '',
     created_by_email: 'workflow', created_by_name: `🔁 ${wf.name}`,
     due_date: '', reminder_minutes: null, recurrence: null,
@@ -10624,6 +10641,32 @@ async function runScheduleWorkflow(wf, now) {
   await persistWorkflow(wf);
 }
 
+// Task-due-soon trigger (Block 2, Workflows v2, 2026-07-11) -- reminds
+// `days_before_due` days ahead of an EXISTING task's due date, rather than
+// creating a task from scratch like the other trigger types. Scoped by
+// portfolio like inactivity/client_added; skips tasks that were themselves
+// created by a workflow (workflow_id set), so one automation doesn't chain-
+// react off another's output. Known limitation, not fixed here: this reuses
+// createWorkflowTask()'s existing per-(client,workflow) de-dup rather than a
+// per-original-task one (that would need a new column tracking which source
+// task a reminder came from) -- so if a client has two tasks both entering
+// the reminder window under the same workflow, only the first produces a
+// reminder until it's resolved. Acceptable for a first version; flagged
+// rather than silently accepted as airtight.
+async function runTaskDueSoonWorkflow(wf) {
+  const daysBefore = wf.days_before_due || 1;
+  const scopeAll = !wf.scope_portfolio || wf.scope_portfolio === 'all';
+  const scopeNames = scopeAll ? null : new Set(getPortfolioClientList(wf.scope_portfolio).map(n => n.toLowerCase()));
+  const now = Date.now();
+  for (const task of CLIENT_TASKS) {
+    if (task.status === 'done' || !task.due_date || task.workflow_id) continue;
+    if (!scopeAll && !scopeNames.has((task.client_name || '').toLowerCase())) continue;
+    const daysUntilDue = (new Date(task.due_date).getTime() - now) / (24 * 60 * 60 * 1000);
+    if (daysUntilDue < 0 || daysUntilDue > daysBefore) continue;
+    await createWorkflowTask(wf, task.client_name, `re: "${task.title}", due ${task.due_date}`);
+  }
+}
+
 let workflowEngineInFlight = false;
 async function runWorkflowEngine() {
   if (!WORKFLOWS || WORKFLOWS.length === 0 || workflowEngineInFlight) return;
@@ -10635,6 +10678,7 @@ async function runWorkflowEngine() {
       try {
         if (wf.trigger_type === 'inactivity') await runInactivityWorkflow(wf);
         else if (wf.trigger_type === 'schedule') await runScheduleWorkflow(wf, now);
+        else if (wf.trigger_type === 'task_due_soon') await runTaskDueSoonWorkflow(wf);
       } catch(e) { console.warn('Workflow failed to run:', wf.name, e.message); }
     }
     renderClientTasksList();
@@ -11252,14 +11296,15 @@ const AI_AGENT_TOOLS = [
   },
   {
     name: 'create_workflow',
-    description: 'Create a new automation workflow. Three trigger types: "inactivity" (creates a task if a client in a portfolio has had no note logged in N days), "schedule" (creates a task on a recurring schedule, either for one specific client or for every client in a portfolio), or "client_added" (creates a task the moment a new client is added to a portfolio — fires immediately, not on the periodic check). This changes data — the user will be asked to confirm first.',
+    description: 'Create a new automation workflow. Four trigger types: "inactivity" (creates a task if a client in a portfolio has had no note logged in N days), "schedule" (creates a task on a recurring schedule, either for one specific client or for every client in a portfolio), "client_added" (creates a task the moment a new client is added to a portfolio — fires immediately, not on the periodic check), or "task_due_soon" (reminds N days before an existing open task\'s due date, for clients in a portfolio). This changes data — the user will be asked to confirm first.',
     input_schema: {
       type: 'object',
       properties: {
         name: { type: 'string' },
-        trigger_type: { type: 'string', enum: ['inactivity', 'schedule', 'client_added'] },
+        trigger_type: { type: 'string', enum: ['inactivity', 'schedule', 'client_added', 'task_due_soon'] },
         inactivity_days: { type: 'integer', description: 'Required if trigger_type is inactivity' },
-        scope_portfolio: { type: 'string', enum: ['all', 'smb', 'whitelabel', 'support'], description: 'Which portfolio(s) this applies to — used by inactivity and client_added, and by schedule when scope_type is portfolio' },
+        days_before_due: { type: 'integer', description: 'Required if trigger_type is task_due_soon — how many days ahead of an existing task\'s due date to remind' },
+        scope_portfolio: { type: 'string', enum: ['all', 'smb', 'whitelabel', 'support'], description: 'Which portfolio(s) this applies to — used by inactivity, client_added, and task_due_soon, and by schedule when scope_type is portfolio' },
         schedule_type: { type: 'string', enum: ['daily', 'weekly', 'monthly', 'custom'], description: 'Required if trigger_type is schedule' },
         schedule_custom_n: { type: 'integer', description: 'Required if schedule_type is custom' },
         schedule_custom_unit: { type: 'string', enum: ['days', 'weeks', 'months'], description: 'Required if schedule_type is custom' },
@@ -11279,8 +11324,9 @@ const AI_AGENT_TOOLS = [
       properties: {
         workflow_name: { type: 'string', description: 'The existing workflow\'s current name, used to find it' },
         active: { type: 'boolean' },
-        trigger_type: { type: 'string', enum: ['inactivity', 'schedule', 'client_added'] },
+        trigger_type: { type: 'string', enum: ['inactivity', 'schedule', 'client_added', 'task_due_soon'] },
         inactivity_days: { type: 'integer' },
+        days_before_due: { type: 'integer' },
         scope_portfolio: { type: 'string', enum: ['all', 'smb', 'whitelabel', 'support'] },
         action_title: { type: 'string' },
         action_assignee: { type: 'string' },
@@ -11728,6 +11774,9 @@ async function executeAiTool(name, input) {
         wf.scope_portfolio = input.scope_portfolio || 'all';
       } else if (input.trigger_type === 'client_added') {
         wf.scope_portfolio = input.scope_portfolio || 'all';
+      } else if (input.trigger_type === 'task_due_soon') {
+        wf.days_before_due = input.days_before_due != null ? input.days_before_due : 1;
+        wf.scope_portfolio = input.scope_portfolio || 'all';
       } else {
         wf.schedule_type = input.schedule_type || 'weekly';
         wf.schedule_custom_n = input.schedule_custom_n || null;
@@ -11747,6 +11796,7 @@ async function executeAiTool(name, input) {
       if (input.active !== undefined) wf.active = input.active;
       if (input.trigger_type !== undefined) wf.trigger_type = input.trigger_type;
       if (input.inactivity_days !== undefined) wf.inactivity_days = input.inactivity_days;
+      if (input.days_before_due !== undefined) wf.days_before_due = input.days_before_due;
       if (input.scope_portfolio !== undefined) wf.scope_portfolio = input.scope_portfolio;
       if (input.action_title !== undefined) wf.action_title = input.action_title;
       if (input.action_assignee !== undefined) {
