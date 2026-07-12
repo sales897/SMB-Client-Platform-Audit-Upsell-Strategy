@@ -927,10 +927,12 @@ tr.hidden-row { display: none; }
 .ai-msg-assistant pre code { border: none; padding: 0; background: none; }
 .ai-msg-assistant a { color: var(--blue); text-decoration: underline; }
 .ai-msg-time { font-size: var(--font-2xs); color: var(--text3); margin-top: 3px; padding: 0 2px; }
-.ai-table-wrap { overflow-x: auto; margin: var(--space-2) 0; }
-.ai-table { border-collapse: collapse; width: 100%; font-size: var(--font-sm); }
-.ai-table th, .ai-table td { border: 1px solid var(--border); padding: var(--space-2); text-align: left; white-space: nowrap; }
-.ai-table th { background: var(--bg); color: var(--text3); font-weight: 700; }
+.ai-table-wrap { margin: var(--space-2) 0; display: flex; flex-direction: column; gap: var(--space-2); }
+.ai-data-row { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--space-2) var(--space-3); }
+.ai-data-title { font-weight: 700; color: var(--text); font-size: var(--font-sm); margin-bottom: 4px; word-break: break-word; }
+.ai-data-field { display: flex; justify-content: space-between; gap: var(--space-2); font-size: var(--font-xs); padding: 2px 0; }
+.ai-data-field .ai-data-label { color: var(--text3); flex-shrink: 0; }
+.ai-data-field .ai-data-value { color: var(--text2); text-align: right; word-break: break-word; }
 .ai-suggestions { display: flex; flex-wrap: wrap; gap: var(--space-2); padding: 0 var(--space-4) var(--space-3); flex-shrink: 0; }
 .ai-suggestion-chip {
   background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-pill); padding: var(--space-2) var(--space-3);
@@ -11079,7 +11081,7 @@ const BULK_ACTION_MAX = 100; // safety cap so a mistyped/over-broad filter can't
 const AI_AGENT_TOOLS = [
   {
     name: 'search_clients',
-    description: 'Search for clients by name or organization across all portfolios (SMB, White Label, Support). Returns matches with which portfolio(s) each belongs to.',
+    description: 'Search for clients by name or organization across all portfolios (SMB, White Label, Support). Returns matches with which portfolio(s) each belongs to. Matching first tries exact/substring, then falls back to ignoring punctuation and spacing (so "1-800 Water Damage" and "1800 Water Damage" are treated as the same client) — if a result came back only because of that fallback, the response includes a note saying so; mention that mismatch to the user rather than silently treating it as a clean match. Before ever telling the user a client "doesn\'t exist" or "isn\'t in the Hub," always try this tool with a shortened or simplified version of the name if the first search comes back empty — do not conclude a client is missing from a single narrow query.',
     input_schema: { type: 'object', properties: { query: { type: 'string', description: 'Name or partial name to search for' } }, required: ['query'] },
   },
   {
@@ -11285,9 +11287,24 @@ const AI_AGENT_TOOLS = [
 
 const AI_ACTION_TOOLS = ['add_note', 'create_task', 'log_kpi_score', 'create_workflow', 'update_workflow', 'delete_workflow', 'bulk_create_tasks', 'bulk_add_note', 'create_client', 'update_client_contact']; // tools that change data — always confirmed
 
+// Strips everything except letters/digits, so "1-800 Water Damage" and
+// "1800 Water Damage" (or "Chung, DDS" vs "Chung DDS") compare equal. Used
+// as a fallback whenever an exact/substring match on the raw name comes up
+// empty — punctuation and spacing differences shouldn't cause Nirvana to
+// wrongly report a real client as "not found."
+function compactClientName(s) {
+  return (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
 function aiFindMergedClient(name) {
   const merged = buildMergedClients();
-  return merged[(name || '').trim().toLowerCase()] || null;
+  const norm = (name || '').trim().toLowerCase();
+  if (merged[norm]) return merged[norm];
+  // Exact match missed -- try again ignoring punctuation/spacing.
+  const compact = compactClientName(name);
+  if (!compact) return null;
+  const fuzzy = Object.values(merged).find(r => compactClientName(r.displayName) === compact);
+  return fuzzy || null;
 }
 
 // Resolves a bulk tool's target client list — either an explicit list of
@@ -11391,10 +11408,24 @@ async function executeAiTool(name, input) {
   switch (name) {
     case 'search_clients': {
       const merged = buildMergedClients();
-      const q = (input.query || '').toLowerCase();
-      const matches = Object.values(merged).filter(r => r.displayName.toLowerCase().includes(q)).slice(0, 15);
-      if (matches.length === 0) return { results: [], note: 'No matching clients found.' };
-      return { results: matches.map(r => ({ name: r.displayName, portfolios: Object.keys(r.portfolios).map(pk => PORTFOLIO_LABELS[pk]) })) };
+      const q = (input.query || '').toLowerCase().trim();
+      const all = Object.values(merged);
+      const orgOf = r => Object.values(r.portfolios).map(p => (p.client.org || '')).find(Boolean) || '';
+      let matches = all.filter(r => r.displayName.toLowerCase().includes(q) || orgOf(r).toLowerCase().includes(q));
+      let fuzzy = false;
+      if (matches.length === 0) {
+        const qCompact = compactClientName(q);
+        if (qCompact) {
+          matches = all.filter(r => compactClientName(r.displayName).includes(qCompact) || compactClientName(orgOf(r)).includes(qCompact));
+          fuzzy = matches.length > 0;
+        }
+      }
+      matches = matches.slice(0, 15);
+      if (matches.length === 0) return { results: [], note: 'No matching clients found, even after ignoring punctuation/spacing differences (e.g. hyphens, commas). This client likely does not exist in the Hub yet.' };
+      return {
+        results: matches.map(r => ({ name: r.displayName, portfolios: Object.keys(r.portfolios).map(pk => PORTFOLIO_LABELS[pk]), org: orgOf(r) || undefined })),
+        note: fuzzy ? 'These only matched after ignoring punctuation/spacing (e.g. "1-800" vs "1800") — mention that mismatch to the user so they know why the exact text they typed wasn\'t found verbatim.' : undefined,
+      };
     }
     case 'get_client_details': {
       const entry = aiFindMergedClient(input.client_name);
@@ -12160,8 +12191,20 @@ function renderAiMarkdown(raw) {
         rows.push(lines[j].split('|').map(c => c.trim()).filter(Boolean));
         j++;
       }
-      html += '<div class="ai-table-wrap"><table class="ai-table"><thead><tr>' + headerCells.map(c => `<th>${escapeInline(c)}</th>`).join('') + '</tr></thead><tbody>' +
-        rows.map(r => '<tr>' + r.map(c => `<td>${escapeInline(c)}</td>`).join('') + '</tr>').join('') + '</tbody></table></div>';
+      // Stacked-card layout, not a grid <table> -- the panel is a fixed
+      // ~420px wide, and a real grid table with business names + multiple
+      // stat columns either truncates or forces horizontal scrolling no
+      // matter the font size. Each row becomes its own card: first column
+      // as a bold title, remaining columns as label:value pairs that wrap
+      // naturally instead of overflowing sideways.
+      html += '<div class="ai-table-wrap">' + rows.map(r => {
+        const title = escapeInline(r[0] || '');
+        const fields = r.slice(1).map((val, idx) => {
+          const label = escapeInline(headerCells[idx + 1] || '');
+          return `<div class="ai-data-field"><span class="ai-data-label">${label}</span><span class="ai-data-value">${escapeInline(val)}</span></div>`;
+        }).join('');
+        return `<div class="ai-data-row"><div class="ai-data-title">${title}</div>${fields}</div>`;
+      }).join('') + '</div>';
       i = j;
       continue;
     }
