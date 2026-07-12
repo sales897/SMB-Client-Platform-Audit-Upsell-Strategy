@@ -2928,6 +2928,8 @@ tr.hidden-row { display: none; }
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfTriggerType" value="schedule" onchange="renderWorkflowTriggerFields()"> 📅 On a schedule</label>
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfTriggerType" value="client_added" onchange="renderWorkflowTriggerFields()"> ✨ New client added</label>
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfTriggerType" value="task_due_soon" onchange="renderWorkflowTriggerFields()"> ⏰ Task due soon</label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfTriggerType" value="kpi_drop" onchange="renderWorkflowTriggerFields()"> ⭐ KPI score drops</label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfTriggerType" value="collections_status" onchange="renderWorkflowTriggerFields()"> 💳 Collections status</label>
     </div>
 
     <div id="workflowTriggerFields"></div>
@@ -2935,9 +2937,13 @@ tr.hidden-row { display: none; }
     <div class="cnt-divider"></div>
 
     <div style="font-size:11px;color:var(--text3);margin-bottom:12px">Action — what should happen when it triggers</div>
+    <div style="display:flex;gap:18px;margin-bottom:12px">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfActionType" value="create_task" checked onchange="toggleWorkflowActionType()"> ✅ Create a task</label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfActionType" value="notify_only" onchange="toggleWorkflowActionType()"> 🔔 Just notify (no task)</label>
+    </div>
     <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:4px">
-      <div><label for="wfActionTitle" class="field-label">Create a task titled</label><input type="text" id="wfActionTitle" class="field-input" style="height:38px" placeholder="e.g. Check in — no recent contact"></div>
-      <div><label for="wfActionAssignee" class="field-label">Assign to</label><select id="wfActionAssignee" class="field-select" style="height:38px"></select></div>
+      <div><label for="wfActionTitle" class="field-label" id="wfActionTitleLabel">Create a task titled</label><input type="text" id="wfActionTitle" class="field-input" style="height:38px" placeholder="e.g. Check in — no recent contact"></div>
+      <div><label for="wfActionAssignee" class="field-label" id="wfActionAssigneeLabel">Assign to</label><select id="wfActionAssignee" class="field-select" style="height:38px"></select></div>
     </div>
 
     <div class="modal-btns" style="margin-top:18px">
@@ -10343,12 +10349,23 @@ function describeWorkflowTrigger(wf) {
     const scope = !wf.scope_portfolio || wf.scope_portfolio === 'all' ? 'any portfolio' : PORTFOLIO_LABELS[wf.scope_portfolio] || wf.scope_portfolio;
     return `⏰ ${wf.days_before_due || 1} day(s) before a task is due, for clients in ${scope}`;
   }
+  if (wf.trigger_type === 'kpi_drop') {
+    const kpiLabel = wf.target_kpi_key ? ((KPI_META[wf.target_kpi_key] || {}).label || wf.target_kpi_key) : 'any of the three KPIs';
+    return `⭐ If ${kpiLabel} score drops from its previous log`;
+  }
+  if (wf.trigger_type === 'collections_status') {
+    const label = wf.target_collections_status ? statusMeta(wf.target_collections_status).label : 'any status';
+    return `💳 If a Collections account is in "${label}" status`;
+  }
   const freq = wf.schedule_type === 'custom' ? `every ${wf.schedule_custom_n} ${wf.schedule_custom_unit}` : { daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly' }[wf.schedule_type] || wf.schedule_type;
   const target = wf.scope_type === 'client' ? `for ${wf.scope_client_name}` : `for every client in ${wf.scope_portfolio === 'all' ? 'any portfolio' : PORTFOLIO_LABELS[wf.scope_portfolio]}`;
   return `📅 ${freq} ${target}`;
 }
 function describeWorkflowAction(wf) {
   const assignee = TEAM_MEMBERS.find(m => m.email === wf.action_assignee_email);
+  if (wf.action_type === 'notify_only') {
+    return `Notify${assignee ? ' ' + assignee.name : ''}: "${wf.action_title}"`;
+  }
   return `Create a task: "${wf.action_title}"${assignee ? ' → ' + assignee.name : ''}`;
 }
 
@@ -10442,6 +10459,29 @@ function renderWorkflowTriggerFields(existing) {
       </div>
       <div style="font-size:var(--font-xs);color:var(--text3);margin-bottom:16px">Watches every open task with a due date for clients in scope — skips tasks that another workflow already created, so automations don't chain-react off each other.</div>`;
     if (existing) document.getElementById('wfScopePortfolioDueSoon').value = existing.scope_portfolio || 'all';
+  } else if (triggerType === 'kpi_drop') {
+    box.innerHTML = `
+      <div style="margin-bottom:8px">
+        <label for="wfTargetKpiKey" class="field-label">Which KPI?</label>
+        <select id="wfTargetKpiKey" class="field-select" style="height:38px">
+          <option value="">Any of the three</option>
+          <option value="anticipating">Anticipating Client Needs</option>
+          <option value="preempting">Pre-empting Risks</option>
+          <option value="solving">Growth Opportunities</option>
+        </select>
+      </div>
+      <div style="font-size:var(--font-xs);color:var(--text3);margin-bottom:16px">Fires when this KPI's score goes down from its previous log. This is a team-level score, not per-client, so the created task isn't tied to a specific client.</div>`;
+    if (existing) document.getElementById('wfTargetKpiKey').value = existing.target_kpi_key || '';
+  } else if (triggerType === 'collections_status') {
+    box.innerHTML = `
+      <div style="margin-bottom:8px">
+        <label for="wfTargetCollectionsStatus" class="field-label">Which status?</label>
+        <select id="wfTargetCollectionsStatus" class="field-select" style="height:38px">
+          ${COLLECTIONS_STATUSES.map(s => `<option value="${s.key}">${escAttr(s.label)}</option>`).join('')}
+        </select>
+      </div>
+      <div style="font-size:var(--font-xs);color:var(--text3);margin-bottom:16px">Fires for any Collections account currently in this status. Checked every cycle, but won't pile up duplicates while a task from this workflow is still open for that account.</div>`;
+    if (existing) document.getElementById('wfTargetCollectionsStatus').value = existing.target_collections_status || 'escalated';
   } else {
     box.innerHTML = `
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
@@ -10485,6 +10525,22 @@ function toggleWorkflowScopeType() {
   document.getElementById('wfScopePortfolioBox').style.display = val === 'portfolio' ? '' : 'none';
 }
 
+function toggleWorkflowActionType() {
+  const val = (document.querySelector('input[name="wfActionType"]:checked') || {}).value;
+  const titleLabel = document.getElementById('wfActionTitleLabel');
+  const assigneeLabel = document.getElementById('wfActionAssigneeLabel');
+  const titleInput = document.getElementById('wfActionTitle');
+  if (val === 'notify_only') {
+    titleLabel.textContent = 'Notify with message';
+    assigneeLabel.textContent = 'Notify';
+    titleInput.placeholder = 'e.g. This account just escalated in Collections';
+  } else {
+    titleLabel.textContent = 'Create a task titled';
+    assigneeLabel.textContent = 'Assign to';
+    titleInput.placeholder = 'e.g. Check in — no recent contact';
+  }
+}
+
 function openAddWorkflowModal() {
   if (!requirePermission('edit')) return;
   editingWorkflowId = null;
@@ -10492,6 +10548,8 @@ function openAddWorkflowModal() {
   document.getElementById('wfName').value = '';
   document.getElementById('wfActionTitle').value = '';
   document.querySelector('input[name="wfTriggerType"][value="inactivity"]').checked = true;
+  document.querySelector('input[name="wfActionType"][value="create_task"]').checked = true;
+  toggleWorkflowActionType();
   populateWorkflowAssigneeSelect();
   renderWorkflowTriggerFields();
   document.getElementById('workflowModal').classList.add('open');
@@ -10506,6 +10564,8 @@ function openEditWorkflowModal(id) {
   document.getElementById('wfName').value = wf.name;
   document.getElementById('wfActionTitle').value = wf.action_title;
   document.querySelector(`input[name="wfTriggerType"][value="${wf.trigger_type}"]`).checked = true;
+  document.querySelector(`input[name="wfActionType"][value="${wf.action_type || 'create_task'}"]`).checked = true;
+  toggleWorkflowActionType();
   populateWorkflowAssigneeSelect();
   document.getElementById('wfActionAssignee').value = wf.action_assignee_email || '';
   renderWorkflowTriggerFields(wf);
@@ -10520,10 +10580,12 @@ function closeWorkflowModal() {
 async function saveWorkflow() {
   const name = document.getElementById('wfName').value.trim();
   if (!name) { showToast('Please name this workflow.', 'warning'); return; }
+  const actionType = document.querySelector('input[name="wfActionType"]:checked').value;
   const actionTitle = document.getElementById('wfActionTitle').value.trim();
-  if (!actionTitle) { showToast('Please enter what the created task should say.', 'warning'); return; }
+  if (!actionTitle) { showToast(actionType === 'notify_only' ? 'Please enter the notification message.' : 'Please enter what the created task should say.', 'warning'); return; }
   const triggerType = document.querySelector('input[name="wfTriggerType"]:checked').value;
   const assigneeEmail = document.getElementById('wfActionAssignee').value;
+  if (actionType === 'notify_only' && !assigneeEmail) { showToast('"Just notify" needs someone to notify — please choose who.', 'warning'); return; }
   const assignee = TEAM_MEMBERS.find(m => m.email === assigneeEmail);
 
   const wf = editingWorkflowId ? WORKFLOWS.find(w => w.id === editingWorkflowId) : {
@@ -10532,6 +10594,7 @@ async function saveWorkflow() {
   };
   wf.name = name;
   wf.trigger_type = triggerType;
+  wf.action_type = actionType;
   wf.action_title = actionTitle;
   wf.action_assignee_email = assigneeEmail;
   wf.action_assignee_name = assignee ? assignee.name : '';
@@ -10544,6 +10607,10 @@ async function saveWorkflow() {
   } else if (triggerType === 'task_due_soon') {
     wf.days_before_due = Math.max(0, parseInt(document.getElementById('wfDaysBeforeDue').value) || 1);
     wf.scope_portfolio = document.getElementById('wfScopePortfolioDueSoon').value;
+  } else if (triggerType === 'kpi_drop') {
+    wf.target_kpi_key = document.getElementById('wfTargetKpiKey').value || null;
+  } else if (triggerType === 'collections_status') {
+    wf.target_collections_status = document.getElementById('wfTargetCollectionsStatus').value;
   } else {
     wf.schedule_type = document.getElementById('wfScheduleType').value;
     wf.schedule_custom_n = wf.schedule_type === 'custom' ? Math.max(1, parseInt(document.getElementById('wfScheduleCustomN').value) || 7) : null;
@@ -10564,7 +10631,38 @@ async function saveWorkflow() {
 }
 
 // ─── Engine — evaluates all active workflows against live data ────────────
-async function createWorkflowTask(wf, clientName, contextNote) {
+// De-dup check for the notify_only action type (Block 5, Workflows v2,
+// 2026-07-11). Task-creating actions use "is there still an open task" as
+// their de-dup memory -- there's no equivalent local state for a bare
+// notification, and the client-side NOTIFICATIONS cache can't be reused
+// here: it's loaded scoped to whichever user currently has the tab open
+// (see loadNotifications), not the workflow's assignee, and doesn't update
+// on creation without a reload. So this queries Supabase directly for an
+// unread notification already tagged to this workflow+client, mirroring
+// "open task" with "unread notification" as the equivalent unresolved-state
+// signal. Encodes the workflow id into `type` (e.g. "workflow_notify_wf123")
+// since notifications has no workflow_id column and adding one would be a
+// schema change, not something to bundle into this block.
+async function hasUnreadWorkflowNotification(clientName, notifyType) {
+  try {
+    const rows = await sbSelect('notifications', `client_name=eq.${encodeURIComponent(clientName)}&type=eq.${encodeURIComponent(notifyType)}&read=eq.false&limit=1`);
+    return Array.isArray(rows) && rows.length > 0;
+  } catch(e) {
+    console.warn('Could not check existing notifications for de-dup:', e.message);
+    return false; // fail open -- a network hiccup here shouldn't silently block real notifications forever
+  }
+}
+
+async function executeWorkflowAction(wf, clientName, contextNote) {
+  const actionType = wf.action_type || 'create_task';
+  if (actionType === 'notify_only') {
+    if (!wf.action_assignee_email) return; // nothing to notify without a recipient
+    const notifyType = `workflow_notify_${wf.id}`;
+    if (await hasUnreadWorkflowNotification(clientName, notifyType)) return;
+    const detail = contextNote ? `${wf.action_title} (${contextNote})` : wf.action_title;
+    await createNotification(wf.action_assignee_email, notifyType, `🔁 ${wf.name} — ${clientName}: ${detail}`, clientName);
+    return;
+  }
   // Don't pile up duplicate tasks — skip if this workflow already has an open task for this client
   const alreadyHas = CLIENT_TASKS.some(t => t.client_name === clientName && t.workflow_id === wf.id && t.status !== 'done');
   if (alreadyHas) return;
@@ -10592,7 +10690,7 @@ async function createWorkflowTask(wf, clientName, contextNote) {
 // both places that can create one: the manual Add Client modal
 // (saveNewClient) and Nirvana's create_client tool. Reuses the existing
 // scope_portfolio field (no new column needed for this trigger type) and
-// the existing createWorkflowTask()/de-dup logic — this only decides WHICH
+// the existing executeWorkflowAction()/de-dup logic — this only decides WHICH
 // workflows should fire, not how a task gets created.
 async function fireClientAddedWorkflows(clientName, addedToPortfolios) {
   if (!Array.isArray(addedToPortfolios) || addedToPortfolios.length === 0) return [];
@@ -10600,7 +10698,7 @@ async function fireClientAddedWorkflows(clientName, addedToPortfolios) {
     wf.active && wf.trigger_type === 'client_added' &&
     (!wf.scope_portfolio || wf.scope_portfolio === 'all' || addedToPortfolios.includes(wf.scope_portfolio))
   );
-  for (const wf of matches) await createWorkflowTask(wf, clientName);
+  for (const wf of matches) await executeWorkflowAction(wf, clientName);
   return matches.map(wf => wf.name);
 }
 
@@ -10611,7 +10709,7 @@ async function runInactivityWorkflow(wf) {
     const notes = getClientNotes(name); // sorted newest-first
     const lastNoteMs = notes.length ? new Date(notes[0].created_at).getTime() : 0;
     const daysSince = (now - lastNoteMs) / (24 * 60 * 60 * 1000);
-    if (daysSince >= wf.inactivity_days) await createWorkflowTask(wf, name);
+    if (daysSince >= wf.inactivity_days) await executeWorkflowAction(wf, name);
   }
 }
 
@@ -10632,10 +10730,10 @@ async function runScheduleWorkflow(wf, now) {
   if (!due) return;
 
   if (wf.scope_type === 'client' && wf.scope_client_name) {
-    await createWorkflowTask(wf, wf.scope_client_name);
+    await executeWorkflowAction(wf, wf.scope_client_name);
   } else if (wf.scope_type === 'portfolio') {
     const clientNames = getPortfolioClientList(wf.scope_portfolio || 'all');
-    for (const name of clientNames) await createWorkflowTask(wf, name);
+    for (const name of clientNames) await executeWorkflowAction(wf, name);
   }
   wf.last_run_at = now.toISOString();
   await persistWorkflow(wf);
@@ -10647,7 +10745,7 @@ async function runScheduleWorkflow(wf, now) {
 // portfolio like inactivity/client_added; skips tasks that were themselves
 // created by a workflow (workflow_id set), so one automation doesn't chain-
 // react off another's output. Known limitation, not fixed here: this reuses
-// createWorkflowTask()'s existing per-(client,workflow) de-dup rather than a
+// executeWorkflowAction()'s existing per-(client,workflow) de-dup rather than a
 // per-original-task one (that would need a new column tracking which source
 // task a reminder came from) -- so if a client has two tasks both entering
 // the reminder window under the same workflow, only the first produces a
@@ -10663,7 +10761,53 @@ async function runTaskDueSoonWorkflow(wf) {
     if (!scopeAll && !scopeNames.has((task.client_name || '').toLowerCase())) continue;
     const daysUntilDue = (new Date(task.due_date).getTime() - now) / (24 * 60 * 60 * 1000);
     if (daysUntilDue < 0 || daysUntilDue > daysBefore) continue;
-    await createWorkflowTask(wf, task.client_name, `re: "${task.title}", due ${task.due_date}`);
+    await executeWorkflowAction(wf, task.client_name, `re: "${task.title}", due ${task.due_date}`);
+  }
+}
+
+// KPI-score-drop trigger (Block 3, Workflows v2, 2026-07-11) -- unlike every
+// other trigger type, this isn't per-client: kpi_scores has no client_name
+// column at all (confirmed against the live schema before building this),
+// it's a team-level SuccessOS score. Since every task still needs a
+// client_name, this uses a fixed sentinel value ("SuccessOS KPIs") rather
+// than a real client -- confirmed safe: the client notes/tasks modal just
+// filters by name string with no actual client lookup, so this renders with
+// empty notes/contact sections rather than breaking anything.
+// Known limitation, flagged rather than silently accepted: because the
+// sentinel name is shared, if target_kpi_key is left unset ("watch all
+// three") and two KPIs drop in the same run, only the first (by KPI_KEYS
+// order) produces a task under the existing per-(client,workflow) de-dup —
+// the second is silently skipped until the first task is resolved. Setting
+// target_kpi_key to a specific KPI avoids this entirely, which is the
+// expected/recommended way to configure this trigger type.
+async function runKpiDropWorkflow(wf) {
+  const keys = wf.target_kpi_key ? [wf.target_kpi_key] : KPI_KEYS;
+  for (const key of keys) {
+    if (getKpiTrend(key) >= 0) continue; // 0 = flat, positive = improved -- only a real drop fires
+    const history = getKpiHistory(key);
+    const latest = getLatestKpiScore(key);
+    const previous = history.length >= 2 ? history[history.length - 2].score : null;
+    const label = (KPI_META[key] || {}).label || key;
+    const note = previous != null ? `${label} dropped from ${previous}★ to ${latest}★` : `${label} dropped to ${latest}★`;
+    await executeWorkflowAction(wf, 'SuccessOS KPIs', note);
+  }
+}
+
+// Collections-status-change trigger (Block 4, Workflows v2, 2026-07-11) --
+// same simplicity as the inactivity trigger: this just checks CURRENT
+// status against target_collections_status each cycle, relying entirely on
+// executeWorkflowAction()'s existing open-task de-dup to prevent re-firing
+// every 30 minutes for an account sitting in that status. No separate
+// "did the status just change" state tracking needed -- if the account's
+// existing task gets resolved and it later re-enters the target status
+// again, a fresh task is correctly created; while a task is still open,
+// nothing new fires. Matches how inactivity already behaves.
+async function runCollectionsStatusWorkflow(wf) {
+  if (!wf.target_collections_status) return;
+  const matches = (COLLECTIONS_ACCOUNTS || []).filter(a => (a.status || '') === wf.target_collections_status);
+  const label = statusMeta(wf.target_collections_status).label;
+  for (const acct of matches) {
+    await executeWorkflowAction(wf, acct.name, `Collections status: ${label}`);
   }
 }
 
@@ -10679,6 +10823,8 @@ async function runWorkflowEngine() {
         if (wf.trigger_type === 'inactivity') await runInactivityWorkflow(wf);
         else if (wf.trigger_type === 'schedule') await runScheduleWorkflow(wf, now);
         else if (wf.trigger_type === 'task_due_soon') await runTaskDueSoonWorkflow(wf);
+        else if (wf.trigger_type === 'kpi_drop') await runKpiDropWorkflow(wf);
+        else if (wf.trigger_type === 'collections_status') await runCollectionsStatusWorkflow(wf);
       } catch(e) { console.warn('Workflow failed to run:', wf.name, e.message); }
     }
     renderClientTasksList();
@@ -11296,22 +11442,25 @@ const AI_AGENT_TOOLS = [
   },
   {
     name: 'create_workflow',
-    description: 'Create a new automation workflow. Four trigger types: "inactivity" (creates a task if a client in a portfolio has had no note logged in N days), "schedule" (creates a task on a recurring schedule, either for one specific client or for every client in a portfolio), "client_added" (creates a task the moment a new client is added to a portfolio — fires immediately, not on the periodic check), or "task_due_soon" (reminds N days before an existing open task\'s due date, for clients in a portfolio). This changes data — the user will be asked to confirm first.',
+    description: 'Create a new automation workflow. Six trigger types: "inactivity" (creates a task if a client in a portfolio has had no note logged in N days), "schedule" (creates a task on a recurring schedule, either for one specific client or for every client in a portfolio), "client_added" (creates a task the moment a new client is added to a portfolio — fires immediately, not on the periodic check), "task_due_soon" (reminds N days before an existing open task\'s due date, for clients in a portfolio), "kpi_drop" (creates a task when a SuccessOS KPI score — Anticipating Client Needs, Preempting Risks, or Growth Opportunities — drops from its previous logged score; this one is team-level, not tied to any specific client, since KPI scores aren\'t per-client data), or "collections_status" (creates a task for any Collections account currently in a specific status, e.g. Escalated). Separately, action_type controls WHAT HAPPENS when any of those trigger: "create_task" (default) creates a task, or "notify_only" just sends a notification with no task — action_assignee is required for notify_only, since there\'d be nobody to notify otherwise. This changes data — the user will be asked to confirm first.',
     input_schema: {
       type: 'object',
       properties: {
         name: { type: 'string' },
-        trigger_type: { type: 'string', enum: ['inactivity', 'schedule', 'client_added', 'task_due_soon'] },
+        trigger_type: { type: 'string', enum: ['inactivity', 'schedule', 'client_added', 'task_due_soon', 'kpi_drop', 'collections_status'] },
+        action_type: { type: 'string', enum: ['create_task', 'notify_only'], description: 'What happens when the trigger fires — defaults to create_task if omitted' },
         inactivity_days: { type: 'integer', description: 'Required if trigger_type is inactivity' },
         days_before_due: { type: 'integer', description: 'Required if trigger_type is task_due_soon — how many days ahead of an existing task\'s due date to remind' },
+        target_kpi_key: { type: 'string', enum: ['anticipating', 'preempting', 'solving'], description: 'Used by kpi_drop — which KPI to watch; omit to watch all three (note: if more than one drops in the same check, only the first produces a task until it\'s resolved, so watching one specific KPI is recommended)' },
+        target_collections_status: { type: 'string', enum: ['pending', 'inreview', 'contacted', 'paymentplan', 'escalated', 'resolved', 'writeoff'], description: 'Required if trigger_type is collections_status — which status to watch for' },
         scope_portfolio: { type: 'string', enum: ['all', 'smb', 'whitelabel', 'support'], description: 'Which portfolio(s) this applies to — used by inactivity, client_added, and task_due_soon, and by schedule when scope_type is portfolio' },
         schedule_type: { type: 'string', enum: ['daily', 'weekly', 'monthly', 'custom'], description: 'Required if trigger_type is schedule' },
         schedule_custom_n: { type: 'integer', description: 'Required if schedule_type is custom' },
         schedule_custom_unit: { type: 'string', enum: ['days', 'weeks', 'months'], description: 'Required if schedule_type is custom' },
         scope_type: { type: 'string', enum: ['client', 'portfolio'], description: 'Required if trigger_type is schedule — whether it targets one client or a whole portfolio' },
         scope_client_name: { type: 'string', description: 'Required if scope_type is client' },
-        action_title: { type: 'string', description: 'The title of the task to create when this workflow triggers' },
-        action_assignee: { type: 'string', description: 'Team member name or email to assign the created task to; optional' },
+        action_title: { type: 'string', description: 'The title of the task to create, or the message to notify with if action_type is notify_only' },
+        action_assignee: { type: 'string', description: 'Team member name or email — optional for create_task, REQUIRED for notify_only' },
       },
       required: ['name', 'trigger_type', 'action_title'],
     },
@@ -11324,9 +11473,12 @@ const AI_AGENT_TOOLS = [
       properties: {
         workflow_name: { type: 'string', description: 'The existing workflow\'s current name, used to find it' },
         active: { type: 'boolean' },
-        trigger_type: { type: 'string', enum: ['inactivity', 'schedule', 'client_added', 'task_due_soon'] },
+        trigger_type: { type: 'string', enum: ['inactivity', 'schedule', 'client_added', 'task_due_soon', 'kpi_drop', 'collections_status'] },
+        action_type: { type: 'string', enum: ['create_task', 'notify_only'] },
         inactivity_days: { type: 'integer' },
         days_before_due: { type: 'integer' },
+        target_kpi_key: { type: 'string', enum: ['anticipating', 'preempting', 'solving'] },
+        target_collections_status: { type: 'string', enum: ['pending', 'inreview', 'contacted', 'paymentplan', 'escalated', 'resolved', 'writeoff'] },
         scope_portfolio: { type: 'string', enum: ['all', 'smb', 'whitelabel', 'support'] },
         action_title: { type: 'string' },
         action_assignee: { type: 'string' },
@@ -11762,10 +11914,12 @@ async function executeAiTool(name, input) {
     }
     case 'create_workflow': {
       if (!requirePermission('edit')) return { error: 'This account doesn\'t have permission to create workflows.' };
+      const actionType = input.action_type === 'notify_only' ? 'notify_only' : 'create_task';
       const assignee = input.action_assignee ? TEAM_MEMBERS.find(m => m.name.toLowerCase() === input.action_assignee.toLowerCase() || m.email.toLowerCase() === input.action_assignee.toLowerCase()) : null;
+      if (actionType === 'notify_only' && !assignee) return { error: '"notify_only" requires action_assignee — there needs to be someone to notify.' };
       const wf = {
         id: (crypto.randomUUID ? crypto.randomUUID() : 'wf_' + Date.now()),
-        name: input.name, active: true, trigger_type: input.trigger_type,
+        name: input.name, active: true, trigger_type: input.trigger_type, action_type: actionType,
         action_title: input.action_title, action_assignee_email: assignee ? assignee.email : '', action_assignee_name: assignee ? assignee.name : '',
         created_at: new Date().toISOString(), created_by: (getCurrentUser() || {}).name || 'Nirvana',
       };
@@ -11777,6 +11931,10 @@ async function executeAiTool(name, input) {
       } else if (input.trigger_type === 'task_due_soon') {
         wf.days_before_due = input.days_before_due != null ? input.days_before_due : 1;
         wf.scope_portfolio = input.scope_portfolio || 'all';
+      } else if (input.trigger_type === 'kpi_drop') {
+        wf.target_kpi_key = input.target_kpi_key || null;
+      } else if (input.trigger_type === 'collections_status') {
+        wf.target_collections_status = input.target_collections_status || 'escalated';
       } else {
         wf.schedule_type = input.schedule_type || 'weekly';
         wf.schedule_custom_n = input.schedule_custom_n || null;
@@ -11795,8 +11953,11 @@ async function executeAiTool(name, input) {
       if (!wf) return { error: 'Workflow not found' };
       if (input.active !== undefined) wf.active = input.active;
       if (input.trigger_type !== undefined) wf.trigger_type = input.trigger_type;
+      if (input.action_type !== undefined) wf.action_type = input.action_type;
       if (input.inactivity_days !== undefined) wf.inactivity_days = input.inactivity_days;
       if (input.days_before_due !== undefined) wf.days_before_due = input.days_before_due;
+      if (input.target_kpi_key !== undefined) wf.target_kpi_key = input.target_kpi_key;
+      if (input.target_collections_status !== undefined) wf.target_collections_status = input.target_collections_status;
       if (input.scope_portfolio !== undefined) wf.scope_portfolio = input.scope_portfolio;
       if (input.action_title !== undefined) wf.action_title = input.action_title;
       if (input.action_assignee !== undefined) {
@@ -11804,6 +11965,7 @@ async function executeAiTool(name, input) {
         wf.action_assignee_email = m ? m.email : '';
         wf.action_assignee_name = m ? m.name : '';
       }
+      if ((wf.action_type === 'notify_only') && !wf.action_assignee_email) return { error: '"notify_only" requires an assignee — there needs to be someone to notify. Set action_assignee too.' };
       await persistWorkflow(wf);
       rebuildWorkflowsPage();
       return { ok: true, updated: wf.name };
@@ -11908,7 +12070,18 @@ function describeAiAction(tool) {
     return `📝 Add a note to <b>${targets.length}</b> client${targets.length === 1 ? '' : 's'}: "${escAttr(i.text)}"${capNote}${previewLine}`;
   }
   if (tool.name === 'log_kpi_score') return `⭐ Set <b>${escAttr((KPI_META[i.kpi_key] || {}).label || i.kpi_key)}</b> to ${i.score} star${i.score === 1 ? '' : 's'}`;
-  if (tool.name === 'create_workflow') return `🔁 Create workflow <b>${escAttr(i.name)}</b> — ${i.trigger_type === 'inactivity' ? `alert if inactive ${escAttr(i.inactivity_days || 14)} days` : `on a ${escAttr(i.schedule_type || 'weekly')} schedule`}, action: "${escAttr(i.action_title)}"`;
+  if (tool.name === 'create_workflow') {
+    const triggerDesc = {
+      inactivity: `alert if inactive ${escAttr(i.inactivity_days || 14)} days`,
+      schedule: `on a ${escAttr(i.schedule_type || 'weekly')} schedule`,
+      client_added: `when a new client is added${i.scope_portfolio && i.scope_portfolio !== 'all' ? ` to ${escAttr(i.scope_portfolio)}` : ''}`,
+      task_due_soon: `${escAttr(i.days_before_due != null ? i.days_before_due : 1)} day(s) before a task is due`,
+      kpi_drop: `if ${i.target_kpi_key ? escAttr(i.target_kpi_key) : 'any KPI'} score drops`,
+      collections_status: `if a Collections account is ${escAttr(i.target_collections_status || 'escalated')}`,
+    }[i.trigger_type] || escAttr(i.trigger_type);
+    const actionDesc = i.action_type === 'notify_only' ? `notify: "${escAttr(i.action_title)}"` : `action: "${escAttr(i.action_title)}"`;
+    return `🔁 Create workflow <b>${escAttr(i.name)}</b> — ${triggerDesc}, ${actionDesc}`;
+  }
   if (tool.name === 'update_workflow') return `🔁 Update workflow <b>${escAttr(i.workflow_name)}</b>`;
   if (tool.name === 'delete_workflow') return `🗑️ Delete workflow <b>${escAttr(i.workflow_name)}</b>`;
   if (tool.name === 'create_client') {
