@@ -2923,9 +2923,10 @@ tr.hidden-row { display: none; }
     <input type="text" id="wfName" class="field-input" style="height:38px;margin-bottom:16px" placeholder="e.g. SMB inactivity alert">
 
     <label class="field-label">When should it trigger? <span style="color:var(--orange)">*</span></label>
-    <div style="display:flex;gap:18px;margin-bottom:14px">
+    <div style="display:flex;gap:18px;margin-bottom:14px;flex-wrap:wrap">
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfTriggerType" value="inactivity" checked onchange="renderWorkflowTriggerFields()"> 😴 Client inactivity</label>
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfTriggerType" value="schedule" onchange="renderWorkflowTriggerFields()"> 📅 On a schedule</label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfTriggerType" value="client_added" onchange="renderWorkflowTriggerFields()"> ✨ New client added</label>
     </div>
 
     <div id="workflowTriggerFields"></div>
@@ -10172,6 +10173,7 @@ async function saveNewClient() {
   closeAddClientModal();
   rebuildAll();
   addedTo.forEach(pk => saveClientsToSupabase(pk).catch(e => console.warn('Save failed:', e)));
+  fireClientAddedWorkflows(name, addedTo).catch(e => console.warn('client_added workflow check failed:', e.message));
 
   let msg = `Added "${name}" to ${addedTo.map(pk => PORTFOLIO_LABELS[pk]).join(', ')} · Saved`;
   if (skippedFrom.length) msg += ` (already existed in ${skippedFrom.join(', ')}, skipped)`;
@@ -10332,6 +10334,10 @@ function describeWorkflowTrigger(wf) {
     const scope = wf.scope_portfolio === 'all' ? 'any portfolio' : PORTFOLIO_LABELS[wf.scope_portfolio] || wf.scope_portfolio;
     return `😴 If a client in ${scope} hasn't had a note in ${wf.inactivity_days} days`;
   }
+  if (wf.trigger_type === 'client_added') {
+    const scope = !wf.scope_portfolio || wf.scope_portfolio === 'all' ? 'any portfolio' : PORTFOLIO_LABELS[wf.scope_portfolio] || wf.scope_portfolio;
+    return `✨ When a new client is added to ${scope}`;
+  }
   const freq = wf.schedule_type === 'custom' ? `every ${wf.schedule_custom_n} ${wf.schedule_custom_unit}` : { daily: 'Daily', weekly: 'Weekly', monthly: 'Monthly' }[wf.schedule_type] || wf.schedule_type;
   const target = wf.scope_type === 'client' ? `for ${wf.scope_client_name}` : `for every client in ${wf.scope_portfolio === 'all' ? 'any portfolio' : PORTFOLIO_LABELS[wf.scope_portfolio]}`;
   return `📅 ${freq} ${target}`;
@@ -10415,6 +10421,14 @@ function renderWorkflowTriggerFields(existing) {
         <div><label for="wfScopePortfolio" class="field-label">Scope</label><select id="wfScopePortfolio" class="field-select" style="height:38px">${portfolioOptions}</select></div>
       </div>`;
     if (existing) document.getElementById('wfScopePortfolio').value = existing.scope_portfolio || 'all';
+  } else if (triggerType === 'client_added') {
+    box.innerHTML = `
+      <div style="margin-bottom:16px">
+        <label for="wfScopePortfolioClientAdded" class="field-label">Which portfolio?</label>
+        <select id="wfScopePortfolioClientAdded" class="field-select" style="height:38px">${portfolioOptions}</select>
+        <div style="font-size:var(--font-xs);color:var(--text3);margin-top:4px">Fires the moment a new client is added to this portfolio — whether added manually or by Nirvana.</div>
+      </div>`;
+    if (existing) document.getElementById('wfScopePortfolioClientAdded').value = existing.scope_portfolio || 'all';
   } else {
     box.innerHTML = `
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
@@ -10512,6 +10526,8 @@ async function saveWorkflow() {
   if (triggerType === 'inactivity') {
     wf.inactivity_days = Math.max(1, parseInt(document.getElementById('wfInactivityDays').value) || 14);
     wf.scope_portfolio = document.getElementById('wfScopePortfolio').value;
+  } else if (triggerType === 'client_added') {
+    wf.scope_portfolio = document.getElementById('wfScopePortfolioClientAdded').value;
   } else {
     wf.schedule_type = document.getElementById('wfScheduleType').value;
     wf.schedule_custom_n = wf.schedule_type === 'custom' ? Math.max(1, parseInt(document.getElementById('wfScheduleCustomN').value) || 7) : null;
@@ -10551,6 +10567,24 @@ async function createWorkflowTask(wf, clientName) {
   if (task.assigned_to_email) {
     await createNotification(task.assigned_to_email, 'task_assigned', `🔁 Automated task from "${wf.name}" on ${clientName}: "${task.title}"`, clientName);
   }
+}
+
+// New-client-added trigger (Block 1, Workflows v2, 2026-07-11) -- unlike
+// inactivity/schedule, this doesn't get evaluated by the periodic engine at
+// all; it fires immediately at the moment a client is actually created, from
+// both places that can create one: the manual Add Client modal
+// (saveNewClient) and Nirvana's create_client tool. Reuses the existing
+// scope_portfolio field (no new column needed for this trigger type) and
+// the existing createWorkflowTask()/de-dup logic — this only decides WHICH
+// workflows should fire, not how a task gets created.
+async function fireClientAddedWorkflows(clientName, addedToPortfolios) {
+  if (!Array.isArray(addedToPortfolios) || addedToPortfolios.length === 0) return [];
+  const matches = (WORKFLOWS || []).filter(wf =>
+    wf.active && wf.trigger_type === 'client_added' &&
+    (!wf.scope_portfolio || wf.scope_portfolio === 'all' || addedToPortfolios.includes(wf.scope_portfolio))
+  );
+  for (const wf of matches) await createWorkflowTask(wf, clientName);
+  return matches.map(wf => wf.name);
 }
 
 async function runInactivityWorkflow(wf) {
@@ -11218,14 +11252,14 @@ const AI_AGENT_TOOLS = [
   },
   {
     name: 'create_workflow',
-    description: 'Create a new automation workflow. Two trigger types: "inactivity" (creates a task if a client in a portfolio has had no note logged in N days) or "schedule" (creates a task on a recurring schedule, either for one specific client or for every client in a portfolio). This changes data — the user will be asked to confirm first.',
+    description: 'Create a new automation workflow. Three trigger types: "inactivity" (creates a task if a client in a portfolio has had no note logged in N days), "schedule" (creates a task on a recurring schedule, either for one specific client or for every client in a portfolio), or "client_added" (creates a task the moment a new client is added to a portfolio — fires immediately, not on the periodic check). This changes data — the user will be asked to confirm first.',
     input_schema: {
       type: 'object',
       properties: {
         name: { type: 'string' },
-        trigger_type: { type: 'string', enum: ['inactivity', 'schedule'] },
+        trigger_type: { type: 'string', enum: ['inactivity', 'schedule', 'client_added'] },
         inactivity_days: { type: 'integer', description: 'Required if trigger_type is inactivity' },
-        scope_portfolio: { type: 'string', enum: ['all', 'smb', 'whitelabel', 'support'], description: 'Which portfolio(s) this applies to' },
+        scope_portfolio: { type: 'string', enum: ['all', 'smb', 'whitelabel', 'support'], description: 'Which portfolio(s) this applies to — used by inactivity and client_added, and by schedule when scope_type is portfolio' },
         schedule_type: { type: 'string', enum: ['daily', 'weekly', 'monthly', 'custom'], description: 'Required if trigger_type is schedule' },
         schedule_custom_n: { type: 'integer', description: 'Required if schedule_type is custom' },
         schedule_custom_unit: { type: 'string', enum: ['days', 'weeks', 'months'], description: 'Required if schedule_type is custom' },
@@ -11245,6 +11279,7 @@ const AI_AGENT_TOOLS = [
       properties: {
         workflow_name: { type: 'string', description: 'The existing workflow\'s current name, used to find it' },
         active: { type: 'boolean' },
+        trigger_type: { type: 'string', enum: ['inactivity', 'schedule', 'client_added'] },
         inactivity_days: { type: 'integer' },
         scope_portfolio: { type: 'string', enum: ['all', 'smb', 'whitelabel', 'support'] },
         action_title: { type: 'string' },
@@ -11260,7 +11295,7 @@ const AI_AGENT_TOOLS = [
   },
   {
     name: 'create_client',
-    description: 'Create a new client record in one or more portfolios (SMB, White Label, Support), optionally with an organization name, contact info, and which products they already use. This changes data — the user will be asked to confirm before it is actually saved. If the person hasn\'t said which portfolio(s) to add the client to, ASK before calling this tool rather than guessing — do not default to a portfolio on their behalf.',
+    description: 'Create a new client record in one or more portfolios (SMB, White Label, Support), optionally with an organization name, contact info, and which products they already use. This changes data — the user will be asked to confirm before it is actually saved. If the person hasn\'t said which portfolio(s) to add the client to, ASK before calling this tool rather than guessing — do not default to a portfolio on their behalf. If the response includes "workflows_triggered", any matching "new client added" automation already ran (e.g. created a welcome/onboarding task) — mention that to the user rather than leaving it unsaid.',
     input_schema: {
       type: 'object',
       properties: {
@@ -11691,6 +11726,8 @@ async function executeAiTool(name, input) {
       if (input.trigger_type === 'inactivity') {
         wf.inactivity_days = input.inactivity_days || 14;
         wf.scope_portfolio = input.scope_portfolio || 'all';
+      } else if (input.trigger_type === 'client_added') {
+        wf.scope_portfolio = input.scope_portfolio || 'all';
       } else {
         wf.schedule_type = input.schedule_type || 'weekly';
         wf.schedule_custom_n = input.schedule_custom_n || null;
@@ -11708,6 +11745,7 @@ async function executeAiTool(name, input) {
       const wf = WORKFLOWS.find(w => w.name.toLowerCase() === (input.workflow_name || '').toLowerCase());
       if (!wf) return { error: 'Workflow not found' };
       if (input.active !== undefined) wf.active = input.active;
+      if (input.trigger_type !== undefined) wf.trigger_type = input.trigger_type;
       if (input.inactivity_days !== undefined) wf.inactivity_days = input.inactivity_days;
       if (input.scope_portfolio !== undefined) wf.scope_portfolio = input.scope_portfolio;
       if (input.action_title !== undefined) wf.action_title = input.action_title;
@@ -11770,12 +11808,14 @@ async function executeAiTool(name, input) {
 
       rebuildAll();
       addedTo.forEach(pk => saveClientsToSupabase(pk).catch(e => console.warn('Save failed:', e)));
+      const triggeredWorkflows = await fireClientAddedWorkflows(name, addedTo).catch(e => { console.warn('client_added workflow check failed:', e.message); return []; });
 
       return {
         ok: true, name,
         added_to: addedTo.map(pk => PORTFOLIO_LABELS[pk]),
         skipped: skippedFrom.length ? skippedFrom : undefined,
         contact_saved: contactSaved,
+        workflows_triggered: triggeredWorkflows.length ? triggeredWorkflows : undefined,
       };
     }
     case 'update_client_contact': {
