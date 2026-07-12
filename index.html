@@ -735,12 +735,12 @@ tr.hidden-row { display: none; }
 .product-icon-chip img { width: 14px; height: 14px; }
 
 /* ─── UPSELL CARDS ─────────────────────────────────────────────────────── */
-.upsell-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+.upsell-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); margin-bottom: var(--space-5); }
 .upsell-card {
-  background: var(--bg2);
+  background: var(--gradient-card);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 20px;
+  padding: var(--space-5);
   border-left: 4px solid var(--orange);
   transition: border-color var(--transition-slow), transform var(--transition-base);
 }
@@ -748,18 +748,18 @@ tr.hidden-row { display: none; }
 .upsell-card.high { border-left-color: var(--red); }
 .upsell-card.medium { border-left-color: var(--yellow); }
 .upsell-card.low { border-left-color: var(--green); }
-.upsell-hd { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
-.upsell-name { font-size: 15px; font-weight: 800; color: var(--text); }
-.prio-tag { font-size: 9px; font-weight: 700; padding: 3px 9px; border-radius: var(--radius-pill); text-transform: uppercase; letter-spacing: .7px; }
+.upsell-hd { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--space-2); }
+.upsell-name { font-family: var(--font-display); font-size: var(--font-md); font-weight: 800; color: var(--text); }
+.prio-tag { font-size: var(--font-2xs); font-weight: 700; padding: var(--space-1) var(--space-2); border-radius: var(--radius-pill); text-transform: uppercase; letter-spacing: .7px; }
 .prio-high { background: rgba(239,68,68,.12); color: var(--red); }
 .prio-med { background: rgba(245,158,11,.12); color: var(--yellow); }
 .prio-low { background: rgba(34,197,94,.12); color: var(--green); }
-.upsell-num { font-size: 26px; font-weight: 800; color: var(--orange); line-height: 1; }
-.upsell-sub { font-size: 11px; color: var(--text3); margin-bottom: 12px; }
+.upsell-num { font-family: var(--font-mono); font-size: var(--font-2xl); font-weight: 800; color: var(--orange); line-height: 1; }
+.upsell-sub { font-size: var(--font-xs); color: var(--text3); margin-bottom: var(--space-3); }
 .upsell-steps { list-style: none; }
 .upsell-steps li {
-  display: flex; gap: 8px; align-items: flex-start;
-  padding: 5px 0; font-size: 11.5px; color: var(--text2); line-height: 1.45;
+  display: flex; gap: var(--space-2); align-items: flex-start;
+  padding: var(--space-2) 0; font-size: var(--font-xs); color: var(--text2); line-height: 1.45;
   border-bottom: 1px solid rgba(46,38,34,.6);
 }
 .upsell-steps li:last-child { border-bottom: none; }
@@ -767,7 +767,7 @@ tr.hidden-row { display: none; }
   background: var(--orange); color: white;
   width: 16px; height: 16px; border-radius: 50%;
   display: inline-flex; align-items: center; justify-content: center;
-  font-size: 8.5px; font-weight: 800; flex-shrink: 0; margin-top: 1px;
+  font-size: var(--font-2xs); font-weight: 800; flex-shrink: 0; margin-top: 1px;
 }
 
 /* ─── NOTES ────────────────────────────────────────────────────────────── */
@@ -790,71 +790,71 @@ tr.hidden-row { display: none; }
 
 /* ─── ACTION PLAN ──────────────────────────────────────────────────────── */
 .phase-card {
-  background: var(--bg2); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 20px; margin-bottom: 14px;
+  background: var(--gradient-card); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: var(--space-5); margin-bottom: var(--space-3);
 }
-.phase-hd { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+.phase-hd { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-4); flex-wrap: wrap; }
 .phase-tag {
-  background: linear-gradient(135deg, var(--orange), var(--orange2));
-  color: white; padding: 5px 12px; border-radius: 7px;
-  font-size: 11px; font-weight: 800; letter-spacing: 1px;
+  background: var(--gradient-accent);
+  color: white; padding: var(--space-1) var(--space-3); border-radius: var(--radius-xs);
+  font-size: var(--font-xs); font-weight: 800; letter-spacing: 1px;
 }
-.phase-title { font-size: 15px; font-weight: 700; color: var(--text); }
-.phase-time { margin-left: auto; font-size: 11px; color: var(--orange); font-weight: 600; }
-.phase-steps { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.phase-title { font-family: var(--font-display); font-size: var(--font-md); font-weight: 700; color: var(--text); }
+.phase-time { margin-left: auto; font-size: var(--font-xs); color: var(--orange); font-weight: 600; }
+.phase-steps { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); }
 .action-step {
-  display: flex; gap: 10px; padding: 12px;
+  display: flex; gap: var(--space-2); padding: var(--space-3);
   background: var(--bg3); border-radius: var(--radius-sm); border: 1px solid var(--border);
 }
 .step-num {
-  background: var(--orange); color: white;
+  background: var(--gradient-accent); color: white;
   width: 26px; height: 26px; border-radius: 50%;
   display: inline-flex; align-items: center; justify-content: center;
-  font-size: 11px; font-weight: 800; flex-shrink: 0;
+  font-size: var(--font-xs); font-weight: 800; flex-shrink: 0;
 }
-.step-body { font-size: 11.5px; color: var(--text2); line-height: 1.45; }
-.step-body strong { color: var(--text); display: block; margin-bottom: 2px; font-size: 12px; }
+.step-body { font-size: var(--font-xs); color: var(--text2); line-height: 1.45; }
+.step-body strong { color: var(--text); display: block; margin-bottom: 2px; font-size: var(--font-sm); }
 
 /* ─── CLIENT SUCCESS KPI PLAYBOOK ──────────────────────────────────────── */
 .kpi-hero-card {
-  background: var(--bg2); border: 1px solid var(--border); border-top: 3px solid var(--kpi-accent, var(--orange));
-  border-radius: var(--radius); padding: 20px;
+  background: var(--gradient-card); border: 1px solid var(--border); border-top: 3px solid var(--kpi-accent, var(--orange));
+  border-radius: var(--radius); padding: var(--space-5);
 }
-.kpi-hero-name { font-size: 14px; font-weight: 800; color: var(--text); display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-.kpi-star-picker { display: flex; gap: 4px; margin-bottom: 8px; }
-.kpi-star-picker .star { font-size: 26px; line-height: 1; color: var(--border); transition: color var(--transition-fast), transform var(--transition-fast); }
+.kpi-hero-name { font-family: var(--font-display); font-size: var(--font-md); font-weight: 800; color: var(--text); display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-2); }
+.kpi-star-picker { display: flex; gap: 4px; margin-bottom: var(--space-2); }
+.kpi-star-picker .star { font-size: var(--font-2xl); line-height: 1; color: var(--border); transition: color var(--transition-fast), transform var(--transition-fast); }
 .kpi-star-picker.editable .star { cursor: pointer; }
 .kpi-star-picker.editable .star:hover { transform: scale(1.15); }
 .kpi-star-picker .star.filled { color: var(--yellow); }
-.kpi-score-label { font-size: 11px; color: var(--text3); margin-bottom: 12px; }
-.kpi-trend-badge { font-size: var(--font-2xs); font-weight: 700; padding: 3px 9px; border-radius: 12px; display: inline-block; margin-bottom: 12px; }
+.kpi-score-label { font-size: var(--font-xs); color: var(--text3); margin-bottom: var(--space-3); }
+.kpi-trend-badge { font-size: var(--font-2xs); font-weight: 700; padding: var(--space-1) var(--space-2); border-radius: var(--radius); display: inline-block; margin-bottom: var(--space-3); }
 .kpi-trend-up { background: rgba(34,197,94,.15); color: var(--green); }
 .kpi-trend-down { background: rgba(239,68,68,.15); color: var(--red); }
 .kpi-trend-flat { background: rgba(163,154,146,.18); color: var(--text2); }
-.kpi-hero-desc { font-size: 12px; color: var(--text2); line-height: 1.55; margin-bottom: 12px; }
-.kpi-jump-link { font-size: 11px; font-weight: 700; color: var(--orange); text-decoration: none; }
+.kpi-hero-desc { font-size: var(--font-sm); color: var(--text2); line-height: 1.55; margin-bottom: var(--space-3); }
+.kpi-jump-link { font-size: var(--font-xs); font-weight: 700; color: var(--orange); text-decoration: none; }
 .kpi-jump-link:hover { text-decoration: underline; }
 
 .kpi-playbook-card {
-  background: var(--bg2); border: 1px solid var(--border); border-left: 4px solid var(--kpi-accent, var(--orange));
-  border-radius: var(--radius); padding: 24px; margin-bottom: 16px; scroll-margin-top: 20px;
+  background: var(--gradient-card); border: 1px solid var(--border); border-left: 4px solid var(--kpi-accent, var(--orange));
+  border-radius: var(--radius); padding: var(--space-6); margin-bottom: var(--space-4); scroll-margin-top: var(--space-5);
 }
-.kpi-playbook-hd { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
-.kpi-playbook-title { font-size: 17px; font-weight: 800; color: var(--text); display: flex; align-items: center; gap: 8px; }
-.kpi-subhead { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--text3); margin: 18px 0 10px; }
+.kpi-playbook-hd { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-3); }
+.kpi-playbook-title { font-family: var(--font-display); font-size: var(--font-lg); font-weight: 800; color: var(--text); display: flex; align-items: center; gap: var(--space-2); }
+.kpi-subhead { font-size: var(--font-xs); font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--text3); margin: var(--space-4) 0 var(--space-2); }
 .kpi-subhead:first-of-type { margin-top: 4px; }
-.kpi-why-box { font-size: 12.5px; color: var(--text2); line-height: 1.6; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; }
-.kpi-sop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.warning-list { display: flex; flex-direction: column; gap: 8px; }
+.kpi-why-box { font-size: var(--font-sm); color: var(--text2); line-height: 1.6; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--space-3) var(--space-4); }
+.kpi-sop-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2); }
+.warning-list { display: flex; flex-direction: column; gap: var(--space-2); }
 .warning-chip {
-  display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--text2); line-height: 1.5;
-  background: rgba(239,68,68,.06); border: 1px solid rgba(239,68,68,.2); border-radius: var(--radius-sm); padding: 10px 12px;
+  display: flex; align-items: flex-start; gap: var(--space-2); font-size: var(--font-sm); color: var(--text2); line-height: 1.5;
+  background: rgba(239,68,68,.06); border: 1px solid rgba(239,68,68,.2); border-radius: var(--radius-sm); padding: var(--space-2) var(--space-3);
 }
 .opportunity-chip {
-  display: flex; align-items: flex-start; gap: 8px; font-size: 12px; color: var(--text2); line-height: 1.5;
-  background: rgba(34,197,94,.06); border: 1px solid rgba(34,197,94,.2); border-radius: var(--radius-sm); padding: 10px 12px;
+  display: flex; align-items: flex-start; gap: var(--space-2); font-size: var(--font-sm); color: var(--text2); line-height: 1.5;
+  background: rgba(34,197,94,.06); border: 1px solid rgba(34,197,94,.2); border-radius: var(--radius-sm); padding: var(--space-2) var(--space-3);
 }
-.kpi-log-row { display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+.kpi-log-row { display: grid; grid-template-columns: auto 1fr auto; gap: var(--space-3); align-items: center; margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--border); }
 @media (max-width: 900px) { .kpi-sop-grid { grid-template-columns: 1fr; } .kpi-log-row { grid-template-columns: 1fr; } }
 
 /* ─── AI AGENT ("NIRVANA") ─────────────────────────────────────────────── */
@@ -1191,7 +1191,7 @@ tr.hidden-row { display: none; }
 .task-info { flex: 1; }
 .task-title { font-size: 13px; font-weight: 600; color: var(--text); }
 .task-meta { font-size: 11px; color: var(--text3); margin-top: 2px; }
-.role-pill { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; padding: 2px 7px; border-radius: var(--radius-sm); }
+.role-pill { font-size: var(--font-2xs); font-weight: 800; text-transform: uppercase; letter-spacing: .03em; padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); }
 .role-pill.admin { background: rgba(226,84,31,.18); color: var(--orange2); }
 .role-pill.superuser { background: rgba(59,130,246,.18); color: var(--blue); }
 .role-pill.user { background: rgba(163,154,146,.18); color: var(--text2); }
@@ -1268,9 +1268,9 @@ tr.hidden-row { display: none; }
 }
 .kb-dropzone:hover, .kb-dropzone.dragover { border-color: var(--orange); background: rgba(226,84,31,.06); }
 
-.team-row { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 8px; background: var(--bg3); }
-.team-row .team-name { flex: 1; font-weight: 700; font-size: 13px; color: var(--text); }
-.team-row .team-email { font-size: 11px; color: var(--text3); }
+.team-row { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: var(--space-2); background: var(--bg3); }
+.team-row .team-name { flex: 1; font-weight: 700; font-size: var(--font-base); color: var(--text); }
+.team-row .team-email { font-size: var(--font-xs); color: var(--text3); }
 
 /* ─── SECTION HEADERS ──────────────────────────────────────────────────── */
 .section-hd { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-2); }
@@ -2075,14 +2075,14 @@ tr.hidden-row { display: none; }
       <div class="kpi"><div class="kpi-icon">⚠️</div><div class="kpi-val" style="color:var(--yellow)" id="va-flagged">0</div><div class="kpi-lbl">Flagged for Review</div><div class="kpi-sub">Have a note attached</div></div>
     </div>
 
-    <div class="card" style="margin-bottom:20px">
+    <div class="card" style="margin-bottom:var(--space-5)">
       <div class="card-header">
         <div><div class="card-title">Voice Agent Adoption by Portfolio</div><div class="card-sub">How many clients in each portfolio use Voice Agent, vs. don't</div></div>
       </div>
       <div class="chart-wrap h260"><canvas id="voiceBar"></canvas></div>
     </div>
 
-    <div class="section-hd" style="margin-top:8px"><div class="section-num" style="background:var(--yellow)">⚠</div><h2 style="color:var(--yellow)">Clients Flagged for Review</h2></div>
+    <div class="section-hd" style="margin-top:var(--space-2)"><div class="section-num" style="background:var(--yellow)">⚠</div><h2 style="color:var(--yellow)">Clients Flagged for Review</h2></div>
     <div class="section-div" style="background:linear-gradient(90deg,var(--yellow),transparent)"></div>
     <div class="card">
       <div class="card-header">
@@ -2090,7 +2090,7 @@ tr.hidden-row { display: none; }
       </div>
       <div class="table-controls">
         <input type="text" class="search-box" id="vaFlagSearch" placeholder="Search flagged clients..." oninput="debouncedRebuildVoiceAgentFlagged()">
-        <div style="display:flex;gap:6px;flex-wrap:wrap" id="vaFlagPills">
+        <div style="display:flex;gap:var(--space-2);flex-wrap:wrap" id="vaFlagPills">
           <button class="filter-pill active" onclick="setVoiceAgentPortfolioFilter('all',this)">All Portfolios</button>
           <button class="filter-pill" onclick="setVoiceAgentPortfolioFilter('smb',this)">📊 SMB</button>
           <button class="filter-pill" onclick="setVoiceAgentPortfolioFilter('whitelabel',this)">🏷️ White Label</button>
@@ -2114,7 +2114,7 @@ tr.hidden-row { display: none; }
       <div class="kpi"><div class="kpi-icon">⚠️</div><div class="kpi-val" style="color:var(--yellow)" id="ta-stale">0</div><div class="kpi-lbl">Flagged for Review</div><div class="kpi-sub">Stale leads: 7 days–6 months</div></div>
     </div>
 
-    <div class="card" style="margin-bottom:20px">
+    <div class="card" style="margin-bottom:var(--space-5)">
       <div class="card-header">
         <div><div class="card-title">Adoption Rate by Product &amp; Portfolio</div><div class="card-sub">% of each portfolio's clients using each product</div></div>
       </div>
@@ -2126,9 +2126,9 @@ tr.hidden-row { display: none; }
         <div><div class="card-title">Breakdown by Product &amp; Portfolio</div><div class="card-sub">How many clients use each product, split by dashboard — click a number to see who</div></div>
       </div>
       <div style="overflow-x:auto">
-        <table>
+        <table class="pill-rows">
           <thead><tr>
-            <th style="text-align:left;padding-left:14px">Product</th>
+            <th style="text-align:left;padding-left:var(--space-3)">Product</th>
             <th>📊 SMB</th>
             <th>🏷️ White Label</th>
             <th>📊 Support</th>
@@ -2139,15 +2139,15 @@ tr.hidden-row { display: none; }
       </div>
     </div>
 
-    <div class="section-hd" style="margin-top:8px"><div class="section-num" style="background:var(--yellow)">⚠</div><h2 style="color:var(--yellow)">Flagged for Review — Stale Leads</h2></div>
+    <div class="section-hd" style="margin-top:var(--space-2)"><div class="section-num" style="background:var(--yellow)">⚠</div><h2 style="color:var(--yellow)">Flagged for Review — Stale Leads</h2></div>
     <div class="section-div" style="background:linear-gradient(90deg,var(--yellow),transparent)"></div>
-    <div class="card" style="margin-bottom:20px">
+    <div class="card" style="margin-bottom:var(--space-5)">
       <div class="card-header">
         <div><div class="card-title">Businesses with a Stale Last Lead</div><div class="card-sub">Automatically detected from comments mentioning when the last lead was handled — flagged when that's anywhere from 7 days to 6 months ago</div></div>
       </div>
       <div class="table-controls">
         <input type="text" class="search-box" id="taStaleSearch" placeholder="Search clients..." oninput="debouncedRebuildTextAgentStale()">
-        <div style="display:flex;gap:6px;flex-wrap:wrap" id="taStalePortfolioPills">
+        <div style="display:flex;gap:var(--space-2);flex-wrap:wrap" id="taStalePortfolioPills">
           <button class="filter-pill active" onclick="setTextAgentStaleFilter('all',this)">All Portfolios</button>
           <button class="filter-pill" onclick="setTextAgentStaleFilter('smb',this)">📊 SMB</button>
           <button class="filter-pill" onclick="setTextAgentStaleFilter('whitelabel',this)">🏷️ White Label</button>
@@ -2157,7 +2157,7 @@ tr.hidden-row { display: none; }
       <div id="taStaleList"></div>
     </div>
 
-    <div class="section-hd" style="margin-top:8px"><div class="section-num" style="background:var(--blue)">💬</div><h2 style="color:var(--blue)">Client Activity &amp; Notes</h2></div>
+    <div class="section-hd" style="margin-top:var(--space-2)"><div class="section-num" style="background:var(--blue)">💬</div><h2 style="color:var(--blue)">Client Activity &amp; Notes</h2></div>
     <div class="section-div" style="background:linear-gradient(90deg,var(--blue),transparent)"></div>
     <div class="card">
       <div class="card-header">
@@ -2165,13 +2165,13 @@ tr.hidden-row { display: none; }
       </div>
       <div class="table-controls">
         <input type="text" class="search-box" id="taNotesSearch" placeholder="Search clients..." oninput="debouncedRebuildTextAgentNotes()">
-        <div style="display:flex;gap:6px;flex-wrap:wrap" id="taNotesProductPills">
+        <div style="display:flex;gap:var(--space-2);flex-wrap:wrap" id="taNotesProductPills">
           <button class="filter-pill active" onclick="setTextAgentProductFilter('all',this)">All Products</button>
           <button class="filter-pill" id="taPillYelp" onclick="setTextAgentProductFilter('yelp',this)">⭐ Yelp</button>
           <button class="filter-pill" id="taPillLsa" onclick="setTextAgentProductFilter('google_lsa',this)">🔍 Google LSA</button>
           <button class="filter-pill" id="taPillThumbtack" onclick="setTextAgentProductFilter('thumbtack',this)">📌 Thumbtack</button>
         </div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap" id="taNotesPortfolioPills">
+        <div style="display:flex;gap:var(--space-2);flex-wrap:wrap" id="taNotesPortfolioPills">
           <button class="filter-pill active" onclick="setTextAgentPortfolioFilter('all',this)">All Portfolios</button>
           <button class="filter-pill" onclick="setTextAgentPortfolioFilter('smb',this)">📊 SMB</button>
           <button class="filter-pill" onclick="setTextAgentPortfolioFilter('whitelabel',this)">🏷️ White Label</button>
@@ -2181,7 +2181,7 @@ tr.hidden-row { display: none; }
       <div id="taNotesList"></div>
     </div>
 
-    <div class="card" style="margin-top:20px;display:none" id="taClientListCard">
+    <div class="card" style="margin-top:var(--space-5);display:none" id="taClientListCard">
       <div class="card-header">
         <div><div class="card-title" id="taClientListTitle">Clients</div><div class="card-sub" id="taClientListSub"></div></div>
         <button class="btn btn-ghost btn-sm" onclick="closeTextAgentClientList()">✕ Close</button>
@@ -2328,11 +2328,11 @@ tr.hidden-row { display: none; }
   <div class="page" id="page-action">
     <div class="kpi-row" id="kpiSummaryRow"></div>
 
-    <div class="grid-3" id="kpiHeroRow" style="margin-bottom:20px"></div>
+    <div class="grid-3" id="kpiHeroRow" style="margin-bottom:var(--space-5)"></div>
 
-    <div id="coachingCornerContainer" style="margin-bottom:20px"></div>
+    <div id="coachingCornerContainer" style="margin-bottom:var(--space-5)"></div>
 
-    <div class="grid-2" style="margin-bottom:20px">
+    <div class="grid-2" style="margin-bottom:var(--space-5)">
       <div class="card">
         <div class="card-header">
           <div><div class="card-title">Current Scores</div><div class="card-sub">All three KPIs side by side — target is 5 stars across the board</div></div>
@@ -2351,9 +2351,9 @@ tr.hidden-row { display: none; }
     <div class="section-div"></div>
     <div id="kpiPlaybooksContainer"></div>
 
-    <div class="section-hd" style="margin-top:8px"><div class="section-num">📦</div><h2>Product Adoption Roadmap</h2></div>
+    <div class="section-hd" style="margin-top:var(--space-2)"><div class="section-num">📦</div><h2>Product Adoption Roadmap</h2></div>
     <div class="section-div"></div>
-    <div id="actionPlanSnapshot" style="margin-bottom:20px"></div>
+    <div id="actionPlanSnapshot" style="margin-bottom:var(--space-5)"></div>
     <div id="actionPlanContainer"></div>
     <div class="page-footer">Client Success Hub · Niche Inc. · SuccessOS</div>
   </div>
@@ -2416,9 +2416,9 @@ tr.hidden-row { display: none; }
        PAGE 8: MANAGE PRODUCTS
   ════════════════════════════════════════════════════════════════════════ -->
   <div class="page" id="page-products">
-    <div class="card" style="margin-bottom:20px;padding:14px 18px">
-      <div style="font-size:11px;color:var(--text3);margin-bottom:10px;letter-spacing:.5px;text-transform:uppercase;font-weight:700">Editing Catalog For</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <div class="card" style="margin-bottom:var(--space-5);padding:var(--space-3) var(--space-4)">
+      <div style="font-size:var(--font-xs);color:var(--text3);margin-bottom:var(--space-2);letter-spacing:.5px;text-transform:uppercase;font-weight:700">Editing Catalog For</div>
+      <div style="display:flex;gap:var(--space-2);flex-wrap:wrap">
         <button class="pm-tab active" data-pk="smb" onclick="switchManagePortfolio('smb')">📊 SMB Dashboard</button>
         <button class="pm-tab" data-pk="whitelabel" onclick="switchManagePortfolio('whitelabel')">🏷️ White Label</button>
         <button class="pm-tab" data-pk="support" onclick="switchManagePortfolio('support')">🎫 Support Dashboard</button>
@@ -2432,18 +2432,18 @@ tr.hidden-row { display: none; }
       <div class="kpi"><div class="kpi-icon">✅</div><div class="kpi-val green" id="pmLowCount">0</div><div class="kpi-lbl">Targeted Priority</div></div>
     </div>
 
-    <div class="card" style="margin-bottom:20px">
+    <div class="card" style="margin-bottom:var(--space-5)">
       <div class="card-header">
         <div><div class="card-title">Add a New Product</div><div class="card-sub">It will appear instantly across the table, charts, KPIs, and upsell playbook</div></div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 90px 1fr 1fr;gap:10px;align-items:end;margin-bottom:14px">
+      <div style="display:grid;grid-template-columns:1fr 90px 1fr 1fr;gap:var(--space-3);align-items:end;margin-bottom:var(--space-3)">
         <div>
           <label for="newProductName" class="field-label">Product Name</label>
           <input type="text" id="newProductName" placeholder="e.g. SMS Marketing" class="field-input">
         </div>
         <div>
           <label for="newProductIcon" class="field-label">Icon</label>
-          <input type="text" id="newProductIcon" placeholder="📦" maxlength="2" style="width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;text-align:center">
+          <input type="text" id="newProductIcon" placeholder="📦" maxlength="2" style="width:100%;padding:var(--space-2) var(--space-3);background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:var(--font-base);outline:none;text-align:center">
         </div>
         <div>
           <label for="newProductPriority" class="field-label">Priority</label>
@@ -2825,11 +2825,11 @@ tr.hidden-row { display: none; }
        PAGE: TEAM & PERMISSIONS — admin only
   ════════════════════════════════════════════════════════════════════════ -->
   <div class="page" id="page-team">
-    <div class="card" style="margin-bottom:20px">
+    <div class="card" style="margin-bottom:var(--space-5)">
       <div class="card-header">
         <div><div class="card-title">Authorize a Teammate</div><div class="card-sub">This email will be able to sign in with Google, or by creating a password</div></div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 160px 120px;gap:10px;align-items:end">
+      <div style="display:grid;grid-template-columns:1fr 1fr 160px 120px;gap:var(--space-3);align-items:end">
         <div>
           <label for="newMemberEmail" class="field-label">Email <span style="color:var(--orange)">(required — this is their login)</span></label>
           <input type="text" id="newMemberEmail" placeholder="jordan@getniche.ai" class="field-input">
@@ -2848,15 +2848,15 @@ tr.hidden-row { display: none; }
         </div>
         <button class="btn btn-primary" onclick="addTeamMember()">＋ Authorize</button>
       </div>
-      <div style="font-size:11px;color:var(--text3);margin-top:12px;line-height:1.6">
+      <div style="font-size:var(--font-xs);color:var(--text3);margin-top:var(--space-3);line-height:1.6">
         This app is invite-only — only emails added here can sign in. Once added, tell them to go to the Hub and either click <b>Sign in with Google</b> (if that email is a Google account), or use <b>"First time here? Create your password"</b> under Email/Password to set one up.
       </div>
     </div>
-    <div class="card" style="margin-bottom:20px">
+    <div class="card" style="margin-bottom:var(--space-5)">
       <div class="card-header">
         <div><div class="card-title">Roles Explained</div></div>
       </div>
-      <div style="font-size:12px;color:var(--text2);line-height:1.9">
+      <div style="font-size:var(--font-sm);color:var(--text2);line-height:1.9">
         <div><span class="role-pill admin">Admin</span> Full access — upload, edit clients, manage the product catalog, and manage the team.</div>
         <div><span class="role-pill superuser">Super user</span> Can upload spreadsheets, connect Sheets, and edit/merge clients. Cannot manage team or the product catalog.</div>
         <div><span class="role-pill user">User</span> View-only — dashboards, charts, and reports, no editing or uploads.</div>
@@ -4260,16 +4260,16 @@ function rebuildTextAgentPage() {
       const cell = (count, pk, idx) => {
         const pct = portfolioClientCounts[idx] ? Math.round(count / portfolioClientCounts[idx] * 100) : 0;
         return count > 0
-          ? `<td><span class="pc-badge pc-${Math.min(count,6)}" style="cursor:pointer" onclick="showTextAgentClientList('${p.key}','${pk}')">${count}</span> <span style="color:var(--text3);font-size:11px">(${pct}%)</span></td>`
+          ? `<td><span class="pc-badge pc-${Math.min(count,6)}" style="cursor:pointer" onclick="showTextAgentClientList('${p.key}','${pk}')" tabindex="0" role="button" aria-label="${count} clients using ${escAttr(p.label)} in ${pk}">${count}</span> <span style="color:var(--text3);font-size:var(--font-xs)">(${pct}%)</span></td>`
           : `<td><span style="color:var(--text3)">0 (0%)</span></td>`;
       };
       const totalPct = totalClients ? Math.round(total / totalClients * 100) : 0;
       return `<tr>
-        <td style="padding-left:14px;font-weight:600;color:var(--text)">${renderProductIcon(p.icon, 16)} ${p.label}</td>
+        <td style="padding-left:var(--space-3);font-weight:600;color:var(--text)">${renderProductIcon(p.icon, 16)} ${p.label}</td>
         ${cell(counts[0], 'smb', 0)}
         ${cell(counts[1], 'whitelabel', 1)}
         ${cell(counts[2], 'support', 2)}
-        <td><span class="pc-badge pc-${Math.min(total,6)}">${total}</span> <span style="color:var(--text3);font-size:11px">(${totalPct}%)</span></td>
+        <td><span class="pc-badge pc-${Math.min(total,6)}">${total}</span> <span style="color:var(--text3);font-size:var(--font-xs)">(${totalPct}%)</span></td>
       </tr>`;
     }).join('');
   }
@@ -5352,6 +5352,13 @@ function rebuildUpsellCards() {
   const cat = getCatalog('smb'); // shared/unified catalog across all three portfolios
   const pkMeta = { smb: { label: 'SMB', chip: 'chip-smb' }, whitelabel: { label: 'White Label', chip: 'chip-whitelabel' }, support: { label: 'Support', chip: 'chip-support' } };
 
+  if (cat.length === 0) {
+    ug.innerHTML = emptyStateHTML({ icon: '🎯', title: 'No products in the catalog yet', sub: 'Add products in Manage Products to see upsell opportunities here.' });
+    const set0 = (id) => { const el = document.getElementById(id); if (el) el.textContent = 0; };
+    ['upsell-total-opps', 'upsell-high-count', 'upsell-med-count', 'upsell-low-count'].forEach(set0);
+    return;
+  }
+
   const rows = cat.map(p => {
     const byPortfolio = portfolios.map(pk => {
       const cl = getClients(pk);
@@ -5386,7 +5393,7 @@ function rebuildUpsellCards() {
         </div>
         <div class="upsell-num">${totalGap} clients</div>
         <div class="upsell-sub">${totalGap} of ${totalClients} clients not using, across SMB, White Label &amp; Support</div>
-        <div style="margin:8px 0 6px;display:flex;gap:6px;flex-wrap:wrap">${breakdown}</div>
+        <div style="margin:var(--space-2) 0 var(--space-2);display:flex;gap:var(--space-2);flex-wrap:wrap">${breakdown}</div>
         <ul class="upsell-steps">${steps}</ul>
       </div>`;
   }).join('');
@@ -5512,7 +5519,7 @@ function starPickerHtml(key, score) {
   const editable = canEdit();
   let h = `<div class="kpi-star-picker${editable ? ' editable' : ''}" data-kpi="${key}">`;
   for (let i = 1; i <= 5; i++) {
-    h += `<span class="star${i <= score ? ' filled' : ''}" data-val="${i}" ${editable ? `onclick="logKpiScore('${key}', ${i})"` : ''}>★</span>`;
+    h += `<span class="star${i <= score ? ' filled' : ''}" data-val="${i}" ${editable ? `onclick="logKpiScore('${key}', ${i})" tabindex="0" role="button" aria-label="Rate ${i} out of 5 stars"` : ''}>★</span>`;
   }
   h += `</div>`;
   return h;
@@ -5686,7 +5693,7 @@ function rebuildCoachingCorner() {
         <strong style="color:var(--text)">${meta.icon} ${meta.label}</strong> is currently sitting at ${score}/5 stars${trendBadgeHtml(weakestKey)}.
         Here's one thing to work on today:
       </div>
-      <div class="action-step" style="margin-top:10px">
+      <div class="action-step" style="margin-top:var(--space-3)">
         <div class="step-num" style="background:${meta.color}">🎓</div>
         <div class="step-body"><strong>${tip.title}</strong>${tip.body}</div>
       </div>
@@ -5743,12 +5750,12 @@ function rebuildActionPlan() {
         <div class="card-header">
           <div><div class="card-title">📌 This Week's Top Priorities</div><div class="card-sub">Live, computed from your current SMB, White Label, and Support data — use these to focus Phase 1</div></div>
         </div>
-        <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <div style="display:flex;gap:var(--space-3);flex-wrap:wrap">
           ${rows.map((r, i) => `
-            <div style="flex:1;min-width:180px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 16px">
-              <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px">#${i+1} Opportunity</div>
-              <div style="font-weight:700;color:var(--text);font-size:14px;margin-bottom:4px">${renderProductIcon(r.p.icon, 18)} ${r.p.label}</div>
-              <div style="font-size:12px;color:var(--text2)">${r.gap} of ${totalClients} clients not using this yet</div>
+            <div style="flex:1;min-width:180px;background:var(--gradient-card);border:1px solid var(--border);border-radius:var(--radius);padding:var(--space-3) var(--space-4)">
+              <div style="font-size:var(--font-xs);color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:var(--space-2)">#${i+1} Opportunity</div>
+              <div style="font-weight:700;color:var(--text);font-size:var(--font-md);margin-bottom:4px">${renderProductIcon(r.p.icon, 18)} ${r.p.label}</div>
+              <div style="font-size:var(--font-sm);color:var(--text2)">${r.gap} of ${totalClients} clients not using this yet</div>
             </div>`).join('')}
         </div>
       </div>`;
@@ -6502,7 +6509,7 @@ function renderTeamUI() {
         <div class="team-row">
           <span class="user-avatar">${m.avatar ? `<img src="${m.avatar}" alt="">` : initials(m.name)}</span>
           <div class="team-name">${m.name}<div class="team-email">${m.email}</div></div>
-          <select onchange="updateTeamMemberRole('${m.id}', this.value)" style="width:170px;padding:6px 10px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:11px">
+          <select onchange="updateTeamMemberRole('${m.id}', this.value)" style="width:170px;padding:var(--space-2) var(--space-3);background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:var(--font-xs)">
             <option value="user" ${m.role==='user'?'selected':''}>User — view only</option>
             <option value="superuser" ${m.role==='superuser'?'selected':''}>Super user</option>
             <option value="admin" ${m.role==='admin'?'selected':''}>Admin</option>
@@ -9715,23 +9722,28 @@ function rebuildProductCatalogPage() {
   if (medEl) medEl.textContent = counts.medium || 0;
   if (lowEl) lowEl.textContent = counts.low || 0;
 
+  if (cat.length === 0) {
+    list.innerHTML = emptyStateHTML({ icon: '📦', title: 'No products in this catalog yet', sub: 'Add one above to start tracking adoption across clients.', compact: true });
+    return;
+  }
+
   list.innerHTML = '';
   cat.forEach(p => {
     const using = cl.filter(c => c[p.key]).length;
     const pct = Math.round(using / total * 100);
     list.innerHTML += `
       <div class="support-item" style="align-items:center">
-        <div class="support-avatar" style="background:var(--orange-dim);color:var(--orange);font-size:18px;display:flex;align-items:center;justify-content:center">${renderProductIcon(p.icon, 22)}</div>
+        <div class="support-avatar" style="background:var(--orange-dim);color:var(--orange);font-size:var(--font-lg);display:flex;align-items:center;justify-content:center">${renderProductIcon(p.icon, 22)}</div>
         <div class="support-info">
           <div class="support-name">${p.label}</div>
           <div class="support-detail">${using} / ${cl.length} clients (${pct}%) &nbsp;·&nbsp; <span style="color:var(--text3)">key: ${p.key}</span></div>
         </div>
-        <select onchange="setProductPriority('${pk}','${p.key}', this.value)" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:11px;font-weight:700;padding:5px 9px;border-radius:20px;outline:none;cursor:pointer">
+        <select onchange="setProductPriority('${pk}','${p.key}', this.value)" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:var(--font-xs);font-weight:700;padding:var(--space-1) var(--space-2);border-radius:var(--radius-pill);outline:none;cursor:pointer">
           <option value="high" ${p.priority==='high'?'selected':''}>🔥 High</option>
           <option value="medium" ${p.priority==='medium'?'selected':''}>Medium</option>
           <option value="low" ${p.priority==='low'?'selected':''}>Targeted</option>
         </select>
-        <button class="btn" style="background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.25);padding:7px 14px;font-size:11px" onclick="requestRemoveProduct('${pk}','${p.key}')">🗑️ Remove</button>
+        <button class="btn" style="background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.25);padding:var(--space-2) var(--space-4);font-size:var(--font-xs)" onclick="requestRemoveProduct('${pk}','${p.key}')">🗑️ Remove</button>
       </div>`;
   });
 }
@@ -11236,9 +11248,42 @@ const AI_AGENT_TOOLS = [
     description: 'Permanently delete a workflow by name. This changes data — the user will be asked to confirm first.',
     input_schema: { type: 'object', properties: { workflow_name: { type: 'string' } }, required: ['workflow_name'] },
   },
+  {
+    name: 'create_client',
+    description: 'Create a new client record in one or more portfolios (SMB, White Label, Support), optionally with an organization name, contact info, and which products they already use. This changes data — the user will be asked to confirm before it is actually saved. If the person hasn\'t said which portfolio(s) to add the client to, ASK before calling this tool rather than guessing — do not default to a portfolio on their behalf.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', description: 'Client or business name' },
+        portfolios: { type: 'array', items: { type: 'string', enum: ['smb', 'whitelabel', 'support'] }, description: 'Which portfolio(s) to add this client to — at least one required' },
+        org: { type: 'string', description: 'Optional parent organization name' },
+        contact_name: { type: 'string', description: 'Optional primary contact\'s name' },
+        contact_title: { type: 'string', description: 'Optional primary contact\'s job title' },
+        contact_email: { type: 'string' },
+        contact_phone: { type: 'string' },
+        products_in_use: { type: 'array', items: { type: 'string' }, description: 'Product keys already in use by this client, if known — optional, defaults to none marked as in use' },
+      },
+      required: ['name', 'portfolios'],
+    },
+  },
+  {
+    name: 'update_client_contact',
+    description: 'Update one or more contact-info fields (name, title, email, phone) for an EXISTING client. Only the fields provided are changed — anything omitted is left as it was, so this is safe to use for adding just a new email or just a new phone number without needing to know or re-enter the rest. This changes data — the user will be asked to confirm before it is actually saved. The client must already exist; use create_client first if it does not.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        client_name: { type: 'string' },
+        contact_name: { type: 'string' },
+        contact_title: { type: 'string' },
+        contact_email: { type: 'string' },
+        contact_phone: { type: 'string' },
+      },
+      required: ['client_name'],
+    },
+  },
 ];
 
-const AI_ACTION_TOOLS = ['add_note', 'create_task', 'log_kpi_score', 'create_workflow', 'update_workflow', 'delete_workflow', 'bulk_create_tasks', 'bulk_add_note']; // tools that change data — always confirmed
+const AI_ACTION_TOOLS = ['add_note', 'create_task', 'log_kpi_score', 'create_workflow', 'update_workflow', 'delete_workflow', 'bulk_create_tasks', 'bulk_add_note', 'create_client', 'update_client_contact']; // tools that change data — always confirmed
 
 function aiFindMergedClient(name) {
   const merged = buildMergedClients();
@@ -11644,6 +11689,75 @@ async function executeAiTool(name, input) {
       if (!deleted) return { error: 'Permission check failed when deleting the workflow.' };
       return { ok: true, deleted: wf.name };
     }
+    case 'create_client': {
+      if (!requirePermission('edit')) return { error: 'This account doesn\'t have permission to create clients.' };
+      const name = (input.name || '').trim();
+      if (!name) return { error: 'A client name is required.' };
+      const pks = Array.isArray(input.portfolios) ? input.portfolios.filter(pk => ['smb', 'whitelabel', 'support'].includes(pk)) : [];
+      if (pks.length === 0) return { error: 'At least one valid portfolio (smb, whitelabel, or support) is required — ask the user which portfolio(s) if they haven\'t said.' };
+      const norm = name.toLowerCase();
+      const addedTo = [], skippedFrom = [];
+      pks.forEach(pk => {
+        const existing = getClients(pk).find(c => (c.name || '').trim().toLowerCase() === norm);
+        if (existing) { skippedFrom.push(PORTFOLIO_LABELS[pk]); return; }
+        const client = { name, org: (input.org || '').trim() || undefined, cellNotes: '' };
+        const productsUsing = new Set((Array.isArray(input.products_in_use) ? input.products_in_use : []).map(k => String(k).toLowerCase()));
+        getProdKeys(pk).forEach(k => { client[k] = productsUsing.has(k.toLowerCase()); });
+        PORTFOLIOS[pk].clients.push(client);
+        addedTo.push(pk);
+      });
+      if (addedTo.length === 0) return { error: `"${name}" already exists in ${skippedFrom.join(', ')} — nothing added.` };
+
+      let contactSaved = false;
+      const contact_name = (input.contact_name || '').trim();
+      const title = (input.contact_title || '').trim();
+      const email = (input.contact_email || '').trim();
+      const phone = (input.contact_phone || '').trim();
+      if (contact_name || title || email || phone) {
+        let contact = getClientContact(name);
+        if (!contact) {
+          contact = { id: (crypto.randomUUID ? crypto.randomUUID() : 'contact_' + Date.now()), client_name: name };
+          CLIENT_CONTACTS.push(contact);
+        }
+        contact.contact_name = contact_name;
+        contact.title = title;
+        contact.email = email;
+        contact.phone = phone;
+        contact.updated_at = new Date().toISOString();
+        localStorage.setItem(CLIENT_CONTACTS_CACHE_KEY, JSON.stringify(CLIENT_CONTACTS));
+        try { await sbUpsert('client_contacts', contact); } catch(e) { console.warn('Could not save contact info:', e.message); }
+        contactSaved = true;
+      }
+
+      rebuildAll();
+      addedTo.forEach(pk => saveClientsToSupabase(pk).catch(e => console.warn('Save failed:', e)));
+
+      return {
+        ok: true, name,
+        added_to: addedTo.map(pk => PORTFOLIO_LABELS[pk]),
+        skipped: skippedFrom.length ? skippedFrom : undefined,
+        contact_saved: contactSaved,
+      };
+    }
+    case 'update_client_contact': {
+      if (!requirePermission('edit')) return { error: 'This account doesn\'t have permission to edit client contact info.' };
+      const entry = aiFindMergedClient(input.client_name);
+      if (!entry) return { error: 'Client not found. Use create_client if this is a brand-new client.' };
+      const fieldMap = { contact_name: 'contact_name', contact_title: 'title', contact_email: 'email', contact_phone: 'phone' };
+      const providedKeys = Object.keys(fieldMap).filter(k => input[k] !== undefined && input[k] !== null && String(input[k]).trim() !== '');
+      if (providedKeys.length === 0) return { error: 'No contact fields were provided to update.' };
+      let contact = getClientContact(entry.displayName);
+      if (!contact) {
+        contact = { id: (crypto.randomUUID ? crypto.randomUUID() : 'contact_' + Date.now()), client_name: entry.displayName };
+        CLIENT_CONTACTS.push(contact);
+      }
+      providedKeys.forEach(k => { contact[fieldMap[k]] = String(input[k]).trim(); });
+      contact.updated_at = new Date().toISOString();
+      localStorage.setItem(CLIENT_CONTACTS_CACHE_KEY, JSON.stringify(CLIENT_CONTACTS));
+      try { await sbUpsert('client_contacts', contact); } catch(e) { console.warn('Could not save contact info:', e.message); }
+      if (typeof cntActiveClientName !== 'undefined' && cntActiveClientName === entry.displayName) renderClientContactInfo();
+      return { ok: true, client: entry.displayName, updated_fields: providedKeys.map(k => fieldMap[k]) };
+    }
     default:
       return { error: 'Unknown tool: ' + name };
   }
@@ -11668,6 +11782,16 @@ function describeAiAction(tool) {
   if (tool.name === 'create_workflow') return `🔁 Create workflow <b>${escAttr(i.name)}</b> — ${i.trigger_type === 'inactivity' ? `alert if inactive ${escAttr(i.inactivity_days || 14)} days` : `on a ${escAttr(i.schedule_type || 'weekly')} schedule`}, action: "${escAttr(i.action_title)}"`;
   if (tool.name === 'update_workflow') return `🔁 Update workflow <b>${escAttr(i.workflow_name)}</b>`;
   if (tool.name === 'delete_workflow') return `🗑️ Delete workflow <b>${escAttr(i.workflow_name)}</b>`;
+  if (tool.name === 'create_client') {
+    const pkLabels = (Array.isArray(i.portfolios) ? i.portfolios : []).map(pk => PORTFOLIO_LABELS[pk] || pk).join(', ');
+    const contactBits = [i.contact_email, i.contact_phone].filter(Boolean).join(', ');
+    return `➕ Create client <b>${escAttr(i.name)}</b> in ${escAttr(pkLabels) || '(no portfolio specified)'}${i.org ? ` — org: ${escAttr(i.org)}` : ''}${contactBits ? ` — contact: ${escAttr(contactBits)}` : ''}`;
+  }
+  if (tool.name === 'update_client_contact') {
+    const fields = ['contact_name', 'contact_title', 'contact_email', 'contact_phone'].filter(k => i[k]);
+    const preview = fields.map(k => `${k.replace('contact_', '')}: ${escAttr(i[k])}`).join(', ');
+    return `✏️ Update contact info for <b>${escAttr(i.client_name)}</b> — ${preview || 'no fields provided'}`;
+  }
   return `Run ${escAttr(tool.name)}?`;
 }
 
