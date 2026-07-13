@@ -1208,6 +1208,7 @@ tr.hidden-row { display: none; }
 .notif-item:hover { background: var(--bg3); }
 .notif-item.unread { background: rgba(226,84,31,.08); border-left: 3px solid var(--orange); }
 .notif-msg { font-size: 12px; color: var(--text); line-height: 1.4; margin-bottom: 3px; }
+.notif-client { font-size: var(--font-2xs); color: var(--orange); font-weight: 700; margin-bottom: 3px; }
 .notif-time { font-size: var(--font-2xs); color: var(--text3); }
 
 .tag-chip {
@@ -6004,6 +6005,29 @@ async function sbUpsert(table, data) {
   return res.json();
 }
 
+// Genuine UPDATE, not an upsert -- sbUpsert's INSERT ... ON CONFLICT DO UPDATE
+// under the hood still requires every NOT NULL column to be present in the
+// payload, even when the row already exists and only some fields are being
+// changed: Postgres validates the hypothetical INSERT's constraints before
+// it ever checks for a conflict. A real bug caught in this exact codebase --
+// checkDueReminders() below was calling sbUpsert('reminders', {id, delivered:
+// true}) to mark a reminder delivered, which silently threw a "null value in
+// column owner_email violates not-null constraint" every time (swallowed by
+// its own try/catch), so reminders never actually got marked delivered and
+// kept re-firing on every periodic check. Use this for any partial-column
+// update on an existing row instead.
+async function sbPatch(table, filter, data) {
+  const res = await fetch(`${API}/${table}?${filter}`, {
+    method: 'PATCH',
+    headers: { ...SB_HEADERS, 'Prefer': 'return=minimal' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`Supabase PATCH ${table} failed: ${res.status} — ${err}`);
+  }
+}
+
 async function sbDelete(table, filter) {
   const res = await fetch(`${API}/${table}?${filter}`, {
     method: 'DELETE',
@@ -6034,6 +6058,7 @@ let googleTokenClient = null;
 let googleAccessToken = null;
 let googleTokenExpiresAt = 0;
 let googleConnectedAccountEmail = null; // which Google account/calendar is actually connected
+let googleRefreshInFlight = null; // de-dupes concurrent refresh attempts into one shared promise
 
 function loadCachedGoogleToken() {
   try {
@@ -6065,20 +6090,92 @@ async function fetchGoogleConnectedAccount() {
   renderGoogleCalendarStatus();
 }
 
+// Silently mints a fresh access token from the refresh token stored
+// server-side, instead of ever showing the Google popup again once
+// connected. De-duped via googleRefreshInFlight so multiple callers that
+// happen to notice an expired token around the same moment share one
+// network round-trip instead of racing each other.
+async function refreshGoogleAccessToken() {
+  if (googleRefreshInFlight) return googleRefreshInFlight;
+  googleRefreshInFlight = (async () => {
+    try {
+      const res = await fetch('/.netlify/functions/google-oauth-refresh', {
+        headers: { 'Authorization': SB_HEADERS['Authorization'] },
+      });
+      const data = await res.json();
+      if (!res.ok || !data.access_token) {
+        if (data.error !== 'not_connected') console.warn('Google Calendar refresh failed:', data.error);
+        googleAccessToken = null;
+        googleTokenExpiresAt = 0;
+        localStorage.removeItem(GCAL_TOKEN_CACHE_KEY);
+        return false;
+      }
+      googleAccessToken = data.access_token;
+      googleTokenExpiresAt = Date.now() + ((data.expires_in || 3600) - 60) * 1000;
+      localStorage.setItem(GCAL_TOKEN_CACHE_KEY, JSON.stringify({ token: googleAccessToken, expiresAt: googleTokenExpiresAt }));
+      return true;
+    } catch(e) {
+      console.warn('Could not reach the Google Calendar refresh endpoint:', e.message);
+      return false;
+    } finally {
+      googleRefreshInFlight = null;
+    }
+  })();
+  return googleRefreshInFlight;
+}
+
+// Ensures there's a valid access token before any Calendar API call — either
+// the cached one is still good, or silently refreshes it. This is the
+// function every Calendar-syncing call site should use instead of checking
+// isGoogleCalendarConnected() directly, so an hour-old token doesn't just
+// silently fail a sync in the background.
+async function ensureGoogleAccessToken() {
+  if (googleAccessToken && googleTokenExpiresAt > Date.now()) return true;
+  return refreshGoogleAccessToken();
+}
+
 function initGoogleCalendarClient() {
   if (!GOOGLE_CALENDAR_CLIENT_ID || typeof google === 'undefined' || !google.accounts) return;
   if (googleTokenClient) return;
-  googleTokenClient = google.accounts.oauth2.initTokenClient({
+  // Authorization-CODE flow (initCodeClient), not the old implicit-token
+  // flow (initTokenClient) -- the old flow only ever issued a short-lived
+  // access token with no way to renew it, so the connection silently
+  // expired about an hour after connecting and never came back without
+  // reconnecting through the Google popup again. This flow gets a one-time
+  // code instead, hands it to google-oauth-connect (server-side), which
+  // exchanges it for both an access token AND a refresh token -- the
+  // refresh token is what lets refreshGoogleAccessToken() above mint fresh
+  // access tokens forever after, with no popup ever needed again.
+  // prompt:'consent' is hardcoded (not conditional) because this client is
+  // ONLY ever used for the initial "Connect" action, and Google only issues
+  // a refresh token when consent is freshly re-confirmed.
+  googleTokenClient = google.accounts.oauth2.initCodeClient({
     client_id: GOOGLE_CALENDAR_CLIENT_ID,
     scope: 'https://www.googleapis.com/auth/calendar.events',
+    ux_mode: 'popup',
+    access_type: 'offline',
+    prompt: 'consent',
     callback: async (resp) => {
-      if (resp && resp.access_token) {
-        googleAccessToken = resp.access_token;
-        googleTokenExpiresAt = Date.now() + ((resp.expires_in || 3600) - 60) * 1000;
+      if (!resp || !resp.code) return;
+      try {
+        const res = await fetch('/.netlify/functions/google-oauth-connect', {
+          method: 'POST',
+          headers: { 'Authorization': SB_HEADERS['Authorization'], 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: resp.code }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.access_token) {
+          showToast(data.error || 'Could not connect Google Calendar — please try again.', 'error');
+          return;
+        }
+        googleAccessToken = data.access_token;
+        googleTokenExpiresAt = Date.now() + ((data.expires_in || 3600) - 60) * 1000;
         localStorage.setItem(GCAL_TOKEN_CACHE_KEY, JSON.stringify({ token: googleAccessToken, expiresAt: googleTokenExpiresAt }));
         await fetchGoogleConnectedAccount();
-        showToast(`Google Calendar connected${googleConnectedAccountEmail ? ' — ' + googleConnectedAccountEmail : ''}. Your assigned tasks will sync automatically.`, 'success');
+        showToast(`Google Calendar connected${googleConnectedAccountEmail ? ' — ' + googleConnectedAccountEmail : ''}. Your assigned tasks will sync automatically — this stays connected, no need to reconnect later.`, 'success');
         syncMyTasksToGoogleCalendar();
+      } catch(e) {
+        showToast('Could not connect Google Calendar: ' + e.message, 'error');
       }
     },
   });
@@ -6094,17 +6191,36 @@ function connectGoogleCalendar() {
   }
   initGoogleCalendarClient();
   if (!googleTokenClient) { showToast('Google sign-in is still loading — try again in a moment.', 'warning'); return; }
-  googleTokenClient.requestAccessToken({ prompt: isGoogleCalendarConnected() ? '' : 'consent' });
+  googleTokenClient.requestCode();
 }
 
-function disconnectGoogleCalendar() {
+async function disconnectGoogleCalendar() {
   googleAccessToken = null;
   googleTokenExpiresAt = 0;
   googleConnectedAccountEmail = null;
   localStorage.removeItem(GCAL_TOKEN_CACHE_KEY);
   localStorage.removeItem(GCAL_ACCOUNT_CACHE_KEY);
-  showToast('Google Calendar disconnected.', 'info');
   renderGoogleCalendarStatus();
+  showToast('Google Calendar disconnected.', 'info');
+  try {
+    await fetch('/.netlify/functions/google-oauth-disconnect', { headers: { 'Authorization': SB_HEADERS['Authorization'] } });
+  } catch(e) {
+    console.warn('Could not remove the stored Google Calendar connection server-side:', e.message);
+  }
+}
+
+// Attempts a silent reconnect at startup — if this person connected Google
+// Calendar before (even in a previous session, on this device or any
+// other), this restores it with zero user action and no popup. Safe to
+// call unconditionally: for someone who's never connected, the server
+// simply returns "not_connected" and this quietly does nothing.
+async function silentlyRestoreGoogleCalendarConnection() {
+  if (!isGoogleCalendarConfigured()) return;
+  if (isGoogleCalendarConnected()) return; // cached token still valid, nothing to do
+  const restored = await refreshGoogleAccessToken();
+  if (restored) {
+    await fetchGoogleConnectedAccount();
+  }
 }
 
 // Builds a one-click "Add to Google Calendar" link that needs zero setup —
@@ -6135,7 +6251,7 @@ function gcalQuickAddUrl(task) {
 }
 
 async function pushTaskToGoogleCalendar(task) {
-  if (!isGoogleCalendarConnected() || !task.due_date) return false;
+  if (!task.due_date || !(await ensureGoogleAccessToken())) return false;
   try {
     const hasTime = taskHasSpecificTime(task.due_date);
     const reminders = (task.reminder_minutes === null || task.reminder_minutes === undefined)
@@ -6190,7 +6306,7 @@ async function pushTaskToGoogleCalendar(task) {
 // done or deleted in the Hub, so completed/removed tasks don't linger on your
 // calendar. This is still a Hub → Calendar action, not the reverse.
 async function deleteGoogleCalendarEvent(task) {
-  if (!isGoogleCalendarConnected() || !task || !task.gcal_event_id) return false;
+  if (!task || !task.gcal_event_id || !(await ensureGoogleAccessToken())) return false;
   try {
     const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events/${task.gcal_event_id}`, {
       method: 'DELETE',
@@ -6211,7 +6327,7 @@ async function deleteGoogleCalendarEvent(task) {
 // have a due date, and haven't been synced yet. Runs on load, after realtime
 // task-assignment notifications, and right after creating a task for yourself.
 async function syncMyTasksToGoogleCalendar() {
-  if (!isGoogleCalendarConnected()) return;
+  if (!(await ensureGoogleAccessToken())) return;
   const u = getCurrentUser();
   if (!u) return;
   let synced = [];
@@ -6243,7 +6359,7 @@ function getMyGcalSyncedOpenTasks() {
 // refresh tokens, at the cost of not being truly real-time.
 let gcalPollInFlight = false;
 async function pollGoogleCalendarChanges(showFeedback) {
-  if (!isGoogleCalendarConnected()) { if (showFeedback) showToast('Connect Google Calendar first.', 'warning'); return; }
+  if (!(await ensureGoogleAccessToken())) { if (showFeedback) showToast('Connect Google Calendar first.', 'warning'); return; }
   if (gcalPollInFlight) return;
   gcalPollInFlight = true;
   try {
@@ -6728,6 +6844,7 @@ async function authorizeSession(session) {
   subscribeToRealtimeNotifications();
   requestNotificationPermissionOnce();
   initGoogleCalendarClient();
+  silentlyRestoreGoogleCalendarConnection();
   bootApp();
 }
 
@@ -8214,7 +8331,7 @@ async function checkDueReminders() {
   if (due.length === 0) return;
   for (const r of due) {
     await createNotification(r.owner_email, 'reminder', `⏰ Reminder: ${r.title}`, r.client_name);
-    try { await sbUpsert('reminders', { id: r.id, delivered: true }); } catch(e) { console.warn('Could not mark reminder delivered:', e.message); }
+    try { await sbPatch('reminders', `id=eq.${r.id}`, { delivered: true }); } catch(e) { console.warn('Could not mark reminder delivered:', e.message); }
   }
   REMINDERS = REMINDERS.filter(r => !due.includes(r));
   localStorage.setItem(REMINDERS_CACHE_KEY, JSON.stringify(REMINDERS));
@@ -8286,10 +8403,25 @@ function renderNotificationList() {
     return;
   }
   wrap.innerHTML = NOTIFICATIONS.map(n => `
-    <div class="notif-item ${n.read ? '' : 'unread'}" onclick="markNotificationRead('${n.id}')">
+    <div class="notif-item ${n.read ? '' : 'unread'}" onclick="handleNotificationClick('${n.id}')">
+      ${n.client_name ? `<div class="notif-client">📁 ${escAttr(n.client_name)}</div>` : ''}
       <div class="notif-msg">${escAttr(n.message)}</div>
       <div class="notif-time">${fmtNoteTime(n.created_at)}</div>
     </div>`).join('');
+}
+
+// Notifications always carried client_name (createNotification's 4th
+// argument), but nothing ever displayed it or acted on it -- clicking one
+// only marked it read, with no way to see which client it was actually
+// about. Now shows the client name inline and opens that client's Notes &
+// Tasks modal on click, giving the actual context the notification is for.
+function handleNotificationClick(id) {
+  const n = NOTIFICATIONS.find(x => x.id === id);
+  markNotificationRead(id);
+  if (n && n.client_name) {
+    toggleNotificationPanel();
+    openClientNotesTasksModal(n.client_name);
+  }
 }
 
 async function markNotificationRead(id) {
