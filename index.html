@@ -1058,6 +1058,12 @@ tr.hidden-row { display: none; }
   background: var(--bg2); border: 1px solid var(--border);
   border-radius: var(--radius-lg); padding: var(--space-6); width: 480px; max-width: 95vw;
   box-shadow: var(--shadow-lg);
+  /* Previously unconstrained -- a sufficiently tall modal (Add Client, with
+     its portfolio checkboxes, 10-item product list, and Smart Paste contact
+     block) could grow past the viewport with no way to scroll to it at all,
+     since .modal-overlay itself doesn't scroll. Now the modal caps its own
+     height and scrolls internally instead. */
+  max-height: 90vh; overflow-y: auto;
 }
 .modal h3 { font-size: var(--font-lg); font-weight: 800; color: var(--text); margin-bottom: 6px; }
 .modal p { font-size: var(--font-base); color: var(--text3); margin-bottom: var(--space-5); line-height: 1.6; }
@@ -1069,7 +1075,22 @@ tr.hidden-row { display: none; }
 }
 .modal input:focus { border-color: var(--orange); }
 .modal input::placeholder { color: var(--text3); }
-.modal-btns { display: flex; gap: var(--space-2); justify-content: flex-end; }
+.modal-btns {
+  display: flex; gap: var(--space-2); justify-content: flex-end;
+  /* Sticky footer within the modal's own scroll box (the fix above) -- the
+     Cancel/Save buttons stay pinned to the visible bottom edge as the
+     content above scrolls, so they're reachable without ever scrolling
+     past them, regardless of how tall the form content is. Negative
+     margins extend it to the modal's full width/bottom edge (escaping the
+     modal's own padding), then its own padding restores the visual
+     spacing; the top border and matching background separate it from
+     scrolled content passing behind it. */
+  position: sticky; bottom: calc(-1 * var(--space-6));
+  background: var(--bg2);
+  margin: var(--space-4) calc(-1 * var(--space-6)) calc(-1 * var(--space-6));
+  padding: var(--space-4) var(--space-6) var(--space-6);
+  border-top: 1px solid var(--border);
+}
 .btn { padding: var(--space-2) var(--space-5); border-radius: var(--radius-sm); font-size: var(--font-base); font-weight: 700; cursor: pointer; border: none; transition: all var(--transition-slow); }
 .btn-primary { background: var(--orange); color: white; }
 .btn-primary:hover { background: var(--orange2); }
@@ -1642,7 +1663,7 @@ tr.hidden-row { display: none; }
       </div>
     </div>
 
-    <div class="modal-btns" style="margin-top:18px">
+    <div class="modal-btns">
       <button class="btn btn-ghost" onclick="closeClientNotesTasksModal()">Close</button>
     </div>
   </div>
@@ -2913,7 +2934,7 @@ tr.hidden-row { display: none; }
     <p id="editClientName" style="font-weight:700;color:var(--text);font-size:15px;margin-bottom:4px"></p>
     <p style="margin-bottom:16px">Toggle which products this client has, per portfolio. Changes are saved automatically.</p>
     <div id="editClientGroups"></div>
-    <div class="modal-btns" style="margin-top:16px">
+    <div class="modal-btns">
       <button class="btn btn-ghost" onclick="closeEditClientModal()">Cancel</button>
       <button class="btn btn-primary" onclick="saveEditClient()">Save Changes</button>
     </div>
@@ -2960,7 +2981,7 @@ tr.hidden-row { display: none; }
       <div style="display:flex;align-items:flex-end;padding-bottom:8px"><span style="font-size:var(--font-xs);color:var(--text3)">Leave both blank for no due date, matching existing workflows.</span></div>
     </div>
 
-    <div class="modal-btns" style="margin-top:18px">
+    <div class="modal-btns">
       <button class="btn btn-ghost" onclick="closeWorkflowModal()">Cancel</button>
       <button class="btn btn-primary" onclick="saveWorkflow()">💾 Save Workflow</button>
     </div>
@@ -2982,7 +3003,7 @@ tr.hidden-row { display: none; }
     <label for="remClientName" class="field-label">Client <span style="color:var(--text3)">(optional)</span></label>
     <input type="text" id="remClientName" class="field-input" style="height:38px;margin-bottom:4px" placeholder="e.g. Summit Roofing Co.">
 
-    <div class="modal-btns" style="margin-top:18px">
+    <div class="modal-btns">
       <button class="btn btn-ghost" onclick="closeAddReminderModal()">Cancel</button>
       <button class="btn btn-primary" onclick="saveReminder()">⏰ Set Reminder</button>
     </div>
@@ -3063,7 +3084,7 @@ tr.hidden-row { display: none; }
       <div><label for="acContactPhone" class="field-label">Phone</label><input type="tel" id="acContactPhone" class="field-input" style="height:38px" placeholder="e.g. (555) 123-4567"></div>
     </div>
 
-    <div class="modal-btns" style="margin-top:18px">
+    <div class="modal-btns">
       <button class="btn btn-ghost" onclick="closeAddClientModal()">Cancel</button>
       <button class="btn btn-primary" onclick="saveNewClient()">＋ Add Client</button>
     </div>
@@ -3165,7 +3186,7 @@ tr.hidden-row { display: none; }
       <textarea id="bulkNoteText" class="field-input" rows="4" style="resize:vertical;font-family:inherit" placeholder="What's happening with these clients?"></textarea>
     </div>
 
-    <div class="modal-btns" style="margin-top:18px">
+    <div class="modal-btns">
       <button class="btn btn-ghost" onclick="closeBulkActionModal()">Cancel</button>
       <button class="btn btn-primary" onclick="saveBulkAction()">Save</button>
     </div>
