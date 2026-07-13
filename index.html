@@ -990,15 +990,26 @@ tr.hidden-row { display: none; }
 
 /* ─── CLIENT SPOTLIGHT ─────────────────────────────────────────────────── */
 .spotlight-card {
-  background: linear-gradient(135deg, rgba(226,84,31,.07), rgba(226,84,31,.02));
-  border: 1px solid rgba(226,84,31,.25); border-radius: var(--radius); padding: 22px;
-  transition: background var(--transition-slower), border-color var(--transition-slower);
+  /* Previously a transparent color wash (rgba orange) over whatever the
+     ambient page background happened to be -- looked fine against the warm
+     plum-brown dark theme, but read as a muddy, inconsistent wash rather
+     than clean black once Blackout mode shipped (2026-07-13), since a
+     transparent tint over pure black doesn't read the same way. Solid
+     theme-correct background now, matching how every other card in the app
+     already works. */
+  background: var(--gradient-card);
+  border: 1px solid var(--border); border-radius: var(--radius); padding: 22px;
+  transition: background var(--transition-slower), border-color var(--transition-slower), box-shadow var(--transition-slower);
 }
 /* Dynamic tone by health category — the card's urgency is now visually honest
-   instead of always the same color regardless of the situation. */
-.spotlight-card.risk-high { background: linear-gradient(135deg, rgba(239,68,68,.09), rgba(239,68,68,.02)); border-color: rgba(239,68,68,.35); }
-.spotlight-card.risk-medium { background: linear-gradient(135deg, rgba(245,158,11,.08), rgba(245,158,11,.02)); border-color: rgba(245,158,11,.3); }
-.spotlight-card.risk-low { background: linear-gradient(135deg, rgba(34,197,94,.06), rgba(34,197,94,.02)); border-color: rgba(34,197,94,.25); }
+   instead of always the same color regardless of the situation. A real glow
+   (colored box-shadow), not just a border tint, on all three tiers now --
+   requested specifically for the healthy/low-risk case ("catch the team's
+   attention" with a green glow), applied to high/medium too for visual
+   consistency rather than only one tier looking distinctly different. */
+.spotlight-card.risk-high { border-color: rgba(239,68,68,.5); box-shadow: 0 0 24px rgba(239,68,68,.25); }
+.spotlight-card.risk-medium { border-color: rgba(245,158,11,.5); box-shadow: 0 0 24px rgba(245,158,11,.22); }
+.spotlight-card.risk-low { border-color: rgba(34,197,94,.6); box-shadow: 0 0 28px rgba(34,197,94,.35); }
 .spotlight-hd { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
 .spotlight-title { font-size: 13px; font-weight: 800; color: var(--orange); text-transform: uppercase; letter-spacing: .04em; display: flex; align-items: center; gap: 8px; }
 .spotlight-name-row { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
@@ -1012,13 +1023,19 @@ tr.hidden-row { display: none; }
 .spotlight-health-risk-medium { background: rgba(245,158,11,.15); color: var(--yellow); }
 .spotlight-health-risk-low { background: rgba(34,197,94,.15); color: var(--green); }
 .spotlight-why-box {
+  /* Same fix as .spotlight-card above and for the same reason -- a
+     transparent wash over the ambient page background read as muddy once
+     Blackout mode shipped. Solid var(--bg3) base now, matching how
+     .kpi-why-box already handles this identical "hint box with a risk/
+     category tint" pattern elsewhere in the app; only the border stays
+     color-coded by tier. */
   font-size: 12.5px; color: var(--text2); line-height: 1.6; border-radius: var(--radius-sm); padding: 12px 14px;
-  margin-bottom: 16px; border: 1px solid;
+  margin-bottom: 16px; border: 1px solid; background: var(--bg3);
 }
 .spotlight-why-box b { color: var(--text); }
-.spotlight-why-risk-high { background: rgba(239,68,68,.07); border-color: rgba(239,68,68,.25); }
-.spotlight-why-risk-medium { background: rgba(245,158,11,.07); border-color: rgba(245,158,11,.25); }
-.spotlight-why-risk-low { background: rgba(34,197,94,.06); border-color: rgba(34,197,94,.2); }
+.spotlight-why-risk-high { border-color: rgba(239,68,68,.35); }
+.spotlight-why-risk-medium { border-color: rgba(245,158,11,.35); }
+.spotlight-why-risk-low { border-color: rgba(34,197,94,.4); }
 .spotlight-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
 .spotlight-block-label { font-size: var(--font-2xs); font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--text3); margin-bottom: 8px; }
 .spotlight-block { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; }
@@ -1520,6 +1537,14 @@ tr.hidden-row { display: none; }
     <div class="nav-item" onclick="showPage('support')">
       <span class="icon">📊</span> Support Dashboard
       <span class="badge red" id="navSupportBadge">8</span>
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Onboarding</div>
+    <div class="nav-item" onclick="showPage('onboarding')">
+      <span class="icon">🧭</span> Onboarding
+      <span class="badge" id="navOnboardingBadge">0</span>
     </div>
   </div>
 
@@ -2949,6 +2974,17 @@ tr.hidden-row { display: none; }
     <div class="page-footer">Client Success Hub · Niche Inc. · Settings</div>
   </div>
 
+  <div class="page" id="page-onboarding">
+    <div class="card">
+      <div class="card-header">
+        <div><div class="card-title">Active Onboarding</div><div class="card-sub" id="onboardingCountSub">0 in progress</div></div>
+        <button class="btn btn-primary btn-sm" onclick="openAddOnboardingModal()">＋ New Onboarding</button>
+      </div>
+      <div id="onboardingList"></div>
+    </div>
+    <div class="page-footer">Client Success Hub · Niche Inc. · Onboarding</div>
+  </div>
+
 </div><!-- end .main -->
 
 <!-- REMOVE PRODUCT CONFIRMATION MODAL -->
@@ -3046,6 +3082,46 @@ tr.hidden-row { display: none; }
     <div class="modal-btns">
       <button class="btn btn-ghost" onclick="closeAddReminderModal()">Cancel</button>
       <button class="btn btn-primary" onclick="saveReminder()">⏰ Set Reminder</button>
+    </div>
+  </div>
+</div>
+
+<!-- NEW ONBOARDING MODAL (Onboarding Block 1) -->
+<div class="modal-overlay" id="addOnboardingModal">
+  <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="addOnboardingModalTitle">
+    <h3 id="addOnboardingModalTitle">🧭 New Onboarding</h3>
+    <p>Start tracking a new client from contract signature through go-live — this doesn't create a real client record yet.</p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
+      <div><label for="obName" class="field-label">Business Name <span style="color:var(--orange)">*</span></label><input type="text" id="obName" class="field-input" style="height:38px" placeholder="e.g. Summit Roofing Co."></div>
+      <div><label for="obOrg" class="field-label">Organization <span style="color:var(--text3)">(optional)</span></label><input type="text" id="obOrg" class="field-input" style="height:38px" placeholder="e.g. Summit Holdings"></div>
+    </div>
+
+    <label for="obPortfolio" class="field-label">Portfolio <span style="color:var(--orange)">*</span></label>
+    <select id="obPortfolio" class="field-input" style="height:38px;margin-bottom:16px" onchange="renderOnboardingProductPicker()">
+      <option value="">Select a portfolio…</option>
+      <option value="smb">📊 SMB</option>
+      <option value="whitelabel">🏷️ White Label</option>
+      <option value="support">📊 Support</option>
+    </select>
+
+    <label class="field-label">Products &amp; Pricing</label>
+    <div id="obProductPicker" style="margin-bottom:4px;font-size:var(--font-sm);color:var(--text3)">Select a portfolio first to see its products.</div>
+
+    <div class="modal-btns" style="margin-top:16px">
+      <button class="btn btn-ghost" onclick="closeAddOnboardingModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveNewOnboardingRecord()">🧭 Start Onboarding</button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW ONBOARDING MODAL (Onboarding Block 1 — read-only; stage/checklist actions come in Block 2) -->
+<div class="modal-overlay" id="viewOnboardingModal">
+  <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="viewOnboardingModalTitle">
+    <h3 id="viewOnboardingModalTitle">🧭 Onboarding Details</h3>
+    <div id="viewOnboardingBody"></div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeViewOnboardingModal()">Close</button>
     </div>
   </div>
 </div>
@@ -3253,6 +3329,7 @@ const pageMeta = {
   adspend:    { title: 'Ad Spend Management', sub: 'Business-by-business budget, promo status, and recommendations' },
   collections:{ title: 'Collections',              sub: 'Outstanding balances and card fails, with status and notes' },
   settings:   { title: 'Settings',             sub: 'Manage Hub-wide settings, integrations, and your team' },
+  onboarding: { title: 'Onboarding',           sub: 'Track new clients from contract signature through go-live' },
 };
 
 function showPage(id) {
@@ -3283,6 +3360,7 @@ function showPage(id) {
   if (id === 'voice') rebuildVoicePage();
   if (id === 'textagent') rebuildTextAgentPage();
   if (id === 'settings') renderGoogleCalendarStatus();
+  if (id === 'onboarding') rebuildOnboardingPage();
 
   closeSidebar();
 }
@@ -8131,6 +8209,7 @@ let CLIENT_TASKS = [];
 let CLIENT_CONTACTS = []; // one row per client: { id, client_name, contact_name, title, email, phone, updated_at }
 let NOTIFICATIONS = [];
 let REMINDERS = []; // personal reminders for the CURRENT user only — owner-scoped by RLS, unlike most other cached arrays here
+let ONBOARDING_RECORDS = []; // pre-client onboarding pipeline — team-wide, not personal
 let cntActiveClientName = null;
 let cntTaggedEmails = [];
 
@@ -8401,6 +8480,326 @@ async function checkDueReminders() {
   localStorage.setItem(REMINDERS_CACHE_KEY, JSON.stringify(REMINDERS));
   await loadNotifications();
   renderMyRemindersWidget();
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// ONBOARDING (new module, 2026-07-13) — tracks a client BEFORE they exist in
+// portfolio_clients at all, from contract signature through go-live. See
+// CSH_Onboarding_Roadmap.md for the full design and confirmed decisions.
+// Team-wide/collaborative, not personal — RLS matches client_tasks/workflows'
+// pattern (any authenticated user, full access), unlike reminders/calendar
+// tokens which are deliberately locked to their owner.
+// ════════════════════════════════════════════════════════════════════════
+const ONBOARDING_STAGE_ORDER = ['contract_signed', 'kickoff_scheduled', 'kickoff_completed', 'setup_in_progress', 'qa_review', 'live'];
+const ONBOARDING_STAGE_META = {
+  contract_signed:    { label: 'Contract Signed',        icon: '✍️' },
+  kickoff_scheduled:  { label: 'Kickoff Call Scheduled',  icon: '📅' },
+  kickoff_completed:  { label: 'Kickoff Call Completed',  icon: '✅' },
+  setup_in_progress:  { label: 'Setup In Progress',       icon: '⚙️' },
+  qa_review:          { label: 'QA / Internal Review',    icon: '🔍' },
+  live:               { label: 'Live',                    icon: '🎉' },
+};
+// Default checklist per stage — auto-populated on a new record, editable/
+// addable afterward, not fixed to these. Grounded in general B2B onboarding
+// practice, not an existing SOP: confirmed via project knowledge search
+// before designing this that no onboarding-specific SOP exists yet to
+// ground these in (only post-onboarding client-success SOPs do).
+const ONBOARDING_DEFAULT_CHECKLIST = {
+  contract_signed:    ['Contract received & signed', 'Payment method on file', 'Welcome email sent'],
+  kickoff_scheduled:  ['Kickoff call scheduled', 'Pre-call questionnaire sent to client', 'Internal team briefed on the account'],
+  kickoff_completed:  ['Goals & expectations documented', 'Products/services confirmed with client', 'Main point of contact confirmed'],
+  setup_in_progress:  ['Products configured', 'Integrations connected', 'Tracking/reporting set up'],
+  qa_review:          ['Setup QA\'d internally', 'Client walkthrough scheduled', 'Training materials sent'],
+  live:               ['Client confirmed everything working', 'Added to regular Client Success rotation'],
+};
+
+async function loadOnboardingRecords() {
+  try {
+    ONBOARDING_RECORDS = await sbSelect('onboarding_records', 'status=eq.active&order=created_at.desc');
+  } catch(e) {
+    console.warn('onboarding_records unavailable:', e.message);
+    ONBOARDING_RECORDS = [];
+  }
+}
+
+function getOnboardingStageLabel(stage) { return (ONBOARDING_STAGE_META[stage] || {}).label || stage; }
+function getOnboardingStageIcon(stage) { return (ONBOARDING_STAGE_META[stage] || {}).icon || '📋'; }
+
+// Creates a record plus its default checklist items for every stage in one
+// call — the "auto-populate" behavior requested, so nobody has to manually
+// build out a checklist from scratch for a brand new onboarding.
+async function createOnboardingRecord({ businessName, organization, portfolio, products }) {
+  const u = getCurrentUser();
+  const record = {
+    id: (crypto.randomUUID ? crypto.randomUUID() : 'ob_' + Date.now()),
+    business_name: businessName,
+    organization: organization || null,
+    portfolio,
+    stage: 'contract_signed',
+    status: 'active',
+    created_by: u ? u.name : 'Guest',
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+  try {
+    await sbUpsert('onboarding_records', record);
+  } catch(e) {
+    showToast('Could not create the onboarding record: ' + e.message, 'error');
+    return null;
+  }
+
+  // Checklist items across all 6 stages, not just the starting one — the
+  // whole pipeline's checklist exists from day one, so advancing stages
+  // later never needs a separate "generate checklist for this stage" step.
+  const checklistItems = [];
+  ONBOARDING_STAGE_ORDER.forEach(stage => {
+    (ONBOARDING_DEFAULT_CHECKLIST[stage] || []).forEach((label, idx) => {
+      checklistItems.push({
+        id: (crypto.randomUUID ? crypto.randomUUID() : 'obc_' + Date.now() + Math.random().toString(16).slice(2)),
+        onboarding_id: record.id, stage, label, done: false, sort_order: idx,
+      });
+    });
+  });
+  if (checklistItems.length > 0) {
+    try { await sbUpsert('onboarding_checklist_items', checklistItems); } catch(e) { console.warn('Could not create default checklist:', e.message); }
+  }
+
+  // Per-product pricing rows, one per selected product.
+  const productRows = (products || []).filter(p => p.selected).map(p => ({
+    id: (crypto.randomUUID ? crypto.randomUUID() : 'obp_' + Date.now() + Math.random().toString(16).slice(2)),
+    onboarding_id: record.id, product_key: p.key, price: p.price || 0,
+  }));
+  if (productRows.length > 0) {
+    try { await sbUpsert('onboarding_products', productRows); } catch(e) { console.warn('Could not save onboarding product pricing:', e.message); }
+  }
+
+  ONBOARDING_RECORDS.unshift(record);
+  return record;
+}
+
+function openAddOnboardingModal() {
+  if (!requirePermission('edit')) return;
+  document.getElementById('obName').value = '';
+  document.getElementById('obOrg').value = '';
+  document.getElementById('obPortfolio').value = '';
+  document.getElementById('obProductPicker').innerHTML = 'Select a portfolio first to see its products.';
+  document.getElementById('addOnboardingModal').classList.add('open');
+}
+
+function closeAddOnboardingModal() {
+  document.getElementById('addOnboardingModal').classList.remove('open');
+}
+
+// Renders one row per product in the selected portfolio's catalog, each
+// with a checkbox (include this product in the deal) and a price field —
+// mirrors the per-product pricing breakdown that was specifically requested
+// over a single lump-sum total.
+function renderOnboardingProductPicker() {
+  const pk = document.getElementById('obPortfolio').value;
+  const wrap = document.getElementById('obProductPicker');
+  if (!pk) { wrap.innerHTML = 'Select a portfolio first to see its products.'; return; }
+  const cat = getCatalog(pk);
+  if (!cat || cat.length === 0) { wrap.innerHTML = '<span style="color:var(--text3)">No products configured for this portfolio yet.</span>'; return; }
+  wrap.innerHTML = `<div style="display:flex;flex-direction:column;gap:${'var(--space-2)'}">` + cat.map(p => `
+    <div style="display:flex;align-items:center;gap:var(--space-3);padding:var(--space-2) var(--space-3);background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm)">
+      <input type="checkbox" id="obProd-${p.key}" style="width:16px;height:16px;flex-shrink:0">
+      <label for="obProd-${p.key}" style="flex:1;cursor:pointer;font-size:var(--font-sm)">${renderProductIcon(p.icon, 16)} ${escAttr(p.label)}</label>
+      <span style="color:var(--text3);font-size:var(--font-xs)">$</span>
+      <input type="number" id="obPrice-${p.key}" placeholder="0" min="0" step="0.01" style="width:90px;height:32px;padding:0 var(--space-2);background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:var(--font-sm)">
+    </div>`).join('') + '</div>';
+}
+
+async function saveNewOnboardingRecord() {
+  const businessName = document.getElementById('obName').value.trim();
+  const organization = document.getElementById('obOrg').value.trim();
+  const portfolio = document.getElementById('obPortfolio').value;
+  if (!businessName) { showToast('Please enter the business name.', 'warning'); return; }
+  if (!portfolio) { showToast('Please choose which portfolio this client is headed to.', 'warning'); return; }
+
+  const cat = getCatalog(portfolio) || [];
+  const products = cat.map(p => {
+    const cb = document.getElementById(`obProd-${p.key}`);
+    const priceInput = document.getElementById(`obPrice-${p.key}`);
+    return { key: p.key, selected: cb ? cb.checked : false, price: priceInput ? parseFloat(priceInput.value) || 0 : 0 };
+  });
+
+  const record = await createOnboardingRecord({ businessName, organization, portfolio, products });
+  if (!record) return;
+  closeAddOnboardingModal();
+  rebuildOnboardingPage();
+  showToast(`Started onboarding for "${businessName}".`, 'success');
+}
+
+async function rebuildOnboardingPage() {
+  await loadOnboardingRecords();
+  const wrap = document.getElementById('onboardingList');
+  const sub = document.getElementById('onboardingCountSub');
+  if (sub) sub.textContent = `${ONBOARDING_RECORDS.length} in progress`;
+  const badge = document.getElementById('navOnboardingBadge');
+  if (badge) badge.textContent = ONBOARDING_RECORDS.length;
+  if (!wrap) return;
+  if (ONBOARDING_RECORDS.length === 0) {
+    wrap.innerHTML = emptyStateHTML({ icon: '🧭', title: 'No onboarding in progress', sub: 'Click "New Onboarding" to start tracking a client from contract signature through go-live.' });
+    return;
+  }
+  wrap.innerHTML = ONBOARDING_RECORDS.map(r => `
+    <div class="edit-client-row" style="cursor:pointer" onclick="openViewOnboardingModal('${r.id}')">
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:4px">
+          <span style="font-weight:700;color:var(--text);font-size:var(--font-base)">${escAttr(r.business_name)}</span>
+          <span class="portfolio-chip chip-${r.portfolio}">${escAttr(PORTFOLIO_LABELS[r.portfolio] || r.portfolio)}</span>
+        </div>
+        <div style="font-size:var(--font-xs);color:var(--text2)">${getOnboardingStageIcon(r.stage)} ${escAttr(getOnboardingStageLabel(r.stage))}${r.organization ? ' · ' + escAttr(r.organization) : ''}</div>
+      </div>
+      <button class="row-action-btn" onclick="event.stopPropagation();openViewOnboardingModal('${r.id}')">👁️ View</button>
+    </div>`).join('');
+}
+
+let currentOnboardingId = null;
+let currentOnboardingChecklist = [];
+
+async function openViewOnboardingModal(id) {
+  const r = ONBOARDING_RECORDS.find(x => x.id === id);
+  if (!r) return;
+  currentOnboardingId = id;
+  const body = document.getElementById('viewOnboardingBody');
+  body.innerHTML = `<div style="text-align:center;padding:var(--space-5);color:var(--text3)">Loading…</div>`;
+  document.getElementById('viewOnboardingModal').classList.add('open');
+
+  let products = [];
+  try { products = await sbSelect('onboarding_products', `onboarding_id=eq.${id}`); } catch(e) { console.warn(e.message); }
+  try { currentOnboardingChecklist = await sbSelect('onboarding_checklist_items', `onboarding_id=eq.${id}&order=sort_order.asc`); } catch(e) { console.warn(e.message); currentOnboardingChecklist = []; }
+
+  renderOnboardingDetail(r, products);
+}
+
+// Renders the stage stepper + checklist sections. Split out from
+// openViewOnboardingModal so toggling a checklist item or changing stage can
+// re-render in place from the already-loaded data, instead of re-fetching
+// from Supabase on every click.
+function renderOnboardingDetail(r, products) {
+  const cat = getCatalog(r.portfolio) || [];
+  const productRows = products.map(p => {
+    const meta = cat.find(c => c.key === p.product_key);
+    return `<div style="display:flex;justify-content:space-between;padding:var(--space-2) 0;border-bottom:1px solid var(--border)">
+      <span>${meta ? renderProductIcon(meta.icon, 16) + ' ' + escAttr(meta.label) : escAttr(p.product_key)}</span>
+      <span style="font-family:var(--font-mono);color:var(--text2)">$${Number(p.price || 0).toFixed(2)}</span>
+    </div>`;
+  }).join('') || '<div style="color:var(--text3);font-size:var(--font-sm)">No products selected yet.</div>';
+  const total = products.reduce((s, p) => s + Number(p.price || 0), 0);
+  const currentIdx = ONBOARDING_STAGE_ORDER.indexOf(r.stage);
+
+  const stepper = ONBOARDING_STAGE_ORDER.map((stage, i) => {
+    const meta = ONBOARDING_STAGE_META[stage];
+    const state = i < currentIdx ? 'done' : i === currentIdx ? 'current' : 'upcoming';
+    const colors = { done: 'var(--green)', current: 'var(--orange)', upcoming: 'var(--border)' };
+    return `<div onclick="setOnboardingStage('${r.id}','${stage}')" tabindex="0" role="button" aria-label="Jump to ${escAttr(meta.label)}"
+      style="flex:1;text-align:center;cursor:pointer;padding:var(--space-2) 4px;border-bottom:3px solid ${colors[state]};opacity:${state === 'upcoming' ? '.55' : '1'}">
+      <div style="font-size:16px">${meta.icon}</div>
+      <div style="font-size:var(--font-2xs);color:${state === 'current' ? 'var(--text)' : 'var(--text3)'};font-weight:${state === 'current' ? '700' : '400'};margin-top:2px">${escAttr(meta.label)}</div>
+    </div>`;
+  }).join('');
+
+  const checklistByStage = ONBOARDING_STAGE_ORDER.map(stage => {
+    const items = currentOnboardingChecklist.filter(c => c.stage === stage);
+    if (items.length === 0) return '';
+    const doneCount = items.filter(c => c.done).length;
+    const meta = ONBOARDING_STAGE_META[stage];
+    return `<div style="margin-bottom:var(--space-3)">
+      <div style="font-size:var(--font-xs);font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:var(--space-2)">${meta.icon} ${escAttr(meta.label)} <span style="color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">(${doneCount}/${items.length})</span></div>
+      ${items.map(c => `
+        <label style="display:flex;align-items:center;gap:var(--space-2);padding:var(--space-2) var(--space-3);background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:4px;cursor:pointer">
+          <input type="checkbox" ${c.done ? 'checked' : ''} onchange="toggleOnboardingChecklistItem('${c.id}', this.checked)" style="width:16px;height:16px;flex-shrink:0">
+          <span style="font-size:var(--font-sm);${c.done ? 'color:var(--text3);text-decoration:line-through' : ''}">${escAttr(c.label)}</span>
+        </label>`).join('')}
+    </div>`;
+  }).join('');
+
+  const activateButton = r.stage === 'live' && r.status !== 'completed'
+    ? `<button class="btn btn-primary" style="width:100%;margin-top:var(--space-3)" onclick="showToast('Activate as Client is coming in the next update.', 'info')">🎉 Activate as Client</button>`
+    : '';
+
+  document.getElementById('viewOnboardingBody').innerHTML = `
+    <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-2)">
+      <span style="font-weight:700;font-size:var(--font-lg);font-family:var(--font-display)">${escAttr(r.business_name)}</span>
+      <span class="portfolio-chip chip-${r.portfolio}">${escAttr(PORTFOLIO_LABELS[r.portfolio] || r.portfolio)}</span>
+    </div>
+    ${r.organization ? `<div style="color:var(--text3);font-size:var(--font-sm);margin-bottom:var(--space-3)">${escAttr(r.organization)}</div>` : ''}
+
+    <div style="display:flex;margin-bottom:var(--space-4);border-bottom:1px solid var(--border)">${stepper}</div>
+
+    <div style="font-size:var(--font-sm);font-weight:700;color:var(--text2);margin-bottom:var(--space-2)">Checklist</div>
+    ${checklistByStage || '<div style="color:var(--text3);font-size:var(--font-sm);margin-bottom:var(--space-3)">No checklist items.</div>'}
+
+    <div style="font-size:var(--font-sm);font-weight:700;color:var(--text2);margin:var(--space-4) 0 var(--space-2)">Products &amp; Pricing</div>
+    ${productRows}
+    <div style="display:flex;justify-content:space-between;padding-top:var(--space-2);font-weight:700">
+      <span>Total</span><span style="font-family:var(--font-mono)">$${total.toFixed(2)}</span>
+    </div>
+    ${activateButton}
+  `;
+}
+
+async function toggleOnboardingChecklistItem(itemId, done) {
+  const item = currentOnboardingChecklist.find(c => c.id === itemId);
+  if (!item) return;
+  const u = getCurrentUser();
+  item.done = done;
+  item.done_by = done ? (u ? u.name : 'Guest') : null;
+  item.done_at = done ? new Date().toISOString() : null;
+  try {
+    await sbPatch('onboarding_checklist_items', `id=eq.${itemId}`, { done: item.done, done_by: item.done_by, done_at: item.done_at });
+  } catch(e) {
+    showToast('Could not save that checklist change: ' + e.message, 'error');
+    item.done = !done; // revert the optimistic update
+  }
+  const r = ONBOARDING_RECORDS.find(x => x.id === currentOnboardingId);
+  if (r) {
+    let products = [];
+    try { products = await sbSelect('onboarding_products', `onboarding_id=eq.${currentOnboardingId}`); } catch(e) {}
+    renderOnboardingDetail(r, products);
+  }
+}
+
+// Jumping backward is always allowed with no confirmation — you're not
+// skipping anything. Jumping forward past a stage with unfinished checklist
+// items asks first rather than silently allowing it or hard-blocking it —
+// sometimes an item genuinely doesn't apply to a given client and advancing
+// anyway is the right call, but it shouldn't happen by accident.
+async function setOnboardingStage(id, newStage) {
+  const r = ONBOARDING_RECORDS.find(x => x.id === id);
+  if (!r || r.stage === newStage) return;
+  const currentIdx = ONBOARDING_STAGE_ORDER.indexOf(r.stage);
+  const newIdx = ONBOARDING_STAGE_ORDER.indexOf(newStage);
+
+  if (newIdx > currentIdx) {
+    const skippedStages = ONBOARDING_STAGE_ORDER.slice(currentIdx, newIdx);
+    const incompleteCount = currentOnboardingChecklist.filter(c => skippedStages.includes(c.stage) && !c.done).length;
+    if (incompleteCount > 0) {
+      const ok = await showConfirmDialog(`${incompleteCount} checklist item(s) between here and "${getOnboardingStageLabel(newStage)}" aren't checked off yet. Advance anyway?`, { title: '⚠️ Unfinished checklist items', confirmLabel: 'Advance anyway' });
+      if (!ok) return;
+    }
+  }
+
+  r.stage = newStage;
+  r.updated_at = new Date().toISOString();
+  if (newStage === 'live' && !r.went_live_at) r.went_live_at = new Date().toISOString();
+  try {
+    await sbPatch('onboarding_records', `id=eq.${id}`, { stage: newStage, updated_at: r.updated_at, went_live_at: r.went_live_at || null });
+  } catch(e) {
+    showToast('Could not save the stage change: ' + e.message, 'error');
+    return;
+  }
+  let products = [];
+  try { products = await sbSelect('onboarding_products', `onboarding_id=eq.${id}`); } catch(e) {}
+  renderOnboardingDetail(r, products);
+  rebuildOnboardingPage();
+}
+
+function closeViewOnboardingModal() {
+  document.getElementById('viewOnboardingModal').classList.remove('open');
+  currentOnboardingId = null;
+  currentOnboardingChecklist = [];
 }
 
 function openAddReminderModal() {
@@ -11959,7 +12358,7 @@ const AI_AGENT_TOOLS = [
   {
     name: 'navigate_to',
     description: 'Switch the Hub to a different page for the user.',
-    input_schema: { type: 'object', properties: { page: { type: 'string', enum: ['home', 'smb', 'whitelabel', 'support', 'clients', 'collections', 'adspend', 'action', 'workflows', 'knowledge', 'voice', 'textagent'] } }, required: ['page'] },
+    input_schema: { type: 'object', properties: { page: { type: 'string', enum: ['home', 'smb', 'whitelabel', 'support', 'clients', 'collections', 'adspend', 'action', 'workflows', 'knowledge', 'voice', 'textagent', 'upsell', 'products', 'settings', 'onboarding'] } }, required: ['page'] },
   },
   {
     name: 'open_client_profile',
@@ -13311,7 +13710,7 @@ async function streamAiAgentResponse(systemPrompt, onTextDelta) {
 async function runAiAgentTurn(toolTagForNextText) {
   showAiAgentTyping(true);
   const u = getCurrentUser();
-  const systemPrompt = `You are Nirvana, the AI Agent inside Niche Inc.'s Client Success Hub, helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the SMB, White Label, and Support portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. Whenever a request would affect MORE THAN ONE client (e.g. "create a follow-up task for every client that hasn't been touched in 30 days," or a list of specific client names), always use bulk_create_tasks or bulk_add_note instead of calling create_task/add_note in a loop — looping individual calls would force a separate confirmation click per client, while the bulk tools show one confirmation with the full affected list. Workflows automate two things: "inactivity" (create a task if a client hasn't had a note in N days) and "schedule" (create a task on a recurring cadence, for one client or a whole portfolio) — if someone describes an automation idea in plain English, translate it into the right workflow fields yourself rather than making them fill out a form. For questions about company policy, procedures, "how do we...", or what the website/docs say, search the Knowledge Base — it contains SOPs, docs, and website content the team has fed in, separate from live client data. You can read and explain every chart in the Hub: get_portfolio_summary explains a portfolio's Product Adoption Rate and Products Per Client charts, get_product_adoption explains the Voice Agent / Text Agent charts, get_collections_summary explains the Collections breakdown (always separated into Outstanding Balances vs Card Fails, each with its own status breakdown — never collapse these into one number), get_adspend_summary explains Ad Spend's promo/budget breakdown, and get_kpi_summary explains the SuccessOS scores. When someone asks you to break down, interpret, or explain any data or chart, always call the specific tool that has that breakdown built in rather than answering from a vaguer or more general tool — if a user asks for a split by category/status/type, that split should already be in the tool result; use it. Prefer the data tools above for explaining charts — they're faster and more precise. Only use view_chart when the question is genuinely about the chart's visual appearance itself (e.g. "does this look right," "what do you see," "describe this chart visually") — calling it will switch the user's screen to that chart's page, so mention that you're pulling it up. Whenever asked to check for discrepancies, duplicates, mismatches, or whether numbers add up anywhere in the Hub (including client counts, Collections, Ad Spend, or the Knowledge Base), always call audit_data_integrity rather than speculating about possible causes — it actually reconciles the numbers and reports genuine findings, so use what it returns instead of guessing at explanations like "could be duplicates" or "could be stale data." A daily briefing already gets shown automatically once per day when the chat is first opened — if asked for a summary, rundown, or "what should I focus on" at any other point, use get_daily_briefing to pull the same live data fresh rather than referencing whatever was shown earlier, since it may be out of date by then. Whenever asked "which accounts are at risk," "who needs attention," or how healthy a specific client is, use get_at_risk_clients or get_client_health rather than checking just one signal (like Collections alone, or note recency alone) — those tools already combine engagement, task backlog, and billing friction into one score with a transparent breakdown of exactly why, which is a more honest answer than picking one factor and guessing at the rest. When summarizing data, only use the real numbers/content returned by tools — never estimate or make things up. If a tool returns an error (e.g. client not found, or nothing in the knowledge base matches), tell the user plainly rather than guessing. If a tool result includes a "note" field, don't ignore it — mention what it says (for example, a client match that only worked after ignoring punctuation/spacing differences) rather than presenting the result as a clean, unqualified match. When presenting a list of businesses or clients that genuinely don't exist yet in the Hub and could be created (for example, orphaned Ad Spend/Collections entries with no matching client record), format it as a markdown table and put a line reading exactly \`[[selectable:create_client]]\` on its own line immediately before that table — this renders the list with checkboxes so the user can pick specific ones to create instead of you needing to ask about each individually. Only use this marker for that specific "these could be created as clients" scenario — never on ordinary reporting tables (KPI trends, budget breakdowns, adoption rates, etc.), since a "create as clients" action button wouldn't make sense there. If a message says the user selected specific businesses to create as clients, treat that as them already having committed to creating those specific ones — don't re-confirm each one individually, just ask which portfolio(s) each should go into (per the existing rule: never guess a portfolio) and then create them.`;
+  const systemPrompt = `You are Nirvana, the AI Agent inside Niche Inc.'s Client Success Hub, helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the SMB, White Label, and Support portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. Whenever a request would affect MORE THAN ONE client (e.g. "create a follow-up task for every client that hasn't been touched in 30 days," or a list of specific client names), always use bulk_create_tasks or bulk_add_note instead of calling create_task/add_note in a loop — looping individual calls would force a separate confirmation click per client, while the bulk tools show one confirmation with the full affected list. Workflows can trigger on six things — "inactivity" (no note in N days), "schedule" (recurring cadence, for one client or a whole portfolio), "client_added" (fires the moment a new client is created), "task_due_soon" (reminds before an existing task's due date), "kpi_drop" (a SuccessOS score went down — team-level, not tied to one client), or "collections_status" (an account entered a specific Collections status) — and can take four actions when they fire: create a task (optionally with a real due date/time), just send a notification with no task, log an audit-trail note with no task or notification, or have you draft the actual task content yourself instead of using fixed text. If someone describes an automation idea in plain English, translate it into the right trigger type, action type, and fields yourself rather than making them fill out a form. For questions about company policy, procedures, "how do we...", or what the website/docs say, search the Knowledge Base — it contains SOPs, docs, and website content the team has fed in, separate from live client data. You can read and explain every chart in the Hub: get_portfolio_summary explains a portfolio's Product Adoption Rate and Products Per Client charts, get_product_adoption explains the Voice Agent / Text Agent charts, get_collections_summary explains the Collections breakdown (always separated into Outstanding Balances vs Card Fails, each with its own status breakdown — never collapse these into one number), get_adspend_summary explains Ad Spend's promo/budget breakdown, and get_kpi_summary explains the SuccessOS scores. When someone asks you to break down, interpret, or explain any data or chart, always call the specific tool that has that breakdown built in rather than answering from a vaguer or more general tool — if a user asks for a split by category/status/type, that split should already be in the tool result; use it. Prefer the data tools above for explaining charts — they're faster and more precise. Only use view_chart when the question is genuinely about the chart's visual appearance itself (e.g. "does this look right," "what do you see," "describe this chart visually") — calling it will switch the user's screen to that chart's page, so mention that you're pulling it up. Whenever asked to check for discrepancies, duplicates, mismatches, or whether numbers add up anywhere in the Hub (including client counts, Collections, Ad Spend, or the Knowledge Base), always call audit_data_integrity rather than speculating about possible causes — it actually reconciles the numbers and reports genuine findings, so use what it returns instead of guessing at explanations like "could be duplicates" or "could be stale data." A daily briefing already gets shown automatically once per day when the chat is first opened — if asked for a summary, rundown, or "what should I focus on" at any other point, use get_daily_briefing to pull the same live data fresh rather than referencing whatever was shown earlier, since it may be out of date by then. Whenever asked "which accounts are at risk," "who needs attention," or how healthy a specific client is, use get_at_risk_clients or get_client_health rather than checking just one signal (like Collections alone, or note recency alone) — those tools already combine engagement, task backlog, and billing friction into one score with a transparent breakdown of exactly why, which is a more honest answer than picking one factor and guessing at the rest. When summarizing data, only use the real numbers/content returned by tools — never estimate or make things up. If a tool returns an error (e.g. client not found, or nothing in the knowledge base matches), tell the user plainly rather than guessing. If a tool result includes a "note" field, don't ignore it — mention what it says (for example, a client match that only worked after ignoring punctuation/spacing differences) rather than presenting the result as a clean, unqualified match. When presenting a list of businesses or clients that genuinely don't exist yet in the Hub and could be created (for example, orphaned Ad Spend/Collections entries with no matching client record), format it as a markdown table and put a line reading exactly \`[[selectable:create_client]]\` on its own line immediately before that table — this renders the list with checkboxes so the user can pick specific ones to create instead of you needing to ask about each individually. Only use this marker for that specific "these could be created as clients" scenario — never on ordinary reporting tables (KPI trends, budget breakdowns, adoption rates, etc.), since a "create as clients" action button wouldn't make sense there. If a message says the user selected specific businesses to create as clients, treat that as them already having committed to creating those specific ones — don't re-confirm each one individually, just ask which portfolio(s) each should go into (per the existing rule: never guess a portfolio) and then create them.`;
 
   let streamBubble = null;
   const onTextDelta = (fullTextSoFar) => {
