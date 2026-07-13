@@ -133,6 +133,32 @@ html[data-theme="light"] {
   --shadow:   0 4px 24px rgba(0,0,0,.08);
   --shadow-lg: 0 24px 64px rgba(0,0,0,.16);
 }
+html[data-theme="blackout"] {
+  color-scheme: dark;
+  /* True/near-black surfaces instead of the warm plum-brown dark theme —
+     brand orange and semantic colors (green/red/yellow/blue/purple) stay
+     identical to dark mode, since there's no reason those should shift
+     between the two dark variants. */
+  --bg:       #000000;
+  --bg2:      #0a0a0a;
+  --bg3:      #121212;
+  --bg4:      #1a1a1a;
+  --border:   #262626;
+  --orange:   #e2541f;
+  --orange2:  #f2772e;
+  --orange-dim: rgba(226,84,31,.16);
+  --text:     #ffffff;
+  --text2:    #a8a8a8;
+  --text3:    #707070;
+  --green:    #22c55e;
+  --red:      #ef4444;
+  --yellow:   #f59e0b;
+  --blue:     #3b82f6;
+  --purple:   #a855f7;
+  --sidebar:  220px;
+  --shadow:   0 4px 24px rgba(0,0,0,.7);
+  --shadow-lg: 0 24px 64px rgba(0,0,0,.8);
+}
 html { scroll-behavior: smooth; }
 /* Respect the OS-level "reduce motion" preference (Block UI-0.4) -- the app
    previously had no accommodation for this at all. Uses near-zero durations
@@ -1543,10 +1569,10 @@ tr.hidden-row { display: none; }
     </div>
   </div>
 
-  <div class="nav-section" id="navTeamSection" style="display:none">
-    <div class="nav-label">Admin</div>
-    <div class="nav-item" onclick="showPage('team')">
-      <span class="icon">🔐</span> Team &amp; Permissions
+  <div class="nav-section">
+    <div class="nav-label">Hub</div>
+    <div class="nav-item" onclick="showPage('settings')">
+      <span class="icon">⚙️</span> Settings
     </div>
   </div>
   </nav>
@@ -1620,10 +1646,7 @@ tr.hidden-row { display: none; }
       </div>
 
       <div class="cnt-section cnt-column-divider">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-          <div class="cnt-section-title" style="margin-bottom:0">✅ Tasks</div>
-          <span id="gcalStatusPill"></span>
-        </div>
+        <div class="cnt-section-title" style="margin-bottom:8px">✅ Tasks</div>
         <div id="cntTasksList" class="cnt-column-scroll" style="margin-bottom:12px"></div>
         <label for="cntNewTaskTitle" class="field-label">Add a Task</label>
         <input type="text" id="cntNewTaskTitle" class="field-input" style="height:36px;margin-bottom:8px" placeholder="e.g. Follow up about renewal">
@@ -1723,7 +1746,7 @@ tr.hidden-row { display: none; }
         </div>
       </div>
       <div class="theme-toggle" id="moneyToggleBtn" onclick="toggleMoneyVisibility()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}" title="Show/hide dollar amounts" aria-label="Show/hide dollar amounts" role="button" tabindex="0">👁️</div>
-      <div class="theme-toggle" id="themeToggle" onclick="toggleTheme()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}" title="Switch light/dark mode" aria-label="Switch light/dark mode" role="button" tabindex="0">🌙</div>
+      <div class="theme-toggle" id="themeToggle" onclick="toggleTheme()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}" title="Switch light/dark/blackout mode" aria-label="Switch light/dark/blackout mode" role="button" tabindex="0">🌙</div>
       <div style="position:relative">
         <div class="user-badge" id="userBadge" onclick="toggleProfileMenu()" title="Account">
           <span class="user-avatar" id="userAvatar">?</span>
@@ -2863,51 +2886,67 @@ tr.hidden-row { display: none; }
   <!-- ═══════════════════════════════════════════════════════════════════
        PAGE: TEAM & PERMISSIONS — admin only
   ════════════════════════════════════════════════════════════════════════ -->
-  <div class="page" id="page-team">
-    <div class="card" style="margin-bottom:var(--space-5)">
-      <div class="card-header">
-        <div><div class="card-title">Authorize a Teammate</div><div class="card-sub">This email will be able to sign in with Google, or by creating a password</div></div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 160px 120px;gap:var(--space-3);align-items:end">
-        <div>
-          <label for="newMemberEmail" class="field-label">Email <span style="color:var(--orange)">(required — this is their login)</span></label>
-          <input type="text" id="newMemberEmail" placeholder="jordan@getniche.ai" class="field-input">
+  <div class="page" id="page-settings">
+    <div style="display:flex;gap:18px;margin-bottom:20px;flex-wrap:wrap">
+      <button class="pm-tab active" id="settingsIntegrationsTabBtn" onclick="switchSettingsTab('integrations')">🔌 Integrations</button>
+      <button class="pm-tab" id="settingsTeamTabBtn" onclick="switchSettingsTab('team')" style="display:none">🔐 Team &amp; Permissions</button>
+    </div>
+
+    <div id="settingsTab-integrations">
+      <div class="card" style="margin-bottom:var(--space-5)">
+        <div class="card-header">
+          <div><div class="card-title">📅 Google Calendar</div><div class="card-sub">Connect your own calendar — tasks assigned to you sync automatically and stay connected until you disconnect</div></div>
         </div>
-        <div>
-          <label for="newMemberName" class="field-label">Name <span style="color:var(--text3)">(optional — fills in automatically on first sign-in)</span></label>
-          <input type="text" id="newMemberName" placeholder="e.g. Jordan Lee" class="field-input">
-        </div>
-        <div>
-          <label for="newMemberRole" class="field-label">Role</label>
-          <select id="newMemberRole" class="field-input">
-            <option value="user">User — view only</option>
-            <option value="superuser">Super user — upload & edit</option>
-            <option value="admin">Admin — full access</option>
-          </select>
-        </div>
-        <button class="btn btn-primary" onclick="addTeamMember()">＋ Authorize</button>
-      </div>
-      <div style="font-size:var(--font-xs);color:var(--text3);margin-top:var(--space-3);line-height:1.6">
-        This app is invite-only — only emails added here can sign in. Once added, tell them to go to the Hub and either click <b>Sign in with Google</b> (if that email is a Google account), or use <b>"First time here? Create your password"</b> under Email/Password to set one up.
+        <div id="gcalStatusPillSettings" style="margin-top:var(--space-2)"></div>
       </div>
     </div>
-    <div class="card" style="margin-bottom:var(--space-5)">
-      <div class="card-header">
-        <div><div class="card-title">Roles Explained</div></div>
+
+    <div id="settingsTab-team" style="display:none">
+      <div class="card" style="margin-bottom:var(--space-5)">
+        <div class="card-header">
+          <div><div class="card-title">Authorize a Teammate</div><div class="card-sub">This email will be able to sign in with Google, or by creating a password</div></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 160px 120px;gap:var(--space-3);align-items:end">
+          <div>
+            <label for="newMemberEmail" class="field-label">Email <span style="color:var(--orange)">(required — this is their login)</span></label>
+            <input type="text" id="newMemberEmail" placeholder="jordan@getniche.ai" class="field-input">
+          </div>
+          <div>
+            <label for="newMemberName" class="field-label">Name <span style="color:var(--text3)">(optional — fills in automatically on first sign-in)</span></label>
+            <input type="text" id="newMemberName" placeholder="e.g. Jordan Lee" class="field-input">
+          </div>
+          <div>
+            <label for="newMemberRole" class="field-label">Role</label>
+            <select id="newMemberRole" class="field-input">
+              <option value="user">User — view only</option>
+              <option value="superuser">Super user — upload & edit</option>
+              <option value="admin">Admin — full access</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="addTeamMember()">＋ Authorize</button>
+        </div>
+        <div style="font-size:var(--font-xs);color:var(--text3);margin-top:var(--space-3);line-height:1.6">
+          This app is invite-only — only emails added here can sign in. Once added, tell them to go to the Hub and either click <b>Sign in with Google</b> (if that email is a Google account), or use <b>"First time here? Create your password"</b> under Email/Password to set one up.
+        </div>
       </div>
-      <div style="font-size:var(--font-sm);color:var(--text2);line-height:1.9">
-        <div><span class="role-pill admin">Admin</span> Full access — upload, edit clients, manage the product catalog, and manage the team.</div>
-        <div><span class="role-pill superuser">Super user</span> Can upload spreadsheets, connect Sheets, and edit/merge clients. Cannot manage team or the product catalog.</div>
-        <div><span class="role-pill user">User</span> View-only — dashboards, charts, and reports, no editing or uploads.</div>
+      <div class="card" style="margin-bottom:var(--space-5)">
+        <div class="card-header">
+          <div><div class="card-title">Roles Explained</div></div>
+        </div>
+        <div style="font-size:var(--font-sm);color:var(--text2);line-height:1.9">
+          <div><span class="role-pill admin">Admin</span> Full access — upload, edit clients, manage the product catalog, and manage the team.</div>
+          <div><span class="role-pill superuser">Super user</span> Can upload spreadsheets, connect Sheets, and edit/merge clients. Cannot manage team or the product catalog.</div>
+          <div><span class="role-pill user">User</span> View-only — dashboards, charts, and reports, no editing or uploads.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">Team Members</div><div class="card-sub" id="teamCountSub">0 people</div></div>
+        </div>
+        <div id="teamMembersList"></div>
       </div>
     </div>
-    <div class="card">
-      <div class="card-header">
-        <div><div class="card-title">Team Members</div><div class="card-sub" id="teamCountSub">0 people</div></div>
-      </div>
-      <div id="teamMembersList"></div>
-    </div>
-    <div class="page-footer">Client Success Hub · Niche Inc. · Team &amp; Permissions</div>
+    <div class="page-footer">Client Success Hub · Niche Inc. · Settings</div>
   </div>
 
 </div><!-- end .main -->
@@ -3213,11 +3252,10 @@ const pageMeta = {
   products:   { title: 'Manage Products',      sub: 'Add, remove, and configure your product catalog' },
   adspend:    { title: 'Ad Spend Management', sub: 'Business-by-business budget, promo status, and recommendations' },
   collections:{ title: 'Collections',              sub: 'Outstanding balances and card fails, with status and notes' },
-  team:       { title: 'Team & Permissions',   sub: 'Manage who can view, edit, and upload' },
+  settings:   { title: 'Settings',             sub: 'Manage Hub-wide settings, integrations, and your team' },
 };
 
 function showPage(id) {
-  if (id === 'team' && !requirePermission('admin')) return;
   if (id === 'products' && !requirePermission('admin')) return;
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -3244,6 +3282,7 @@ function showPage(id) {
   if (id === 'home') rebuildHomePage();
   if (id === 'voice') rebuildVoicePage();
   if (id === 'textagent') rebuildTextAgentPage();
+  if (id === 'settings') renderGoogleCalendarStatus();
 
   closeSidebar();
 }
@@ -3541,10 +3580,13 @@ function resolveCssColor(c) {
 }
 
 function refreshChartColors() {
-  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-  if (isLight) {
+  const theme = document.documentElement.getAttribute('data-theme') || 'dark';
+  if (theme === 'light') {
     C.grid = 'rgba(224,220,213,.9)'; C.tick = '#8c8378'; C.text = '#5c554d';
     C.tooltipBg = '#1a1714'; C.tooltipBorder = '#3a352f'; C.tooltipTitle = '#f7f6f4'; C.axisLabel = '#5c554d';
+  } else if (theme === 'blackout') {
+    C.grid = 'rgba(38,38,38,.9)'; C.tick = '#707070'; C.text = '#a8a8a8';
+    C.tooltipBg = '#000000'; C.tooltipBorder = '#262626'; C.tooltipTitle = '#ffffff'; C.axisLabel = '#a8a8a8';
   } else {
     C.grid = 'rgba(39,39,39,.8)'; C.tick = '#6b6b6b'; C.text = '#a3a3a3';
     C.tooltipBg = '#0a0a0a'; C.tooltipBorder = '#272727'; C.tooltipTitle = '#f0f0f0'; C.axisLabel = '#a3a3a3';
@@ -3552,27 +3594,38 @@ function refreshChartColors() {
 }
 
 // ════════════════════════════════════════════════════════════════════════
-// THEME — light mode / deep black dark mode toggle
+// THEME — light / dark / blackout, cycled in that order
 // ════════════════════════════════════════════════════════════════════════
 const THEME_KEY = 'csh_theme_v1';
+const THEME_CYCLE = ['light', 'dark', 'blackout'];
+const THEME_META = {
+  light:    { icon: '☀️', next: 'dark',     label: 'Switch to dark mode' },
+  dark:     { icon: '🌙', next: 'blackout', label: 'Switch to blackout mode' },
+  blackout: { icon: '⚫', next: 'light',    label: 'Switch to light mode' },
+};
 
 function getSavedTheme() {
-  try { return localStorage.getItem(THEME_KEY) || 'dark'; }
-  catch(e) { return 'dark'; }
+  try {
+    const saved = localStorage.getItem(THEME_KEY);
+    return THEME_CYCLE.includes(saved) ? saved : 'dark';
+  } catch(e) { return 'dark'; }
 }
 
 function applyTheme(theme, redrawCharts) {
+  if (!THEME_CYCLE.includes(theme)) theme = 'dark';
   document.documentElement.setAttribute('data-theme', theme);
   try { localStorage.setItem(THEME_KEY, theme); } catch(e) {}
   const btn = document.getElementById('themeToggle');
-  if (btn) { btn.textContent = theme === 'light' ? '☀️' : '🌙'; btn.title = theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'; btn.setAttribute('aria-label', btn.title); }
+  const meta = THEME_META[theme];
+  if (btn) { btn.textContent = meta.icon; btn.title = meta.label; btn.setAttribute('aria-label', meta.label); }
   refreshChartColors();
   if (redrawCharts && typeof rebuildAll === 'function') rebuildAll();
 }
 
 function toggleTheme() {
   const current = document.documentElement.getAttribute('data-theme') || 'dark';
-  applyTheme(current === 'light' ? 'dark' : 'light', true);
+  const next = (THEME_META[current] || THEME_META.dark).next;
+  applyTheme(next, true);
 }
 
 const prioMeta = {
@@ -6433,16 +6486,27 @@ document.addEventListener('visibilitychange', () => {
 });
 
 function renderGoogleCalendarStatus() {
-  const el = document.getElementById('gcalStatusPill');
+  const el = document.getElementById('gcalStatusPillSettings');
   if (!el) return;
-  if (!isGoogleCalendarConfigured()) { el.innerHTML = ''; return; }
+  if (!isGoogleCalendarConfigured()) { el.innerHTML = '<div style="font-size:var(--font-sm);color:var(--text3)">Not configured for this Hub yet — an Admin needs to add a Google OAuth Client ID.</div>'; return; }
   if (isGoogleCalendarConnected()) {
     const label = googleConnectedAccountEmail ? `📅 Connected: ${escAttr(googleConnectedAccountEmail)}` : '📅 Google Calendar connected';
-    el.innerHTML = `<span class="portfolio-chip chip-addon" title="Tasks assigned to you sync to this calendar">${label}</span> <a href="#" onclick="pollGoogleCalendarChanges(true);return false;" style="font-size:11px;color:var(--text2);margin-left:8px" title="Check Calendar for anything changed or deleted there">🔄 Sync Now</a> <a href="#" onclick="disconnectGoogleCalendar();return false;" style="font-size:11px;color:var(--text3);margin-left:8px">Disconnect</a>`;
+    el.innerHTML = `<div style="display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap">
+      <span class="portfolio-chip chip-addon" title="Tasks assigned to you sync to this calendar">${label}</span>
+      <button class="btn btn-ghost btn-sm" onclick="pollGoogleCalendarChanges(true)" title="Check Calendar for anything changed or deleted there">🔄 Sync Now</button>
+      <button class="btn btn-ghost btn-sm" onclick="disconnectGoogleCalendar()" style="color:var(--red)">Disconnect</button>
+    </div>`;
     if (!googleConnectedAccountEmail) fetchGoogleConnectedAccount(); // backfill once, then re-renders itself
   } else {
-    el.innerHTML = `<button class="btn btn-ghost btn-sm" onclick="connectGoogleCalendar()">📅 Connect Google Calendar</button>`;
+    el.innerHTML = `<button class="btn btn-primary btn-sm" onclick="connectGoogleCalendar()">📅 Connect Google Calendar</button>`;
   }
+}
+
+function switchSettingsTab(tab) {
+  document.querySelectorAll('#page-settings .pm-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById(`settings${tab.charAt(0).toUpperCase()}${tab.slice(1)}TabBtn`).classList.add('active');
+  document.getElementById('settingsTab-integrations').style.display = tab === 'integrations' ? '' : 'none';
+  document.getElementById('settingsTab-team').style.display = tab === 'team' ? '' : 'none';
 }
 
 // ════════════════════════════════════════════════════════════════════════
@@ -6525,8 +6589,8 @@ function applyPermissionsToUI() {
   if (sheetsBtn) sheetsBtn.disabled = !uploadAllowed;
   if (sheetsBtn) sheetsBtn.style.opacity = uploadAllowed ? '' : '.4';
 
-  const teamSection = document.getElementById('navTeamSection');
-  if (teamSection) teamSection.style.display = isAdmin() ? '' : 'none';
+  const settingsTeamTab = document.getElementById('settingsTeamTabBtn');
+  if (settingsTeamTab) settingsTeamTab.style.display = isAdmin() ? '' : 'none';
 
   const productsNav = document.getElementById('navProductsItem');
   if (productsNav) productsNav.style.opacity = isAdmin() ? '' : '.4';
@@ -8504,7 +8568,6 @@ function openClientNotesTasksModal(clientName) {
   renderClientContactInfo();
   renderClientNotesThread();
   renderClientTasksList();
-  renderGoogleCalendarStatus();
   const contactBtn = document.getElementById('cntContactSubmitBtn');
   if (contactBtn) contactBtn.style.display = canEdit() ? '' : 'none';
   document.getElementById('clientNotesTasksModal').classList.add('open');
