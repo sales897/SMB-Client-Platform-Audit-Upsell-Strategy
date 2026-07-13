@@ -522,6 +522,24 @@ body {
 .edit-client-row input[type=checkbox] { width:16px;height:16px;accent-color:var(--orange);cursor:pointer; }
 .row-count { font-size: 11px; color: var(--text3); margin-left: auto; white-space: nowrap; }
 
+/* ─── ONBOARDING PIPELINE BOARD (Block 6, 2026-07-13) ───────────────────── */
+.onboarding-column {
+  flex: 0 0 260px; background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: var(--space-3); display: flex; flex-direction: column;
+  max-height: calc(100vh - 220px);
+}
+.onboarding-column-hd { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3); padding-bottom: var(--space-2); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.onboarding-column-title { font-family: var(--font-display); font-weight: 700; font-size: var(--font-sm); color: var(--text); flex: 1; }
+.onboarding-column-count { font-family: var(--font-mono); font-size: var(--font-xs); color: var(--text3); background: var(--bg3); padding: 2px 8px; border-radius: var(--radius-pill); }
+.onboarding-column-cards { overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: var(--space-2); }
+.onboarding-card {
+  background: var(--gradient-card); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3); cursor: pointer; transition: border-color var(--transition-base), transform var(--transition-fast);
+}
+.onboarding-card:hover { border-color: var(--orange); transform: translateY(-1px); }
+.onboarding-card-name { font-weight: 700; font-size: var(--font-sm); color: var(--text); margin-bottom: 2px; }
+.onboarding-card-meta { font-size: var(--font-2xs); color: var(--text3); }
+
 .tbl-scroll {
   max-height: 460px;
   overflow-y: auto;
@@ -2975,13 +2993,11 @@ tr.hidden-row { display: none; }
   </div>
 
   <div class="page" id="page-onboarding">
-    <div class="card">
-      <div class="card-header">
-        <div><div class="card-title">Active Onboarding</div><div class="card-sub" id="onboardingCountSub">0 in progress</div></div>
-        <button class="btn btn-primary btn-sm" onclick="openAddOnboardingModal()">＋ New Onboarding</button>
-      </div>
-      <div id="onboardingList"></div>
+    <div class="card-header" style="margin-bottom:var(--space-4)">
+      <div><div class="card-title">Onboarding Pipeline</div><div class="card-sub" id="onboardingCountSub">0 in progress</div></div>
+      <button class="btn btn-primary btn-sm" onclick="openAddOnboardingModal()">＋ New Onboarding</button>
     </div>
+    <div id="onboardingBoard" style="display:flex;gap:var(--space-3);overflow-x:auto;padding-bottom:var(--space-3)"></div>
     <div class="page-footer">Client Success Hub · Niche Inc. · Onboarding</div>
   </div>
 
@@ -8632,7 +8648,7 @@ async function saveNewOnboardingRecord() {
 
 async function rebuildOnboardingPage() {
   await loadOnboardingRecords();
-  const wrap = document.getElementById('onboardingList');
+  const wrap = document.getElementById('onboardingBoard');
   const sub = document.getElementById('onboardingCountSub');
   if (sub) sub.textContent = `${ONBOARDING_RECORDS.length} in progress`;
   const badge = document.getElementById('navOnboardingBadge');
@@ -8642,21 +8658,101 @@ async function rebuildOnboardingPage() {
     wrap.innerHTML = emptyStateHTML({ icon: '🧭', title: 'No onboarding in progress', sub: 'Click "New Onboarding" to start tracking a client from contract signature through go-live.' });
     return;
   }
-  wrap.innerHTML = ONBOARDING_RECORDS.map(r => `
-    <div class="edit-client-row" style="cursor:pointer" onclick="openViewOnboardingModal('${r.id}')">
-      <div style="flex:1">
-        <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:4px">
-          <span style="font-weight:700;color:var(--text);font-size:var(--font-base)">${escAttr(r.business_name)}</span>
+  wrap.innerHTML = ONBOARDING_STAGE_ORDER.map(stage => {
+    const meta = ONBOARDING_STAGE_META[stage];
+    const records = ONBOARDING_RECORDS.filter(r => r.stage === stage);
+    const cards = records.map(r => `
+      <div class="onboarding-card" onclick="openViewOnboardingModal('${r.id}')" tabindex="0" role="button" aria-label="View ${escAttr(r.business_name)}'s onboarding">
+        <div class="onboarding-card-name">${escAttr(r.business_name)}</div>
+        <div class="onboarding-card-meta">
           <span class="portfolio-chip chip-${r.portfolio}">${escAttr(PORTFOLIO_LABELS[r.portfolio] || r.portfolio)}</span>
+          ${r.organization ? ' · ' + escAttr(r.organization) : ''}
         </div>
-        <div style="font-size:var(--font-xs);color:var(--text2)">${getOnboardingStageIcon(r.stage)} ${escAttr(getOnboardingStageLabel(r.stage))}${r.organization ? ' · ' + escAttr(r.organization) : ''}</div>
-      </div>
-      <button class="row-action-btn" onclick="event.stopPropagation();openViewOnboardingModal('${r.id}')">👁️ View</button>
-    </div>`).join('');
+      </div>`).join('') || '<div style="color:var(--text3);font-size:var(--font-xs);text-align:center;padding:var(--space-3) 0">Nothing here</div>';
+    return `
+      <div class="onboarding-column">
+        <div class="onboarding-column-hd">
+          <span>${meta.icon}</span>
+          <span class="onboarding-column-title">${escAttr(meta.label)}</span>
+          <span class="onboarding-column-count">${records.length}</span>
+        </div>
+        <div class="onboarding-column-cards">${cards}</div>
+      </div>`;
+  }).join('');
+}
+
+// Block 4 — the graduation flow. Mirrors saveNewClient()'s core create-
+// client logic (same de-dup check, same PORTFOLIOS[pk].clients.push pattern,
+// same persist call) rather than inventing a new one, and fires
+// client_added workflows exactly like any other new client would (the same
+// hook saveNewClient and Nirvana's create_client tool already use) so an
+// onboarding graduation is indistinguishable from a manually-added client to
+// anything watching for new clients.
+// KNOWN LIMITATION, not silently dropped: per-product PRICING captured
+// during onboarding has nowhere to go in portfolio_clients — that table has
+// no pricing field at all (confirmed against the live schema before
+// designing Onboarding). The pricing stays visible on the onboarding record
+// itself (status: completed, not deleted) for historical reference, but
+// isn't carried into the client's own data. Adding client-level pricing
+// would be new scope beyond what's been asked for here.
+// The actual work, no confirm dialog -- split out so Nirvana's
+// activate_onboarding_as_client tool can call this directly after its OWN
+// tool-level confirmation already happened, instead of triggering a
+// confusing second confirm dialog on top of that. Returns {ok, client_name}
+// or {error}, not UI side effects like toasts/modal-closing -- callers
+// decide how to present the result.
+async function doActivateOnboardingAsClient(r) {
+  const norm = r.business_name.trim().toLowerCase();
+  const existingClient = getClients(r.portfolio).find(c => (c.name || '').trim().toLowerCase() === norm);
+  if (existingClient) {
+    return { error: `"${r.business_name}" already exists as a client in ${PORTFOLIO_LABELS[r.portfolio]} — not creating a duplicate.` };
+  }
+
+  let products = [];
+  try { products = await sbSelect('onboarding_products', `onboarding_id=eq.${r.id}`); } catch(e) { console.warn(e.message); }
+  const selectedKeys = new Set(products.map(p => p.product_key));
+
+  const client = { name: r.business_name, org: r.organization || undefined, cellNotes: '' };
+  getProdKeys(r.portfolio).forEach(k => { client[k] = selectedKeys.has(k); });
+  PORTFOLIOS[r.portfolio].clients.push(client);
+  rebuildAll();
+  saveClientsToSupabase(r.portfolio).catch(e => console.warn('Save failed:', e));
+  fireClientAddedWorkflows(r.business_name, [r.portfolio]).catch(e => console.warn('client_added workflow check failed:', e.message));
+
+  r.status = 'completed';
+  r.converted_client_name = r.business_name;
+  r.updated_at = new Date().toISOString();
+  try {
+    await sbPatch('onboarding_records', `id=eq.${r.id}`, { status: 'completed', converted_client_name: r.business_name, updated_at: r.updated_at });
+  } catch(e) {
+    return { ok: true, client_name: r.business_name, warning: `The client was created, but the onboarding record's status could not be updated: ${e.message}` };
+  }
+  return { ok: true, client_name: r.business_name };
+}
+
+async function activateOnboardingAsClient(id) {
+  if (!requirePermission('edit')) return;
+  const r = ONBOARDING_RECORDS.find(x => x.id === id);
+  if (!r) return;
+
+  const confirmed = await showConfirmDialog(
+    `Create "${r.business_name}" as a real client in ${PORTFOLIO_LABELS[r.portfolio]}? The onboarding record stays around afterward for reference, marked complete.`,
+    { title: '🎉 Activate as Client', confirmLabel: 'Activate' }
+  );
+  if (!confirmed) return;
+
+  const result = await doActivateOnboardingAsClient(r);
+  if (result.error) { showToast(result.error, 'warning'); return; }
+  if (result.warning) showToast(result.warning, 'warning');
+
+  closeViewOnboardingModal();
+  await rebuildOnboardingPage();
+  showToast(`🎉 "${r.business_name}" is now a real client in ${PORTFOLIO_LABELS[r.portfolio]}.`, 'success');
 }
 
 let currentOnboardingId = null;
 let currentOnboardingChecklist = [];
+let currentOnboardingNotes = [];
 
 async function openViewOnboardingModal(id) {
   const r = ONBOARDING_RECORDS.find(x => x.id === id);
@@ -8669,6 +8765,7 @@ async function openViewOnboardingModal(id) {
   let products = [];
   try { products = await sbSelect('onboarding_products', `onboarding_id=eq.${id}`); } catch(e) { console.warn(e.message); }
   try { currentOnboardingChecklist = await sbSelect('onboarding_checklist_items', `onboarding_id=eq.${id}&order=sort_order.asc`); } catch(e) { console.warn(e.message); currentOnboardingChecklist = []; }
+  try { currentOnboardingNotes = await sbSelect('onboarding_notes', `onboarding_id=eq.${id}&order=created_at.desc`); } catch(e) { console.warn(e.message); currentOnboardingNotes = []; }
 
   renderOnboardingDetail(r, products);
 }
@@ -8716,8 +8813,19 @@ function renderOnboardingDetail(r, products) {
   }).join('');
 
   const activateButton = r.stage === 'live' && r.status !== 'completed'
-    ? `<button class="btn btn-primary" style="width:100%;margin-top:var(--space-3)" onclick="showToast('Activate as Client is coming in the next update.', 'info')">🎉 Activate as Client</button>`
+    ? `<button class="btn btn-primary" style="width:100%;margin-top:var(--space-3)" onclick="activateOnboardingAsClient('${r.id}')">🎉 Activate as Client</button>`
     : '';
+
+  const notesThread = currentOnboardingNotes.length === 0
+    ? '<div style="color:var(--text3);font-size:var(--font-sm);margin-bottom:var(--space-3)">No notes yet — be the first.</div>'
+    : currentOnboardingNotes.map(n => `
+      <div style="padding:var(--space-2) var(--space-3);background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:var(--space-2)">
+        <div style="display:flex;justify-content:space-between;margin-bottom:2px">
+          <span style="font-weight:700;font-size:var(--font-xs);color:var(--text2)">${escAttr(n.author_name || 'Guest')}</span>
+          <span style="font-size:var(--font-2xs);color:var(--text3)">${fmtNoteTime(n.created_at)}</span>
+        </div>
+        <div style="font-size:var(--font-sm);white-space:pre-wrap">${escAttr(n.text)}</div>
+      </div>`).join('');
 
   document.getElementById('viewOnboardingBody').innerHTML = `
     <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-2)">
@@ -8737,6 +8845,13 @@ function renderOnboardingDetail(r, products) {
       <span>Total</span><span style="font-family:var(--font-mono)">$${total.toFixed(2)}</span>
     </div>
     ${activateButton}
+
+    <div style="font-size:var(--font-sm);font-weight:700;color:var(--text2);margin:var(--space-4) 0 var(--space-2)">Notes</div>
+    ${notesThread}
+    <div style="display:flex;gap:var(--space-2);margin-top:var(--space-2)">
+      <input type="text" id="obNoteInput" class="field-input" style="height:38px;margin-bottom:0" placeholder="Add a note…" onkeydown="if(event.key==='Enter'){event.preventDefault();addOnboardingNoteFromModal();}">
+      <button class="btn btn-primary btn-sm" onclick="addOnboardingNoteFromModal()">＋ Add</button>
+    </div>
   `;
 }
 
@@ -8800,6 +8915,40 @@ function closeViewOnboardingModal() {
   document.getElementById('viewOnboardingModal').classList.remove('open');
   currentOnboardingId = null;
   currentOnboardingChecklist = [];
+  currentOnboardingNotes = [];
+}
+
+async function addOnboardingNote(onboardingId, text) {
+  const u = getCurrentUser();
+  const note = {
+    id: (crypto.randomUUID ? crypto.randomUUID() : 'obn_' + Date.now() + Math.random().toString(16).slice(2)),
+    onboarding_id: onboardingId,
+    author_email: u ? u.email : '',
+    author_name: u ? u.name : 'Guest',
+    text,
+    created_at: new Date().toISOString(),
+  };
+  try {
+    await sbUpsert('onboarding_notes', note);
+  } catch(e) {
+    showToast('Could not save the note: ' + e.message, 'error');
+    return null;
+  }
+  return note;
+}
+
+async function addOnboardingNoteFromModal() {
+  const input = document.getElementById('obNoteInput');
+  const text = input.value.trim();
+  if (!text || !currentOnboardingId) return;
+  const note = await addOnboardingNote(currentOnboardingId, text);
+  if (!note) return;
+  currentOnboardingNotes.unshift(note);
+  input.value = '';
+  const r = ONBOARDING_RECORDS.find(x => x.id === currentOnboardingId);
+  let products = [];
+  try { products = await sbSelect('onboarding_products', `onboarding_id=eq.${currentOnboardingId}`); } catch(e) {}
+  if (r) renderOnboardingDetail(r, products);
 }
 
 function openAddReminderModal() {
@@ -12473,9 +12622,65 @@ const AI_AGENT_TOOLS = [
       required: ['title', 'remind_at'],
     },
   },
+  {
+    name: 'create_onboarding',
+    description: 'Start tracking a new client through onboarding — before they exist as a real client anywhere else in the Hub. Does NOT create a real client record; that only happens later via activate_onboarding_as_client, typically once the record reaches the Live stage. Every stage gets its own default checklist automatically. This changes data — the user will be asked to confirm first.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        business_name: { type: 'string' },
+        organization: { type: 'string', description: 'Optional parent organization name' },
+        portfolio: { type: 'string', enum: ['smb', 'whitelabel', 'support'] },
+        products: {
+          type: 'array',
+          description: 'Optional — which products this client is onboarding onto, each with an optional price. Omit entirely if not discussed yet.',
+          items: { type: 'object', properties: { key: { type: 'string', description: 'Product key from that portfolio\'s catalog' }, price: { type: 'number' } }, required: ['key'] },
+        },
+      },
+      required: ['business_name', 'portfolio'],
+    },
+  },
+  {
+    name: 'update_onboarding_stage',
+    description: 'Move an existing onboarding record to a different stage. Valid stages in order: contract_signed, kickoff_scheduled, kickoff_completed, setup_in_progress, qa_review, live. Can move forward or backward. Unlike the UI (which asks for confirmation before skipping unfinished checklist items), this makes the change directly — if the result includes a "warning" about skipped items, mention it to the user rather than staying silent. This changes data — the user will be asked to confirm first.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        business_name: { type: 'string', description: 'Which onboarding record to update, by business name' },
+        stage: { type: 'string', enum: ['contract_signed', 'kickoff_scheduled', 'kickoff_completed', 'setup_in_progress', 'qa_review', 'live'] },
+      },
+      required: ['business_name', 'stage'],
+    },
+  },
+  {
+    name: 'add_onboarding_note',
+    description: 'Add a note to an existing onboarding record — for progress updates, decisions, or anything worth logging during the onboarding process. This changes data — the user will be asked to confirm first.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        business_name: { type: 'string' },
+        note: { type: 'string' },
+      },
+      required: ['business_name', 'note'],
+    },
+  },
+  {
+    name: 'list_onboarding',
+    description: 'List all active onboarding records — business name, portfolio, and current stage. Use this whenever asked what onboarding is in progress, what stage a specific client is at, or for an overview of the onboarding pipeline.',
+    input_schema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'activate_onboarding_as_client',
+    description: 'Graduate an onboarding record into a real client — creates the actual client record in its portfolio using everything captured during onboarding (name, org, products in use), and marks the onboarding record complete. Typically only makes sense once a record has reached the Live stage — if it hasn\'t, mention that to the user as part of confirming rather than silently proceeding. This changes data — the user will be asked to confirm first.',
+    input_schema: {
+      type: 'object',
+      properties: { business_name: { type: 'string' } },
+      required: ['business_name'],
+    },
+  },
 ];
 
-const AI_ACTION_TOOLS = ['add_note', 'create_task', 'log_kpi_score', 'create_workflow', 'update_workflow', 'delete_workflow', 'bulk_create_tasks', 'bulk_add_note', 'create_client', 'update_client_contact', 'create_reminder']; // tools that change data — always confirmed
+const AI_ACTION_TOOLS = ['add_note', 'create_task', 'log_kpi_score', 'create_workflow', 'update_workflow', 'delete_workflow', 'bulk_create_tasks', 'bulk_add_note', 'create_client', 'update_client_contact', 'create_reminder', 'create_onboarding', 'update_onboarding_stage', 'add_onboarding_note', 'activate_onboarding_as_client']; // tools that change data — always confirmed
 
 // Strips everything except letters/digits, so "1-800 Water Damage" and
 // "1800 Water Damage" (or "Chung, DDS" vs "Chung DDS") compare equal. Used
@@ -12495,6 +12700,27 @@ function aiFindMergedClient(name) {
   if (!compact) return null;
   const fuzzy = Object.values(merged).find(r => compactClientName(r.displayName) === compact);
   return fuzzy || null;
+}
+
+// Fetches fresh from Supabase rather than trusting the client-side
+// ONBOARDING_RECORDS cache -- that cache only populates once the Onboarding
+// page has actually been visited this session (loadOnboardingRecords() is
+// only called from rebuildOnboardingPage()), so relying on it here could
+// silently fail to find a real record just because nobody's opened that
+// page yet today. Exact case-insensitive match only for now, not the same
+// punctuation-fuzzy matching search_clients has — new code, starting
+// simple; revisit only if this turns out to be a real reported problem the
+// way the client-search one was.
+async function aiFindOnboardingRecord(businessName) {
+  const name = (businessName || '').trim();
+  if (!name) return null;
+  try {
+    const rows = await sbSelect('onboarding_records', `business_name=ilike.${encodeURIComponent(name)}&status=eq.active&limit=1`);
+    return rows && rows.length ? rows[0] : null;
+  } catch(e) {
+    console.warn('Could not look up onboarding record:', e.message);
+    return null;
+  }
 }
 
 // Resolves a bulk tool's target client list — either an explicit list of
@@ -13020,6 +13246,67 @@ async function executeAiTool(name, input) {
       if (!reminder) return { error: 'Could not save the reminder — please try again.' };
       return { ok: true, title, remind_at: input.remind_at, owner: ownerEmail };
     }
+    case 'create_onboarding': {
+      if (!requirePermission('edit')) return { error: 'This account doesn\'t have permission to start onboarding records.' };
+      const businessName = (input.business_name || '').trim();
+      if (!businessName) return { error: 'A business name is required.' };
+      if (!['smb', 'whitelabel', 'support'].includes(input.portfolio)) return { error: 'A valid portfolio (smb, whitelabel, or support) is required.' };
+      const cat = getCatalog(input.portfolio) || [];
+      const products = cat.map(p => {
+        const match = (input.products || []).find(x => x.key === p.key);
+        return { key: p.key, selected: !!match, price: match ? (match.price || 0) : 0 };
+      });
+      const record = await createOnboardingRecord({ businessName, organization: input.organization || null, portfolio: input.portfolio, products });
+      if (!record) return { error: 'Could not create the onboarding record.' };
+      if (typeof rebuildOnboardingPage === 'function') rebuildOnboardingPage();
+      return { ok: true, business_name: businessName, portfolio: PORTFOLIO_LABELS[input.portfolio], stage: getOnboardingStageLabel('contract_signed') };
+    }
+    case 'update_onboarding_stage': {
+      if (!requirePermission('edit')) return { error: 'This account doesn\'t have permission to update onboarding records.' };
+      if (!ONBOARDING_STAGE_ORDER.includes(input.stage)) return { error: 'Not a valid stage.' };
+      const r = await aiFindOnboardingRecord(input.business_name);
+      if (!r) return { error: `No active onboarding record found for "${input.business_name}".` };
+      let checklist = [];
+      try { checklist = await sbSelect('onboarding_checklist_items', `onboarding_id=eq.${r.id}`); } catch(e) { console.warn(e.message); }
+      const currentIdx = ONBOARDING_STAGE_ORDER.indexOf(r.stage);
+      const newIdx = ONBOARDING_STAGE_ORDER.indexOf(input.stage);
+      let warning;
+      if (newIdx > currentIdx) {
+        const skipped = ONBOARDING_STAGE_ORDER.slice(currentIdx, newIdx);
+        const incomplete = checklist.filter(c => skipped.includes(c.stage) && !c.done).length;
+        if (incomplete > 0) warning = `${incomplete} checklist item(s) between the old and new stage weren't checked off — mention this to the user.`;
+      }
+      const updated_at = new Date().toISOString();
+      const patch = { stage: input.stage, updated_at };
+      if (input.stage === 'live' && !r.went_live_at) patch.went_live_at = updated_at;
+      try { await sbPatch('onboarding_records', `id=eq.${r.id}`, patch); } catch(e) { return { error: 'Could not update the stage: ' + e.message }; }
+      if (typeof rebuildOnboardingPage === 'function') rebuildOnboardingPage();
+      return { ok: true, business_name: r.business_name, new_stage: getOnboardingStageLabel(input.stage), warning };
+    }
+    case 'add_onboarding_note': {
+      if (!requirePermission('edit')) return { error: 'This account doesn\'t have permission to add onboarding notes.' };
+      const note = (input.note || '').trim();
+      if (!note) return { error: 'Note text is required.' };
+      const r = await aiFindOnboardingRecord(input.business_name);
+      if (!r) return { error: `No active onboarding record found for "${input.business_name}".` };
+      const saved = await addOnboardingNote(r.id, note);
+      if (!saved) return { error: 'Could not save the note.' };
+      return { ok: true, business_name: r.business_name };
+    }
+    case 'list_onboarding': {
+      let rows = [];
+      try { rows = await sbSelect('onboarding_records', 'status=eq.active&order=created_at.desc'); } catch(e) { return { error: e.message }; }
+      return { results: rows.map(r => ({ business_name: r.business_name, portfolio: PORTFOLIO_LABELS[r.portfolio] || r.portfolio, stage: getOnboardingStageLabel(r.stage) })) };
+    }
+    case 'activate_onboarding_as_client': {
+      if (!requirePermission('edit')) return { error: 'This account doesn\'t have permission to activate onboarding records.' };
+      const r = await aiFindOnboardingRecord(input.business_name);
+      if (!r) return { error: `No active onboarding record found for "${input.business_name}".` };
+      const result = await doActivateOnboardingAsClient(r);
+      if (result.error) return { error: result.error };
+      if (typeof rebuildOnboardingPage === 'function') rebuildOnboardingPage();
+      return result;
+    }
     default:
       return { error: 'Unknown tool: ' + name };
   }
@@ -13070,6 +13357,19 @@ function describeAiAction(tool) {
   }
   if (tool.name === 'create_reminder') {
     return `⏰ Remind ${i.owner ? escAttr(i.owner) : 'you'} to "${escAttr(i.title)}" at ${escAttr(i.remind_at)}${i.client_name ? ' — re: ' + escAttr(i.client_name) : ''}`;
+  }
+  if (tool.name === 'create_onboarding') {
+    const prodCount = Array.isArray(i.products) ? i.products.length : 0;
+    return `🧭 Start onboarding for <b>${escAttr(i.business_name)}</b> in ${escAttr(PORTFOLIO_LABELS[i.portfolio] || i.portfolio)}${i.organization ? ' — org: ' + escAttr(i.organization) : ''}${prodCount ? ` — ${prodCount} product(s)` : ''}`;
+  }
+  if (tool.name === 'update_onboarding_stage') {
+    return `➡️ Move <b>${escAttr(i.business_name)}</b>'s onboarding to "${escAttr(getOnboardingStageLabel(i.stage))}"`;
+  }
+  if (tool.name === 'add_onboarding_note') {
+    return `📝 Add a note to <b>${escAttr(i.business_name)}</b>'s onboarding: "${escAttr(i.note)}"`;
+  }
+  if (tool.name === 'activate_onboarding_as_client') {
+    return `🎉 Activate <b>${escAttr(i.business_name)}</b> as a real client`;
   }
   return `Run ${escAttr(tool.name)}?`;
 }
@@ -13710,7 +14010,7 @@ async function streamAiAgentResponse(systemPrompt, onTextDelta) {
 async function runAiAgentTurn(toolTagForNextText) {
   showAiAgentTyping(true);
   const u = getCurrentUser();
-  const systemPrompt = `You are Nirvana, the AI Agent inside Niche Inc.'s Client Success Hub, helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the SMB, White Label, and Support portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. Whenever a request would affect MORE THAN ONE client (e.g. "create a follow-up task for every client that hasn't been touched in 30 days," or a list of specific client names), always use bulk_create_tasks or bulk_add_note instead of calling create_task/add_note in a loop — looping individual calls would force a separate confirmation click per client, while the bulk tools show one confirmation with the full affected list. Workflows can trigger on six things — "inactivity" (no note in N days), "schedule" (recurring cadence, for one client or a whole portfolio), "client_added" (fires the moment a new client is created), "task_due_soon" (reminds before an existing task's due date), "kpi_drop" (a SuccessOS score went down — team-level, not tied to one client), or "collections_status" (an account entered a specific Collections status) — and can take four actions when they fire: create a task (optionally with a real due date/time), just send a notification with no task, log an audit-trail note with no task or notification, or have you draft the actual task content yourself instead of using fixed text. If someone describes an automation idea in plain English, translate it into the right trigger type, action type, and fields yourself rather than making them fill out a form. For questions about company policy, procedures, "how do we...", or what the website/docs say, search the Knowledge Base — it contains SOPs, docs, and website content the team has fed in, separate from live client data. You can read and explain every chart in the Hub: get_portfolio_summary explains a portfolio's Product Adoption Rate and Products Per Client charts, get_product_adoption explains the Voice Agent / Text Agent charts, get_collections_summary explains the Collections breakdown (always separated into Outstanding Balances vs Card Fails, each with its own status breakdown — never collapse these into one number), get_adspend_summary explains Ad Spend's promo/budget breakdown, and get_kpi_summary explains the SuccessOS scores. When someone asks you to break down, interpret, or explain any data or chart, always call the specific tool that has that breakdown built in rather than answering from a vaguer or more general tool — if a user asks for a split by category/status/type, that split should already be in the tool result; use it. Prefer the data tools above for explaining charts — they're faster and more precise. Only use view_chart when the question is genuinely about the chart's visual appearance itself (e.g. "does this look right," "what do you see," "describe this chart visually") — calling it will switch the user's screen to that chart's page, so mention that you're pulling it up. Whenever asked to check for discrepancies, duplicates, mismatches, or whether numbers add up anywhere in the Hub (including client counts, Collections, Ad Spend, or the Knowledge Base), always call audit_data_integrity rather than speculating about possible causes — it actually reconciles the numbers and reports genuine findings, so use what it returns instead of guessing at explanations like "could be duplicates" or "could be stale data." A daily briefing already gets shown automatically once per day when the chat is first opened — if asked for a summary, rundown, or "what should I focus on" at any other point, use get_daily_briefing to pull the same live data fresh rather than referencing whatever was shown earlier, since it may be out of date by then. Whenever asked "which accounts are at risk," "who needs attention," or how healthy a specific client is, use get_at_risk_clients or get_client_health rather than checking just one signal (like Collections alone, or note recency alone) — those tools already combine engagement, task backlog, and billing friction into one score with a transparent breakdown of exactly why, which is a more honest answer than picking one factor and guessing at the rest. When summarizing data, only use the real numbers/content returned by tools — never estimate or make things up. If a tool returns an error (e.g. client not found, or nothing in the knowledge base matches), tell the user plainly rather than guessing. If a tool result includes a "note" field, don't ignore it — mention what it says (for example, a client match that only worked after ignoring punctuation/spacing differences) rather than presenting the result as a clean, unqualified match. When presenting a list of businesses or clients that genuinely don't exist yet in the Hub and could be created (for example, orphaned Ad Spend/Collections entries with no matching client record), format it as a markdown table and put a line reading exactly \`[[selectable:create_client]]\` on its own line immediately before that table — this renders the list with checkboxes so the user can pick specific ones to create instead of you needing to ask about each individually. Only use this marker for that specific "these could be created as clients" scenario — never on ordinary reporting tables (KPI trends, budget breakdowns, adoption rates, etc.), since a "create as clients" action button wouldn't make sense there. If a message says the user selected specific businesses to create as clients, treat that as them already having committed to creating those specific ones — don't re-confirm each one individually, just ask which portfolio(s) each should go into (per the existing rule: never guess a portfolio) and then create them.`;
+  const systemPrompt = `You are Nirvana, the AI Agent inside Niche Inc.'s Client Success Hub, helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the SMB, White Label, and Support portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. Whenever a request would affect MORE THAN ONE client (e.g. "create a follow-up task for every client that hasn't been touched in 30 days," or a list of specific client names), always use bulk_create_tasks or bulk_add_note instead of calling create_task/add_note in a loop — looping individual calls would force a separate confirmation click per client, while the bulk tools show one confirmation with the full affected list. Workflows can trigger on six things — "inactivity" (no note in N days), "schedule" (recurring cadence, for one client or a whole portfolio), "client_added" (fires the moment a new client is created), "task_due_soon" (reminds before an existing task's due date), "kpi_drop" (a SuccessOS score went down — team-level, not tied to one client), or "collections_status" (an account entered a specific Collections status) — and can take four actions when they fire: create a task (optionally with a real due date/time), just send a notification with no task, log an audit-trail note with no task or notification, or have you draft the actual task content yourself instead of using fixed text. If someone describes an automation idea in plain English, translate it into the right trigger type, action type, and fields yourself rather than making them fill out a form. For questions about company policy, procedures, "how do we...", or what the website/docs say, search the Knowledge Base — it contains SOPs, docs, and website content the team has fed in, separate from live client data. You can read and explain every chart in the Hub: get_portfolio_summary explains a portfolio's Product Adoption Rate and Products Per Client charts, get_product_adoption explains the Voice Agent / Text Agent charts, get_collections_summary explains the Collections breakdown (always separated into Outstanding Balances vs Card Fails, each with its own status breakdown — never collapse these into one number), get_adspend_summary explains Ad Spend's promo/budget breakdown, and get_kpi_summary explains the SuccessOS scores. When someone asks you to break down, interpret, or explain any data or chart, always call the specific tool that has that breakdown built in rather than answering from a vaguer or more general tool — if a user asks for a split by category/status/type, that split should already be in the tool result; use it. Prefer the data tools above for explaining charts — they're faster and more precise. Only use view_chart when the question is genuinely about the chart's visual appearance itself (e.g. "does this look right," "what do you see," "describe this chart visually") — calling it will switch the user's screen to that chart's page, so mention that you're pulling it up. Whenever asked to check for discrepancies, duplicates, mismatches, or whether numbers add up anywhere in the Hub (including client counts, Collections, Ad Spend, or the Knowledge Base), always call audit_data_integrity rather than speculating about possible causes — it actually reconciles the numbers and reports genuine findings, so use what it returns instead of guessing at explanations like "could be duplicates" or "could be stale data." A daily briefing already gets shown automatically once per day when the chat is first opened — if asked for a summary, rundown, or "what should I focus on" at any other point, use get_daily_briefing to pull the same live data fresh rather than referencing whatever was shown earlier, since it may be out of date by then. Whenever asked "which accounts are at risk," "who needs attention," or how healthy a specific client is, use get_at_risk_clients or get_client_health rather than checking just one signal (like Collections alone, or note recency alone) — those tools already combine engagement, task backlog, and billing friction into one score with a transparent breakdown of exactly why, which is a more honest answer than picking one factor and guessing at the rest. When summarizing data, only use the real numbers/content returned by tools — never estimate or make things up. If a tool returns an error (e.g. client not found, or nothing in the knowledge base matches), tell the user plainly rather than guessing. If a tool result includes a "note" field, don't ignore it — mention what it says (for example, a client match that only worked after ignoring punctuation/spacing differences) rather than presenting the result as a clean, unqualified match. When presenting a list of businesses or clients that genuinely don't exist yet in the Hub and could be created (for example, orphaned Ad Spend/Collections entries with no matching client record), format it as a markdown table and put a line reading exactly \`[[selectable:create_client]]\` on its own line immediately before that table — this renders the list with checkboxes so the user can pick specific ones to create instead of you needing to ask about each individually. Only use this marker for that specific "these could be created as clients" scenario — never on ordinary reporting tables (KPI trends, budget breakdowns, adoption rates, etc.), since a "create as clients" action button wouldn't make sense there. If a message says the user selected specific businesses to create as clients, treat that as them already having committed to creating those specific ones — don't re-confirm each one individually, just ask which portfolio(s) each should go into (per the existing rule: never guess a portfolio) and then create them. Onboarding records are a SEPARATE, EARLIER concept from clients — an onboarding record represents a business before it's a real client anywhere else in the Hub, tracked through six stages (Contract Signed, Kickoff Call Scheduled, Kickoff Call Completed, Setup In Progress, QA / Internal Review, Live) with its own checklist and notes. Don't confuse create_onboarding with create_client, or an onboarding record's business_name with an actual client_name — they're different things until activate_onboarding_as_client is explicitly used to graduate one into the other, which typically only makes sense once a record has reached the Live stage.`;
 
   let streamBubble = null;
   const onTextDelta = (fullTextSoFar) => {
