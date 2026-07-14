@@ -22,16 +22,20 @@
 *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 :root {
   color-scheme: dark;
-  /* Direction B "Copilot" palette (decided 2026-07-11, replacing the
-     Direction A neutral-black palette Phase 0 originally shipped with) --
-     warmer plum-brown surfaces instead of pure black/gray, so gradients and
-     glows (see --gradient-accent, --glow-accent below) read as intentional
-     warmth rather than a mismatched color temperature. */
-  --bg:       #14100e;
-  --bg2:      #1c1510;
-  --bg3:      #221a14;
-  --bg4:      #2a2018;
-  --border:   #3a2e24;
+  /* Direction D "Void Amber" palette (decided 2026-07-14, replacing the
+     Direction B "Copilot" plum-brown surfaces from 2026-07-11) -- darker,
+     more restrained orange-black base, picked over four other candidates
+     (Ember, Deep Rust, Burnt Umber, Molten) after rendering all five as
+     mockups. Only the default dark theme's surface/border tokens change
+     here -- Light and Blackout themes are untouched by this block. Brand
+     orange, text, and semantic colors (green/red/yellow/blue/purple) are
+     also untouched; the multi-hue decorative accent pass for charts/status
+     pills is a later block, once this base is locked in. */
+  --bg:       #0f0906;
+  --bg2:      #16100b;
+  --bg3:      #1c150f;
+  --bg4:      #241c14;
+  --border:   #332318;
   --orange:   #e2541f;
   --orange2:  #f2772e;
   --orange-dim: rgba(226,84,31,.14);
