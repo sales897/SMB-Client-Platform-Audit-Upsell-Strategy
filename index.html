@@ -437,7 +437,7 @@ body.ai-panel-open .main {
   font-size: var(--font-2xs); font-weight: 700;
   padding: var(--space-1) var(--space-2); border-radius: var(--radius-pill);
 }
-.chart-wrap { position: relative; }
+.chart-wrap { position: relative; filter: drop-shadow(0 0 10px rgba(226,84,31,.18)); }
 .chart-wrap.h260 { height: 260px; }
 .chart-wrap.h300 { height: 300px; }
 .chart-wrap.h340 { height: 340px; }
@@ -1352,15 +1352,15 @@ tr.hidden-row { display: none; }
 .task-info { flex: 1; }
 .task-title { font-size: 13px; font-weight: 600; color: var(--text); }
 .task-meta { font-size: 11px; color: var(--text3); margin-top: 2px; }
-.role-pill { font-size: var(--font-2xs); font-weight: 800; text-transform: uppercase; letter-spacing: .03em; padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); }
-.role-pill.admin { background: rgba(226,84,31,.18); color: var(--orange2); }
-.role-pill.superuser { background: rgba(59,130,246,.18); color: var(--blue); }
-.role-pill.user { background: rgba(163,154,146,.18); color: var(--text2); }
-.promo-pill { font-size: var(--font-2xs); font-weight: 700; padding: var(--space-1) var(--space-2); border-radius: var(--radius); white-space: nowrap; display: inline-block; }
-.promo-pill.yes { background: rgba(34,197,94,.15); color: var(--green); }
-.promo-pill.no { background: rgba(239,68,68,.15); color: var(--red); }
-.promo-pill.using { background: rgba(59,130,246,.15); color: var(--blue); }
-.status-pill { font-size: var(--font-2xs); font-weight: 700; padding: 3px 9px; border-radius: 12px; white-space: nowrap; display: inline-block; border: none; cursor: pointer; }
+.role-pill { font-size: var(--font-2xs); font-weight: 800; text-transform: uppercase; letter-spacing: .03em; padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); box-shadow: 0 0 6px currentColor; }
+.role-pill.admin { background: linear-gradient(90deg, rgba(226,84,31,.32), rgba(226,84,31,.1)); color: var(--orange2); }
+.role-pill.superuser { background: linear-gradient(90deg, rgba(59,130,246,.32), rgba(59,130,246,.1)); color: var(--blue); }
+.role-pill.user { background: linear-gradient(90deg, rgba(163,154,146,.3), rgba(163,154,146,.1)); color: var(--text2); box-shadow: none; }
+.promo-pill { font-size: var(--font-2xs); font-weight: 700; padding: var(--space-1) var(--space-2); border-radius: var(--radius); white-space: nowrap; display: inline-block; box-shadow: 0 0 6px currentColor; }
+.promo-pill.yes { background: linear-gradient(90deg, rgba(34,197,94,.28), rgba(34,197,94,.08)); color: var(--green); }
+.promo-pill.no { background: linear-gradient(90deg, rgba(239,68,68,.28), rgba(239,68,68,.08)); color: var(--red); }
+.promo-pill.using { background: linear-gradient(90deg, rgba(59,130,246,.28), rgba(59,130,246,.08)); color: var(--blue); }
+.status-pill { font-size: var(--font-2xs); font-weight: 700; padding: 3px 9px; border-radius: 12px; white-space: nowrap; display: inline-block; border: none; cursor: pointer; box-shadow: 0 0 7px currentColor; }
 /* Dot-style status indicator (mixed in from the Terminal/C direction,
    2026-07-11) -- a simple binary/small-state indicator: a colored dot plus
    colored text, no filled background. Deliberately separate from
@@ -3830,6 +3830,52 @@ function resolveCssColor(c) {
   return resolved || c;
 }
 
+// Block: colorful/futuristic charts (2026-07-14) -- lightens a hex color toward
+// white by `amt` (0-1), used to build the top stop of a vertical bar gradient.
+function lightenHex(hex, amt) {
+  const h = resolveCssColor(hex).replace('#', '');
+  if (h.length !== 6) return hex;
+  const num = parseInt(h, 16);
+  const clamp = (v) => Math.max(0, Math.min(255, Math.round(v)));
+  const r = clamp((num >> 16) + (255 - (num >> 16)) * amt);
+  const g = clamp(((num >> 8) & 0xff) + (255 - ((num >> 8) & 0xff)) * amt);
+  const b = clamp((num & 0xff) + (255 - (num & 0xff)) * amt);
+  return '#' + [r, g, b].map(v => v.toString(16).padStart(2, '0')).join('');
+}
+
+// Vertical gradient fill for bar datasets: a lighter tint at the top fading
+// into the full base color at the bottom -- the "gradient-filled bars" look.
+// Falls back to the flat hex until Chart.js has computed a chartArea.
+function verticalGradient(ctx, chartArea, hex) {
+  const resolved = resolveCssColor(hex);
+  if (!chartArea) return resolved;
+  const g = ctx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+  g.addColorStop(0, lightenHex(resolved, 0.6));
+  g.addColorStop(1, resolved);
+  return g;
+}
+
+// Global glow plugin: every chart in the Hub gets a soft glow behind its bars/
+// lines/arcs automatically, colored per-dataset. Datasets using a gradient
+// fill (a function, not a flat color) set `_glowColor` alongside so the glow
+// still matches the series' real color instead of falling back to orange.
+const seriesGlowPlugin = {
+  id: 'seriesGlow',
+  beforeDatasetDraw(chart, args) {
+    const raw = chart.data.datasets[args.index];
+    let color = raw._glowColor || raw.borderColor || raw.backgroundColor;
+    if (Array.isArray(color)) color = color[0];
+    if (typeof color !== 'string') color = 'rgba(226,84,31,.5)';
+    chart.ctx.save();
+    chart.ctx.shadowColor = resolveCssColor(color);
+    chart.ctx.shadowBlur = 14;
+  },
+  afterDatasetDraw(chart) {
+    chart.ctx.restore();
+  },
+};
+Chart.register(seriesGlowPlugin);
+
 function refreshChartColors() {
   const theme = document.documentElement.getAttribute('data-theme') || 'dark';
   if (theme === 'light') {
@@ -4535,8 +4581,8 @@ function rebuildVoicePage() {
       data: {
         labels,
         datasets: [
-          { label: 'Using Voice Agent', data: usingCounts, backgroundColor: C.green, borderRadius: 6 },
-          { label: 'Not Using', data: notUsingCounts, backgroundColor: 'rgba(239,68,68,.55)', borderRadius: 6 },
+          { label: 'Using Voice Agent', data: usingCounts, backgroundColor: (ctx) => verticalGradient(ctx.chart.ctx, ctx.chart.chartArea, C.green), _glowColor: resolveCssColor(C.green), borderRadius: 6 },
+          { label: 'Not Using', data: notUsingCounts, backgroundColor: (ctx) => verticalGradient(ctx.chart.ctx, ctx.chart.chartArea, '#ef4444'), _glowColor: '#ef4444', borderRadius: 6 },
         ],
       },
       options: {
@@ -4709,9 +4755,9 @@ function rebuildTextAgentPage() {
       data: {
         labels,
         datasets: [
-          { label: 'Yelp', data: pctFor('yelp'), backgroundColor: C.orange, borderRadius: 6 },
-          { label: 'Google LSA', data: pctFor('google_lsa'), backgroundColor: C.blue, borderRadius: 6 },
-          { label: 'Thumbtack', data: pctFor('thumbtack'), backgroundColor: C.purple, borderRadius: 6 },
+          { label: 'Yelp', data: pctFor('yelp'), backgroundColor: (ctx) => verticalGradient(ctx.chart.ctx, ctx.chart.chartArea, C.orange), _glowColor: resolveCssColor(C.orange), borderRadius: 6 },
+          { label: 'Google LSA', data: pctFor('google_lsa'), backgroundColor: (ctx) => verticalGradient(ctx.chart.ctx, ctx.chart.chartArea, C.blue), _glowColor: resolveCssColor(C.blue), borderRadius: 6 },
+          { label: 'Thumbtack', data: pctFor('thumbtack'), backgroundColor: (ctx) => verticalGradient(ctx.chart.ctx, ctx.chart.chartArea, C.purple), _glowColor: resolveCssColor(C.purple), borderRadius: 6 },
         ],
       },
       options: {
@@ -4771,7 +4817,7 @@ function rebuildTextAgentStale() {
         <div class="support-name">${escAttr(e.name)}</div>
         <div class="support-detail">${renderProductIcon(product.icon, 14)} ${product.label} · ${escAttr(e.note)}</div>
       </div>
-      <span class="status-pill" style="background:rgba(245,158,11,.15);color:var(--yellow);margin-right:8px">${daysLabel}</span>
+      <span class="status-pill" style="background:linear-gradient(90deg, rgba(245,158,11,.32), rgba(245,158,11,.1));color:var(--yellow);margin-right:8px">${daysLabel}</span>
       <span class="portfolio-chip ${meta.chip}">${meta.label}</span>
     </div>`;
   }).join('');
@@ -5022,7 +5068,11 @@ function rebuildAdoptionBar(pk) {
 
   const ds = {
     data: pcts,
-    backgroundColor: pcts.map(v => v > 50 ? C.orange : v > 10 ? C.yellow : 'rgba(226,84,31,.25)'),
+    backgroundColor: (context) => {
+      const v = pcts[context.dataIndex];
+      const hex = v > 50 ? C.orange : v > 10 ? C.yellow : '#e2541f';
+      return verticalGradient(context.chart.ctx, context.chart.chartArea, hex);
+    },
     borderRadius: { topLeft: 6, topRight: 6 }, borderSkipped: false, barPercentage: 0.6,
   };
   ds._pcts = pcts;
@@ -5125,7 +5175,11 @@ function rebuildGapBar(pk) {
 
   const ds = {
     data: gaps,
-    backgroundColor: gaps.map(v => v >= total*0.85 ? C.red : v >= total*0.7 ? C.orange : v >= total*0.3 ? C.yellow : C.green),
+    backgroundColor: (context) => {
+      const v = gaps[context.dataIndex];
+      const hex = v >= total*0.85 ? C.red : v >= total*0.7 ? C.orange : v >= total*0.3 ? C.yellow : C.green;
+      return verticalGradient(context.chart.ctx, context.chart.chartArea, hex);
+    },
     borderRadius: { topRight: 6, bottomRight: 6 }, borderSkipped: 'left', barPercentage: 0.65,
   };
   ds._gaps = gaps;
@@ -6073,7 +6127,7 @@ function rebuildKpiCharts() {
       type: 'bar',
       data: {
         labels: KPI_KEYS.map(k => KPI_META[k].short),
-        datasets: [{ data: scores, backgroundColor: KPI_KEYS.map(k => KPI_META[k].color), borderRadius: { topLeft: 6, topRight: 6 }, borderSkipped: false, barPercentage: 0.5 }],
+        datasets: [{ data: scores, backgroundColor: (context) => verticalGradient(context.chart.ctx, context.chart.chartArea, KPI_KEYS[context.dataIndex] ? KPI_META[KPI_KEYS[context.dataIndex]].color : C.orange), borderRadius: { topLeft: 6, topRight: 6 }, borderSkipped: false, barPercentage: 0.5 }],
       },
       options: {
         responsive: true, maintainAspectRatio: false,
@@ -7646,7 +7700,7 @@ function rebuildAdSpendCharts() {
           labels: top.map(b => b.name),
           datasets: [{
             data: top.map(b => b.budget),
-            backgroundColor: C.orange, borderRadius: { topRight: 6, bottomRight: 6 }, borderSkipped: 'left', barPercentage: 0.65,
+            backgroundColor: (context) => verticalGradient(context.chart.ctx, context.chart.chartArea, C.orange), _glowColor: resolveCssColor(C.orange), borderRadius: { topRight: 6, bottomRight: 6 }, borderSkipped: 'left', barPercentage: 0.65,
           }],
         },
         options: {
@@ -8016,13 +8070,13 @@ let activeCollectionsType = 'outstanding';
 let collectionsFilter = 'all';
 
 const COLLECTIONS_STATUSES = [
-  { key: 'pending',     label: 'Pending',      color: 'var(--text2)',  bg: 'rgba(163,154,146,.18)' },
-  { key: 'inreview',    label: 'In Review',    color: 'var(--yellow)', bg: 'rgba(245,158,11,.15)'  },
-  { key: 'contacted',   label: 'Contacted',    color: 'var(--blue)',   bg: 'rgba(59,130,246,.15)'  },
-  { key: 'paymentplan', label: 'Payment Plan', color: 'var(--purple)', bg: 'rgba(168,85,247,.15)'  },
-  { key: 'escalated',   label: 'Escalated',    color: 'var(--red)',    bg: 'rgba(239,68,68,.15)'   },
-  { key: 'resolved',    label: 'Resolved',     color: 'var(--green)',  bg: 'rgba(34,197,94,.15)'   },
-  { key: 'writeoff',    label: 'Write-Off',    color: 'var(--text3)',  bg: 'rgba(107,98,88,.28)'   },
+  { key: 'pending',     label: 'Pending',      color: 'var(--text2)',  bg: 'linear-gradient(90deg, rgba(163,154,146,.32), rgba(163,154,146,.1))' },
+  { key: 'inreview',    label: 'In Review',    color: 'var(--yellow)', bg: 'linear-gradient(90deg, rgba(245,158,11,.32), rgba(245,158,11,.1))' },
+  { key: 'contacted',   label: 'Contacted',    color: 'var(--blue)',   bg: 'linear-gradient(90deg, rgba(59,130,246,.32), rgba(59,130,246,.1))' },
+  { key: 'paymentplan', label: 'Payment Plan', color: 'var(--purple)', bg: 'linear-gradient(90deg, rgba(168,85,247,.32), rgba(168,85,247,.1))' },
+  { key: 'escalated',   label: 'Escalated',    color: 'var(--red)',    bg: 'linear-gradient(90deg, rgba(239,68,68,.32), rgba(239,68,68,.1))' },
+  { key: 'resolved',    label: 'Resolved',     color: 'var(--green)',  bg: 'linear-gradient(90deg, rgba(34,197,94,.32), rgba(34,197,94,.1))' },
+  { key: 'writeoff',    label: 'Write-Off',    color: 'var(--text3)',  bg: 'linear-gradient(90deg, rgba(107,98,88,.4), rgba(107,98,88,.15))' },
 ];
 function statusMeta(key) { return COLLECTIONS_STATUSES.find(s => s.key === key) || COLLECTIONS_STATUSES[0]; }
 
@@ -8269,7 +8323,7 @@ function rebuildCollectionsCharts() {
           labels: present.map(x => x.s.label),
           datasets: [{
             data: present.map(x => x.amount),
-            backgroundColor: present.map(x => resolveCssColor(x.s.color)), borderRadius: { topRight: 6, bottomRight: 6 }, borderSkipped: 'left', barPercentage: 0.65,
+            backgroundColor: (context) => verticalGradient(context.chart.ctx, context.chart.chartArea, present[context.dataIndex] ? resolveCssColor(present[context.dataIndex].s.color) : C.orange), borderRadius: { topRight: 6, bottomRight: 6 }, borderSkipped: 'left', barPercentage: 0.65,
           }],
         },
         options: {
