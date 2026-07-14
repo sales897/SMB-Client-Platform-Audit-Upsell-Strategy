@@ -2194,7 +2194,7 @@ tr.hidden-row { display: none; }
         <div><div class="card-title">Voice Agent Notes</div><div class="card-sub" id="va-flagged-sub">Pulled from comments attached to the Voice Agent column during upload</div></div>
       </div>
       <div class="table-controls">
-        <input type="text" class="search-box" id="vaFlagSearch" placeholder="Search flagged clients..." oninput="debouncedRebuildVoiceAgentFlagged()">
+        <input type="text" class="search-box" id="vaFlagSearch" placeholder="Search flagged clients..." oninput="listPaginationState.vaFlagged=1;debouncedRebuildVoiceAgentFlagged()">
         <div style="display:flex;gap:var(--space-2);flex-wrap:wrap" id="vaFlagPills">
           <button class="filter-pill active" onclick="setVoiceAgentPortfolioFilter('all',this)">All Portfolios</button>
           <button class="filter-pill" onclick="setVoiceAgentPortfolioFilter('smb',this)">📊 SMB</button>
@@ -2269,7 +2269,7 @@ tr.hidden-row { display: none; }
         <div><div class="card-title">Yelp / Google LSA / Thumbtack Notes</div><div class="card-sub" id="ta-notes-sub">Pulled from comments attached to these columns during upload, across SMB, White Label, and Support</div></div>
       </div>
       <div class="table-controls">
-        <input type="text" class="search-box" id="taNotesSearch" placeholder="Search clients..." oninput="debouncedRebuildTextAgentNotes()">
+        <input type="text" class="search-box" id="taNotesSearch" placeholder="Search clients..." oninput="listPaginationState.taNotes=1;debouncedRebuildTextAgentNotes()">
         <div style="display:flex;gap:var(--space-2);flex-wrap:wrap" id="taNotesProductPills">
           <button class="filter-pill active" onclick="setTextAgentProductFilter('all',this)">All Products</button>
           <button class="filter-pill" id="taPillYelp" onclick="setTextAgentProductFilter('yelp',this)">⭐ Yelp</button>
@@ -2933,6 +2933,7 @@ tr.hidden-row { display: none; }
     <div style="display:flex;gap:18px;margin-bottom:20px;flex-wrap:wrap">
       <button class="pm-tab active" id="settingsIntegrationsTabBtn" onclick="switchSettingsTab('integrations')">🔌 Integrations</button>
       <button class="pm-tab" id="settingsTeamTabBtn" onclick="switchSettingsTab('team')" style="display:none">🔐 Team &amp; Permissions</button>
+      <button class="pm-tab" id="settingsCleanupTabBtn" onclick="switchSettingsTab('cleanup')" style="display:none">🧹 Data Cleanup</button>
     </div>
 
     <div id="settingsTab-integrations">
@@ -2987,6 +2988,18 @@ tr.hidden-row { display: none; }
           <div><div class="card-title">Team Members</div><div class="card-sub" id="teamCountSub">0 people</div></div>
         </div>
         <div id="teamMembersList"></div>
+      </div>
+    </div>
+
+    <div id="settingsTab-cleanup" style="display:none">
+      <div class="card" style="margin-bottom:var(--space-5)">
+        <div class="card-header">
+          <div><div class="card-title">Duplicate Clients</div><div class="card-sub">Same client name appearing more than once within the same portfolio — usually from a spreadsheet re-uploaded without de-duplicating against existing clients</div></div>
+          <button class="btn btn-primary btn-sm" onclick="scanForDuplicateClients()">🔍 Scan for Duplicates</button>
+        </div>
+        <div id="duplicateClientsList">
+          <div style="color:var(--text3);font-size:var(--font-sm);text-align:center;padding:var(--space-5) 0">Click "Scan for Duplicates" to check.</div>
+        </div>
       </div>
     </div>
     <div class="page-footer">Client Success Hub · Niche Inc. · Settings</div>
@@ -4361,6 +4374,7 @@ function setVoiceAgentPortfolioFilter(pk, btn) {
   voiceAgentPortfolioFilter = pk;
   document.querySelectorAll('#vaFlagPills .filter-pill').forEach(p => p.classList.remove('active'));
   if (btn) btn.classList.add('active');
+  listPaginationState.vaFlagged = 1;
   rebuildVoiceAgentFlagged();
 }
 
@@ -4383,7 +4397,7 @@ function rebuildVoiceAgentFlagged() {
     return;
   }
 
-  wrap.innerHTML = flagged.map(({ client: c, pk }) => {
+  renderPaginatedList(wrap, flagged, 'vaFlagged', ({ client: c, pk }) => {
     const meta = portfolioMeta[pk];
     return `<div class="support-item">
       <div class="support-avatar" style="background:var(--bg4);color:var(--yellow)">⚠️</div>
@@ -4393,7 +4407,7 @@ function rebuildVoiceAgentFlagged() {
       </div>
       <span class="portfolio-chip ${meta.chip}">${meta.label}</span>
     </div>`;
-  }).join('');
+  }, rebuildVoiceAgentFlagged);
 }
 
 // ─── TEXT AGENT PAGE — Yelp / Google LSA / Thumbtack breakdown by portfolio ───
@@ -4584,12 +4598,14 @@ function setTextAgentProductFilter(key, btn) {
   textAgentProductFilter = key;
   document.querySelectorAll('#taNotesProductPills .filter-pill').forEach(p => p.classList.remove('active'));
   if (btn) btn.classList.add('active');
+  listPaginationState.taNotes = 1;
   rebuildTextAgentNotes();
 }
 function setTextAgentPortfolioFilter(pk, btn) {
   textAgentPortfolioFilter = pk;
   document.querySelectorAll('#taNotesPortfolioPills .filter-pill').forEach(p => p.classList.remove('active'));
   if (btn) btn.classList.add('active');
+  listPaginationState.taNotes = 1;
   rebuildTextAgentNotes();
 }
 
@@ -4620,7 +4636,7 @@ function rebuildTextAgentNotes() {
     return;
   }
 
-  wrap.innerHTML = entries.map(e => {
+  renderPaginatedList(wrap, entries, 'taNotes', e => {
     const meta = TA_PORTFOLIO_META[e.pk];
     const product = TEXT_AGENT_PRODUCTS.find(p => p.key === e.productKey);
     return `<div class="support-item">
@@ -4631,7 +4647,7 @@ function rebuildTextAgentNotes() {
       </div>
       <span class="portfolio-chip ${meta.chip}">${meta.label}</span>
     </div>`;
-  }).join('');
+  }, rebuildTextAgentNotes);
 }
 
 function showTextAgentClientList(productKey, pk) {
@@ -4994,6 +5010,36 @@ function emptyStateHTML(opts = {}) {
 function emptyStateRow(colspan, opts) {
   return `<tr><td colspan="${colspan}" style="padding:0">${emptyStateHTML(opts)}</td></tr>`;
 }
+
+// Shared by any long flat list that shouldn't make the WHOLE page scroll —
+// Voice Agent and Text Agent's "Clients Flagged for Review" lists were the
+// original complaint (six duplicate rows visible at once, needing constant
+// scrolling that also scrolled the search box and portfolio filters out of
+// view). Renders a fixed-height, independently-scrolling window into the
+// list plus Prev/Next controls, so the search/filter controls above it stay
+// pinned in view no matter how far you page through the results.
+let listPaginationState = {};
+function renderPaginatedList(wrap, items, stateKey, renderItemFn, rebuildFn, pageSize = 15) {
+  const totalPages = Math.max(1, Math.ceil(items.length / pageSize));
+  const page = Math.min(Math.max(1, listPaginationState[stateKey] || 1), totalPages);
+  listPaginationState[stateKey] = page;
+  const start = (page - 1) * pageSize;
+  const rows = items.slice(start, start + pageSize).map(renderItemFn).join('');
+
+  const pager = totalPages > 1 ? `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:var(--space-3) var(--space-2) 0;border-top:1px solid var(--border);margin-top:var(--space-2)">
+      <button class="btn btn-ghost btn-sm" ${page <= 1 ? 'disabled' : ''} onclick="changeListPage('${stateKey}', ${page - 1}, ${rebuildFn.name})">← Prev</button>
+      <span style="font-size:var(--font-xs);color:var(--text3)">Page ${page} of ${totalPages} · ${items.length} total</span>
+      <button class="btn btn-ghost btn-sm" ${page >= totalPages ? 'disabled' : ''} onclick="changeListPage('${stateKey}', ${page + 1}, ${rebuildFn.name})">Next →</button>
+    </div>` : '';
+
+  wrap.innerHTML = `<div style="max-height:520px;overflow-y:auto">${rows}</div>${pager}`;
+}
+function changeListPage(stateKey, newPage, rebuildFn) {
+  listPaginationState[stateKey] = newPage;
+  rebuildFn();
+}
+
 function skeletonRows(colspan, count = 5) {
   let html = '';
   for (let i = 0; i < count; i++) {
@@ -6601,6 +6647,152 @@ function switchSettingsTab(tab) {
   document.getElementById(`settings${tab.charAt(0).toUpperCase()}${tab.slice(1)}TabBtn`).classList.add('active');
   document.getElementById('settingsTab-integrations').style.display = tab === 'integrations' ? '' : 'none';
   document.getElementById('settingsTab-team').style.display = tab === 'team' ? '' : 'none';
+  document.getElementById('settingsTab-cleanup').style.display = tab === 'cleanup' ? '' : 'none';
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// DUPLICATE CLIENT CLEANUP (2026-07-14) — the in-memory PORTFOLIOS cache
+// collapses away each row's id/created_at on load (see the client-loading
+// map in loadInitialData), so it can't be used to target a SPECIFIC
+// duplicate row for deletion. This works from a fresh, direct Supabase
+// query instead, with full row data, rather than reusing
+// auditDataIntegrity()'s detection (which only ever sees the collapsed
+// in-memory version and is correct for REPORTING duplicates but has nothing
+// to act on).
+// Key fact that makes merging safe: client_notes/client_tasks/
+// client_contacts all join by client NAME (text), not by portfolio_clients.
+// id (confirmed in CSH_Schema_Reference.md's cross-table notes) -- so
+// deleting redundant rows never orphans a note/task/contact, since none of
+// them ever pointed at a specific duplicate row's id to begin with.
+// ════════════════════════════════════════════════════════════════════════
+let duplicateClientScanResults = [];
+
+async function scanForDuplicateClients() {
+  const wrap = document.getElementById('duplicateClientsList');
+  wrap.innerHTML = `<div style="text-align:center;padding:var(--space-5);color:var(--text3)">Scanning…</div>`;
+
+  let rows = [];
+  try {
+    rows = await sbSelect('portfolio_clients', 'select=id,portfolio,name,organization,cell_notes,products,created_at&order=created_at.asc');
+  } catch(e) {
+    wrap.innerHTML = `<div style="color:var(--red);font-size:var(--font-sm)">Could not scan: ${escAttr(e.message)}</div>`;
+    return;
+  }
+
+  const groups = {};
+  rows.forEach(r => {
+    const key = `${r.portfolio}::${(r.name || '').trim().toLowerCase()}`;
+    (groups[key] = groups[key] || []).push(r);
+  });
+  // Already sorted oldest-first by the query above, so group[0] is always
+  // the oldest -- the designated survivor, consistently, without re-sorting.
+  duplicateClientScanResults = Object.values(groups).filter(g => g.length > 1);
+
+  if (duplicateClientScanResults.length === 0) {
+    wrap.innerHTML = emptyStateHTML({ icon: '✅', title: 'No duplicates found', sub: 'Every client name appears exactly once within its own portfolio.' });
+    return;
+  }
+
+  wrap.innerHTML = duplicateClientScanResults.map((group, i) => renderDuplicateGroupRow(i, false)).join('');
+}
+
+function renderDuplicateGroupRow(i, expanded) {
+  const group = duplicateClientScanResults[i];
+  const first = group[0];
+  const summary = `<div class="edit-client-row" style="align-items:flex-start" id="dupGroupRow-${i}">
+    <div style="flex:1">
+      <div style="font-weight:700;color:var(--text);font-size:var(--font-base)">${escAttr(first.name)}</div>
+      <div style="font-size:var(--font-xs);color:var(--text2);margin-top:2px">
+        <span class="portfolio-chip chip-${first.portfolio}">${escAttr(PORTFOLIO_LABELS[first.portfolio] || first.portfolio)}</span>
+        appears ${group.length} times
+      </div>
+    </div>
+    <button class="row-action-btn" onclick="toggleDuplicateGroupReview(${i})">${expanded ? '✕ Close' : '👁️ Review & Merge'}</button>
+  </div>`;
+
+  if (!expanded) return summary;
+
+  const productKeys = Array.from(new Set(group.flatMap(r => Object.keys(r.products || {}).filter(k => r.products[k]))));
+  const detailRows = group.map((r, idx) => `
+    <div style="padding:var(--space-2) var(--space-3);background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:var(--space-2)">
+      <div style="font-size:var(--font-xs);font-weight:700;color:${idx === 0 ? 'var(--green)' : 'var(--text3)'};margin-bottom:2px">${idx === 0 ? '🏆 Oldest — stays' : '🗑️ Will be deleted'} · created ${fmtNoteTime(r.created_at)}</div>
+      <div style="font-size:var(--font-sm)">${r.organization ? 'Org: ' + escAttr(r.organization) : '<span style="color:var(--text3)">No organization</span>'}</div>
+      <div style="font-size:var(--font-xs);color:var(--text2);margin-top:2px">${Object.keys(r.products || {}).filter(k => r.products[k]).map(escAttr).join(', ') || 'No products marked in use'}</div>
+    </div>`).join('');
+
+  return `<div style="border:1px solid var(--orange);border-radius:var(--radius-sm);padding:var(--space-3);margin-bottom:var(--space-2)">
+    ${summary}
+    <div style="margin-top:var(--space-3)">
+      <div style="font-size:var(--font-xs);color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:var(--space-2)">${group.length} duplicate rows</div>
+      ${detailRows}
+      <div style="font-size:var(--font-xs);color:var(--text2);margin-bottom:var(--space-3)">
+        Merging combines every product marked "in use" across all ${group.length} rows onto the survivor (${productKeys.length ? escAttr(productKeys.join(', ')) : 'none marked yet'}) — nothing gets silently lost. Notes, tasks, and contacts aren't affected either way, since they're linked by client name, not by these specific rows.
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="confirmMergeDuplicateGroup(${i})">🧹 Merge ${group.length} → 1</button>
+    </div>
+  </div>`;
+}
+
+function toggleDuplicateGroupReview(i) {
+  const el = document.getElementById(`dupGroupRow-${i}`);
+  const alreadyExpanded = el && el.parentElement && el.parentElement.style.borderColor;
+  el.parentElement.outerHTML = renderDuplicateGroupRow(i, !alreadyExpanded);
+}
+
+async function confirmMergeDuplicateGroup(i) {
+  const group = duplicateClientScanResults[i];
+  if (!group) return;
+  const confirmed = await showConfirmDialog(
+    `Merge all ${group.length} rows for "${group[0].name}" into one? This deletes ${group.length - 1} duplicate row(s) after combining their product flags onto the oldest one. This can't be undone from here.`,
+    { title: '🧹 Merge duplicates', confirmLabel: `Merge ${group.length} → 1`, danger: true }
+  );
+  if (!confirmed) return;
+  await mergeDuplicateClientGroup(i);
+}
+
+async function mergeDuplicateClientGroup(i) {
+  const group = duplicateClientScanResults[i];
+  if (!group) return;
+  const survivor = group[0]; // oldest, per the created_at.asc sort in the scan query
+  const rest = group.slice(1);
+
+  // Union every product flag across all rows onto the survivor — never
+  // silently drop a "true" just because it happened to live on a row that's
+  // about to be deleted.
+  const mergedProducts = { ...survivor.products };
+  rest.forEach(r => {
+    Object.entries(r.products || {}).forEach(([k, v]) => { if (v) mergedProducts[k] = true; });
+  });
+
+  // Fill gaps only -- never overwrite something the survivor already has.
+  const mergedOrg = survivor.organization || rest.find(r => r.organization)?.organization || null;
+  const mergedCellNotes = { ...(survivor.cell_notes || {}) };
+  rest.forEach(r => {
+    Object.entries(r.cell_notes || {}).forEach(([k, v]) => { if (v && !mergedCellNotes[k]) mergedCellNotes[k] = v; });
+  });
+
+  try {
+    await sbPatch('portfolio_clients', `id=eq.${survivor.id}`, { products: mergedProducts, organization: mergedOrg, cell_notes: mergedCellNotes });
+    const idsToDelete = rest.map(r => r.id).join(',');
+    await sbDelete('portfolio_clients', `id=in.(${idsToDelete})`);
+  } catch(e) {
+    showToast('Could not complete the merge: ' + e.message, 'error');
+    return;
+  }
+
+  showToast(`Merged "${survivor.name}" — ${rest.length} duplicate row(s) removed.`, 'success');
+  duplicateClientScanResults.splice(i, 1);
+  // Re-render the remaining groups' rows now that indexes have shifted,
+  // rather than leaving stale onclick handlers pointing at the wrong index.
+  const wrap = document.getElementById('duplicateClientsList');
+  wrap.innerHTML = duplicateClientScanResults.length === 0
+    ? emptyStateHTML({ icon: '✅', title: 'No duplicates found', sub: 'Every client name appears exactly once within its own portfolio.' })
+    : duplicateClientScanResults.map((g, idx) => renderDuplicateGroupRow(idx, false)).join('');
+
+  // Refresh the in-memory client cache so the rest of the app (including
+  // the very "Clients Flagged for Review" lists that surfaced this issue)
+  // reflects the merge immediately, not just after a full page reload.
+  if (typeof loadFromSupabase === 'function') { try { await loadFromSupabase(); rebuildAll(); } catch(e) { console.warn(e.message); } }
 }
 
 // ════════════════════════════════════════════════════════════════════════
@@ -6685,6 +6877,9 @@ function applyPermissionsToUI() {
 
   const settingsTeamTab = document.getElementById('settingsTeamTabBtn');
   if (settingsTeamTab) settingsTeamTab.style.display = isAdmin() ? '' : 'none';
+
+  const settingsCleanupTab = document.getElementById('settingsCleanupTabBtn');
+  if (settingsCleanupTab) settingsCleanupTab.style.display = isAdmin() ? '' : 'none';
 
   const productsNav = document.getElementById('navProductsItem');
   if (productsNav) productsNav.style.opacity = isAdmin() ? '' : '.4';
@@ -8655,7 +8850,12 @@ async function rebuildOnboardingPage() {
   if (badge) badge.textContent = ONBOARDING_RECORDS.length;
   if (!wrap) return;
   if (ONBOARDING_RECORDS.length === 0) {
-    wrap.innerHTML = emptyStateHTML({ icon: '🧭', title: 'No onboarding in progress', sub: 'Click "New Onboarding" to start tracking a client from contract signature through go-live.' });
+    // #onboardingBoard is display:flex (for the kanban columns) -- without
+    // an explicit width, a single child just shrinks to its own content
+    // size and sits at the start of the row instead of spanning/centering
+    // across it, even though .empty-state itself already centers its own
+    // content correctly once it actually has the full width to do it in.
+    wrap.innerHTML = `<div style="width:100%">${emptyStateHTML({ icon: '🧭', title: 'No onboarding in progress', sub: 'Click "New Onboarding" to start tracking a client from contract signature through go-live.' })}</div>`;
     return;
   }
   wrap.innerHTML = ONBOARDING_STAGE_ORDER.map(stage => {
