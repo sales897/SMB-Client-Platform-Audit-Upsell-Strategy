@@ -296,8 +296,6 @@ body {
 .nav-dropdown:focus-within .nav-dropdown-menu { display: flex; }
 .nav-dropdown:hover .nav-dropdown-trigger .caret { transform: rotate(180deg); }
 
-.top-nav-settings { margin-left: auto; flex-shrink: 0; }
-
 .nav-toggle {
   display: none;
   background: none; border: none;
@@ -1283,14 +1281,6 @@ tr.hidden-row { display: none; }
   transition: border-color var(--transition-base);
 }
 .user-badge:hover { border-color: var(--orange); }
-.theme-toggle {
-  width: 34px; height: 34px; border-radius: 50%;
-  background: var(--bg3); border: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; font-size: 15px; flex-shrink: 0;
-  transition: border-color var(--transition-base), transform var(--transition-base);
-}
-.theme-toggle:hover { border-color: var(--orange); transform: rotate(15deg); }
 .user-avatar {
   width: 22px; height: 22px; border-radius: 50%; background: var(--orange); overflow: hidden;
   color: #fff; font-size: var(--font-2xs); font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
@@ -1309,6 +1299,21 @@ tr.hidden-row { display: none; }
 .profile-menu-item:hover { background: var(--bg3); color: var(--text); }
 .profile-menu-item.danger:hover { background: rgba(239,68,68,.1); color: var(--red); }
 .profile-menu-divider { height: 1px; background: var(--border); margin: 6px 4px; }
+.profile-menu-section-label { font-size: 9.5px; font-weight: 700; color: var(--text3); letter-spacing: 1px; text-transform: uppercase; padding: 4px 10px 2px; }
+.pref-switch {
+  position: relative; flex-shrink: 0;
+  width: 30px; height: 17px; border-radius: var(--radius-pill);
+  background: var(--bg4); border: 1px solid var(--border);
+  transition: background var(--transition-base);
+}
+.pref-switch-thumb {
+  position: absolute; top: 1px; left: 1px;
+  width: 13px; height: 13px; border-radius: 50%;
+  background: var(--text3);
+  transition: transform var(--transition-base), background var(--transition-base);
+}
+.pref-switch.on { background: rgba(226,84,31,.3); border-color: var(--orange); }
+.pref-switch.on .pref-switch-thumb { transform: translateX(13px); background: var(--orange); }
 
 .notif-badge {
   position: absolute; top: -4px; right: -4px;
@@ -1455,11 +1460,12 @@ tr.hidden-row { display: none; }
   display: flex;
   align-items: center;
   gap: var(--space-4);
-  background: linear-gradient(120deg, #e2541f, #f2772e 35%, #ec4899 70%, #a855f7);
+  background: linear-gradient(120deg, #e2541f, #c96a3a 40%, #a39e96 70%, #d4d0c8);
   border-radius: var(--radius-lg);
   padding: var(--space-4) var(--space-5);
   margin-bottom: var(--space-5);
   color: #fff;
+  box-shadow: 0 0 0 1px rgba(255,255,255,.5), 0 0 20px rgba(255,255,255,.25);
 }
 .ai-insights-icon { font-size: 20px; flex-shrink: 0; }
 .ai-insights-label { font-size: var(--font-2xs); font-weight: 700; letter-spacing: .5px; text-transform: uppercase; opacity: .85; margin-bottom: 2px; }
@@ -1538,7 +1544,6 @@ tr.hidden-row { display: none; }
   }
   .top-nav-items.open { display: flex; }
   .top-nav-overlay.open { display: block; }
-  .top-nav-settings { margin-left: 0; }
   .ai-agent-panel { width: 100vw; }
   .ai-agent-fab.panel-open { display: none; }
   /* Dropdowns can't rely on hover on touch devices, so they render expanded
@@ -1721,13 +1726,7 @@ tr.hidden-row { display: none; }
         </div>
         <div class="nav-item" onclick="showPage('collections')">
           <span class="icon">📋</span> Collections
-          <span class="badge red" id="navCollectionsBadge" style="display:none">0</span>
-        </div>
       </div>
-    </div>
-
-    <div class="nav-item top-nav-settings" onclick="showPage('settings')">
-      <span class="icon">⚙️</span> Settings
     </div>
   </div>
 </nav>
@@ -1890,20 +1889,12 @@ tr.hidden-row { display: none; }
       <div class="topbar-sub" id="topbarSub">Your daily snapshot across the Hub</div>
     </div>
     <div class="topbar-right">
-      <div class="data-source-pill" id="dataSourcePill">
-        <span class="dot"></span> Sample Data
-      </div>
-      <div style="position:relative">
-        <div class="theme-toggle" id="notifBellBtn" onclick="toggleNotificationPanel()" title="Notifications">
-          🔔
-          <span class="notif-badge" id="notifBadge" style="display:none">0</span>
-        </div>
-      </div>
-      <div class="theme-toggle" id="moneyToggleBtn" onclick="toggleMoneyVisibility()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}" title="Show/hide dollar amounts" aria-label="Show/hide dollar amounts" role="button" tabindex="0">👁️</div>
-      <div class="theme-toggle" id="themeToggle" onclick="toggleTheme()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click();}" title="Switch light/dark/blackout mode" aria-label="Switch light/dark/blackout mode" role="button" tabindex="0">🌙</div>
       <div style="position:relative">
         <div class="user-badge" id="userBadge" onclick="toggleProfileMenu()" title="Account">
-          <span class="user-avatar" id="userAvatar">?</span>
+          <div style="position:relative;display:flex">
+            <span class="user-avatar" id="userAvatar">?</span>
+            <span class="notif-badge" id="userBadgeNotifBadge" style="display:none">0</span>
+          </div>
           <span id="userBadgeName">Guest</span>
           <span class="role-pill user" id="userBadgeRole">User</span>
         </div>
@@ -1915,6 +1906,26 @@ tr.hidden-row { display: none; }
               <div class="profile-menu-email" id="profileMenuEmail"></div>
             </div>
           </div>
+          <div class="data-source-pill" id="dataSourcePill" style="margin:0 4px 8px">
+            <span class="dot"></span> Sample Data
+          </div>
+          <div class="profile-menu-section-label">Preferences</div>
+          <div class="profile-menu-item" id="themeToggle" onclick="toggleTheme()" title="Switch light/dark/blackout mode">
+            <span id="themeToggleIcon">🌙</span> <span style="flex:1">Theme</span>
+          </div>
+          <div class="profile-menu-item" onclick="toggleMoneyVisibility()">
+            <span style="flex:1">Show amounts</span>
+            <span class="pref-switch" id="moneyToggleBtn"><span class="pref-switch-thumb"></span></span>
+          </div>
+          <div class="profile-menu-divider"></div>
+          <div class="profile-menu-item" id="notifBellBtn" onclick="toggleProfileMenu();toggleNotificationPanel()">
+            🔔 <span style="flex:1">Notifications</span>
+            <span class="notif-badge" id="notifBadge" style="display:none;position:static">0</span>
+          </div>
+          <div class="profile-menu-item nav-item" onclick="showPage('settings')">
+            ⚙️ Settings
+          </div>
+          <div class="profile-menu-divider"></div>
           <label class="profile-menu-item" style="cursor:pointer">
             📷 Change Profile Picture
             <input type="file" accept="image/*" style="display:none" onchange="handleAvatarUpload(event)">
@@ -3511,6 +3522,8 @@ function showPage(id) {
   if (id === 'onboarding') rebuildOnboardingPage();
 
   closeMobileNav();
+  const profileMenu = document.getElementById('profileMenu');
+  if (profileMenu) profileMenu.style.display = 'none';
 }
 
 function toggleMobileNav() {
@@ -3841,9 +3854,11 @@ function applyTheme(theme, redrawCharts) {
   if (!THEME_CYCLE.includes(theme)) theme = 'dark';
   document.documentElement.setAttribute('data-theme', theme);
   try { localStorage.setItem(THEME_KEY, theme); } catch(e) {}
-  const btn = document.getElementById('themeToggle');
+  const btn = document.getElementById('themeToggleIcon');
+  const row = document.getElementById('themeToggle');
   const meta = THEME_META[theme];
-  if (btn) { btn.textContent = meta.icon; btn.title = meta.label; btn.setAttribute('aria-label', meta.label); }
+  if (btn) btn.textContent = meta.icon;
+  if (row) { row.title = meta.label; row.setAttribute('aria-label', meta.label); }
   refreshChartColors();
   if (redrawCharts && typeof rebuildAll === 'function') rebuildAll();
 }
@@ -7528,8 +7543,12 @@ function toggleMoneyVisibility() {
   rebuildAll(); // re-render everything so every fmtMoney() call re-evaluates with the new state
 }
 function updateMoneyToggleIcon() {
-  const btn = document.getElementById('moneyToggleBtn');
-  if (btn) { btn.textContent = moneyHidden ? '🙈' : '👁️'; btn.title = moneyHidden ? 'Show dollar amounts' : 'Hide dollar amounts'; btn.setAttribute('aria-label', btn.title); }
+  const sw = document.getElementById('moneyToggleBtn');
+  if (sw) {
+    sw.classList.toggle('on', !moneyHidden);
+    sw.title = moneyHidden ? 'Show dollar amounts' : 'Hide dollar amounts';
+    sw.setAttribute('aria-label', sw.title);
+  }
 }
 
 function fmtDate(d) {
@@ -8806,8 +8825,10 @@ async function createNotification(recipientEmail, type, message, clientName) {
 
 function renderNotificationBell() {
   const badge = document.getElementById('notifBadge');
+  const avatarBadge = document.getElementById('userBadgeNotifBadge');
   const unread = NOTIFICATIONS.filter(n => !n.read).length;
   if (badge) { badge.style.display = unread > 0 ? '' : 'none'; badge.textContent = unread; }
+  if (avatarBadge) { avatarBadge.style.display = unread > 0 ? '' : 'none'; avatarBadge.textContent = unread; }
 }
 
 // ════════════════════════════════════════════════════════════════════════
