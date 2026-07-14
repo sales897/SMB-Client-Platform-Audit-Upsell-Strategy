@@ -209,7 +209,6 @@ body {
    untouched here -- still the Direction B plum-brown tokens above; the
    orange-black palette pass is a separate, later block. */
 .top-nav {
-  width: 100%;
   background: var(--bg2);
   border-bottom: 1px solid var(--border);
   display: flex;
@@ -220,6 +219,7 @@ body {
   position: sticky;
   top: 0;
   z-index: 100;
+  transition: margin-right var(--transition-slower) ease;
 }
 .top-nav-logo {
   display: flex;
@@ -308,6 +308,11 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  transition: margin-right var(--transition-slower) ease;
+}
+body.ai-panel-open .top-nav,
+body.ai-panel-open .main {
+  margin-right: 400px;
 }
 
 /* ─── TOP BAR ──────────────────────────────────────────────────────────── */
@@ -1529,6 +1534,10 @@ tr.hidden-row { display: none; }
 
 @media (max-width: 768px) {
   .nav-toggle { display: block; }
+  body.ai-panel-open .top-nav,
+  body.ai-panel-open .main {
+    margin-right: 0;
+  }
   .top-nav-items {
     display: none;
     position: fixed;
@@ -14127,6 +14136,7 @@ function toggleAiAgentPanel() {
   const willShow = panel.style.display === 'none';
   panel.style.display = willShow ? 'flex' : 'none';
   if (fab) fab.classList.toggle('panel-open', willShow);
+  document.body.classList.toggle('ai-panel-open', willShow);
   if (!willShow && typeof window.speechSynthesis !== 'undefined') window.speechSynthesis.cancel(); // stop talking if the panel is closed mid-reply
   if (willShow) {
     updateNirvanaVoiceButton();
