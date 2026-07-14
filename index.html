@@ -939,13 +939,14 @@ tr.hidden-row { display: none; }
 
 /* ─── AI AGENT ("NIRVANA") ─────────────────────────────────────────────── */
 .ai-agent-fab {
-  position: fixed; bottom: 24px; right: 24px; z-index: 4000;
+  position: fixed; bottom: 24px; right: 24px; z-index: 4001;
   width: 60px; height: 60px; border-radius: 50%; border: none; cursor: pointer;
   background: radial-gradient(circle at 35% 30%, #ffffff, #ffb37a 45%, var(--orange) 100%);
   display: flex; align-items: center; justify-content: center; overflow: visible;
-  transition: transform var(--transition-base);
+  transition: transform var(--transition-base), right var(--transition-slower) ease;
 }
 .ai-agent-fab:hover { transform: scale(1.08); }
+.ai-agent-fab.panel-open { right: 416px; }
 .ai-agent-fab-icon { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; object-position: 50% 15%; position: relative; z-index: 2; box-shadow: 0 1px 4px rgba(0,0,0,.5); }
 .ai-agent-fab-glow {
   position: absolute; inset: -7px; border-radius: 50%; z-index: 1;
@@ -964,10 +965,14 @@ tr.hidden-row { display: none; }
   100% { box-shadow: 0 0 0 0 rgba(255,179,122,0), 0 8px 24px rgba(0,0,0,.45); }
 }
 .ai-agent-panel {
-  position: fixed; bottom: 96px; right: 24px; z-index: 4000;
-  width: 420px; max-width: calc(100vw - 32px); height: 600px; max-height: 75vh;
-  background: var(--gradient-card); border: 1px solid var(--border); border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg); display: flex; flex-direction: column; overflow: hidden;
+  /* Block 4 (2026-07-14): docked full-height right-edge panel, replacing
+     the floating bottom-right card -- chosen over the floating option
+     after rendering both as mockups. Orb launcher position/behavior is
+     unchanged; only the panel that opens from it moved. */
+  position: fixed; top: 0; right: 0; bottom: 0; z-index: 4000;
+  width: 400px; max-width: 100vw;
+  background: var(--gradient-card); border-left: 1px solid var(--border); border-radius: 0;
+  box-shadow: -8px 0 32px rgba(0,0,0,.35); display: flex; flex-direction: column; overflow: hidden;
 }
 .ai-agent-header {
   display: flex; align-items: center; justify-content: space-between; padding: var(--space-3) var(--space-4);
@@ -977,9 +982,26 @@ tr.hidden-row { display: none; }
 .ai-agent-header-title { font-weight: 800; color: var(--text); font-size: var(--font-md); display: flex; align-items: center; gap: var(--space-2); }
 .ai-agent-header-icon { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; object-position: 50% 15%; box-shadow: 0 0 0 2px rgba(226,84,31,.35); }
 .ai-agent-header-actions { display: flex; gap: 4px; }
-.ai-agent-header button { background: none; border: none; color: var(--text3); font-size: var(--font-md); cursor: pointer; padding: var(--space-1) var(--space-2); border-radius: var(--radius-xs); transition: background var(--transition-base); }
+.ai-agent-header button {
+  background: none; border: none; color: var(--text3); font-size: var(--font-md); cursor: pointer;
+  width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  transition: background var(--transition-base);
+}
 .ai-agent-header button:hover { background: var(--bg3); color: var(--text); }
 .ai-agent-header button.active { background: rgba(226,84,31,.18); color: var(--orange); }
+.ai-quick-actions {
+  display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-2);
+  padding: var(--space-3) var(--space-4); flex-shrink: 0;
+  border-bottom: 1px solid var(--border);
+}
+.ai-quick-action {
+  display: flex; align-items: center; gap: var(--space-2);
+  background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-pill);
+  padding: var(--space-2) var(--space-3); cursor: pointer; font-size: var(--font-xs); color: var(--text2);
+  transition: all var(--transition-base);
+}
+.ai-quick-action:hover { border-color: var(--orange); color: var(--text); background: var(--bg2); }
+.ai-quick-action .icon { font-size: var(--font-sm); flex-shrink: 0; }
 .ai-agent-messages { flex: 1; overflow-y: auto; padding: var(--space-3) var(--space-4); display: flex; flex-direction: column; gap: var(--space-3); }
 .ai-msg-row { display: flex; flex-direction: column; max-width: 88%; }
 .ai-msg-row.ai-msg-row-user { align-self: flex-end; align-items: flex-end; }
@@ -1031,9 +1053,9 @@ tr.hidden-row { display: none; }
 .ai-confirm-text { font-size: var(--font-sm); color: var(--text2); margin-bottom: var(--space-2); line-height: 1.5; }
 .ai-confirm-btns { display: flex; gap: var(--space-2); justify-content: flex-end; }
 .ai-agent-input-row { display: flex; gap: var(--space-2); padding: var(--space-3); border-top: 1px solid var(--border); flex-shrink: 0; }
-.ai-agent-input-row input { flex: 1; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--space-2) var(--space-3); color: var(--text); font-size: var(--font-base); outline: none; }
+.ai-agent-input-row input { flex: 1; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-pill); padding: var(--space-2) var(--space-4); color: var(--text); font-size: var(--font-base); outline: none; }
 .ai-agent-input-row input:focus { border-color: var(--orange); }
-.ai-agent-input-row button { background: var(--gradient-accent); color: #fff; border: none; border-radius: var(--radius-sm); padding: var(--space-2) var(--space-4); font-size: var(--font-base); font-weight: 700; cursor: pointer; transition: transform var(--transition-base); }
+.ai-agent-input-row button { background: var(--gradient-accent); color: #fff; border: none; border-radius: var(--radius-pill); padding: var(--space-2) var(--space-4); font-size: var(--font-base); font-weight: 700; cursor: pointer; transition: transform var(--transition-base); }
 .ai-agent-input-row button:hover:not(:disabled) { transform: translateY(-1px); }
 .ai-agent-input-row button:disabled { opacity: .5; cursor: default; }
 .ai-typing-dots { display: inline-flex; gap: 3px; align-items: center; padding: 2px 0; }
@@ -1372,8 +1394,10 @@ tr.hidden-row { display: none; }
   animation: voicePulse 1.2s infinite;
 }
 .ai-voice-btn {
-  background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm);
-  color: var(--text2); font-size: 15px; padding: 9px 12px; cursor: pointer; transition: all var(--transition-base);
+  background: var(--bg3); border: 1px solid var(--border); border-radius: 50%;
+  color: var(--text2); font-size: 15px; width: 38px; height: 38px; padding: 0;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  cursor: pointer; transition: all var(--transition-base);
 }
 .ai-voice-btn:hover { border-color: var(--orange); color: var(--text); }
 @keyframes voicePulse {
@@ -1423,6 +1447,37 @@ tr.hidden-row { display: none; }
   margin-bottom: 8px; transition: border-color var(--transition-slow);
 }
 .support-item:hover { border-color: var(--orange); }
+/* AI Insights banner (Block 3, 2026-07-14) -- the one deliberately bold,
+   multi-hue gradient moment agreed for this redesign. Everywhere else in
+   the app stays disciplined/single-accent; this banner is the signature
+   element per the reference mockup Oscar liked. */
+.ai-insights-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  background: linear-gradient(120deg, #e2541f, #f2772e 35%, #ec4899 70%, #a855f7);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
+  margin-bottom: var(--space-5);
+  color: #fff;
+}
+.ai-insights-icon { font-size: 20px; flex-shrink: 0; }
+.ai-insights-label { font-size: var(--font-2xs); font-weight: 700; letter-spacing: .5px; text-transform: uppercase; opacity: .85; margin-bottom: 2px; }
+.ai-insights-text { font-size: var(--font-md); font-weight: 600; line-height: 1.4; }
+.ai-insights-refresh {
+  margin-left: auto;
+  background: rgba(255,255,255,.18);
+  border: none;
+  color: #fff;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  flex-shrink: 0;
+  font-size: var(--font-sm);
+  transition: background var(--transition-base);
+}
+.ai-insights-refresh:hover { background: rgba(255,255,255,.3); }
+.ai-insights-refresh:disabled { opacity: .5; cursor: default; }
 .home-greeting { font-family: var(--font-display); font-size: var(--font-xl); font-weight: 800; color: var(--text); margin-bottom: 4px; }
 .home-greeting-sub { font-size: var(--font-base); color: var(--text3); margin-bottom: var(--space-5); }
 .quick-links-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; }
@@ -1484,6 +1539,8 @@ tr.hidden-row { display: none; }
   .top-nav-items.open { display: flex; }
   .top-nav-overlay.open { display: block; }
   .top-nav-settings { margin-left: 0; }
+  .ai-agent-panel { width: 100vw; }
+  .ai-agent-fab.panel-open { display: none; }
   /* Dropdowns can't rely on hover on touch devices, so they render expanded
      inline under their trigger label instead of as a floating menu. */
   .nav-dropdown-menu {
@@ -1800,6 +1857,12 @@ tr.hidden-row { display: none; }
       <button onclick="toggleAiAgentPanel()" title="Close" aria-label="Close Nirvana">✕</button>
     </div>
   </div>
+  <div class="ai-quick-actions">
+    <div class="ai-quick-action" onclick="sendAiAgentQuickMessage('Give me today\'s briefing.')"><span class="icon">📋</span> Daily briefing</div>
+    <div class="ai-quick-action" onclick="sendAiAgentQuickMessage('Which clients are at risk right now?')"><span class="icon">⚠️</span> At-risk clients</div>
+    <div class="ai-quick-action" onclick="sendAiAgentQuickMessage('I want to create a task.')"><span class="icon">✅</span> Create a task</div>
+    <div class="ai-quick-action" onclick="sendAiAgentQuickMessage('I want to add a note to a client.')"><span class="icon">📝</span> Add a note</div>
+  </div>
   <div class="ai-agent-messages" id="aiAgentMessages"></div>
   <div class="ai-agent-confirm" id="aiAgentConfirm" style="display:none"></div>
   <div class="ai-agent-input-row">
@@ -1927,6 +1990,14 @@ tr.hidden-row { display: none; }
        PAGE 0: HOME — daily overview & quick access (default landing page)
   ════════════════════════════════════════════════════════════════════════ -->
   <div class="page active" id="page-home">
+    <div class="ai-insights-banner" id="aiInsightsBanner">
+      <div class="ai-insights-icon">✨</div>
+      <div style="flex:1;min-width:0">
+        <div class="ai-insights-label">Nirvana's take</div>
+        <div class="ai-insights-text" id="aiInsightsText">Loading today's insight…</div>
+      </div>
+      <button class="ai-insights-refresh" id="aiInsightsRefreshBtn" onclick="loadAiInsightsBanner()" title="Get a new insight" aria-label="Get a new insight">🔄</button>
+    </div>
     <div class="home-greeting" id="homeGreeting">Good morning 👋</div>
     <div class="home-greeting-sub" id="homeGreetingSub">Here's what's happening across the Hub today.</div>
 
@@ -4223,6 +4294,38 @@ async function getSpotlightAiSuggestion(pk, btn) {
   }
 }
 
+// AI Insights banner (Home page) -- one-off, tool-free Nirvana call (same
+// quickAiCompletion pattern as getSpotlightAiSuggestion above) summarizing
+// today's portfolio numbers into a single actionable line. Falls back to a
+// computed-from-the-same-numbers sentence if the AI call fails, so the
+// banner never shows a broken or empty state.
+async function loadAiInsightsBanner() {
+  const textEl = document.getElementById('aiInsightsText');
+  const btn = document.getElementById('aiInsightsRefreshBtn');
+  if (!textEl) return;
+  if (btn) btn.disabled = true;
+  textEl.textContent = 'Thinking about today\'s priorities…';
+  const needsAttention = COLLECTIONS_ACCOUNTS.filter(a => ['pending', 'inreview', 'escalated'].includes(a.status)).length
+    + AD_SPEND_BUSINESSES.filter(b => b.promo === 'Yes').length;
+  const fallback = needsAttention > 0
+    ? `${needsAttention} account${needsAttention === 1 ? '' : 's'} need attention today — that's the fastest place to start.`
+    : 'Everything\'s caught up — a good day to get ahead on Growth Tools.';
+  try {
+    const totalClients = Object.keys(buildMergedClients()).length;
+    const staleLeads = getTextAgentStaleLeads().length;
+    const collectionsOwed = COLLECTIONS_ACCOUNTS.reduce((s, a) => s + (a.amount || 0), 0);
+    const insight = await quickAiCompletion(
+      'You are Nirvana, a concise client success advisor for a home-services marketing agency. Given today\'s portfolio numbers, give ONE punchy, specific sentence (max 20 words) highlighting the single most useful thing for the person to focus on today. No greeting, no filler, just the insight itself.',
+      `Total clients: ${totalClients}\nAccounts needing attention: ${needsAttention}\nStale leads: ${staleLeads}\nCollections outstanding: ${fmtMoney(collectionsOwed)}`
+    );
+    textEl.textContent = (insight || '').trim() || fallback;
+  } catch(e) {
+    textEl.textContent = fallback;
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
 function rebuildPortfolio(pk) {
   rebuildTableHeaders(pk);
   rebuildFilterPills(pk);
@@ -4280,6 +4383,7 @@ function rebuildHomePage() {
   renderMyRemindersWidget();
   renderHomeAttentionList();
   renderHomeActivityList();
+  loadAiInsightsBanner();
 }
 
 function renderHomeGreeting() {
@@ -13998,8 +14102,10 @@ function buildDailyBriefingText() {
 
 function toggleAiAgentPanel() {
   const panel = document.getElementById('aiAgentPanel');
+  const fab = document.getElementById('aiAgentFab');
   const willShow = panel.style.display === 'none';
   panel.style.display = willShow ? 'flex' : 'none';
+  if (fab) fab.classList.toggle('panel-open', willShow);
   if (!willShow && typeof window.speechSynthesis !== 'undefined') window.speechSynthesis.cancel(); // stop talking if the panel is closed mid-reply
   if (willShow) {
     updateNirvanaVoiceButton();
