@@ -1828,6 +1828,34 @@ tr.hidden-row { display: none; }
 .wfb-node-menu-item:hover { background: var(--bg4); color: var(--text); }
 .wfb-node-menu-item.danger { color: var(--red); }
 .wfb-node-menu-item.danger:hover { background: rgba(239,68,68,.12); }
+
+/* Inline expand-in-place node editing (Option B, 2026-07-15) -- replaces
+   the old modal entirely. Clicking a node expands it right where it sits;
+   only one node is ever expanded at a time (enforced by wfbExpandedNodeId
+   being a single value, not a set). */
+.wfb-node-expanded { width: 260px !important; z-index: 10; cursor: default; }
+.wfb-field-label { display: block; font-size: 9px; color: var(--text3); margin: 8px 0 3px; }
+.wfb-field-input {
+  width: 100%; box-sizing: border-box; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-xs);
+  padding: 6px 8px; font-size: 10.5px; color: var(--text); font-family: inherit; resize: vertical;
+}
+.wfb-field-input:focus { border-color: var(--node-color, var(--orange)); outline: none; }
+.wfb-expanded-btns { display: flex; gap: 6px; margin-top: 10px; }
+.wfb-mini-btn {
+  font-size: 9px; font-weight: 700; padding: 5px 9px; border-radius: var(--radius-xs); border: 1px solid var(--border);
+  background: var(--bg3); color: var(--text2); cursor: pointer;
+}
+.wfb-mini-btn.primary { background: linear-gradient(90deg, var(--orange), var(--orange2)); color: #fff; border: none; margin-left: auto; }
+.wfb-mini-btn.danger { color: var(--red); margin-right: auto; }
+.wfb-merge-dropdown {
+  position: fixed; z-index: 300; background: var(--bg3); border: 1px solid var(--orange); border-radius: var(--radius-sm);
+  box-shadow: 0 0 14px rgba(226,84,31,.3); max-height: 160px; overflow-y: auto;
+}
+.wfb-merge-item { padding: 6px 10px; font-size: 10px; color: var(--text2); cursor: pointer; border-bottom: 1px solid var(--border); }
+.wfb-merge-item:last-child { border-bottom: none; }
+.wfb-merge-item:hover { background: var(--bg4); }
+.wfb-merge-item b { color: var(--orange2); display: block; }
+.wfb-merge-item span { font-size: 9px; color: var(--text3); }
 .wfb-node-hd { display: flex; align-items: center; gap: 6px; font-size: 9px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--node-color, var(--text3)); margin-bottom: 3px; }
 .wfb-node-hd .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--node-color); box-shadow: 0 0 6px var(--node-color); }
 .wfb-node-hd .menu { margin-left: auto; color: var(--text3); cursor: pointer; }
@@ -1856,6 +1884,24 @@ tr.hidden-row { display: none; }
 .wfb-live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--yellow); box-shadow: 0 0 6px var(--yellow); }
 .wfb-ai-body { flex: 1; overflow-y: auto; padding: var(--space-3); }
 .wfb-ai-placeholder { font-size: var(--font-sm); color: var(--text2); line-height: 1.6; background: var(--bg3); border-radius: var(--radius-sm); padding: var(--space-3); }
+.wfb-suggestion-hd { font-size: 9px; font-weight: 800; letter-spacing: .06em; color: var(--text3); margin-bottom: var(--space-2); }
+.wfb-suggestion {
+  display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--bg3); border: 1px solid var(--border);
+  border-left: 3px solid var(--sev-color, var(--orange)); border-radius: var(--radius-xs); margin-bottom: 6px; cursor: pointer;
+  transition: background var(--transition-base);
+}
+.wfb-suggestion:hover { background: var(--bg4); }
+.wfb-suggestion .txt { flex: 1; font-size: var(--font-2xs); color: var(--text2); line-height: 1.4; }
+.wfb-suggestion .sev-badge { font-size: 8px; font-weight: 800; padding: 2px 6px; border-radius: var(--radius-pill); background: var(--sev-color, var(--orange)); color: #000; flex-shrink: 0; }
+.wfb-chat-msg { font-size: var(--font-xs); line-height: 1.5; margin-bottom: var(--space-3); }
+.wfb-chat-msg.user { color: var(--text); text-align: right; }
+.wfb-chat-msg.user .bubble { display: inline-block; background: var(--orange-dim); color: var(--text); padding: 6px 10px; border-radius: var(--radius-sm); max-width: 90%; text-align: left; }
+.wfb-chat-msg.ai .bubble { display: inline-block; background: var(--bg3); color: var(--text2); padding: 6px 10px; border-radius: var(--radius-sm); max-width: 95%; }
+.wfb-chat-msg.ai .who { font-size: 9px; font-weight: 800; color: var(--orange); margin-bottom: 2px; }
+.wfb-build-confirm { background: var(--bg3); border: 1px solid var(--orange); border-radius: var(--radius-sm); padding: var(--space-3); margin-bottom: var(--space-3); box-shadow: 0 0 12px rgba(226,84,31,.15); }
+.wfb-build-confirm-hd { font-size: 9px; font-weight: 800; letter-spacing: .05em; color: var(--orange); margin-bottom: 6px; text-transform: uppercase; }
+.wfb-build-confirm-item { font-size: var(--font-2xs); color: var(--text2); padding: 4px 0; border-bottom: 1px solid var(--border); }
+.wfb-build-confirm-item:last-of-type { border-bottom: none; }
 .wfb-ai-footer { padding: var(--space-3); border-top: 1px solid var(--border); }
 .wfb-ai-disclaimer { font-size: var(--font-2xs); color: var(--text3); margin-top: 6px; text-align: center; }
 
@@ -2848,9 +2894,8 @@ tr.hidden-row { display: none; }
         <div class="wfb-subtitle">Design intelligent automations with our visual workflow builder.</div>
       </div>
       <div class="wfb-header-actions">
-        <button class="btn btn-ghost btn-sm" onclick="saveWorkflowDraft()">💾 Save Draft</button>
         <button class="btn btn-ghost btn-sm" onclick="testWorkflowRun()">▶️ Test Workflow</button>
-        <button class="btn btn-primary btn-sm" onclick="publishWorkflowGraph()">🚀 Publish Workflow</button>
+        <button class="btn btn-primary btn-sm" onclick="openWfbSaveModal()">💾 Save</button>
       </div>
     </div>
 
@@ -2923,19 +2968,21 @@ tr.hidden-row { display: none; }
           <span class="wfb-ai-badge">AI</span>
           <div>
             <div class="wfb-ai-title">NIRVANA AI ASSISTANT</div>
-            <div class="wfb-ai-status"><span class="wfb-live-dot"></span> Wiring in progress</div>
+            <div class="wfb-ai-status"><span class="wfb-live-dot" id="wfbAiLiveDot" style="background:var(--green);box-shadow:0 0 6px var(--green)"></span> Live workflow guidance</div>
           </div>
         </div>
-        <div class="wfb-ai-body">
-          <div class="wfb-ai-placeholder">
-            This panel will show Nirvana's live guidance on the exact workflow you have open — reading its steps, spotting gaps, and suggesting improvements you can apply with one click. That wiring is the next block.
-            <br><br>
-            For now, use the floating Nirvana panel (bottom right) to create and manage workflows by chatting — that part already works.
-          </div>
+        <div class="wfb-ai-body" id="wfbAiBody">
+          <button class="btn btn-ghost btn-sm" style="width:100%;margin-bottom:var(--space-3)" onclick="analyzeAndImproveWorkflow()">🔍 Analyze Workflow &amp; Improve</button>
+          <div id="wfbAiSuggestions"></div>
+          <div id="wfbAiChatThread"></div>
         </div>
         <div class="wfb-ai-footer">
-          <input type="text" class="field-input" placeholder="Ask anything about your workflow..." disabled style="height:36px">
-          <div class="wfb-ai-disclaimer">✨ Full AI wiring coming in the next block</div>
+          <input type="text" class="field-input" id="wfbAiInput" placeholder="Ask anything, or describe a change to build..." style="height:36px;margin-bottom:8px" onkeydown="if(event.key==='Enter'){sendWfbAiMessage();}">
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-ghost btn-sm" style="flex:1" onclick="sendWfbAiMessage()" title="Discuss, suggest, or ask questions — no changes are made">💬 Ask</button>
+            <button class="btn btn-primary btn-sm" style="flex:1" onclick="sendWfbBuildMessage()" title="Let Nirvana actually make the changes — you'll review and confirm first">🔨 Build</button>
+          </div>
+          <div class="wfb-ai-disclaimer">✨ Nirvana can make mistakes. Review before applying.</div>
         </div>
       </div>
     </div>
@@ -3613,6 +3660,19 @@ tr.hidden-row { display: none; }
 
 <!-- MANAGE PIPELINES MODAL -->
 <!-- WORKFLOW BRANCH LABEL MODAL -->
+<!-- WORKFLOW SAVE MODAL -->
+<div class="modal-overlay" id="wfbSaveModal">
+  <div class="modal" style="max-width:360px" role="dialog" aria-modal="true" aria-labelledby="wfbSaveModalTitle">
+    <h3 id="wfbSaveModalTitle">💾 Save Workflow</h3>
+    <p style="font-size:var(--font-sm);color:var(--text2);line-height:1.5">Your edits are already saved as you make them. This decides whether this workflow is actually running yet.</p>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeWfbSaveModal()">Cancel</button>
+      <button class="btn btn-ghost" onclick="commitWorkflowSave('draft')">📝 Save as Draft</button>
+      <button class="btn btn-primary" onclick="commitWorkflowSave('published')">🚀 Make Live</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="wfbBranchModal">
   <div class="modal" style="max-width:320px" role="dialog" aria-modal="true" aria-labelledby="wfbBranchModalTitle">
     <h3 id="wfbBranchModalTitle">🔀 Branch Label</h3>
@@ -3621,22 +3681,6 @@ tr.hidden-row { display: none; }
       <button class="btn btn-ghost" onclick="resolveWfbBranchModal(null)">Cancel</button>
       <button class="btn btn-ghost" style="color:var(--red)" onclick="resolveWfbBranchModal('No')">No</button>
       <button class="btn btn-primary" onclick="resolveWfbBranchModal('Yes')">Yes</button>
-    </div>
-  </div>
-</div>
-
-<!-- WORKFLOW NODE EDIT MODAL -->
-<div class="modal-overlay" id="wfbNodeEditModal">
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="wfbNodeEditTitle">
-    <h3 id="wfbNodeEditTitle">Edit Node</h3>
-    <label for="wfbNodeEditLabel" class="field-label">Label</label>
-    <input type="text" id="wfbNodeEditLabel" class="field-input">
-    <label for="wfbNodeEditSublabel" class="field-label">Sublabel (optional)</label>
-    <input type="text" id="wfbNodeEditSublabel" class="field-input">
-    <div class="modal-btns">
-      <button class="btn btn-ghost" style="color:var(--red);margin-right:auto" onclick="deleteWorkflowNode(wfbEditingNodeId)">🗑️ Delete Node</button>
-      <button class="btn btn-ghost" onclick="closeWfbNodeEditModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveWfbNodeEdit()">Save</button>
     </div>
   </div>
 </div>
@@ -12968,6 +13012,7 @@ function renderWorkflowCanvas() {
     nodesLayer.innerHTML = `<div style="padding:40px;color:var(--text3);font-size:var(--font-sm)">No steps in this workflow yet.</div>`;
     svg.innerHTML = '';
     renderWorkflowMinimap(400, 300);
+    renderWfbAiSuggestions();
     return;
   }
   const maxX = Math.max(...workflowNodesCache.map(n => n.pos_x)) + WFB_NODE_W + 60;
@@ -12981,6 +13026,20 @@ function renderWorkflowCanvas() {
     const color = WORKFLOW_NODE_COLORS[n.node_type] || 'var(--text3)';
     const icon = WORKFLOW_NODE_ICONS[n.node_type] || '📋';
     const typeLabel = WORKFLOW_NODE_TYPE_LABELS[n.node_type] || n.node_type;
+    if (n.id === wfbExpandedNodeId) {
+      const schema = getNodeFieldSchema(n);
+      return `<div class="wfb-node wfb-node-expanded" style="left:${n.pos_x}px;top:${n.pos_y}px;--node-color:${color}" data-node-id="${n.id}">
+        <div class="wfb-node-hd"><span class="dot"></span>${icon} ${escAttr(typeLabel)}<span class="menu" onclick="event.stopPropagation();closeWfbExpandedNode()" title="Close">✕</span></div>
+        <label class="wfb-field-label">Label</label>
+        <input type="text" class="wfb-field-input" id="wfb-field-${n.id}-label" value="${escAttr(n.label)}">
+        ${schema.map(f => renderWfbField(n, f)).join('')}
+        <div class="wfb-expanded-btns">
+          <button class="wfb-mini-btn danger" onclick="event.stopPropagation();deleteWorkflowNode('${n.id}')">🗑️</button>
+          <button class="wfb-mini-btn" onclick="event.stopPropagation();closeWfbExpandedNode()">Cancel</button>
+          <button class="wfb-mini-btn primary" onclick="event.stopPropagation();saveExpandedWfbNode('${n.id}')">Save</button>
+        </div>
+      </div>`;
+    }
     return `<div class="wfb-node" style="left:${n.pos_x}px;top:${n.pos_y}px;--node-color:${color}" data-node-id="${n.id}">
       <div class="wfb-node-hd"><span class="dot"></span>${icon} ${escAttr(typeLabel)}<span class="menu">⋮</span></div>
       <div class="wfb-node-label">${escAttr(n.label)}</div>
@@ -13014,6 +13073,7 @@ function renderWorkflowCanvas() {
 
   renderWorkflowMinimap(maxX, maxY);
   applyWorkflowZoomTransform();
+  renderWfbAiSuggestions();
 }
 
 function renderWorkflowMinimap(canvasW, canvasH) {
@@ -13067,6 +13127,7 @@ function initWorkflowCanvasInteractions() {
       return;
     }
     if (nodeEl && !e.target.closest('.menu')) {
+      if (nodeEl.classList.contains('wfb-node-expanded')) return;
       e.stopPropagation();
       const node = workflowNodesCache.find(n => n.id === nodeEl.dataset.nodeId);
       if (!node) return;
@@ -13253,37 +13314,561 @@ async function addWorkflowNodeFromPalette(nodeType, subtype, defaultLabel) {
   showToast(`Added "${defaultLabel}" — drag it into place, then drag from its dot to connect it.`, 'success');
 }
 
-let wfbEditingNodeId = null;
-function openWorkflowNodeEditor(nodeId) {
-  closeAllWfbNodeMenus();
-  const node = workflowNodesCache.find(n => n.id === nodeId);
-  if (!node) return;
-  wfbEditingNodeId = nodeId;
-  document.getElementById('wfbNodeEditTitle').textContent = `Edit ${WORKFLOW_NODE_TYPE_LABELS[node.node_type] || 'Node'}`;
-  document.getElementById('wfbNodeEditLabel').value = node.label;
-  document.getElementById('wfbNodeEditSublabel').value = node.sublabel || '';
-  document.getElementById('wfbNodeEditModal').classList.add('open');
-}
-function closeWfbNodeEditModal() {
-  document.getElementById('wfbNodeEditModal').classList.remove('open');
-  wfbEditingNodeId = null;
-}
-async function saveWfbNodeEdit() {
-  const node = workflowNodesCache.find(n => n.id === wfbEditingNodeId);
-  if (!node) return;
-  const label = document.getElementById('wfbNodeEditLabel').value.trim();
-  if (!label) { showToast('Please enter a label.', 'warning'); return; }
-  node.label = label;
-  node.sublabel = document.getElementById('wfbNodeEditSublabel').value.trim();
-  try { await sbPatch('workflow_nodes', `id=eq.${node.id}`, { label: node.label, sublabel: node.sublabel }); }
-  catch(e) { showToast('Could not save: ' + e.message, 'error'); }
-  closeWfbNodeEditModal();
-  renderWorkflowCanvas();
+// Tailored per-node-type field schemas + merge-field tokens (2026-07-15).
+// Option B: clicking a node expands it in place on the canvas -- no modal.
+// Only one node is ever expanded at a time since wfbExpandedNodeId is a
+// single value; opening a second node naturally collapses the first
+// because the render check (n.id === wfbExpandedNodeId) can only match one.
+let wfbExpandedNodeId = null;
+
+const WORKFLOW_MERGE_FIELDS = [
+  { token: 'first_name', desc: "Contact's first name" },
+  { token: 'last_name', desc: "Contact's last name" },
+  { token: 'business_name', desc: 'Business / company name' },
+  { token: 'email', desc: 'Contact email address' },
+  { token: 'phone', desc: 'Contact phone number' },
+  { token: 'lead_score', desc: 'Lead score value' },
+  { token: 'portfolio', desc: 'Portfolio (SMB / White Label / Support)' },
+];
+const WORKFLOW_CONDITION_OPERATORS = ['>=', '>', '==', '<', '<=', 'contains'];
+const WORKFLOW_DELAY_UNITS = ['minutes', 'hours', 'days'];
+
+function getNodeFieldSchema(node) {
+  if (node.node_type === 'trigger') return [{ key: 'sublabel', label: 'Source', type: 'text' }];
+  if (node.node_type === 'condition') return [
+    { key: 'field', label: 'Field', type: 'text', source: 'config' },
+    { key: 'operator', label: 'Operator', type: 'select', options: WORKFLOW_CONDITION_OPERATORS, source: 'config' },
+    { key: 'value', label: 'Value', type: 'text', merge: true, source: 'config' },
+  ];
+  if (node.node_type === 'delay') return [
+    { key: 'duration', label: 'Duration', type: 'number', source: 'config' },
+    { key: 'unit', label: 'Unit', type: 'select', options: WORKFLOW_DELAY_UNITS, source: 'config' },
+  ];
+  if (node.node_type === 'logic') return [{ key: 'sublabel', label: 'Details', type: 'text' }];
+  if (node.node_type === 'end') return [];
+  if (node.node_type === 'action') {
+    switch (node.subtype) {
+      case 'send_email': return [
+        { key: 'sublabel', label: 'Template Name', type: 'text' },
+        { key: 'subject', label: 'Subject', type: 'text', merge: true, source: 'config' },
+        { key: 'body', label: 'Body', type: 'textarea', merge: true, source: 'config' },
+      ];
+      case 'add_tag': return [{ key: 'sublabel', label: 'Tag Name', type: 'text' }];
+      case 'create_task': return [
+        { key: 'sublabel', label: 'Task Title', type: 'text', merge: true },
+        { key: 'assignee', label: 'Assignee', type: 'select', options: 'TEAM_MEMBERS', source: 'config' },
+      ];
+      case 'notify_team': return [{ key: 'sublabel', label: 'Message', type: 'textarea', merge: true }];
+      case 'update_status': return [{ key: 'sublabel', label: 'New Status', type: 'text' }];
+      default: return [{ key: 'sublabel', label: 'Detail', type: 'text' }];
+    }
+  }
+  return [];
 }
 
-function saveWorkflowDraft() { showToast('Draft saved. Test-run simulation and Publish still land in a later block.', 'success'); }
+function renderWfbField(n, f) {
+  const fieldId = `wfb-field-${n.id}-${f.key}`;
+  const currentVal = f.source === 'config' ? ((n.config && n.config[f.key]) || '') : (n[f.key] || '');
+  const mergeHint = f.merge ? ' <span style="color:var(--text3);font-weight:400">(type {{ for merge fields)</span>' : '';
+  if (f.type === 'select') {
+    const opts = f.options === 'TEAM_MEMBERS' ? TEAM_MEMBERS.map(m => m.name) : f.options;
+    return `<label class="wfb-field-label">${escAttr(f.label)}</label>
+      <select class="wfb-field-input" id="${fieldId}">
+        ${opts.map(o => `<option value="${escAttr(o)}" ${o === currentVal ? 'selected' : ''}>${escAttr(o)}</option>`).join('')}
+      </select>`;
+  }
+  if (f.type === 'textarea') {
+    return `<label class="wfb-field-label">${escAttr(f.label)}${mergeHint}</label>
+      <textarea class="wfb-field-input" id="${fieldId}" rows="2" oninput="handleWfbMergeInput(event)">${escAttr(currentVal)}</textarea>`;
+  }
+  return `<label class="wfb-field-label">${escAttr(f.label)}${mergeHint}</label>
+    <input type="${f.type === 'number' ? 'number' : 'text'}" class="wfb-field-input" id="${fieldId}" value="${escAttr(currentVal)}" ${f.merge ? 'oninput="handleWfbMergeInput(event)"' : ''}>`;
+}
+
+function openWorkflowNodeEditor(nodeId) {
+  closeAllWfbNodeMenus();
+  wfbExpandedNodeId = nodeId;
+  renderWorkflowCanvas();
+}
+function closeWfbExpandedNode() {
+  wfbExpandedNodeId = null;
+  removeWfbMergeDropdown();
+  renderWorkflowCanvas();
+}
+async function saveExpandedWfbNode(nodeId) {
+  const node = workflowNodesCache.find(n => n.id === nodeId);
+  if (!node) return;
+  const labelEl = document.getElementById(`wfb-field-${nodeId}-label`);
+  const label = labelEl ? labelEl.value.trim() : node.label;
+  if (!label) { showToast('Please enter a label.', 'warning'); return; }
+  node.label = label;
+  const schema = getNodeFieldSchema(node);
+  const configPatch = {};
+  schema.forEach(f => {
+    const el = document.getElementById(`wfb-field-${nodeId}-${f.key}`);
+    if (!el) return;
+    if (f.source === 'config') configPatch[f.key] = el.value;
+    else node[f.key] = el.value.trim();
+  });
+  node.config = { ...(node.config || {}), ...configPatch };
+  try {
+    await sbPatch('workflow_nodes', `id=eq.${nodeId}`, { label: node.label, sublabel: node.sublabel || null, config: node.config });
+  } catch(e) { showToast('Could not save: ' + e.message, 'error'); return; }
+  wfbExpandedNodeId = null;
+  removeWfbMergeDropdown();
+  renderWorkflowCanvas();
+  showToast('Node updated.', 'success');
+}
+
+// Merge-field ({{ ) autocomplete -- generic, works on any input/textarea
+// that calls this on input, since it operates on selectionStart/value
+// which both element types support identically.
+function handleWfbMergeInput(e) {
+  const el = e.target;
+  const caret = el.selectionStart;
+  const upTo = el.value.slice(0, caret);
+  const m = /\{\{(\w*)$/.exec(upTo);
+  if (!m) { removeWfbMergeDropdown(); return; }
+  const query = m[1].toLowerCase();
+  const matches = WORKFLOW_MERGE_FIELDS.filter(f => f.token.startsWith(query));
+  if (matches.length === 0) { removeWfbMergeDropdown(); return; }
+  showWfbMergeDropdown(el, matches, caret - query.length - 2);
+}
+function showWfbMergeDropdown(inputEl, matches, insertStart) {
+  removeWfbMergeDropdown();
+  const rect = inputEl.getBoundingClientRect();
+  const dd = document.createElement('div');
+  dd.id = 'wfbMergeDropdown';
+  dd.className = 'wfb-merge-dropdown';
+  dd.style.left = rect.left + 'px';
+  dd.style.top = (rect.bottom + 2) + 'px';
+  dd.style.width = Math.max(rect.width, 200) + 'px';
+  dd.innerHTML = matches.map(f =>
+    `<div class="wfb-merge-item" onmousedown="event.preventDefault();insertWfbMergeToken('${inputEl.id}', ${insertStart}, '${f.token}')"><b>{{${f.token}}}</b><span>${escAttr(f.desc)}</span></div>`
+  ).join('');
+  document.body.appendChild(dd);
+}
+function insertWfbMergeToken(inputId, insertStart, token) {
+  const el = document.getElementById(inputId);
+  if (!el) return;
+  const caret = el.selectionStart;
+  const before = el.value.slice(0, insertStart);
+  const after = el.value.slice(caret);
+  const insert = `{{${token}}}`;
+  el.value = before + insert + after;
+  const newCaret = (before + insert).length;
+  el.focus();
+  el.setSelectionRange(newCaret, newCaret);
+  removeWfbMergeDropdown();
+}
+function removeWfbMergeDropdown() {
+  const dd = document.getElementById('wfbMergeDropdown');
+  if (dd) dd.remove();
+}
+
+// Nirvana wiring for the workflow builder (2026-07-15). Two real pieces,
+// not placeholders: (1) analyzeWorkflowGraph() is deterministic rule-based
+// structural analysis -- no AI call, no hallucination risk, runs instantly
+// on every graph mutation. (2) the chat below is real quickAiCompletion(),
+// primed with a full text description of the exact open graph (nodes,
+// connections, and the same detected issues) so it can discuss and
+// pinpoint specific nodes by name. What's NOT here yet: Nirvana can't
+// autonomously edit the graph from chat (add/rewire/delete nodes herself)
+// -- suggestions link you to the relevant node to fix it yourself, they
+// don't auto-apply. That's a reasonable next step, not built tonight.
+function analyzeWorkflowGraph() {
+  const issues = [];
+  const outgoing = {}, incoming = {};
+  workflowNodesCache.forEach(n => { outgoing[n.id] = []; incoming[n.id] = []; });
+  workflowEdgesCache.forEach(e => {
+    if (outgoing[e.source_node_id]) outgoing[e.source_node_id].push(e);
+    if (incoming[e.target_node_id]) incoming[e.target_node_id].push(e);
+  });
+  workflowNodesCache.forEach(n => {
+    const out = outgoing[n.id] || [];
+    const inc = incoming[n.id] || [];
+    if (out.length === 0 && inc.length === 0 && workflowNodesCache.length > 1) {
+      issues.push({ severity: 'critical', nodeId: n.id, message: `"${n.label}" isn't connected to anything — it won't run as part of this workflow.` });
+      return;
+    }
+    if (n.node_type === 'trigger' && out.length === 0) {
+      issues.push({ severity: 'critical', nodeId: n.id, message: `Trigger "${n.label}" has nothing wired after it yet.` });
+    }
+    if (n.node_type !== 'end' && n.node_type !== 'trigger' && out.length === 0 && inc.length > 0) {
+      issues.push({ severity: 'critical', nodeId: n.id, message: `"${n.label}" is a dead end — nothing happens after it, and it's not marked as an ending.` });
+    }
+    if (n.node_type === 'condition') {
+      const hasYes = out.some(e => e.branch_label === 'Yes');
+      const hasNo = out.some(e => e.branch_label === 'No');
+      if (!hasYes) issues.push({ severity: 'critical', nodeId: n.id, message: `"${n.label}" is missing its Yes branch.` });
+      if (!hasNo) issues.push({ severity: 'critical', nodeId: n.id, message: `"${n.label}" is missing its No branch.` });
+      if (!(n.config && n.config.field)) issues.push({ severity: 'warning', nodeId: n.id, message: `"${n.label}" doesn't have a field/value set yet — it won't evaluate correctly.` });
+    }
+    if (n.node_type === 'delay' && !(n.config && n.config.duration)) {
+      issues.push({ severity: 'warning', nodeId: n.id, message: `"${n.label}" doesn't have a duration set yet.` });
+    }
+  });
+  if (workflowNodesCache.filter(n => n.node_type === 'trigger').length === 0 && workflowNodesCache.length > 0) {
+    issues.push({ severity: 'critical', nodeId: null, message: 'This workflow has no trigger — nothing will ever start it.' });
+  }
+  return issues;
+}
+
+function renderWfbAiSuggestions() {
+  const wrap = document.getElementById('wfbAiSuggestions');
+  if (!wrap) return;
+  const issues = analyzeWorkflowGraph();
+  const sevColor = { critical: resolveCssColor('var(--red)'), warning: resolveCssColor('var(--yellow)'), info: resolveCssColor('var(--blue)') };
+  const sevLabel = { critical: 'BROKEN', warning: 'NEEDS SETUP', info: 'SUGGESTION' };
+  const dot = document.getElementById('wfbAiLiveDot');
+  if (dot) { dot.style.background = issues.some(i => i.severity === 'critical') ? resolveCssColor('var(--red)') : resolveCssColor('var(--green)'); dot.style.boxShadow = `0 0 6px ${dot.style.background}`; }
+  if (issues.length === 0) {
+    wrap.innerHTML = `<div class="wfb-suggestion-hd">✅ HEALTH CHECK</div><div class="wfb-ai-placeholder" style="font-size:var(--font-xs)">No structural issues found — every path leads somewhere, every condition has both branches, and delays have a duration set.</div>`;
+    return;
+  }
+  wrap.innerHTML = `<div class="wfb-suggestion-hd">⚠️ ${issues.length} THING${issues.length === 1 ? '' : 'S'} TO FIX</div>` +
+    issues.map(iss => `<div class="wfb-suggestion" style="--sev-color:${sevColor[iss.severity]}" onclick="jumpToWfbNode('${iss.nodeId || ''}')">
+      <span class="sev-badge">${sevLabel[iss.severity]}</span>
+      <span class="txt">${escAttr(iss.message)}</span>
+    </div>`).join('');
+}
+function jumpToWfbNode(nodeId) {
+  if (!nodeId) return;
+  openWorkflowNodeEditor(nodeId);
+}
+
+function serializeWorkflowGraphForAi() {
+  const wf = WORKFLOWS.find(w => w.id === currentWorkflowGraphId);
+  const nodeById = Object.fromEntries(workflowNodesCache.map(n => [n.id, n]));
+  const nodesDesc = workflowNodesCache.map(n => {
+    const cfg = n.config && Object.keys(n.config).length ? ` config=${JSON.stringify(n.config)}` : '';
+    return `- [${n.id}] (${n.node_type}/${n.subtype}) "${n.label}"${n.sublabel ? ' — ' + n.sublabel : ''}${cfg}`;
+  }).join('\n');
+  const edgesDesc = workflowEdgesCache.map(e => {
+    const s = nodeById[e.source_node_id], t = nodeById[e.target_node_id];
+    return `- ${s ? s.label : e.source_node_id} → ${t ? t.label : e.target_node_id}${e.branch_label ? ' [' + e.branch_label + ']' : ''}`;
+  }).join('\n');
+  const issues = analyzeWorkflowGraph();
+  const issuesDesc = issues.length ? issues.map(i => `- (${i.severity}) ${i.message}`).join('\n') : 'None detected.';
+  return `Workflow: "${wf ? wf.name : 'Untitled'}" (status: ${wf ? wf.status : 'draft'})
+
+NODES:
+${nodesDesc || '(none)'}
+
+CONNECTIONS:
+${edgesDesc || '(none)'}
+
+DETECTED ISSUES:
+${issuesDesc}`;
+}
+
+// "Build" mode (2026-07-15) -- unlike "Ask" (quickAiCompletion, text only,
+// read-only), Build gives Nirvana real tools to actually mutate the open
+// workflow's graph: add/update/delete nodes, connect/disconnect them.
+// Mirrors the main floating Nirvana panel's streamAiAgentResponse() request
+// shape ({system, messages, tools} to the same endpoint, same SSE parsing
+// for text + tool_use blocks) but self-contained with its own message
+// array rather than sharing aiAgentMessages, since that's the floating
+// panel's own conversation state, not this one's.
+const WORKFLOW_BUILD_TOOLS = [
+  {
+    name: 'add_node',
+    description: 'Add a new node to the currently open workflow.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        node_type: { type: 'string', enum: ['trigger', 'condition', 'action', 'delay', 'logic', 'end'] },
+        subtype: { type: 'string', description: 'e.g. form_submitted, if_else, send_email, add_tag, create_task, notify_team, update_status, wait_delay, split_path, merge_paths, workflow_end' },
+        label: { type: 'string' },
+        sublabel: { type: 'string' },
+        field: { type: 'string', description: 'Condition nodes: the field being checked' },
+        operator: { type: 'string', description: 'Condition nodes: >=, >, ==, <, <=, contains' },
+        value: { type: 'string', description: 'Condition nodes: the comparison value' },
+        duration: { type: 'number', description: 'Delay nodes' },
+        unit: { type: 'string', description: 'Delay nodes: minutes, hours, or days' },
+      },
+      required: ['node_type', 'subtype', 'label'],
+    },
+  },
+  {
+    name: 'update_node',
+    description: "Update an existing node's label, sublabel, or type-specific config (field/operator/value for conditions, duration/unit for delays). Use the node's real ID from the graph description.",
+    input_schema: {
+      type: 'object',
+      properties: {
+        node_id: { type: 'string' }, label: { type: 'string' }, sublabel: { type: 'string' },
+        field: { type: 'string' }, operator: { type: 'string' }, value: { type: 'string' },
+        duration: { type: 'number' }, unit: { type: 'string' },
+      },
+      required: ['node_id'],
+    },
+  },
+  {
+    name: 'delete_node',
+    description: 'Delete a node from the workflow. Any connections to/from it are removed too.',
+    input_schema: { type: 'object', properties: { node_id: { type: 'string' } }, required: ['node_id'] },
+  },
+  {
+    name: 'add_edge',
+    description: 'Connect two existing nodes by their real IDs. If the source is a Condition node, branch_label must be "Yes" or "No".',
+    input_schema: {
+      type: 'object',
+      properties: { source_node_id: { type: 'string' }, target_node_id: { type: 'string' }, branch_label: { type: 'string', enum: ['Yes', 'No'] } },
+      required: ['source_node_id', 'target_node_id'],
+    },
+  },
+  {
+    name: 'delete_edge',
+    description: 'Remove a connection between two nodes, by the edge\'s real ID from the graph description.',
+    input_schema: { type: 'object', properties: { edge_id: { type: 'string' } }, required: ['edge_id'] },
+  },
+];
+
+async function runWorkflowBuildTurn(systemPrompt, messages, tools) {
+  const res = await fetch(AI_AGENT_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ system: systemPrompt, messages, tools }),
+  });
+  const contentType = res.headers.get('content-type') || '';
+  if (!res.ok || contentType.includes('application/json') || !res.body) {
+    const errData = await res.json().catch(() => ({}));
+    throw new Error((errData && (errData.error && errData.error.message || errData.error)) || `Request failed (${res.status})`);
+  }
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  const contentBlocks = [];
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const frames = buffer.split('\n\n');
+    buffer = frames.pop();
+    for (const frame of frames) {
+      let dataStr = null;
+      for (const line of frame.split('\n')) if (line.startsWith('data:')) dataStr = line.slice(5).trim();
+      if (!dataStr) continue;
+      let data;
+      try { data = JSON.parse(dataStr); } catch(e) { continue; }
+      if (data.type === 'content_block_start') {
+        contentBlocks[data.index] = data.content_block.type === 'tool_use'
+          ? { type: 'tool_use', id: data.content_block.id, name: data.content_block.name, input: {}, _partialJson: '' }
+          : { type: 'text', text: '' };
+      } else if (data.type === 'content_block_delta') {
+        const block = contentBlocks[data.index];
+        if (!block) continue;
+        if (data.delta.type === 'text_delta') block.text += data.delta.text;
+        else if (data.delta.type === 'input_json_delta') block._partialJson += data.delta.partial_json;
+      } else if (data.type === 'content_block_stop') {
+        const block = contentBlocks[data.index];
+        if (block && block.type === 'tool_use') {
+          try { block.input = JSON.parse(block._partialJson || '{}'); } catch(e) { block.input = {}; }
+          delete block._partialJson;
+        }
+      } else if (data.type === 'error') {
+        throw new Error((data.error && data.error.message) || 'Stream error');
+      }
+    }
+  }
+  return { content: contentBlocks.filter(Boolean) };
+}
+
+async function executeWorkflowBuildTool(toolUse) {
+  const { name, input } = toolUse;
+  const workflowId = currentWorkflowGraphId;
+  if (name === 'add_node') {
+    const maxY = workflowNodesCache.length > 0 ? Math.max(...workflowNodesCache.map(n => n.pos_y)) + WFB_NODE_H + 40 : 60;
+    const config = {};
+    ['field', 'operator', 'value', 'duration', 'unit'].forEach(k => { if (input[k] !== undefined) config[k] = input[k]; });
+    const node = {
+      id: (crypto.randomUUID ? crypto.randomUUID() : 'n_' + Date.now() + Math.random().toString(16).slice(2)),
+      workflow_id: workflowId, node_type: input.node_type, subtype: input.subtype || 'custom',
+      label: input.label, sublabel: input.sublabel || null, config, pos_x: 60, pos_y: maxY,
+    };
+    await sbUpsert('workflow_nodes', node);
+    workflowNodesCache.push(node);
+    return { ok: true, summary: `Added "${node.label}" (${node.node_type})` };
+  }
+  if (name === 'update_node') {
+    const node = workflowNodesCache.find(n => n.id === input.node_id);
+    if (!node) return { ok: false, summary: `Couldn't find that node.` };
+    if (input.label !== undefined) node.label = input.label;
+    if (input.sublabel !== undefined) node.sublabel = input.sublabel;
+    const config = { ...(node.config || {}) };
+    ['field', 'operator', 'value', 'duration', 'unit'].forEach(k => { if (input[k] !== undefined) config[k] = input[k]; });
+    node.config = config;
+    await sbPatch('workflow_nodes', `id=eq.${node.id}`, { label: node.label, sublabel: node.sublabel || null, config: node.config });
+    return { ok: true, summary: `Updated "${node.label}"` };
+  }
+  if (name === 'delete_node') {
+    const node = workflowNodesCache.find(n => n.id === input.node_id);
+    if (!node) return { ok: false, summary: `Couldn't find that node.` };
+    await sbDelete('workflow_nodes', `id=eq.${input.node_id}`);
+    workflowNodesCache = workflowNodesCache.filter(n => n.id !== input.node_id);
+    workflowEdgesCache = workflowEdgesCache.filter(e => e.source_node_id !== input.node_id && e.target_node_id !== input.node_id);
+    return { ok: true, summary: `Deleted "${node.label}"` };
+  }
+  if (name === 'add_edge') {
+    const s = workflowNodesCache.find(n => n.id === input.source_node_id);
+    const t = workflowNodesCache.find(n => n.id === input.target_node_id);
+    if (!s || !t) return { ok: false, summary: 'Could not find one of those nodes.' };
+    const edge = { id: (crypto.randomUUID ? crypto.randomUUID() : 'e_' + Date.now() + Math.random().toString(16).slice(2)), workflow_id: workflowId, source_node_id: input.source_node_id, target_node_id: input.target_node_id, branch_label: input.branch_label || null };
+    await sbUpsert('workflow_edges', edge);
+    workflowEdgesCache.push(edge);
+    return { ok: true, summary: `Connected "${s.label}" → "${t.label}"${input.branch_label ? ' [' + input.branch_label + ']' : ''}` };
+  }
+  if (name === 'delete_edge') {
+    await sbDelete('workflow_edges', `id=eq.${input.edge_id}`);
+    workflowEdgesCache = workflowEdgesCache.filter(e => e.id !== input.edge_id);
+    return { ok: true, summary: 'Removed a connection' };
+  }
+  return { ok: false, summary: 'Unknown tool: ' + name };
+}
+
+function describeWfbBuildTool(t) {
+  const i = t.input;
+  const nodeLabel = (id) => { const n = workflowNodesCache.find(x => x.id === id); return n ? `"${escAttr(n.label)}"` : 'a node'; };
+  if (t.name === 'add_node') return `➕ Add ${escAttr(i.node_type)} node "${escAttr(i.label)}"`;
+  if (t.name === 'update_node') return `✏️ Update ${nodeLabel(i.node_id)}`;
+  if (t.name === 'delete_node') return `🗑️ Delete ${nodeLabel(i.node_id)}`;
+  if (t.name === 'add_edge') return `🔗 Connect ${nodeLabel(i.source_node_id)} → ${nodeLabel(i.target_node_id)}${i.branch_label ? ' [' + escAttr(i.branch_label) + ']' : ''}`;
+  if (t.name === 'delete_edge') return `✂️ Remove a connection`;
+  return escAttr(t.name);
+}
+
+function showWfbBuildConfirmation(toolUses) {
+  const thread = document.getElementById('wfbAiChatThread');
+  if (!thread) return;
+  const div = document.createElement('div');
+  div.className = 'wfb-build-confirm';
+  div.innerHTML = `
+    <div class="wfb-build-confirm-hd">Proposed changes:</div>
+    ${toolUses.map(t => `<div class="wfb-build-confirm-item">${describeWfbBuildTool(t)}</div>`).join('')}
+    <div class="wfb-expanded-btns" style="margin-top:8px">
+      <button class="wfb-mini-btn" onclick="this.closest('.wfb-build-confirm').remove()">Cancel</button>
+      <button class="wfb-mini-btn primary" id="wfbBuildConfirmBtn">Apply Changes</button>
+    </div>`;
+  thread.appendChild(div);
+  thread.scrollTop = thread.scrollHeight;
+  document.getElementById('wfbBuildConfirmBtn').onclick = async () => {
+    div.querySelector('.wfb-expanded-btns').innerHTML = '<span style="font-size:10px;color:var(--text3)">Applying…</span>';
+    const results = [];
+    for (const t of toolUses) {
+      try { results.push(await executeWorkflowBuildTool(t)); }
+      catch(e) { results.push({ ok: false, summary: 'Error: ' + e.message }); }
+    }
+    div.remove();
+    appendWfbChatMsg('ai', results.map(r => (r.ok ? '✅ ' : '⚠️ ') + r.summary).join('\n'));
+    renderWorkflowCanvas();
+  };
+}
+
+async function sendWfbBuildMessage() {
+  const input = document.getElementById('wfbAiInput');
+  const text = input.value.trim();
+  if (!text) return;
+  if (!requirePermission('edit')) return;
+  input.value = '';
+  appendWfbChatMsg('user', text);
+  const thinkingId = appendWfbChatMsg('ai', '…planning changes…');
+  const systemPrompt = `You are Nirvana, embedded in Niche Inc.'s visual Workflow Builder, in BUILD mode — the user wants you to actually make changes to the currently open workflow's node graph (add/update/delete nodes, connect or disconnect them), not just discuss it. Use the tools available to make the requested changes, referencing the real node/edge IDs from the graph description below. If a request is ambiguous about exact placement or wording, make a reasonable choice rather than asking — the user will see exactly what you're proposing before anything is actually saved, so it's fine to commit to specifics. Keep your text reply brief — one or two sentences — since the tool calls themselves are what matters here, not a long explanation.
+
+${serializeWorkflowGraphForAi()}`;
+  try {
+    const result = await runWorkflowBuildTurn(systemPrompt, [{ role: 'user', content: text }], WORKFLOW_BUILD_TOOLS);
+    const toolUses = result.content.filter(b => b.type === 'tool_use');
+    const textReply = result.content.filter(b => b.type === 'text').map(b => b.text).join(' ');
+    if (toolUses.length === 0) {
+      updateWfbChatMsg(thinkingId, textReply || "I didn't find a concrete change to make from that — try rephrasing, or use Ask if you just want to discuss it.");
+      return;
+    }
+    updateWfbChatMsg(thinkingId, textReply || `Proposing ${toolUses.length} change(s) below.`);
+    showWfbBuildConfirmation(toolUses);
+  } catch(e) {
+    updateWfbChatMsg(thinkingId, "I couldn't reach the AI just now — try again in a moment.");
+  }
+}
+
+async function analyzeAndImproveWorkflow() {
+  const requestText = 'Analyze this workflow and suggest improvements.';
+  appendWfbChatMsg('user', requestText);
+  const thinkingId = appendWfbChatMsg('ai', '…reviewing the workflow…');
+  const systemPrompt = `You are Nirvana, embedded in Niche Inc.'s visual Workflow Builder. Give a genuine design review of the CURRENT workflow — not just whether it's structurally broken (missing branches, dead ends, etc. are already caught separately and listed below), but real judgment on whether it's well-built: is the logic sound, is there a missing path worth adding (e.g. a re-engagement step for non-responders, an escalation for high-value leads), is the sequencing/timing reasonable, are there redundant or unnecessary steps, and are there good opportunities to use merge fields ({{first_name}}, {{business_name}}, etc.) for personalization that aren't being used yet in email/message content. Reference specific real node names from the graph. Give 2-4 concrete, specific suggestions — not generic automation advice. Keep it tight, this is a small side panel, not a report.
+
+${serializeWorkflowGraphForAi()}`;
+  try {
+    const reply = await quickAiCompletion(systemPrompt, requestText);
+    updateWfbChatMsg(thinkingId, reply);
+  } catch(e) {
+    updateWfbChatMsg(thinkingId, "I couldn't reach the AI just now — try again in a moment.");
+  }
+}
+
+async function sendWfbAiMessage() {
+  const input = document.getElementById('wfbAiInput');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  appendWfbChatMsg('user', text);
+  const thinkingId = appendWfbChatMsg('ai', '…thinking…');
+  const systemPrompt = `You are Nirvana, an AI assistant embedded directly in Niche Inc.'s visual Workflow Builder. The user is looking at a specific workflow's node graph, described below. Answer their question about THIS workflow specifically — reference actual node names/labels from the graph, and point out exactly which node or connection is the problem when relevant. If they ask you to "analyze," "review," or "improve" the workflow, don't just repeat the structural issues listed below — give real design judgment too: missing paths worth adding, redundant steps, timing/sequencing concerns, and unused merge-field personalization opportunities, referencing specific node names. Keep answers concise (a few sentences to a short list), since this is a small side panel, not a full chat window.
+
+${serializeWorkflowGraphForAi()}`;
+  try {
+    const reply = await quickAiCompletion(systemPrompt, text);
+    updateWfbChatMsg(thinkingId, reply);
+  } catch(e) {
+    updateWfbChatMsg(thinkingId, "I couldn't reach the AI just now — try again in a moment.");
+  }
+}
+function appendWfbChatMsg(role, text) {
+  const thread = document.getElementById('wfbAiChatThread');
+  if (!thread) return null;
+  const id = 'wfbmsg_' + Date.now() + Math.random().toString(16).slice(2);
+  const div = document.createElement('div');
+  div.className = 'wfb-chat-msg ' + role;
+  div.id = id;
+  div.innerHTML = role === 'user'
+    ? `<div class="bubble">${escAttr(text)}</div>`
+    : `<div class="who">✨ Nirvana</div><div class="bubble">${escAttr(text)}</div>`;
+  thread.appendChild(div);
+  thread.scrollTop = thread.scrollHeight;
+  return id;
+}
+function updateWfbChatMsg(id, text) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const bubble = el.querySelector('.bubble');
+  if (bubble) bubble.textContent = text;
+}
+
 function testWorkflowRun() { showToast('Test-run simulation is coming in a later block.', 'info'); }
-function publishWorkflowGraph() { showToast('Publishing is coming in a later block — this workflow stays in Draft for now.', 'info'); }
+
+function openWfbSaveModal() {
+  if (!currentWorkflowGraphId) { showToast('No workflow is open.', 'warning'); return; }
+  document.getElementById('wfbSaveModal').classList.add('open');
+}
+function closeWfbSaveModal() {
+  document.getElementById('wfbSaveModal').classList.remove('open');
+}
+async function commitWorkflowSave(status) {
+  closeWfbSaveModal();
+  if (!currentWorkflowGraphId) return;
+  const wf = WORKFLOWS.find(w => w.id === currentWorkflowGraphId);
+  const updated_at = new Date().toISOString();
+  const patch = { status, updated_at, active: status === 'published' };
+  try {
+    await sbPatch('workflows', `id=eq.${currentWorkflowGraphId}`, patch);
+  } catch(e) { showToast('Could not save: ' + e.message, 'error'); return; }
+  if (wf) { wf.status = status; wf.updated_at = updated_at; wf.active = patch.active; }
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  set('wfbStatusBadge', status.toUpperCase());
+  set('wfbStatusText', status === 'published' ? 'Published' : 'Draft');
+  set('wfbLastUpdated', fmtNoteTime(updated_at));
+  set('wfbAutosaveNote', `Auto-saved ${fmtNoteTime(updated_at)}`);
+  showToast(status === 'published' ? '🚀 Workflow is now live.' : '📝 Saved as draft — not running yet.', 'success');
+}
 
 function rebuildWorkflowsPageOLD() {
   const addBtn = document.getElementById('addWorkflowBtn');
