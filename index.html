@@ -13036,14 +13036,14 @@ function renderWorkflowCanvas() {
     if (n.id === wfbExpandedNodeId) {
       const schema = getNodeFieldSchema(n);
       return `<div class="wfb-node wfb-node-expanded" style="left:${n.pos_x}px;top:${n.pos_y}px;--node-color:${color}" data-node-id="${n.id}">
-        <div class="wfb-node-hd"><span class="dot"></span>${icon} ${escAttr(typeLabel)}<span class="menu" onclick="event.stopPropagation();closeWfbExpandedNode()" title="Close">✕</span></div>
+        <div class="wfb-node-hd"><span class="dot"></span>${icon} ${escAttr(typeLabel)}<span class="menu" onclick="event.stopImmediatePropagation();closeWfbExpandedNode()" title="Close">✕</span></div>
         <label class="wfb-field-label">Label</label>
         <input type="text" class="wfb-field-input" id="wfb-field-${n.id}-label" value="${escAttr(n.label)}">
         ${schema.map(f => renderWfbField(n, f)).join('')}
         <div class="wfb-expanded-btns">
-          <button class="wfb-mini-btn danger" onclick="event.stopPropagation();deleteWorkflowNode('${n.id}')">🗑️</button>
-          <button class="wfb-mini-btn" onclick="event.stopPropagation();closeWfbExpandedNode()">Cancel</button>
-          <button class="wfb-mini-btn primary" onclick="event.stopPropagation();saveExpandedWfbNode('${n.id}')">Save</button>
+          <button class="wfb-mini-btn danger" onclick="event.stopImmediatePropagation();deleteWorkflowNode('${n.id}')">🗑️</button>
+          <button class="wfb-mini-btn" onclick="event.stopImmediatePropagation();closeWfbExpandedNode()">Cancel</button>
+          <button class="wfb-mini-btn primary" onclick="event.stopImmediatePropagation();saveExpandedWfbNode('${n.id}')">Save</button>
         </div>
       </div>`;
     }
@@ -13147,7 +13147,16 @@ function initWorkflowCanvasInteractions() {
 
   nodesLayer.addEventListener('click', (e) => {
     const menuBtn = e.target.closest('.menu');
-    if (menuBtn) { e.stopPropagation(); toggleWfbNodeMenu(menuBtn.closest('.wfb-node').dataset.nodeId, menuBtn); }
+    if (!menuBtn) return;
+    // An expanded node's "✕" also carries class "menu" (same visual slot as
+    // the compact node's "⋮"), but it already has its own inline onclick
+    // that closes the node directly -- this delegated handler must never
+    // also fire toggleWfbNodeMenu for it, or the resulting stray floating
+    // menu sits on top of the close button and eats the next several clicks
+    // before one finally lands cleanly.
+    if (menuBtn.closest('.wfb-node-expanded')) return;
+    e.stopPropagation();
+    toggleWfbNodeMenu(menuBtn.closest('.wfb-node').dataset.nodeId, menuBtn);
   });
 
   // Click-and-drag to pan the canvas, freely in both directions -- only
