@@ -380,6 +380,40 @@ body.ai-panel-open .main {
 @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
 
 /* ─── KPI CARDS ────────────────────────────────────────────────────────── */
+/* Home vitals grid (2026-07-14) -- replaces the old KPI row + Quick Access +
+   Today's Focus stack with 6 dense, chart-driven blocks, matching the
+   reference "command center" layout. Uses theme tokens throughout (--bg2,
+   --border, --text, etc.) so it adapts across Light/Dark/Blackout the same
+   as everything else -- nothing here is a hardcoded color. */
+.home-vitals-grid { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, minmax(190px, 1fr)); gap: var(--space-4); margin-bottom: 24px; }
+.vital-block {
+  position: relative; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: var(--space-4); display: flex; flex-direction: column;
+}
+.vital-block::before, .vital-block::after { content: ''; position: absolute; width: 14px; height: 14px; border-color: var(--orange); border-style: solid; opacity: .75; }
+.vital-block::before { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
+.vital-block::after { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
+.vital-block-hd { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-bottom: 2px; }
+.vital-block-hd h3 { margin: 0; font-size: var(--font-xs); letter-spacing: .5px; text-transform: uppercase; color: var(--text); display: flex; align-items: center; gap: 7px; font-weight: 700; }
+.vital-dot { width: 6px; height: 6px; border-radius: 50%; box-shadow: 0 0 8px currentColor; animation: vitalPulse 2.2s infinite; flex-shrink: 0; }
+@keyframes vitalPulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+.vital-sub { font-size: var(--font-2xs); color: var(--text3); margin-bottom: var(--space-3); }
+.vital-ask { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 13px; padding: 2px 5px; border-radius: var(--radius-xs); transition: all var(--transition-base); line-height: 1; }
+.vital-ask:hover { color: var(--orange); background: var(--bg3); }
+.vital-chart-wrap { flex: 1; min-height: 0; position: relative; }
+.vital-stat { font-size: 22px; font-weight: 800; color: var(--orange); font-family: var(--font-display); line-height: 1; }
+.vital-stat-sub { font-size: var(--font-2xs); color: var(--text3); margin-top: 2px; }
+.vital-ring-wrap { display: flex; align-items: center; gap: var(--space-3); flex: 1; }
+.vital-ring-canvas-wrap { position: relative; width: 66px; height: 66px; flex-shrink: 0; }
+.vital-ring-label { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: var(--text); }
+.vital-legend { display: flex; flex-direction: column; gap: 4px; font-size: var(--font-2xs); }
+.vital-legend span { display: flex; align-items: center; gap: 6px; color: var(--text2); }
+.vital-legend i { width: 7px; height: 7px; border-radius: 2px; display: inline-block; flex-shrink: 0; }
+.vital-stackbar { display: flex; height: 18px; border-radius: var(--radius-xs); overflow: hidden; margin: var(--space-2) 0; box-shadow: 0 0 10px rgba(226,84,31,.15); }
+@media (max-width: 900px) {
+  .home-vitals-grid { grid-template-columns: 1fr; grid-template-rows: none; }
+}
+
 .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
 .kpi {
   background: var(--gradient-card);
@@ -2024,48 +2058,70 @@ tr.hidden-row { display: none; }
     <div class="home-greeting" id="homeGreeting">Good morning 👋</div>
     <div class="home-greeting-sub" id="homeGreetingSub">Here's what's happening across the Hub today.</div>
 
-    <div class="kpi-row">
-      <div class="kpi"><div class="kpi-icon">👥</div><div class="kpi-val orange" id="home-total-clients">0</div><div class="kpi-lbl">Unique Clients</div><div class="kpi-sub">Across SMB, White Label, Support</div></div>
-      <div class="kpi"><div class="kpi-icon">💰</div><div class="kpi-val" id="home-ad-budget">$0</div><div class="kpi-lbl">Total Ad Spend Budget</div></div>
-      <div class="kpi"><div class="kpi-icon">🧾</div><div class="kpi-val" id="home-collections-owed">$0</div><div class="kpi-lbl">Outstanding + Card Fails</div></div>
-      <div class="kpi kpi-glow-green"><div class="kpi-icon">✅</div><div class="kpi-val green" id="home-collected">$0</div><div class="kpi-lbl">Amount Collected</div><div class="kpi-sub">Payment Plan &amp; Resolved · Outstanding + Card Fails combined</div></div>
-      <div class="kpi"><div class="kpi-icon">⚠️</div><div class="kpi-val red" id="home-needs-attention">0</div><div class="kpi-lbl">Need Attention Today</div></div>
-      <div class="kpi"><div class="kpi-icon">⚠️</div><div class="kpi-val" style="color:var(--yellow)" id="home-stale-leads">0</div><div class="kpi-lbl">Stale Leads</div><div class="kpi-sub">Yelp/LSA/Thumbtack, 7 days–6 months</div></div>
-    </div>
+    <div class="home-vitals-grid" id="homeVitalsGrid">
 
-    <div class="section-hd" style="margin-top:8px"><div class="section-num">1</div><h2>Quick Access</h2></div>
-    <div class="section-div"></div>
-    <div class="quick-links-grid" id="homeQuickLinks" style="margin-bottom:28px"></div>
+      <div class="vital-block">
+        <div class="vital-block-hd">
+          <h3><span class="vital-dot" style="background:var(--red);color:var(--red)"></span>Needs Attention</h3>
+          <button class="vital-ask" onclick="askNirvanaAboutVital('attention')" title="Ask Nirvana about this" aria-label="Ask Nirvana about accounts needing attention">✨</button>
+        </div>
+        <div class="vital-sub">Collections flagged pending, in review, or escalated</div>
+        <div class="vital-ring-wrap">
+          <div class="vital-ring-canvas-wrap"><canvas id="vitalAttentionRing"></canvas><div class="vital-ring-label" id="vitalAttentionCount">0</div></div>
+          <div class="vital-legend" id="vitalAttentionLegend"></div>
+        </div>
+      </div>
 
-    <div class="section-hd"><div class="section-num">2</div><h2>Today's Focus</h2></div>
-    <div class="section-div"></div>
-    <div class="card" style="margin-bottom:20px;border-color:rgba(226,84,31,.35)">
-      <div class="card-header">
-        <div><div class="card-title">✅ My Tasks</div><div class="card-sub" id="home-my-tasks-sub">Open tasks assigned to you, across every client</div></div>
-        <span class="pc-badge pc-6" id="home-my-tasks-count">0</span>
-      </div>
-      <div id="homeMyTasksList"></div>
-    </div>
-    <div class="card" style="margin-bottom:20px">
-      <div class="card-header">
-        <div><div class="card-title">⏰ My Reminders</div><div class="card-sub">Personal reminders, just for you — not shared with the team</div></div>
-        <button class="btn btn-primary btn-sm" onclick="openAddReminderModal()">＋ Remind Me</button>
-      </div>
-      <div id="homeMyRemindersList"></div>
-    </div>
-    <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:20px;align-items:start">
-      <div class="card">
-        <div class="card-header">
-          <div><div class="card-title">⚠️ Needs Attention</div><div class="card-sub">Collections accounts that are pending, in review, or escalated</div></div>
+      <div class="vital-block">
+        <div class="vital-block-hd">
+          <h3><span class="vital-dot" style="background:var(--purple);color:var(--purple)"></span>Onboarding Pipeline</h3>
+          <button class="vital-ask" onclick="askNirvanaAboutVital('onboarding')" title="Ask Nirvana about this" aria-label="Ask Nirvana about onboarding">✨</button>
         </div>
-        <div id="homeAttentionList"></div>
+        <div class="vital-sub">Clients moving through setup stages</div>
+        <div class="vital-chart-wrap"><canvas id="vitalOnboardingFunnel"></canvas></div>
       </div>
-      <div class="card">
-        <div class="card-header">
-          <div><div class="card-title">🕒 Recent Activity</div><div class="card-sub">Latest notes on any client, across the whole Hub</div></div>
+
+      <div class="vital-block">
+        <div class="vital-block-hd">
+          <h3><span class="vital-dot" style="background:var(--orange);color:var(--orange)"></span>Ad Spend Budget</h3>
+          <button class="vital-ask" onclick="askNirvanaAboutVital('adspend')" title="Ask Nirvana about this" aria-label="Ask Nirvana about ad spend">✨</button>
         </div>
-        <div id="homeActivityList"></div>
+        <div class="vital-sub">Promo adoption rate across eligible accounts</div>
+        <div class="vital-ring-wrap">
+          <div class="vital-ring-canvas-wrap"><canvas id="vitalAdSpendRing"></canvas><div class="vital-ring-label" id="vitalAdSpendPct">0%</div></div>
+          <div><div class="vital-stat" id="vitalAdSpendBudget">$0</div><div class="vital-stat-sub">total budget</div></div>
+        </div>
       </div>
+
+      <div class="vital-block">
+        <div class="vital-block-hd">
+          <h3><span class="vital-dot" style="background:var(--red);color:var(--red)"></span>Collections Status</h3>
+          <button class="vital-ask" onclick="askNirvanaAboutVital('collections')" title="Ask Nirvana about this" aria-label="Ask Nirvana about collections">✨</button>
+        </div>
+        <div class="vital-sub">Dollar total per status</div>
+        <div class="vital-stat" id="vitalCollectionsTotal">$0</div>
+        <div class="vital-stackbar" id="vitalCollectionsBar"></div>
+      </div>
+
+      <div class="vital-block">
+        <div class="vital-block-hd">
+          <h3><span class="vital-dot" style="background:var(--green);color:var(--green)"></span>SuccessOS KPI Scores</h3>
+          <button class="vital-ask" onclick="askNirvanaAboutVital('kpi')" title="Ask Nirvana about this" aria-label="Ask Nirvana about SuccessOS scores">✨</button>
+        </div>
+        <div class="vital-sub">Health / Engagement / Retention trend</div>
+        <div class="vital-chart-wrap"><canvas id="vitalKpiLine"></canvas></div>
+        <div class="vital-stat" id="vitalKpiAvg" style="margin-top:6px;font-size:16px"></div>
+      </div>
+
+      <div class="vital-block">
+        <div class="vital-block-hd">
+          <h3><span class="vital-dot" style="background:var(--yellow);color:var(--yellow)"></span>Product Adoption Gap</h3>
+          <button class="vital-ask" onclick="askNirvanaAboutVital('adoption')" title="Ask Nirvana about this" aria-label="Ask Nirvana about product adoption gap">✨</button>
+        </div>
+        <div class="vital-sub">Clients not using each product (SMB)</div>
+        <div class="vital-chart-wrap"><canvas id="vitalAdoptionGap"></canvas></div>
+      </div>
+
     </div>
 
     <div class="page-footer">Client Success Hub · Niche Inc. · Home</div>
@@ -4450,13 +4506,178 @@ function refreshNavBadges() {
 function rebuildHomePage() {
   if (!document.getElementById('page-home')) return;
   renderHomeGreeting();
-  renderHomeKPIs();
-  renderHomeQuickLinks();
-  renderHomeMyTasks();
-  renderMyRemindersWidget();
-  renderHomeAttentionList();
-  renderHomeActivityList();
+  renderHomeVitalsGrid();
   loadAiInsightsBanner();
+}
+
+// Home vitals grid (2026-07-14) -- six chart-driven blocks replacing the old
+// KPI row + Quick Access + Today's Focus stack. Every block pulls real data
+// already computed elsewhere in the app -- nothing here is placeholder.
+function renderHomeVitalsGrid() {
+  if (!document.getElementById('homeVitalsGrid')) return;
+  renderVitalAttention();
+  renderVitalOnboarding();
+  renderVitalAdSpend();
+  renderVitalCollections();
+  renderVitalKpi();
+  renderVitalAdoptionGap();
+}
+
+function renderVitalAttention() {
+  const canvas = document.getElementById('vitalAttentionRing');
+  if (!canvas) return;
+  const escalated = COLLECTIONS_ACCOUNTS.filter(a => a.status === 'escalated').length;
+  const inreview = COLLECTIONS_ACCOUNTS.filter(a => a.status === 'inreview').length;
+  const pending = COLLECTIONS_ACCOUNTS.filter(a => a.status === 'pending').length;
+  const total = escalated + inreview + pending;
+  const countEl = document.getElementById('vitalAttentionCount');
+  if (countEl) countEl.textContent = total;
+  const legend = document.getElementById('vitalAttentionLegend');
+  if (legend) {
+    legend.innerHTML = `
+      <span><i style="background:var(--red)"></i>${escalated} Escalated</span>
+      <span><i style="background:var(--yellow)"></i>${inreview} In Review</span>
+      <span><i style="background:var(--text3)"></i>${pending} Pending</span>`;
+  }
+  destroyChart('vital-attention');
+  chartRegistry['vital-attention'] = new Chart(canvas, {
+    type: 'doughnut',
+    data: {
+      labels: ['Escalated', 'In Review', 'Pending'],
+      datasets: [{ data: [escalated, inreview, pending], backgroundColor: [resolveCssColor('var(--red)'), resolveCssColor('var(--yellow)'), resolveCssColor('var(--text3)')], borderWidth: 2, borderColor: resolveCssColor('var(--bg2)'), hoverOffset: 4 }],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false, cutout: '72%',
+      plugins: { legend: { display: false }, tooltip: { backgroundColor: C.tooltipBg, borderColor: C.tooltipBorder, borderWidth: 1, titleColor: C.tooltipTitle, bodyColor: C.orange, padding: 10, cornerRadius: 8 } },
+    },
+  });
+}
+
+function renderVitalOnboarding() {
+  const canvas = document.getElementById('vitalOnboardingFunnel');
+  if (!canvas) return;
+  const counts = ONBOARDING_STAGE_ORDER.map(s => ONBOARDING_RECORDS.filter(r => r.stage === s).length);
+  const labels = ONBOARDING_STAGE_ORDER.map(s => ONBOARDING_STAGE_META[s].label);
+  destroyChart('vital-onboarding');
+  chartRegistry['vital-onboarding'] = new Chart(canvas, {
+    type: 'bar',
+    data: { labels, datasets: [{ data: counts, backgroundColor: (ctx) => verticalGradient(ctx.chart.ctx, ctx.chart.chartArea, '#a855f7'), _glowColor: '#a855f7', borderRadius: { topRight: 6, bottomRight: 6 }, borderSkipped: 'left', barPercentage: 0.6 }] },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { backgroundColor: C.tooltipBg, borderColor: C.tooltipBorder, borderWidth: 1, titleColor: C.tooltipTitle, bodyColor: C.orange, padding: 10, cornerRadius: 8 } },
+      scales: {
+        x: { beginAtZero: true, ticks: { color: C.tick, stepSize: 1, font: { size: 9 } }, grid: { color: C.grid }, border: { display: false } },
+        y: { grid: { display: false }, ticks: { color: C.text, font: { size: 9 } }, border: { display: false } },
+      },
+    },
+  });
+}
+
+function renderVitalAdSpend() {
+  const canvas = document.getElementById('vitalAdSpendRing');
+  if (!canvas) return;
+  const totalBudget = AD_SPEND_BUSINESSES.reduce((s, b) => s + (b.budget || 0), 0);
+  const eligible = AD_SPEND_BUSINESSES.filter(b => b.promo === 'Yes' || b.promo === 'Using').length;
+  const using = AD_SPEND_BUSINESSES.filter(b => b.promo === 'Using').length;
+  const pct = eligible > 0 ? Math.round((using / eligible) * 100) : 0;
+  const pctEl = document.getElementById('vitalAdSpendPct');
+  if (pctEl) pctEl.textContent = pct + '%';
+  const budgetEl = document.getElementById('vitalAdSpendBudget');
+  if (budgetEl) budgetEl.textContent = fmtMoney(totalBudget);
+  destroyChart('vital-adspend');
+  chartRegistry['vital-adspend'] = new Chart(canvas, {
+    type: 'doughnut',
+    data: { datasets: [{ data: [pct, 100 - pct], backgroundColor: [resolveCssColor('var(--orange)'), resolveCssColor('var(--bg3)')], borderWidth: 0, hoverOffset: 0 }] },
+    options: { responsive: true, maintainAspectRatio: false, cutout: '76%', plugins: { legend: { display: false }, tooltip: { enabled: false } } },
+  });
+}
+
+function renderVitalCollections() {
+  const wrap = document.getElementById('vitalCollectionsBar');
+  if (!wrap) return;
+  const byStatus = COLLECTIONS_STATUSES.map(s => ({
+    ...s, amount: COLLECTIONS_ACCOUNTS.filter(a => a.status === s.key).reduce((sum, a) => sum + (a.amount || 0), 0),
+  })).filter(s => s.amount > 0);
+  const total = byStatus.reduce((sum, s) => sum + s.amount, 0);
+  const totalEl = document.getElementById('vitalCollectionsTotal');
+  if (totalEl) totalEl.textContent = fmtMoney(total);
+  wrap.innerHTML = total > 0
+    ? byStatus.map(s => `<div style="width:${(s.amount / total * 100).toFixed(1)}%;background:${resolveCssColor(s.color)};box-shadow:0 0 8px ${resolveCssColor(s.color)}" title="${escAttr(s.label)}: ${fmtMoney(s.amount)}"></div>`).join('')
+    : '';
+}
+
+function renderVitalKpi() {
+  const canvas = document.getElementById('vitalKpiLine');
+  if (!canvas) return;
+  const scores = KPI_KEYS.map(k => getLatestKpiScore(k));
+  const avgEl = document.getElementById('vitalKpiAvg');
+  if (avgEl) {
+    const avg = scores.length ? (scores.reduce((a, b) => a + b, 0) / scores.length).toFixed(1) : '0';
+    avgEl.innerHTML = `${avg}<span class="vital-stat-sub"> / 5 avg</span>`;
+  }
+  const allDates = Array.from(new Set(KPI_SCORE_HISTORY.map(r => (r.created_at || '').slice(0, 10)))).filter(Boolean).sort();
+  const datasets = KPI_KEYS.map(k => {
+    const rows = getKpiHistory(k);
+    const data = allDates.map(d => {
+      const upTo = rows.filter(r => (r.created_at || '').slice(0, 10) <= d);
+      return upTo.length ? upTo[upTo.length - 1].score : null;
+    });
+    return { label: KPI_META[k].short, data, borderColor: KPI_META[k].color, backgroundColor: KPI_META[k].color, tension: 0.35, spanGaps: true, pointRadius: 2, pointHoverRadius: 4, borderWidth: 2 };
+  });
+  destroyChart('vital-kpi');
+  chartRegistry['vital-kpi'] = new Chart(canvas, {
+    type: 'line',
+    data: { labels: allDates.map(d => fmtDate(d)), datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { backgroundColor: C.tooltipBg, borderColor: C.tooltipBorder, borderWidth: 1, titleColor: C.tooltipTitle, bodyColor: C.orange, padding: 10, cornerRadius: 8 } },
+      scales: {
+        y: { beginAtZero: true, max: 5, ticks: { stepSize: 1, color: C.tick, font: { size: 9 } }, grid: { color: C.grid }, border: { display: false } },
+        x: { grid: { display: false }, ticks: { display: false }, border: { display: false } },
+      },
+    },
+  });
+}
+
+function renderVitalAdoptionGap() {
+  const canvas = document.getElementById('vitalAdoptionGap');
+  if (!canvas) return;
+  const cat = getCatalog('smb');
+  const cl = getClients('smb');
+  const total = cl.length || 1;
+  const gaps = cat.map(p => total - cl.filter(c => c[p.key]).length);
+  const labels = cat.map(p => p.label);
+  destroyChart('vital-adoption-gap');
+  chartRegistry['vital-adoption-gap'] = new Chart(canvas, {
+    type: 'bar',
+    data: { labels, datasets: [{ data: gaps, backgroundColor: (ctx) => verticalGradient(ctx.chart.ctx, ctx.chart.chartArea, '#f59e0b'), _glowColor: '#f59e0b', borderRadius: 3, barPercentage: 0.75, categoryPercentage: 0.9 }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { backgroundColor: C.tooltipBg, borderColor: C.tooltipBorder, borderWidth: 1, titleColor: C.tooltipTitle, bodyColor: C.orange, padding: 10, cornerRadius: 8 } },
+      scales: {
+        y: { beginAtZero: true, ticks: { color: C.tick, font: { size: 8 } }, grid: { color: C.grid }, border: { display: false } },
+        x: { grid: { display: false }, ticks: { display: false }, border: { display: false } },
+      },
+    },
+  });
+}
+
+// Wires the Home vitals grid into Nirvana -- each block's ✨ button opens the
+// panel and asks a canned, topic-relevant question through the same send
+// pathway the panel's own quick-actions grid already uses.
+const VITAL_NIRVANA_PROMPTS = {
+  attention: "Which accounts need attention today, and what should I prioritize first?",
+  onboarding: "Which onboarding accounts are stuck or falling behind on their stage?",
+  adspend: "Which ad spend accounts are eligible for promo but not using it yet?",
+  collections: "Summarize where we stand on collections right now.",
+  kpi: "How are our SuccessOS KPI scores trending, and where should I focus?",
+  adoption: "Which SMB clients have the biggest product adoption gap I should upsell?",
+};
+function askNirvanaAboutVital(topic) {
+  const panel = document.getElementById('aiAgentPanel');
+  if (panel && panel.style.display === 'none') toggleAiAgentPanel();
+  const prompt = VITAL_NIRVANA_PROMPTS[topic];
+  if (prompt) sendAiAgentQuickMessage(prompt);
 }
 
 function renderHomeGreeting() {
