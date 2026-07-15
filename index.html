@@ -1809,8 +1809,22 @@ tr.hidden-row { display: none; }
 .wfb-node {
   position: absolute; width: 172px; background: var(--bg2); border: 1px solid var(--node-color, var(--border));
   border-radius: var(--radius-sm); padding: 8px 10px; box-shadow: 0 0 0 1px rgba(0,0,0,.15), 0 2px 10px rgba(0,0,0,.25);
-  cursor: grab;
+  cursor: grab; user-select: none;
 }
+.wfb-node.dragging { cursor: grabbing; opacity: .85; z-index: 5; }
+.wfb-node-port {
+  position: absolute; right: -7px; top: 50%; transform: translateY(-50%); width: 12px; height: 12px; border-radius: 50%;
+  background: var(--node-color, var(--orange)); border: 2px solid var(--bg2); cursor: crosshair; box-shadow: 0 0 6px var(--node-color, var(--orange));
+}
+.wfb-node-port:hover { transform: translateY(-50%) scale(1.3); }
+.wfb-node-menu {
+  position: fixed; z-index: 200; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  box-shadow: var(--shadow); padding: 4px; min-width: 130px;
+}
+.wfb-node-menu-item { padding: 6px 10px; font-size: var(--font-xs); border-radius: var(--radius-xs); cursor: pointer; color: var(--text2); }
+.wfb-node-menu-item:hover { background: var(--bg4); color: var(--text); }
+.wfb-node-menu-item.danger { color: var(--red); }
+.wfb-node-menu-item.danger:hover { background: rgba(239,68,68,.12); }
 .wfb-node-hd { display: flex; align-items: center; gap: 6px; font-size: 9px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--node-color, var(--text3)); margin-bottom: 3px; }
 .wfb-node-hd .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--node-color); box-shadow: 0 0 6px var(--node-color); }
 .wfb-node-hd .menu { margin-left: auto; color: var(--text3); cursor: pointer; }
@@ -2842,34 +2856,34 @@ tr.hidden-row { display: none; }
         <input type="text" class="field-input" style="height:34px;margin-bottom:var(--space-3)" placeholder="Search nodes... ⌘K">
         <div class="wfb-node-group">
           <div class="wfb-node-group-hd">TRIGGERS</div>
-          <div class="wfb-node-item"><span class="wfb-node-dot" style="background:var(--green);color:var(--green)"></span>Form Submitted</div>
-          <div class="wfb-node-item"><span class="wfb-node-dot" style="background:var(--green);color:var(--green)"></span>New Lead Created</div>
-          <div class="wfb-node-item"><span class="wfb-node-dot" style="background:var(--green);color:var(--green)"></span>Tag Added</div>
-          <div class="wfb-node-item"><span class="wfb-node-dot" style="background:var(--green);color:var(--green)"></span>Webhook Received</div>
-          <div class="wfb-node-item"><span class="wfb-node-dot" style="background:var(--green);color:var(--green)"></span>Task Completed</div>
+          <div class="wfb-node-item" onclick="addWorkflowNodeFromPalette('trigger','form_submitted','Form Submitted')"><span class="wfb-node-dot" style="background:var(--green);color:var(--green)"></span>Form Submitted</div>
+          <div class="wfb-node-item" onclick="addWorkflowNodeFromPalette('trigger','new_lead_created','New Lead Created')"><span class="wfb-node-dot" style="background:var(--green);color:var(--green)"></span>New Lead Created</div>
+          <div class="wfb-node-item" onclick="addWorkflowNodeFromPalette('trigger','tag_added','Tag Added')"><span class="wfb-node-dot" style="background:var(--green);color:var(--green)"></span>Tag Added</div>
+          <div class="wfb-node-item" onclick="addWorkflowNodeFromPalette('trigger','webhook_received','Webhook Received')"><span class="wfb-node-dot" style="background:var(--green);color:var(--green)"></span>Webhook Received</div>
+          <div class="wfb-node-item" onclick="addWorkflowNodeFromPalette('trigger','task_completed','Task Completed')"><span class="wfb-node-dot" style="background:var(--green);color:var(--green)"></span>Task Completed</div>
         </div>
         <div class="wfb-node-group">
           <div class="wfb-node-group-hd">CONDITIONS</div>
-          <div class="wfb-node-item"><span class="wfb-node-dot" style="background:var(--orange);color:var(--orange)"></span>If / Else</div>
-          <div class="wfb-node-item"><span class="wfb-node-dot" style="background:var(--orange);color:var(--orange)"></span>Multi-Condition</div>
+          <div class="wfb-node-item" onclick="addWorkflowNodeFromPalette('condition','if_else','If / Else')"><span class="wfb-node-dot" style="background:var(--orange);color:var(--orange)"></span>If / Else</div>
+          <div class="wfb-node-item" onclick="addWorkflowNodeFromPalette('condition','multi_condition','Multi-Condition')"><span class="wfb-node-dot" style="background:var(--orange);color:var(--orange)"></span>Multi-Condition</div>
         </div>
         <div class="wfb-node-group">
           <div class="wfb-node-group-hd">ACTIONS</div>
-          <div class="wfb-node-item"><span class="wfb-node-dot" style="background:var(--purple);color:var(--purple)"></span>Send Email</div>
-          <div class="wfb-node-item"><span class="wfb-node-dot" style="background:var(--purple);color:var(--purple)"></span>Add Tag</div>
-          <div class="wfb-node-item"><span class="wfb-node-dot" style="background:var(--purple);color:var(--purple)"></span>Create Task</div>
-          <div class="wfb-node-item"><span class="wfb-node-dot" style="background:var(--purple);color:var(--purple)"></span>Notify Team</div>
-          <div class="wfb-node-item"><span class="wfb-node-dot" style="background:var(--purple);color:var(--purple)"></span>Update Status</div>
+          <div class="wfb-node-item" onclick="addWorkflowNodeFromPalette('action','send_email','Send Email')"><span class="wfb-node-dot" style="background:var(--purple);color:var(--purple)"></span>Send Email</div>
+          <div class="wfb-node-item" onclick="addWorkflowNodeFromPalette('action','add_tag','Add Tag')"><span class="wfb-node-dot" style="background:var(--purple);color:var(--purple)"></span>Add Tag</div>
+          <div class="wfb-node-item" onclick="addWorkflowNodeFromPalette('action','create_task','Create Task')"><span class="wfb-node-dot" style="background:var(--purple);color:var(--purple)"></span>Create Task</div>
+          <div class="wfb-node-item" onclick="addWorkflowNodeFromPalette('action','notify_team','Notify Team')"><span class="wfb-node-dot" style="background:var(--purple);color:var(--purple)"></span>Notify Team</div>
+          <div class="wfb-node-item" onclick="addWorkflowNodeFromPalette('action','update_status','Update Status')"><span class="wfb-node-dot" style="background:var(--purple);color:var(--purple)"></span>Update Status</div>
         </div>
         <div class="wfb-node-group">
           <div class="wfb-node-group-hd">DELAYS</div>
-          <div class="wfb-node-item"><span class="wfb-node-dot" style="background:var(--blue);color:var(--blue)"></span>Wait / Delay</div>
-          <div class="wfb-node-item"><span class="wfb-node-dot" style="background:var(--blue);color:var(--blue)"></span>Date / Time Check</div>
+          <div class="wfb-node-item" onclick="addWorkflowNodeFromPalette('delay','wait_delay','Wait / Delay')"><span class="wfb-node-dot" style="background:var(--blue);color:var(--blue)"></span>Wait / Delay</div>
+          <div class="wfb-node-item" onclick="addWorkflowNodeFromPalette('delay','date_time_check','Date / Time Check')"><span class="wfb-node-dot" style="background:var(--blue);color:var(--blue)"></span>Date / Time Check</div>
         </div>
         <div class="wfb-node-group">
           <div class="wfb-node-group-hd">LOGIC</div>
-          <div class="wfb-node-item"><span class="wfb-node-dot" style="background:var(--pink);color:var(--pink)"></span>Split Path</div>
-          <div class="wfb-node-item"><span class="wfb-node-dot" style="background:var(--pink);color:var(--pink)"></span>Merge Paths</div>
+          <div class="wfb-node-item" onclick="addWorkflowNodeFromPalette('logic','split_path','Split Path')"><span class="wfb-node-dot" style="background:var(--pink);color:var(--pink)"></span>Split Path</div>
+          <div class="wfb-node-item" onclick="addWorkflowNodeFromPalette('logic','merge_paths','Merge Paths')"><span class="wfb-node-dot" style="background:var(--pink);color:var(--pink)"></span>Merge Paths</div>
         </div>
         <div class="wfb-sidebar-tip">💡 Tip: Drag nodes to the canvas (coming in a later block).<br>Double-click a node to edit (also coming).</div>
       </div>
@@ -3595,6 +3609,34 @@ tr.hidden-row { display: none; }
 </div>
 
 <!-- MANAGE PIPELINES MODAL -->
+<!-- WORKFLOW BRANCH LABEL MODAL -->
+<div class="modal-overlay" id="wfbBranchModal">
+  <div class="modal" style="max-width:320px" role="dialog" aria-modal="true" aria-labelledby="wfbBranchModalTitle">
+    <h3 id="wfbBranchModalTitle">🔀 Branch Label</h3>
+    <p style="font-size:var(--font-sm);color:var(--text2)">This connects from a Condition node — which branch is this?</p>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="resolveWfbBranchModal(null)">Cancel</button>
+      <button class="btn btn-ghost" style="color:var(--red)" onclick="resolveWfbBranchModal('No')">No</button>
+      <button class="btn btn-primary" onclick="resolveWfbBranchModal('Yes')">Yes</button>
+    </div>
+  </div>
+</div>
+
+<!-- WORKFLOW NODE EDIT MODAL -->
+<div class="modal-overlay" id="wfbNodeEditModal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="wfbNodeEditTitle">
+    <h3 id="wfbNodeEditTitle">Edit Node</h3>
+    <label for="wfbNodeEditLabel" class="field-label">Label</label>
+    <input type="text" id="wfbNodeEditLabel" class="field-input">
+    <label for="wfbNodeEditSublabel" class="field-label">Sublabel (optional)</label>
+    <input type="text" id="wfbNodeEditSublabel" class="field-input">
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeWfbNodeEditModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveWfbNodeEdit()">Save</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="managePipelinesModal">
   <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="managePipelinesModalTitle">
     <h3 id="managePipelinesModalTitle">⚙️ Onboarding Pipelines</h3>
@@ -12879,6 +12921,7 @@ const WFB_NODE_W = 172, WFB_NODE_H = 62;
 async function rebuildWorkflowsPage() {
   await loadWorkflows();
   if (!document.getElementById('wfbCanvas')) return;
+  initWorkflowCanvasInteractions();
   if (!currentWorkflowGraphId || !WORKFLOWS.find(w => w.id === currentWorkflowGraphId)) {
     currentWorkflowGraphId = WORKFLOWS.length > 0 ? WORKFLOWS[WORKFLOWS.length - 1].id : null;
   }
@@ -12938,6 +12981,7 @@ function renderWorkflowCanvas() {
       <div class="wfb-node-hd"><span class="dot"></span>${icon} ${escAttr(typeLabel)}<span class="menu">⋮</span></div>
       <div class="wfb-node-label">${escAttr(n.label)}</div>
       ${n.sublabel ? `<div class="wfb-node-sublabel">${escAttr(n.sublabel)}</div>` : ''}
+      ${n.node_type !== 'end' ? '<div class="wfb-node-port" title="Drag to another node to connect"></div>' : ''}
     </div>`;
   }).join('');
 
@@ -12992,7 +13036,204 @@ function applyWorkflowZoomTransform() {
 // Stubs -- real save/test/publish logic is a later block, once node editing
 // exists. Present now so the header buttons in the reference layout aren't
 // dead clicks with zero feedback.
-function saveWorkflowDraft() { showToast('Draft saved. Full node editing lands in a later block.', 'success'); }
+// Block 3 (2026-07-15): node palette add/remove, free-drag positioning, and
+// drag-to-connect. Event delegation on #wfbNodesLayer rather than per-node
+// listeners, since renderWorkflowCanvas() fully rebuilds that innerHTML on
+// every change -- per-node listeners would need re-binding constantly.
+let wfbDragState = null;
+let wfbConnectState = null;
+let wfbBranchModalResolve = null;
+
+function initWorkflowCanvasInteractions() {
+  const nodesLayer = document.getElementById('wfbNodesLayer');
+  if (!nodesLayer || nodesLayer.dataset.wfbInit) return;
+  nodesLayer.dataset.wfbInit = '1';
+
+  nodesLayer.addEventListener('mousedown', (e) => {
+    const port = e.target.closest('.wfb-node-port');
+    const nodeEl = e.target.closest('.wfb-node');
+    if (port) {
+      e.stopPropagation();
+      wfbConnectState = { sourceNodeId: nodeEl.dataset.nodeId };
+      document.addEventListener('mousemove', onWfbConnectMove);
+      document.addEventListener('mouseup', onWfbConnectEnd, { once: true });
+      return;
+    }
+    if (nodeEl && !e.target.closest('.menu')) {
+      const node = workflowNodesCache.find(n => n.id === nodeEl.dataset.nodeId);
+      if (!node) return;
+      nodeEl.classList.add('dragging');
+      wfbDragState = { nodeId: node.id, startMouseX: e.clientX, startMouseY: e.clientY, startPosX: node.pos_x, startPosY: node.pos_y };
+      document.addEventListener('mousemove', onWfbNodeDragMove);
+      document.addEventListener('mouseup', onWfbNodeDragEnd, { once: true });
+    }
+  });
+
+  nodesLayer.addEventListener('dblclick', (e) => {
+    const nodeEl = e.target.closest('.wfb-node');
+    if (nodeEl) openWorkflowNodeEditor(nodeEl.dataset.nodeId);
+  });
+
+  nodesLayer.addEventListener('click', (e) => {
+    const menuBtn = e.target.closest('.menu');
+    if (menuBtn) { e.stopPropagation(); toggleWfbNodeMenu(menuBtn.closest('.wfb-node').dataset.nodeId, menuBtn); }
+  });
+}
+
+function onWfbNodeDragMove(e) {
+  if (!wfbDragState) return;
+  const dx = (e.clientX - wfbDragState.startMouseX) / workflowZoomLevel;
+  const dy = (e.clientY - wfbDragState.startMouseY) / workflowZoomLevel;
+  const node = workflowNodesCache.find(n => n.id === wfbDragState.nodeId);
+  if (!node) return;
+  node.pos_x = Math.max(0, Math.round(wfbDragState.startPosX + dx));
+  node.pos_y = Math.max(0, Math.round(wfbDragState.startPosY + dy));
+  renderWorkflowCanvas();
+}
+async function onWfbNodeDragEnd() {
+  document.removeEventListener('mousemove', onWfbNodeDragMove);
+  if (!wfbDragState) return;
+  const node = workflowNodesCache.find(n => n.id === wfbDragState.nodeId);
+  wfbDragState = null;
+  if (!node) return;
+  try { await sbPatch('workflow_nodes', `id=eq.${node.id}`, { pos_x: node.pos_x, pos_y: node.pos_y }); }
+  catch(e) { console.warn('Could not save node position:', e.message); }
+}
+
+function onWfbConnectMove(e) {
+  if (!wfbConnectState) return;
+  const canvas = document.getElementById('wfbCanvas');
+  const svg = document.getElementById('wfbEdgesSvg');
+  const rect = canvas.getBoundingClientRect();
+  const sourceNode = workflowNodesCache.find(n => n.id === wfbConnectState.sourceNodeId);
+  if (!sourceNode) return;
+  const x1 = sourceNode.pos_x + WFB_NODE_W, y1 = sourceNode.pos_y + WFB_NODE_H / 2;
+  const x2 = (e.clientX - rect.left) / workflowZoomLevel;
+  const y2 = (e.clientY - rect.top) / workflowZoomLevel;
+  let preview = document.getElementById('wfbConnectPreviewPath');
+  if (!preview) {
+    preview = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    preview.id = 'wfbConnectPreviewPath';
+    preview.setAttribute('fill', 'none');
+    preview.setAttribute('stroke', resolveCssColor('var(--orange)'));
+    preview.setAttribute('stroke-width', '2');
+    preview.setAttribute('stroke-dasharray', '5,4');
+    svg.appendChild(preview);
+  }
+  const midX = (x1 + x2) / 2;
+  preview.setAttribute('d', `M ${x1} ${y1} C ${midX} ${y1}, ${midX} ${y2}, ${x2} ${y2}`);
+}
+async function onWfbConnectEnd(e) {
+  document.removeEventListener('mousemove', onWfbConnectMove);
+  const preview = document.getElementById('wfbConnectPreviewPath');
+  if (preview) preview.remove();
+  if (!wfbConnectState) return;
+  const sourceId = wfbConnectState.sourceNodeId;
+  wfbConnectState = null;
+  const targetEl = document.elementFromPoint(e.clientX, e.clientY);
+  const targetNodeEl = targetEl ? targetEl.closest('.wfb-node') : null;
+  if (!targetNodeEl || targetNodeEl.dataset.nodeId === sourceId) return;
+  const targetId = targetNodeEl.dataset.nodeId;
+  const alreadyConnected = workflowEdgesCache.some(edge => edge.source_node_id === sourceId && edge.target_node_id === targetId);
+  if (alreadyConnected) { showToast('Those two are already connected.', 'warning'); return; }
+  const sourceNode = workflowNodesCache.find(n => n.id === sourceId);
+  let branchLabel = null;
+  if (sourceNode && sourceNode.node_type === 'condition') {
+    branchLabel = await promptBranchLabel();
+    if (branchLabel === null) return;
+  }
+  const edge = { id: (crypto.randomUUID ? crypto.randomUUID() : 'e_' + Date.now() + Math.random().toString(16).slice(2)), workflow_id: currentWorkflowGraphId, source_node_id: sourceId, target_node_id: targetId, branch_label: branchLabel };
+  try { await sbUpsert('workflow_edges', edge); }
+  catch(err) { showToast('Could not connect those nodes: ' + err.message, 'error'); return; }
+  workflowEdgesCache.push(edge);
+  renderWorkflowCanvas();
+}
+function promptBranchLabel() {
+  return new Promise(resolve => {
+    wfbBranchModalResolve = resolve;
+    document.getElementById('wfbBranchModal').classList.add('open');
+  });
+}
+function resolveWfbBranchModal(value) {
+  document.getElementById('wfbBranchModal').classList.remove('open');
+  if (wfbBranchModalResolve) { wfbBranchModalResolve(value); wfbBranchModalResolve = null; }
+}
+
+function toggleWfbNodeMenu(nodeId, anchorEl) {
+  closeAllWfbNodeMenus();
+  const rect = anchorEl.getBoundingClientRect();
+  const menu = document.createElement('div');
+  menu.className = 'wfb-node-menu';
+  menu.id = 'wfbActiveNodeMenu';
+  menu.style.left = rect.left + 'px';
+  menu.style.top = rect.bottom + 'px';
+  menu.innerHTML = `
+    <div class="wfb-node-menu-item" onclick="openWorkflowNodeEditor('${nodeId}')">✏️ Edit</div>
+    <div class="wfb-node-menu-item danger" onclick="deleteWorkflowNode('${nodeId}')">🗑️ Delete</div>`;
+  document.body.appendChild(menu);
+  setTimeout(() => document.addEventListener('click', closeAllWfbNodeMenus, { once: true }), 0);
+}
+function closeAllWfbNodeMenus() {
+  const m = document.getElementById('wfbActiveNodeMenu');
+  if (m) m.remove();
+}
+
+async function deleteWorkflowNode(nodeId) {
+  closeAllWfbNodeMenus();
+  const confirmed = await showConfirmDialog('Delete this node? Any connections to or from it will be removed too.', { title: '🗑️ Delete Node', confirmLabel: 'Delete', danger: true });
+  if (!confirmed) return;
+  try { await sbDelete('workflow_nodes', `id=eq.${nodeId}`); }
+  catch(e) { showToast('Could not delete: ' + e.message, 'error'); return; }
+  workflowNodesCache = workflowNodesCache.filter(n => n.id !== nodeId);
+  workflowEdgesCache = workflowEdgesCache.filter(e => e.source_node_id !== nodeId && e.target_node_id !== nodeId);
+  renderWorkflowCanvas();
+  showToast('Node deleted.', 'success');
+}
+
+async function addWorkflowNodeFromPalette(nodeType, subtype, defaultLabel) {
+  if (!currentWorkflowGraphId) { showToast('Open or create a workflow first.', 'warning'); return; }
+  const maxY = workflowNodesCache.length > 0 ? Math.max(...workflowNodesCache.map(n => n.pos_y)) + WFB_NODE_H + 40 : 60;
+  const node = {
+    id: (crypto.randomUUID ? crypto.randomUUID() : 'n_' + Date.now() + Math.random().toString(16).slice(2)),
+    workflow_id: currentWorkflowGraphId, node_type: nodeType, subtype, label: defaultLabel, sublabel: '', config: {},
+    pos_x: 60, pos_y: maxY,
+  };
+  try { await sbUpsert('workflow_nodes', node); }
+  catch(e) { showToast('Could not add that node: ' + e.message, 'error'); return; }
+  workflowNodesCache.push(node);
+  renderWorkflowCanvas();
+  showToast(`Added "${defaultLabel}" — drag it into place, then drag from its dot to connect it.`, 'success');
+}
+
+let wfbEditingNodeId = null;
+function openWorkflowNodeEditor(nodeId) {
+  closeAllWfbNodeMenus();
+  const node = workflowNodesCache.find(n => n.id === nodeId);
+  if (!node) return;
+  wfbEditingNodeId = nodeId;
+  document.getElementById('wfbNodeEditTitle').textContent = `Edit ${WORKFLOW_NODE_TYPE_LABELS[node.node_type] || 'Node'}`;
+  document.getElementById('wfbNodeEditLabel').value = node.label;
+  document.getElementById('wfbNodeEditSublabel').value = node.sublabel || '';
+  document.getElementById('wfbNodeEditModal').classList.add('open');
+}
+function closeWfbNodeEditModal() {
+  document.getElementById('wfbNodeEditModal').classList.remove('open');
+  wfbEditingNodeId = null;
+}
+async function saveWfbNodeEdit() {
+  const node = workflowNodesCache.find(n => n.id === wfbEditingNodeId);
+  if (!node) return;
+  const label = document.getElementById('wfbNodeEditLabel').value.trim();
+  if (!label) { showToast('Please enter a label.', 'warning'); return; }
+  node.label = label;
+  node.sublabel = document.getElementById('wfbNodeEditSublabel').value.trim();
+  try { await sbPatch('workflow_nodes', `id=eq.${node.id}`, { label: node.label, sublabel: node.sublabel }); }
+  catch(e) { showToast('Could not save: ' + e.message, 'error'); }
+  closeWfbNodeEditModal();
+  renderWorkflowCanvas();
+}
+
+function saveWorkflowDraft() { showToast('Draft saved. Test-run simulation and Publish still land in a later block.', 'success'); }
 function testWorkflowRun() { showToast('Test-run simulation is coming in a later block.', 'info'); }
 function publishWorkflowGraph() { showToast('Publishing is coming in a later block — this workflow stays in Draft for now.', 'info'); }
 
