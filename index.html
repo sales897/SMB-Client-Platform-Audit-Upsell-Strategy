@@ -13160,6 +13160,14 @@ function initWorkflowCanvasInteractions() {
       document.addEventListener('mousemove', onWfbPanMove);
       document.addEventListener('mouseup', onWfbPanEnd, { once: true });
     });
+    // Ctrl/Cmd + scroll wheel to zoom -- preventDefault stops the browser's
+    // own page-zoom from also triggering; { passive: false } is required
+    // for preventDefault to actually take effect on a wheel listener.
+    scrollWrap.addEventListener('wheel', (e) => {
+      if (!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      workflowZoom(e.deltaY < 0 ? 0.08 : -0.08);
+    }, { passive: false });
   }
 }
 
@@ -15225,6 +15233,11 @@ const AI_AGENT_TOOLS = [
     },
   },
   {
+    name: 'close_popup',
+    description: 'Closes whatever popup/modal window is currently open on screen — a client profile, an onboarding detail view, an add/edit form, etc. Use this when the user asks to close, dismiss, or get rid of a popup or window. Does nothing (and says so) if nothing is currently open. This is a UI action only, not a data change — no confirmation needed.',
+    input_schema: { type: 'object', properties: {} },
+  },
+  {
     name: 'list_onboarding_pipelines',
     description: 'List every onboarding pipeline that exists, along with its stages in order. Use this to see what pipelines are available, or to check what stages a specific pipeline has before moving a record or creating a new pipeline.',
     input_schema: { type: 'object', properties: {} },
@@ -15359,6 +15372,52 @@ async function aiResolvePipelineByName(name) {
 function matchStageByQuery(stages, query) {
   const q = (query || '').trim().toLowerCase();
   return stages.find(s => s.stage_key.toLowerCase() === q) || stages.find(s => s.label.toLowerCase() === q) || stages.find(s => s.label.toLowerCase().includes(q));
+}
+
+// Nirvana "close the popup" tool (2026-07-15) -- maps each modal's overlay
+// ID to its real close function (not just stripping the .open class)
+// because several modals also reset internal state on close (e.g.
+// closeClientNotesTasksModal clears cntActiveClientName) -- skipping that
+// would leave stale state even though the popup visually disappeared.
+// wfbBranchModal and confirmDialogModal are deliberately excluded: both are
+// actually waiting on the user for a real answer (Yes/No, Confirm/Cancel),
+// not just "in the way" -- auto-dismissing those would silently answer a
+// question the user was supposed to answer themselves.
+const MODAL_CLOSE_FUNCTIONS = {
+  clientNotesTasksModal: () => closeClientNotesTasksModal(),
+  editAdSpendModal: () => closeEditAdSpendModal(),
+  adSpendMappingModal: () => closeAdSpendMappingModal(),
+  adSpendDuplicatesModal: () => closeAdSpendDuplicatesModal(),
+  editCollectionsModal: () => closeEditCollectionsModal(),
+  collectionsMappingModal: () => closeCollectionsMappingModal(),
+  collectionsDuplicatesModal: () => closeCollectionsDuplicatesModal(),
+  removeProductModal: () => closeRemoveProductModal(),
+  editClientModal: () => closeEditClientModal(),
+  workflowModal: () => closeWorkflowModal(),
+  reminderModal: () => closeAddReminderModal(),
+  addOnboardingModal: () => closeAddOnboardingModal(),
+  viewOnboardingModal: () => closeViewOnboardingModal(),
+  wfbSaveModal: () => closeWfbSaveModal(),
+  managePipelinesModal: () => closeManagePipelinesModal(),
+  knowledgeModal: () => closeKnowledgeModal(),
+  addClientModal: () => closeAddClientModal(),
+  deleteClientModal: () => closeDeleteClientModal(),
+  sheetsModal: () => closeSheetsModal(),
+  mappingModal: () => closeMappingModal(),
+  duplicatesModal: () => closeDuplicatesModal(),
+  bulkActionModal: () => closeBulkActionModal(),
+};
+function closeAnyOpenPopup() {
+  const overlays = document.querySelectorAll('.modal-overlay.open');
+  let closed = 0;
+  overlays.forEach(el => {
+    if (el.id === 'wfbBranchModal' || el.id === 'confirmDialogModal') return;
+    const closer = MODAL_CLOSE_FUNCTIONS[el.id];
+    if (closer) closer();
+    else el.classList.remove('open'); // not individually mapped -- still closes visually
+    closed++;
+  });
+  return closed;
 }
 
 async function aiFindOnboardingRecord(businessName) {
@@ -16040,6 +16099,10 @@ async function executeAiTool(name, input) {
       if (currentOnboardingId === r.id) currentOnboardingChecklist = currentOnboardingChecklist.filter(c => c.id !== target.id);
       return { ok: true, business_name: r.business_name, removed_label: target.label };
     }
+    case 'close_popup': {
+      const closedCount = closeAnyOpenPopup();
+      return closedCount > 0 ? { ok: true, closed: closedCount } : { ok: false, message: 'Nothing appears to be open right now.' };
+    }
     case 'list_onboarding_pipelines': {
       let pipelines = [];
       let allStages = [];
@@ -16289,6 +16352,7 @@ const AI_TOOL_LABELS = {
   delete_onboarding: '🗑️ Deleted an onboarding record',
   add_onboarding_checklist_item: '✅ Added a checklist item',
   remove_onboarding_checklist_item: '🗑️ Removed a checklist item',
+  close_popup: '✕ Closed the popup',
   list_onboarding_pipelines: '⚙️ Checked onboarding pipelines',
   create_onboarding_pipeline: '⚙️ Created a new onboarding pipeline',
 };
