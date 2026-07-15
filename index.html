@@ -385,6 +385,20 @@ body.ai-panel-open .main {
    reference "command center" layout. Uses theme tokens throughout (--bg2,
    --border, --text, etc.) so it adapts across Light/Dark/Blackout the same
    as everything else -- nothing here is a hardcoded color. */
+/* Home page fits the viewport with no scrolling (2026-07-14) -- height is
+   the viewport minus the two sticky bars above it (56px top-nav + 60px
+   topbar); banner/greeting take their natural height, the grid flexes to
+   fill whatever's left. Scoped to #page-home only -- every other page keeps
+   its normal scrolling behavior untouched. Print styles are unaffected since
+   they live in their own @media print block. */
+#page-home { display: flex; flex-direction: column; height: calc(100vh - 56px - 60px); overflow: hidden; padding: 16px 28px 14px; }
+#page-home .ai-insights-banner { margin-bottom: 10px; padding: var(--space-3) var(--space-4); flex-shrink: 0; }
+#page-home .home-greeting { margin-bottom: 2px; flex-shrink: 0; }
+#page-home .home-greeting-sub { margin-bottom: 10px; flex-shrink: 0; }
+#page-home .home-vitals-grid { flex: 1; min-height: 0; margin-bottom: 0; grid-template-rows: repeat(4, 1fr); }
+#page-home .vital-block { overflow: hidden; padding: var(--space-3); }
+#page-home .page-footer { display: none; }
+
 .home-vitals-grid { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(4, minmax(160px, 1fr)); gap: var(--space-4); margin-bottom: 24px; }
 .vital-block {
   position: relative; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm);
@@ -419,6 +433,9 @@ body.ai-panel-open .main {
 .vital-list-empty { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--text3); font-size: var(--font-2xs); text-align: center; }
 @media (max-width: 900px) {
   .home-vitals-grid { grid-template-columns: 1fr; grid-template-rows: none; }
+  #page-home { height: auto; overflow: visible; }
+  #page-home .vital-block { overflow: visible; min-height: 220px; }
+  #page-home .page-footer { display: block; }
 }
 
 .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
