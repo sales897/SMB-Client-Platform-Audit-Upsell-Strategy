@@ -777,6 +777,23 @@ body.ai-panel-open .main {
 }
 .field-input:focus, .field-select:focus { border-color: var(--orange); }
 .field-input::placeholder { color: var(--text3); }
+/* Native <select> dropdown popups (2026-07-15) -- color-scheme:dark at
+   :root is already set, but that alone doesn't reliably force a dark
+   native select popup on every browser/OS combination (a known Chromium-
+   on-Windows quirk in particular). Explicit option background/color is a
+   second, more directly-honored layer -- Chrome, Edge, and Firefox all
+   respect this even when the broader color-scheme hint gets ignored for
+   the popup specifically. Applies globally so every <select> in the Hub
+   is consistent, not just ones touched individually.
+   KNOWN LIMITATION: macOS Safari (and macOS Chrome, in some versions)
+   renders <option> using the OS's own native menu regardless of any CSS
+   here -- there is no CSS-only fix for that; the only real fix would be
+   replacing native <select> with a fully custom-built dropdown component,
+   which is a much larger change than this. */
+select, .field-select { color-scheme: dark; }
+option { background-color: var(--bg3); color: var(--text); }
+html[data-theme="light"] select, html[data-theme="light"] .field-select { color-scheme: light; }
+html[data-theme="light"] option { background-color: var(--bg2); color: var(--text); }
 
 /* ─── LOGIN GATE ───────────────────────────────────────────────────────────── */
 /* Login gate: "vault" redesign (2026-07-14) -- rotating glow rings around a
@@ -1865,6 +1882,7 @@ tr.hidden-row { display: none; }
 .wfb-branch-label {
   position: absolute; font-size: 9px; font-weight: 800; padding: 1px 6px; border-radius: var(--radius-pill);
   background: var(--bg2); border: 1px solid var(--border); color: var(--text2); pointer-events: none;
+  transform: translate(-50%, -50%);
 }
 .wfb-minimap {
   position: absolute; bottom: 10px; left: 10px; width: 150px; height: 90px; background: var(--bg2);
@@ -13118,8 +13136,16 @@ function renderWorkflowCanvas() {
       <circle cx="${x1}" cy="${y1}" r="3.5" fill="${pathColor}" />
       <circle cx="${x2}" cy="${y2}" r="3.5" fill="${pathColor}" />`;
     if (e.branch_label) {
-      const lx = x1 + (midX - x1) * 0.4;
-      branchLabelsHtml += `<div class="wfb-branch-label" style="left:${lx}px;top:${y1 - 9}px;color:${pathColor};border-color:${pathColor}">${escAttr(e.branch_label)}</div>`;
+      // Point at t=0.35 along the exact same cubic bezier as the path
+      // above (M x1,y1 C midX,y1, midX,y2, x2,y2) -- NOT just "40% of the
+      // way from x1 to midX at the source's height", which was the bug:
+      // that ignored where the curve actually bends toward y2, so a branch
+      // curving sharply toward a much higher or lower target left its
+      // label sitting near the source while the line dove away from it.
+      const t = 0.35, mt = 1 - t;
+      const bx = mt * mt * mt * x1 + 3 * mt * mt * t * midX + 3 * mt * t * t * midX + t * t * t * x2;
+      const by = mt * mt * mt * y1 + 3 * mt * mt * t * y1 + 3 * mt * t * t * y2 + t * t * t * y2;
+      branchLabelsHtml += `<div class="wfb-branch-label" style="left:${bx}px;top:${by}px;color:${pathColor};border-color:${pathColor}">${escAttr(e.branch_label)}</div>`;
     }
   });
   svg.innerHTML = edgesHtml;
