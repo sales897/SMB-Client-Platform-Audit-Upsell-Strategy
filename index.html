@@ -646,8 +646,9 @@ body.ai-panel-open .main {
 .onboarding-column {
   flex: 0 0 260px; background: var(--bg2); border: 1px solid var(--border);
   border-radius: var(--radius); padding: var(--space-3); display: flex; flex-direction: column;
-  max-height: calc(100vh - 220px);
+  max-height: calc(100vh - 220px); transition: border-color var(--transition-base), background var(--transition-base);
 }
+.onboarding-column.drag-over { border-color: var(--orange); background: var(--bg3); }
 .onboarding-column-hd { display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-3); padding-bottom: var(--space-2); border-bottom: 1px solid var(--border); flex-shrink: 0; }
 .onboarding-column-title { font-family: var(--font-display); font-weight: 700; font-size: var(--font-sm); color: var(--text); flex: 1; }
 .onboarding-column-count { font-family: var(--font-mono); font-size: var(--font-xs); color: var(--text3); background: var(--bg3); padding: 2px 8px; border-radius: var(--radius-pill); }
@@ -655,8 +656,10 @@ body.ai-panel-open .main {
 .onboarding-card {
   background: var(--gradient-card); border: 1px solid var(--border); border-radius: var(--radius-sm);
   padding: var(--space-2) var(--space-3); cursor: pointer; transition: border-color var(--transition-base), transform var(--transition-fast);
+  box-shadow: 0 0 14px -2px var(--stage-color, var(--orange)), inset 0 0 20px -10px var(--stage-color, var(--orange));
 }
-.onboarding-card:hover { border-color: var(--orange); transform: translateY(-1px); }
+.onboarding-card:hover { border-color: var(--stage-color, var(--orange)); transform: translateY(-1px); }
+.onboarding-card.dragging { opacity: .4; }
 .onboarding-card-name { font-weight: 700; font-size: var(--font-sm); color: var(--text); margin-bottom: 2px; }
 .onboarding-card-meta { font-size: var(--font-2xs); color: var(--text3); }
 
@@ -3270,7 +3273,11 @@ tr.hidden-row { display: none; }
   <div class="page" id="page-onboarding">
     <div class="card-header" style="margin-bottom:var(--space-4)">
       <div><div class="card-title">Onboarding Pipeline</div><div class="card-sub" id="onboardingCountSub">0 in progress</div></div>
-      <button class="btn btn-primary btn-sm" onclick="openAddOnboardingModal()">＋ New Onboarding</button>
+      <div style="display:flex;gap:var(--space-2);align-items:center">
+        <select id="onboardingPipelineSelect" class="field-input" style="height:36px;margin-bottom:0;width:auto" onchange="switchOnboardingPipeline(this.value)"></select>
+        <button class="btn btn-sm" onclick="openManagePipelinesModal()" title="Create or edit pipelines">⚙️ Pipelines</button>
+        <button class="btn btn-primary btn-sm" onclick="openAddOnboardingModal()">＋ New Onboarding</button>
+      </div>
     </div>
     <div id="onboardingBoard" style="display:flex;gap:var(--space-3);overflow-x:auto;padding-bottom:var(--space-3)"></div>
     <div class="page-footer">Client Success Hub · Niche Inc. · Onboarding</div>
@@ -3413,6 +3420,26 @@ tr.hidden-row { display: none; }
     <div id="viewOnboardingBody"></div>
     <div class="modal-btns">
       <button class="btn btn-ghost" onclick="closeViewOnboardingModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- MANAGE PIPELINES MODAL -->
+<div class="modal-overlay" id="managePipelinesModal">
+  <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="managePipelinesModalTitle">
+    <h3 id="managePipelinesModalTitle">⚙️ Onboarding Pipelines</h3>
+    <div style="font-size:var(--font-sm);font-weight:700;color:var(--text2);margin-bottom:var(--space-2)">Existing Pipelines</div>
+    <div id="pipelinesList" style="margin-bottom:var(--space-4)"></div>
+
+    <div style="font-size:var(--font-sm);font-weight:700;color:var(--text2);margin-bottom:var(--space-2)">Create a New Pipeline</div>
+    <label for="newPipelineName" class="field-label">Pipeline Name</label>
+    <input type="text" id="newPipelineName" class="field-input" placeholder="e.g. White Label Fast-Track">
+    <label class="field-label">Stages (in order)</label>
+    <div id="newPipelineStages"></div>
+    <button class="btn btn-sm" style="margin:var(--space-2) 0" onclick="addNewPipelineStageRow()">＋ Add Stage</button>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeManagePipelinesModal()">Close</button>
+      <button class="btn btn-primary" onclick="createNewPipelineFromModal()">Create Pipeline</button>
     </div>
   </div>
 </div>
@@ -4787,8 +4814,16 @@ function renderVitalAttention() {
 function renderVitalOnboarding() {
   const canvas = document.getElementById('vitalOnboardingFunnel');
   if (!canvas) return;
-  const counts = ONBOARDING_STAGE_ORDER.map(s => ONBOARDING_RECORDS.filter(r => r.stage === s).length);
-  const labels = ONBOARDING_STAGE_ORDER.map(s => ONBOARDING_STAGE_META[s].label);
+  // KNOWN SCOPING DECISION: this funnel shows the default pipeline only --
+  // once multiple custom pipelines with different stages exist, a single
+  // combined funnel across all of them wouldn't have a coherent shared axis
+  // to plot against. Home shows the default pipeline's shape; the full
+  // multi-pipeline picture lives on the Onboarding page itself.
+  const defaultPipeline = ONBOARDING_PIPELINES.find(p => p.is_default) || ONBOARDING_PIPELINES[0];
+  const pid = defaultPipeline ? defaultPipeline.id : null;
+  const stages = pid ? getPipelineStages(pid) : [];
+  const counts = stages.map(s => ONBOARDING_RECORDS.filter(r => r.pipeline_id === pid && r.stage === s.stage_key).length);
+  const labels = stages.map(s => s.label);
   destroyChart('vital-onboarding');
   chartRegistry['vital-onboarding'] = new Chart(canvas, {
     type: 'bar',
@@ -9455,20 +9490,27 @@ async function checkDueReminders() {
 // pattern (any authenticated user, full access), unlike reminders/calendar
 // tokens which are deliberately locked to their owner.
 // ════════════════════════════════════════════════════════════════════════
-const ONBOARDING_STAGE_ORDER = ['contract_signed', 'kickoff_scheduled', 'kickoff_completed', 'setup_in_progress', 'qa_review', 'live'];
-const ONBOARDING_STAGE_META = {
-  contract_signed:    { label: 'Contract Signed',        icon: '✍️' },
-  kickoff_scheduled:  { label: 'Kickoff Call Scheduled',  icon: '📅' },
-  kickoff_completed:  { label: 'Kickoff Call Completed',  icon: '✅' },
-  setup_in_progress:  { label: 'Setup In Progress',       icon: '⚙️' },
-  qa_review:          { label: 'QA / Internal Review',    icon: '🔍' },
-  live:               { label: 'Live',                    icon: '🎉' },
-};
+// Multi-pipeline support (Block 6, 2026-07-14) -- the fixed 6-stage array
+// that used to live here is now data-driven: pipelines and their stages
+// come from onboarding_pipelines/onboarding_pipeline_stages. Every existing
+// record was backfilled to a "Standard Onboarding" pipeline with the exact
+// same 6 stage keys/labels/icons/colors that used to be hardcoded, so
+// nothing already in progress changed meaning -- it just lives in a
+// pipeline like everything else now does.
+let ONBOARDING_PIPELINES = [];
+let ONBOARDING_PIPELINE_STAGES = [];
+let currentOnboardingPipelineId = null; // which pipeline's board is currently showing
+
 // Default checklist per stage — auto-populated on a new record, editable/
 // addable afterward, not fixed to these. Grounded in general B2B onboarding
 // practice, not an existing SOP: confirmed via project knowledge search
 // before designing this that no onboarding-specific SOP exists yet to
 // ground these in (only post-onboarding client-success SOPs do).
+// KNOWN LIMITATION: keyed to the Standard Onboarding pipeline's stage keys
+// specifically -- a new custom pipeline's stages won't match any of these
+// keys, so it just starts with an empty checklist per stage (the lookup
+// below already returns [] safely for an unknown key). Admins add items via
+// the checklist editor the same way as always.
 const ONBOARDING_DEFAULT_CHECKLIST = {
   contract_signed:    ['Contract received & signed', 'Payment method on file', 'Welcome email sent'],
   kickoff_scheduled:  ['Kickoff call scheduled', 'Pre-call questionnaire sent to client', 'Internal team briefed on the account'],
@@ -9487,20 +9529,53 @@ async function loadOnboardingRecords() {
   }
 }
 
-function getOnboardingStageLabel(stage) { return (ONBOARDING_STAGE_META[stage] || {}).label || stage; }
-function getOnboardingStageIcon(stage) { return (ONBOARDING_STAGE_META[stage] || {}).icon || '📋'; }
+async function loadOnboardingPipelines() {
+  try {
+    ONBOARDING_PIPELINES = await sbSelect('onboarding_pipelines', 'order=created_at.asc');
+  } catch(e) { console.warn('onboarding_pipelines unavailable:', e.message); ONBOARDING_PIPELINES = []; }
+  try {
+    ONBOARDING_PIPELINE_STAGES = await sbSelect('onboarding_pipeline_stages', 'order=sort_order.asc');
+  } catch(e) { console.warn('onboarding_pipeline_stages unavailable:', e.message); ONBOARDING_PIPELINE_STAGES = []; }
+  if (!currentOnboardingPipelineId || !ONBOARDING_PIPELINES.find(p => p.id === currentOnboardingPipelineId)) {
+    const def = ONBOARDING_PIPELINES.find(p => p.is_default) || ONBOARDING_PIPELINES[0];
+    currentOnboardingPipelineId = def ? def.id : null;
+  }
+}
+
+function getPipelineStages(pipelineId) {
+  return ONBOARDING_PIPELINE_STAGES.filter(s => s.pipeline_id === pipelineId).sort((a, b) => a.sort_order - b.sort_order);
+}
+function getOnboardingStageLabel(pipelineId, stage) {
+  const s = getPipelineStages(pipelineId).find(x => x.stage_key === stage);
+  return s ? s.label : stage;
+}
+function getOnboardingStageIcon(pipelineId, stage) {
+  const s = getPipelineStages(pipelineId).find(x => x.stage_key === stage);
+  return s ? s.icon : '📋';
+}
+function getOnboardingStageColor(pipelineId, stage) {
+  const s = getPipelineStages(pipelineId).find(x => x.stage_key === stage);
+  return s ? s.color : 'var(--orange)';
+}
 
 // Creates a record plus its default checklist items for every stage in one
 // call — the "auto-populate" behavior requested, so nobody has to manually
 // build out a checklist from scratch for a brand new onboarding.
-async function createOnboardingRecord({ businessName, organization, portfolio, products }) {
+async function createOnboardingRecord({ businessName, organization, portfolio, products, pipelineId }) {
   const u = getCurrentUser();
+  const pid = pipelineId || currentOnboardingPipelineId || (ONBOARDING_PIPELINES.find(p => p.is_default) || {}).id;
+  const stages = getPipelineStages(pid);
+  if (!pid || stages.length === 0) {
+    showToast('No onboarding pipeline is set up yet — create one first.', 'error');
+    return null;
+  }
   const record = {
     id: (crypto.randomUUID ? crypto.randomUUID() : 'ob_' + Date.now()),
     business_name: businessName,
     organization: organization || null,
     portfolio,
-    stage: 'contract_signed',
+    pipeline_id: pid,
+    stage: stages[0].stage_key,
     status: 'active',
     created_by: u ? u.name : 'Guest',
     created_at: new Date().toISOString(),
@@ -9513,15 +9588,17 @@ async function createOnboardingRecord({ businessName, organization, portfolio, p
     return null;
   }
 
-  // Checklist items across all 6 stages, not just the starting one — the
-  // whole pipeline's checklist exists from day one, so advancing stages
-  // later never needs a separate "generate checklist for this stage" step.
+  // Checklist items across every stage in this pipeline, not just the
+  // starting one — the whole pipeline's checklist exists from day one, so
+  // advancing stages later never needs a separate "generate checklist for
+  // this stage" step. Custom pipeline stages that don't match a
+  // ONBOARDING_DEFAULT_CHECKLIST key just get no seeded items (safe [] fallback).
   const checklistItems = [];
-  ONBOARDING_STAGE_ORDER.forEach(stage => {
-    (ONBOARDING_DEFAULT_CHECKLIST[stage] || []).forEach((label, idx) => {
+  stages.forEach(({ stage_key }) => {
+    (ONBOARDING_DEFAULT_CHECKLIST[stage_key] || []).forEach((label, idx) => {
       checklistItems.push({
         id: (crypto.randomUUID ? crypto.randomUUID() : 'obc_' + Date.now() + Math.random().toString(16).slice(2)),
-        onboarding_id: record.id, stage, label, done: false, sort_order: idx,
+        onboarding_id: record.id, stage: stage_key, label, done: false, sort_order: idx,
       });
     });
   });
@@ -9597,13 +9674,24 @@ async function saveNewOnboardingRecord() {
 
 async function rebuildOnboardingPage() {
   await loadOnboardingRecords();
+  await loadOnboardingPipelines();
+  const select = document.getElementById('onboardingPipelineSelect');
+  if (select) {
+    select.innerHTML = ONBOARDING_PIPELINES.map(p => `<option value="${p.id}" ${p.id === currentOnboardingPipelineId ? 'selected' : ''}>${escAttr(p.name)}</option>`).join('');
+  }
   const wrap = document.getElementById('onboardingBoard');
+  const pipelineRecords = ONBOARDING_RECORDS.filter(r => r.pipeline_id === currentOnboardingPipelineId);
   const sub = document.getElementById('onboardingCountSub');
-  if (sub) sub.textContent = `${ONBOARDING_RECORDS.length} in progress`;
+  if (sub) sub.textContent = `${pipelineRecords.length} in progress`;
   const badge = document.getElementById('navOnboardingBadge');
   if (badge) badge.textContent = ONBOARDING_RECORDS.length;
   if (!wrap) return;
-  if (ONBOARDING_RECORDS.length === 0) {
+  const stages = getPipelineStages(currentOnboardingPipelineId);
+  if (stages.length === 0) {
+    wrap.innerHTML = `<div style="width:100%">${emptyStateHTML({ icon: '⚙️', title: 'No pipeline set up yet', sub: 'Click "⚙️ Pipelines" to create your first onboarding pipeline and define its stages.' })}</div>`;
+    return;
+  }
+  if (pipelineRecords.length === 0) {
     // #onboardingBoard is display:flex (for the kanban columns) -- without
     // an explicit width, a single child just shrinks to its own content
     // size and sits at the start of the row instead of spanning/centering
@@ -9612,11 +9700,10 @@ async function rebuildOnboardingPage() {
     wrap.innerHTML = `<div style="width:100%">${emptyStateHTML({ icon: '🧭', title: 'No onboarding in progress', sub: 'Click "New Onboarding" to start tracking a client from contract signature through go-live.' })}</div>`;
     return;
   }
-  wrap.innerHTML = ONBOARDING_STAGE_ORDER.map(stage => {
-    const meta = ONBOARDING_STAGE_META[stage];
-    const records = ONBOARDING_RECORDS.filter(r => r.stage === stage);
+  wrap.innerHTML = stages.map(({ stage_key, label, icon, color }) => {
+    const records = pipelineRecords.filter(r => r.stage === stage_key);
     const cards = records.map(r => `
-      <div class="onboarding-card" onclick="openViewOnboardingModal('${r.id}')" tabindex="0" role="button" aria-label="View ${escAttr(r.business_name)}'s onboarding">
+      <div class="onboarding-card" draggable="true" ondragstart="onboardingCardDragStart(event, '${r.id}')" ondragend="onboardingCardDragEnd(event)" style="--stage-color:${color || 'var(--orange)'}" onclick="openViewOnboardingModal('${r.id}')" tabindex="0" role="button" aria-label="View ${escAttr(r.business_name)}'s onboarding">
         <div class="onboarding-card-name">${escAttr(r.business_name)}</div>
         <div class="onboarding-card-meta">
           <span class="portfolio-chip chip-${r.portfolio}">${escAttr(PORTFOLIO_LABELS[r.portfolio] || r.portfolio)}</span>
@@ -9624,15 +9711,130 @@ async function rebuildOnboardingPage() {
         </div>
       </div>`).join('') || '<div style="color:var(--text3);font-size:var(--font-xs);text-align:center;padding:var(--space-3) 0">Nothing here</div>';
     return `
-      <div class="onboarding-column">
+      <div class="onboarding-column" data-stage="${stage_key}" ondragover="onboardingColumnDragOver(event)" ondragleave="onboardingColumnDragLeave(event)" ondrop="onboardingColumnDrop(event, '${stage_key}')">
         <div class="onboarding-column-hd">
-          <span>${meta.icon}</span>
-          <span class="onboarding-column-title">${escAttr(meta.label)}</span>
+          <span>${icon}</span>
+          <span class="onboarding-column-title">${escAttr(label)}</span>
           <span class="onboarding-column-count">${records.length}</span>
         </div>
         <div class="onboarding-column-cards">${cards}</div>
       </div>`;
   }).join('');
+}
+
+function switchOnboardingPipeline(pipelineId) {
+  currentOnboardingPipelineId = pipelineId;
+  rebuildOnboardingPage();
+}
+
+// Shared by the "⚙️ Pipelines" modal and Nirvana's create_onboarding_pipeline
+// tool -- one place that actually writes a new pipeline + its stages, so the
+// two paths can't drift out of sync with each other.
+const ONBOARDING_STAGE_COLORS_CYCLE = ['#e2541f', '#a855f7', '#3b82f6', '#f59e0b', '#ec4899', '#22c55e'];
+async function createOnboardingPipeline({ name, stages }) {
+  const trimmedName = (name || '').trim();
+  if (!trimmedName) return { error: 'A pipeline name is required.' };
+  const validStages = (stages || []).filter(s => s && (s.label || '').trim());
+  if (validStages.length === 0) return { error: 'At least one stage is required.' };
+  const pipeline = { id: (crypto.randomUUID ? crypto.randomUUID() : 'pl_' + Date.now()), name: trimmedName, is_default: false, created_at: new Date().toISOString() };
+  try {
+    await sbUpsert('onboarding_pipelines', pipeline);
+  } catch(e) {
+    return { error: 'Could not create the pipeline: ' + e.message };
+  }
+  const stageRows = validStages.map((s, i) => ({
+    id: (crypto.randomUUID ? crypto.randomUUID() : 'obs_' + Date.now() + Math.random().toString(16).slice(2)),
+    pipeline_id: pipeline.id,
+    stage_key: 'stage_' + i + '_' + s.label.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').slice(0, 30),
+    label: s.label.trim(), icon: s.icon || '📋', color: ONBOARDING_STAGE_COLORS_CYCLE[i % ONBOARDING_STAGE_COLORS_CYCLE.length], sort_order: i,
+  }));
+  try {
+    await sbUpsert('onboarding_pipeline_stages', stageRows);
+  } catch(e) {
+    return { error: 'Pipeline created, but its stages could not be saved: ' + e.message, pipeline };
+  }
+  return { ok: true, pipeline, stages: stageRows };
+}
+
+async function deleteOnboardingPipeline(pipelineId) {
+  if (!requirePermission('admin')) return;
+  const pipeline = ONBOARDING_PIPELINES.find(p => p.id === pipelineId);
+  if (!pipeline) return;
+  if (pipeline.is_default) { showToast('The default pipeline can\'t be deleted.', 'warning'); return; }
+  const inUse = ONBOARDING_RECORDS.filter(r => r.pipeline_id === pipelineId).length;
+  if (inUse > 0) { showToast(`"${pipeline.name}" has ${inUse} active onboarding record(s) — move or delete those first.`, 'warning'); return; }
+  const confirmed = await showConfirmDialog(`Delete the "${pipeline.name}" pipeline and all its stages? This can't be undone.`, { title: '🗑️ Delete Pipeline', confirmLabel: 'Delete', danger: true });
+  if (!confirmed) return;
+  try {
+    await sbDelete('onboarding_pipelines', `id=eq.${pipelineId}`);
+  } catch(e) {
+    showToast('Could not delete: ' + e.message, 'error');
+    return;
+  }
+  if (currentOnboardingPipelineId === pipelineId) currentOnboardingPipelineId = null;
+  await rebuildOnboardingPage();
+  renderManagePipelinesList();
+  showToast(`🗑️ "${pipeline.name}" pipeline deleted.`, 'success');
+}
+
+function openManagePipelinesModal() {
+  document.getElementById('newPipelineName').value = '';
+  document.getElementById('newPipelineStages').innerHTML = '';
+  addNewPipelineStageRow();
+  addNewPipelineStageRow();
+  renderManagePipelinesList();
+  document.getElementById('managePipelinesModal').classList.add('open');
+}
+function closeManagePipelinesModal() {
+  document.getElementById('managePipelinesModal').classList.remove('open');
+}
+function renderManagePipelinesList() {
+  const wrap = document.getElementById('pipelinesList');
+  if (!wrap) return;
+  wrap.innerHTML = ONBOARDING_PIPELINES.map(p => {
+    const stages = getPipelineStages(p.id);
+    const recordCount = ONBOARDING_RECORDS.filter(r => r.pipeline_id === p.id).length;
+    return `<div style="display:flex;align-items:center;gap:var(--space-2);padding:var(--space-2) var(--space-3);background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:6px">
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:700">${escAttr(p.name)}${p.is_default ? ' <span style="color:var(--text3);font-weight:400;font-size:var(--font-2xs)">(default)</span>' : ''}</div>
+        <div style="font-size:var(--font-2xs);color:var(--text3)">${stages.map(s => s.icon + ' ' + escAttr(s.label)).join(' → ')} · ${recordCount} in progress</div>
+      </div>
+      ${p.is_default ? '' : `<button class="row-action-btn danger" onclick="deleteOnboardingPipeline('${p.id}')" title="Delete this pipeline" aria-label="Delete ${escAttr(p.name)} pipeline">🗑️</button>`}
+    </div>`;
+  }).join('') || '<div style="color:var(--text3);font-size:var(--font-sm)">No pipelines yet.</div>';
+}
+
+let newPipelineStageCount = 0;
+function addNewPipelineStageRow() {
+  const idx = newPipelineStageCount++;
+  const wrap = document.getElementById('newPipelineStages');
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;gap:6px;margin-bottom:6px';
+  row.id = 'newPipelineStageRow-' + idx;
+  row.innerHTML = `
+    <input type="text" class="field-input new-pipeline-stage-icon" style="width:52px;text-align:center" placeholder="📋" maxlength="2">
+    <input type="text" class="field-input new-pipeline-stage-label" style="flex:1" placeholder="Stage name">
+    <button class="row-action-btn danger" onclick="document.getElementById('newPipelineStageRow-${idx}').remove()" title="Remove this stage" aria-label="Remove this stage">×</button>`;
+  wrap.appendChild(row);
+}
+
+async function createNewPipelineFromModal() {
+  if (!requirePermission('admin')) return;
+  const name = document.getElementById('newPipelineName').value;
+  const stages = Array.from(document.querySelectorAll('#newPipelineStages > div')).map(row => ({
+    label: row.querySelector('.new-pipeline-stage-label').value,
+    icon: row.querySelector('.new-pipeline-stage-icon').value,
+  }));
+  const result = await createOnboardingPipeline({ name, stages });
+  if (result.error) { showToast(result.error, 'error'); return; }
+  currentOnboardingPipelineId = result.pipeline.id;
+  await rebuildOnboardingPage();
+  renderManagePipelinesList();
+  document.getElementById('newPipelineName').value = '';
+  document.getElementById('newPipelineStages').innerHTML = '';
+  addNewPipelineStageRow();
+  addNewPipelineStageRow();
+  showToast(`⚙️ "${result.pipeline.name}" pipeline created with ${result.stages.length} stage(s).`, 'success');
 }
 
 // Block 4 — the graduation flow. Mirrors saveNewClient()'s core create-
@@ -9682,6 +9884,32 @@ async function doActivateOnboardingAsClient(r) {
     return { ok: true, client_name: r.business_name, warning: `The client was created, but the onboarding record's status could not be updated: ${e.message}` };
   }
   return { ok: true, client_name: r.business_name };
+}
+
+// Delete a client from the onboarding pipeline entirely (Block 3, 2026-07-14).
+// onboarding_checklist_items/onboarding_products/onboarding_notes all have
+// ON DELETE CASCADE on onboarding_id (confirmed against the live schema
+// before writing this) -- deleting the parent record is enough, no manual
+// cleanup of the child rows needed.
+async function deleteOnboardingRecord(id) {
+  if (!requirePermission('edit')) return;
+  const r = ONBOARDING_RECORDS.find(x => x.id === id);
+  if (!r) return;
+  const confirmed = await showConfirmDialog(
+    `Permanently remove "${r.business_name}" from the onboarding pipeline? This deletes its checklist, notes, and product selections too. This can't be undone.`,
+    { title: '🗑️ Delete from Pipeline', confirmLabel: 'Delete', danger: true }
+  );
+  if (!confirmed) return;
+  try {
+    await sbDelete('onboarding_records', `id=eq.${id}`);
+  } catch(e) {
+    showToast('Could not delete: ' + e.message, 'error');
+    return;
+  }
+  ONBOARDING_RECORDS = ONBOARDING_RECORDS.filter(x => x.id !== id);
+  closeViewOnboardingModal();
+  rebuildOnboardingPage();
+  showToast(`🗑️ "${r.business_name}" removed from the pipeline.`, 'success');
 }
 
 async function activateOnboardingAsClient(id) {
@@ -9738,35 +9966,41 @@ function renderOnboardingDetail(r, products) {
     </div>`;
   }).join('') || '<div style="color:var(--text3);font-size:var(--font-sm)">No products selected yet.</div>';
   const total = products.reduce((s, p) => s + Number(p.price || 0), 0);
-  const currentIdx = ONBOARDING_STAGE_ORDER.indexOf(r.stage);
+  const stages = getPipelineStages(r.pipeline_id);
+  const currentIdx = stages.findIndex(s => s.stage_key === r.stage);
 
-  const stepper = ONBOARDING_STAGE_ORDER.map((stage, i) => {
-    const meta = ONBOARDING_STAGE_META[stage];
+  const stepper = stages.map(({ stage_key, label, icon }, i) => {
     const state = i < currentIdx ? 'done' : i === currentIdx ? 'current' : 'upcoming';
     const colors = { done: 'var(--green)', current: 'var(--orange)', upcoming: 'var(--border)' };
-    return `<div onclick="setOnboardingStage('${r.id}','${stage}')" tabindex="0" role="button" aria-label="Jump to ${escAttr(meta.label)}"
+    return `<div onclick="setOnboardingStage('${r.id}','${stage_key}')" tabindex="0" role="button" aria-label="Jump to ${escAttr(label)}"
       style="flex:1;text-align:center;cursor:pointer;padding:var(--space-2) 4px;border-bottom:3px solid ${colors[state]};opacity:${state === 'upcoming' ? '.55' : '1'}">
-      <div style="font-size:16px">${meta.icon}</div>
-      <div style="font-size:var(--font-2xs);color:${state === 'current' ? 'var(--text)' : 'var(--text3)'};font-weight:${state === 'current' ? '700' : '400'};margin-top:2px">${escAttr(meta.label)}</div>
+      <div style="font-size:16px">${icon}</div>
+      <div style="font-size:var(--font-2xs);color:${state === 'current' ? 'var(--text)' : 'var(--text3)'};font-weight:${state === 'current' ? '700' : '400'};margin-top:2px">${escAttr(label)}</div>
     </div>`;
   }).join('');
 
-  const checklistByStage = ONBOARDING_STAGE_ORDER.map(stage => {
-    const items = currentOnboardingChecklist.filter(c => c.stage === stage);
-    if (items.length === 0) return '';
+  const checklistByStage = stages.map(({ stage_key, label, icon }) => {
+    const items = currentOnboardingChecklist.filter(c => c.stage === stage_key);
     const doneCount = items.filter(c => c.done).length;
-    const meta = ONBOARDING_STAGE_META[stage];
     return `<div style="margin-bottom:var(--space-3)">
-      <div style="font-size:var(--font-xs);font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:var(--space-2)">${meta.icon} ${escAttr(meta.label)} <span style="color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">(${doneCount}/${items.length})</span></div>
+      <div style="font-size:var(--font-xs);font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:var(--space-2)">${icon} ${escAttr(label)} <span style="color:var(--text3);font-weight:400;text-transform:none;letter-spacing:0">(${doneCount}/${items.length})</span></div>
       ${items.map(c => `
-        <label style="display:flex;align-items:center;gap:var(--space-2);padding:var(--space-2) var(--space-3);background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:4px;cursor:pointer">
-          <input type="checkbox" ${c.done ? 'checked' : ''} onchange="toggleOnboardingChecklistItem('${c.id}', this.checked)" style="width:16px;height:16px;flex-shrink:0">
-          <span style="font-size:var(--font-sm);${c.done ? 'color:var(--text3);text-decoration:line-through' : ''}">${escAttr(c.label)}</span>
-        </label>`).join('')}
+        <div style="display:flex;align-items:center;gap:var(--space-2);padding:var(--space-2) var(--space-3);background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:4px">
+          <label style="display:flex;align-items:center;gap:var(--space-2);cursor:pointer;flex:1;min-width:0">
+            <input type="checkbox" ${c.done ? 'checked' : ''} onchange="toggleOnboardingChecklistItem('${c.id}', this.checked)" style="width:16px;height:16px;flex-shrink:0">
+            <span style="font-size:var(--font-sm);${c.done ? 'color:var(--text3);text-decoration:line-through' : ''}">${escAttr(c.label)}</span>
+          </label>
+          <button class="row-action-btn danger" onclick="deleteOnboardingChecklistItem('${c.id}')" title="Remove item (Admin only)" aria-label="Remove checklist item">×</button>
+        </div>`).join('')}
+      <div style="display:flex;gap:var(--space-2);margin-top:4px">
+        <input type="text" id="obChecklistAdd-${stage_key}" class="field-input" style="height:32px;margin-bottom:0;font-size:var(--font-xs)" placeholder="Add a checklist item… (Admin only)" onkeydown="if(event.key==='Enter'){event.preventDefault();addOnboardingChecklistItem('${r.id}','${stage_key}');}">
+        <button class="btn btn-sm" onclick="addOnboardingChecklistItem('${r.id}','${stage_key}')">＋</button>
+      </div>
     </div>`;
   }).join('');
 
-  const activateButton = r.stage === 'live' && r.status !== 'completed'
+  const isAtLastStage = stages.length > 0 && r.stage === stages[stages.length - 1].stage_key;
+  const activateButton = isAtLastStage && r.status !== 'completed'
     ? `<button class="btn btn-primary" style="width:100%;margin-top:var(--space-3)" onclick="activateOnboardingAsClient('${r.id}')">🎉 Activate as Client</button>`
     : '';
 
@@ -9778,13 +10012,14 @@ function renderOnboardingDetail(r, products) {
           <span style="font-weight:700;font-size:var(--font-xs);color:var(--text2)">${escAttr(n.author_name || 'Guest')}</span>
           <span style="font-size:var(--font-2xs);color:var(--text3)">${fmtNoteTime(n.created_at)}</span>
         </div>
-        <div style="font-size:var(--font-sm);white-space:pre-wrap">${escAttr(n.text)}</div>
+        <div style="font-size:var(--font-sm);white-space:pre-wrap">${renderNoteTextWithMentions(n.text)}</div>
       </div>`).join('');
 
   document.getElementById('viewOnboardingBody').innerHTML = `
     <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-2)">
       <span style="font-weight:700;font-size:var(--font-lg);font-family:var(--font-display)">${escAttr(r.business_name)}</span>
       <span class="portfolio-chip chip-${r.portfolio}">${escAttr(PORTFOLIO_LABELS[r.portfolio] || r.portfolio)}</span>
+      <button class="row-action-btn danger" style="margin-left:auto" onclick="deleteOnboardingRecord('${r.id}')" title="Delete from pipeline" aria-label="Delete ${escAttr(r.business_name)} from the onboarding pipeline">🗑️</button>
     </div>
     ${r.organization ? `<div style="color:var(--text3);font-size:var(--font-sm);margin-bottom:var(--space-3)">${escAttr(r.organization)}</div>` : ''}
 
@@ -9803,7 +10038,10 @@ function renderOnboardingDetail(r, products) {
     <div style="font-size:var(--font-sm);font-weight:700;color:var(--text2);margin:var(--space-4) 0 var(--space-2)">Notes</div>
     ${notesThread}
     <div style="display:flex;gap:var(--space-2);margin-top:var(--space-2)">
-      <input type="text" id="obNoteInput" class="field-input" style="height:38px;margin-bottom:0" placeholder="Add a note…" onkeydown="if(event.key==='Enter'){event.preventDefault();addOnboardingNoteFromModal();}">
+      <div style="position:relative;flex:1">
+        <input type="text" id="obNoteInput" class="field-input" style="height:38px;margin-bottom:0" placeholder="Add a note… Type @ to tag a teammate" oninput="handleObNoteMentionInput(event)" onkeydown="handleObNoteMentionKeydown(event)">
+        <div id="obMentionDropdown" class="mention-dropdown" style="display:none"></div>
+      </div>
       <button class="btn btn-primary btn-sm" onclick="addOnboardingNoteFromModal()">＋ Add</button>
     </div>
   `;
@@ -9830,29 +10068,115 @@ async function toggleOnboardingChecklistItem(itemId, done) {
   }
 }
 
+// Admin-only checklist editing (Block 4, 2026-07-14) -- add/remove items on
+// a specific client's checklist, per stage. Gated the same way every other
+// admin-only action in this file is: requirePermission('admin') shows a
+// toast and refuses rather than hiding the button outright, matching the
+// existing convention (e.g. requirePermission('edit') elsewhere) rather
+// than inventing a new pattern for just this feature.
+async function addOnboardingChecklistItem(onboardingId, stage) {
+  if (!requirePermission('admin')) return;
+  const input = document.getElementById('obChecklistAdd-' + stage);
+  const label = (input ? input.value : '').trim();
+  if (!label) return;
+  const sortOrder = currentOnboardingChecklist.filter(c => c.stage === stage).length;
+  const item = {
+    id: (crypto.randomUUID ? crypto.randomUUID() : 'obc_' + Date.now() + Math.random().toString(16).slice(2)),
+    onboarding_id: onboardingId, stage, label, done: false, sort_order: sortOrder,
+  };
+  try {
+    await sbUpsert('onboarding_checklist_items', item);
+  } catch(e) {
+    showToast('Could not add that item: ' + e.message, 'error');
+    return;
+  }
+  currentOnboardingChecklist.push(item);
+  const r = ONBOARDING_RECORDS.find(x => x.id === onboardingId);
+  if (r) {
+    let products = [];
+    try { products = await sbSelect('onboarding_products', `onboarding_id=eq.${onboardingId}`); } catch(e) {}
+    renderOnboardingDetail(r, products);
+  }
+}
+
+async function deleteOnboardingChecklistItem(itemId) {
+  if (!requirePermission('admin')) return;
+  const item = currentOnboardingChecklist.find(c => c.id === itemId);
+  if (!item) return;
+  try {
+    await sbDelete('onboarding_checklist_items', `id=eq.${itemId}`);
+  } catch(e) {
+    showToast('Could not remove that item: ' + e.message, 'error');
+    return;
+  }
+  currentOnboardingChecklist = currentOnboardingChecklist.filter(c => c.id !== itemId);
+  const r = ONBOARDING_RECORDS.find(x => x.id === currentOnboardingId);
+  if (r) {
+    let products = [];
+    try { products = await sbSelect('onboarding_products', `onboarding_id=eq.${currentOnboardingId}`); } catch(e) {}
+    renderOnboardingDetail(r, products);
+  }
+}
+
 // Jumping backward is always allowed with no confirmation — you're not
 // skipping anything. Jumping forward past a stage with unfinished checklist
 // items asks first rather than silently allowing it or hard-blocking it —
 // sometimes an item genuinely doesn't apply to a given client and advancing
 // anyway is the right call, but it shouldn't happen by accident.
+// Drag-and-drop between onboarding stages (Block 2, 2026-07-14). Reuses
+// setOnboardingStage() for the actual move -- same persistence, same
+// "unfinished checklist items" warning when advancing forward. KNOWN
+// LIMITATION: that checklist warning only fires with real data when the
+// detail modal is already open for this record (currentOnboardingChecklist
+// is only populated then); a board-only drag skips straight to the move
+// since there's nothing stale to check against. Not silently accepted --
+// flagged here the same way other known gaps in this file are.
+let onboardingDragId = null;
+function onboardingCardDragStart(e, id) {
+  onboardingDragId = id;
+  e.dataTransfer.effectAllowed = 'move';
+  e.currentTarget.classList.add('dragging');
+}
+function onboardingCardDragEnd(e) {
+  e.currentTarget.classList.remove('dragging');
+  document.querySelectorAll('.onboarding-column.drag-over').forEach(c => c.classList.remove('drag-over'));
+}
+function onboardingColumnDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  e.currentTarget.classList.add('drag-over');
+}
+function onboardingColumnDragLeave(e) {
+  e.currentTarget.classList.remove('drag-over');
+}
+function onboardingColumnDrop(e, stage) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  if (!onboardingDragId) return;
+  setOnboardingStage(onboardingDragId, stage);
+  onboardingDragId = null;
+}
+
 async function setOnboardingStage(id, newStage) {
   const r = ONBOARDING_RECORDS.find(x => x.id === id);
   if (!r || r.stage === newStage) return;
-  const currentIdx = ONBOARDING_STAGE_ORDER.indexOf(r.stage);
-  const newIdx = ONBOARDING_STAGE_ORDER.indexOf(newStage);
+  const stages = getPipelineStages(r.pipeline_id);
+  const currentIdx = stages.findIndex(s => s.stage_key === r.stage);
+  const newIdx = stages.findIndex(s => s.stage_key === newStage);
 
   if (newIdx > currentIdx) {
-    const skippedStages = ONBOARDING_STAGE_ORDER.slice(currentIdx, newIdx);
+    const skippedStages = stages.slice(currentIdx, newIdx).map(s => s.stage_key);
     const incompleteCount = currentOnboardingChecklist.filter(c => skippedStages.includes(c.stage) && !c.done).length;
     if (incompleteCount > 0) {
-      const ok = await showConfirmDialog(`${incompleteCount} checklist item(s) between here and "${getOnboardingStageLabel(newStage)}" aren't checked off yet. Advance anyway?`, { title: '⚠️ Unfinished checklist items', confirmLabel: 'Advance anyway' });
+      const ok = await showConfirmDialog(`${incompleteCount} checklist item(s) between here and "${getOnboardingStageLabel(r.pipeline_id, newStage)}" aren't checked off yet. Advance anyway?`, { title: '⚠️ Unfinished checklist items', confirmLabel: 'Advance anyway' });
       if (!ok) return;
     }
   }
 
+  const isLastStage = stages.length > 0 && newStage === stages[stages.length - 1].stage_key;
   r.stage = newStage;
   r.updated_at = new Date().toISOString();
-  if (newStage === 'live' && !r.went_live_at) r.went_live_at = new Date().toISOString();
+  if (isLastStage && !r.went_live_at) r.went_live_at = new Date().toISOString();
   try {
     await sbPatch('onboarding_records', `id=eq.${id}`, { stage: newStage, updated_at: r.updated_at, went_live_at: r.went_live_at || null });
   } catch(e) {
@@ -9874,12 +10198,14 @@ function closeViewOnboardingModal() {
 
 async function addOnboardingNote(onboardingId, text) {
   const u = getCurrentUser();
+  const mentionedEmails = parseMentionsFromText(text);
   const note = {
     id: (crypto.randomUUID ? crypto.randomUUID() : 'obn_' + Date.now() + Math.random().toString(16).slice(2)),
     onboarding_id: onboardingId,
     author_email: u ? u.email : '',
     author_name: u ? u.name : 'Guest',
     text,
+    tagged_emails: mentionedEmails,
     created_at: new Date().toISOString(),
   };
   try {
@@ -9887,6 +10213,11 @@ async function addOnboardingNote(onboardingId, text) {
   } catch(e) {
     showToast('Could not save the note: ' + e.message, 'error');
     return null;
+  }
+  const r = ONBOARDING_RECORDS.find(x => x.id === onboardingId);
+  const label = r ? r.business_name : 'an onboarding record';
+  for (const email of mentionedEmails) {
+    await createNotification(email, 'tagged', `${u ? u.name : 'Someone'} tagged you in an onboarding note on ${label}`, label);
   }
   return note;
 }
@@ -10104,6 +10435,66 @@ function getMentionQuery(ta) {
   const m = /(^|\s)@([\w.]*)$/.exec(upToCaret);
   return m ? { query: m[2], start: caret - m[2].length - 1 } : null;
 }
+
+// Onboarding notes @mention autocomplete (Block 5, 2026-07-14) -- same
+// matching logic as the client-notes mention system above, reused via the
+// already-generic getMentionQuery()/parseMentionsFromText(), but with its
+// own dropdown/state since the client-notes version is hardcoded to its own
+// specific textarea and tag-picker IDs rather than parameterized.
+let obMentionActiveIndex = -1;
+let obMentionMatches = [];
+function handleObNoteMentionInput(e) {
+  const inputEl = e.target;
+  const dd = document.getElementById('obMentionDropdown');
+  const ctx = getMentionQuery(inputEl);
+  const u = getCurrentUser();
+  if (!ctx) { dd.style.display = 'none'; return; }
+  obMentionMatches = TEAM_MEMBERS.filter(m => (!u || m.email !== u.email) && m.name.toLowerCase().includes(ctx.query.toLowerCase()));
+  if (obMentionMatches.length === 0) { dd.style.display = 'none'; return; }
+  obMentionActiveIndex = 0;
+  dd.innerHTML = obMentionMatches.map((m, i) =>
+    `<div class="mention-item${i===0?' highlighted':''}" data-idx="${i}" onmousedown="event.preventDefault();selectObMention(${i})">
+      <span>👤 ${escAttr(m.name)}</span><span class="mention-email">${escAttr(m.email)}</span>
+    </div>`
+  ).join('');
+  dd.style.display = '';
+  dd.dataset.mentionStart = ctx.start;
+}
+function handleObNoteMentionKeydown(e) {
+  const dd = document.getElementById('obMentionDropdown');
+  if (dd.style.display === 'none' || obMentionMatches.length === 0) {
+    if (e.key === 'Enter') { e.preventDefault(); addOnboardingNoteFromModal(); }
+    return;
+  }
+  if (e.key === 'ArrowDown') { e.preventDefault(); obMentionActiveIndex = (obMentionActiveIndex + 1) % obMentionMatches.length; refreshObMentionHighlight(); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); obMentionActiveIndex = (obMentionActiveIndex - 1 + obMentionMatches.length) % obMentionMatches.length; refreshObMentionHighlight(); }
+  else if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); selectObMention(obMentionActiveIndex); }
+  else if (e.key === 'Escape') { dd.style.display = 'none'; }
+}
+function refreshObMentionHighlight() {
+  document.querySelectorAll('#obMentionDropdown .mention-item').forEach((el, i) => el.classList.toggle('highlighted', i === obMentionActiveIndex));
+}
+function selectObMention(idx) {
+  const member = obMentionMatches[idx];
+  const dd = document.getElementById('obMentionDropdown');
+  const inputEl = document.getElementById('obNoteInput');
+  if (!member || !inputEl) return;
+  const start = parseInt(dd.dataset.mentionStart || '0');
+  const caret = inputEl.selectionStart;
+  const before = inputEl.value.slice(0, start);
+  const after = inputEl.value.slice(caret);
+  const insert = `@${member.name} `;
+  inputEl.value = before + insert + after;
+  const newCaret = (before + insert).length;
+  inputEl.focus();
+  inputEl.setSelectionRange(newCaret, newCaret);
+  dd.style.display = 'none';
+}
+document.addEventListener('click', (e) => {
+  const dd = document.getElementById('obMentionDropdown');
+  const inputEl = document.getElementById('obNoteInput');
+  if (dd && dd.style.display !== 'none' && !dd.contains(e.target) && e.target !== inputEl) dd.style.display = 'none';
+});
 
 function handleNoteMentionInput(e) {
   const ta = e.target;
@@ -13597,13 +13988,14 @@ const AI_AGENT_TOOLS = [
   },
   {
     name: 'create_onboarding',
-    description: 'Start tracking a new client through onboarding — before they exist as a real client anywhere else in the Hub. Does NOT create a real client record; that only happens later via activate_onboarding_as_client, typically once the record reaches the Live stage. Every stage gets its own default checklist automatically. This changes data — the user will be asked to confirm first.',
+    description: 'Start tracking a new client through onboarding — before they exist as a real client anywhere else in the Hub. Does NOT create a real client record; that only happens later via activate_onboarding_as_client, typically once the record reaches the last stage of its pipeline. Every stage in the pipeline gets its own checklist automatically. This changes data — the user will be asked to confirm first.',
     input_schema: {
       type: 'object',
       properties: {
         business_name: { type: 'string' },
         organization: { type: 'string', description: 'Optional parent organization name' },
         portfolio: { type: 'string', enum: ['smb', 'whitelabel', 'support'] },
+        pipeline_name: { type: 'string', description: 'Which onboarding pipeline to use, by name. Omit to use whichever pipeline is marked as the default (usually "Standard Onboarding").' },
         products: {
           type: 'array',
           description: 'Optional — which products this client is onboarding onto, each with an optional price. Omit entirely if not discussed yet.',
@@ -13615,14 +14007,35 @@ const AI_AGENT_TOOLS = [
   },
   {
     name: 'update_onboarding_stage',
-    description: 'Move an existing onboarding record to a different stage. Valid stages in order: contract_signed, kickoff_scheduled, kickoff_completed, setup_in_progress, qa_review, live. Can move forward or backward. Unlike the UI (which asks for confirmation before skipping unfinished checklist items), this makes the change directly — if the result includes a "warning" about skipped items, mention it to the user rather than staying silent. This changes data — the user will be asked to confirm first.',
+    description: 'Move an existing onboarding record to a different stage within its own pipeline. Each pipeline defines its own stages — use list_onboarding_pipelines first if unsure what stages a given record\'s pipeline has. Can move forward or backward. Unlike the UI (which asks for confirmation before skipping unfinished checklist items), this makes the change directly — if the result includes a "warning" about skipped items, mention it to the user rather than staying silent. This changes data — the user will be asked to confirm first.',
     input_schema: {
       type: 'object',
       properties: {
         business_name: { type: 'string', description: 'Which onboarding record to update, by business name' },
-        stage: { type: 'string', enum: ['contract_signed', 'kickoff_scheduled', 'kickoff_completed', 'setup_in_progress', 'qa_review', 'live'] },
+        stage: { type: 'string', description: 'The target stage, by its label or a close match (e.g. "kickoff" matches "Kickoff Call Scheduled")' },
       },
       required: ['business_name', 'stage'],
+    },
+  },
+  {
+    name: 'list_onboarding_pipelines',
+    description: 'List every onboarding pipeline that exists, along with its stages in order. Use this to see what pipelines are available, or to check what stages a specific pipeline has before moving a record or creating a new pipeline.',
+    input_schema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'create_onboarding_pipeline',
+    description: 'Create a brand new onboarding pipeline with its own custom stages — Admin only. Existing pipelines and their records are untouched; this only adds a new one alongside them. This changes data — the user will be asked to confirm first.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        name: { type: 'string', description: 'Name for the new pipeline' },
+        stages: {
+          type: 'array',
+          description: 'The stages, in order from first to last. At least one is required.',
+          items: { type: 'object', properties: { label: { type: 'string' }, icon: { type: 'string', description: 'A single emoji for this stage. Optional — defaults to a clipboard.' } }, required: ['label'] },
+        },
+      },
+      required: ['name', 'stages'],
     },
   },
   {
@@ -13651,9 +14064,43 @@ const AI_AGENT_TOOLS = [
       required: ['business_name'],
     },
   },
+  {
+    name: 'delete_onboarding',
+    description: 'Permanently remove a client from the onboarding pipeline — deletes the record along with its checklist, notes, and product selections (all cascade automatically). This does NOT touch any real client record — only use this for someone still in the onboarding pipeline who was never activated as a client, or who is being removed from tracking entirely. This changes data and cannot be undone — the user will be asked to confirm first.',
+    input_schema: {
+      type: 'object',
+      properties: { business_name: { type: 'string' } },
+      required: ['business_name'],
+    },
+  },
+  {
+    name: 'add_onboarding_checklist_item',
+    description: 'Add a new checklist item to a specific stage of an onboarding record — Admin only. Use this when someone wants to customize what needs to happen at a given stage beyond the default checklist.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        business_name: { type: 'string' },
+        stage: { type: 'string', description: 'The stage, by its label or a close match' },
+        label: { type: 'string', description: 'The checklist item text' },
+      },
+      required: ['business_name', 'stage', 'label'],
+    },
+  },
+  {
+    name: 'remove_onboarding_checklist_item',
+    description: 'Remove a checklist item from an onboarding record — Admin only. Matches by the item\'s text, so a partial/close match of the label is fine.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        business_name: { type: 'string' },
+        label: { type: 'string', description: 'The checklist item text (or a close match) to remove' },
+      },
+      required: ['business_name', 'label'],
+    },
+  },
 ];
 
-const AI_ACTION_TOOLS = ['add_note', 'create_task', 'log_kpi_score', 'create_workflow', 'update_workflow', 'delete_workflow', 'bulk_create_tasks', 'bulk_add_note', 'create_client', 'update_client_contact', 'create_reminder', 'create_onboarding', 'update_onboarding_stage', 'add_onboarding_note', 'activate_onboarding_as_client', 'merge_duplicate_clients']; // tools that change data — always confirmed
+const AI_ACTION_TOOLS = ['add_note', 'create_task', 'log_kpi_score', 'create_workflow', 'update_workflow', 'delete_workflow', 'bulk_create_tasks', 'bulk_add_note', 'create_client', 'update_client_contact', 'create_reminder', 'create_onboarding', 'update_onboarding_stage', 'add_onboarding_note', 'activate_onboarding_as_client', 'delete_onboarding', 'add_onboarding_checklist_item', 'remove_onboarding_checklist_item', 'create_onboarding_pipeline', 'merge_duplicate_clients']; // tools that change data — always confirmed
 
 // Strips everything except letters/digits, so "1-800 Water Damage" and
 // "1800 Water Damage" (or "Chung, DDS" vs "Chung DDS") compare equal. Used
@@ -13684,6 +14131,29 @@ function aiFindMergedClient(name) {
 // punctuation-fuzzy matching search_clients has — new code, starting
 // simple; revisit only if this turns out to be a real reported problem the
 // way the client-search one was.
+// Multi-pipeline helpers for Nirvana's tools (Block 6, 2026-07-14) -- same
+// fetch-fresh-from-Supabase reasoning as aiFindOnboardingRecord below rather
+// than trusting the client-side ONBOARDING_PIPELINES/STAGES cache, which
+// only populates once the Onboarding page has actually been visited this
+// session.
+async function aiGetPipelineStages(pipelineId) {
+  try {
+    return await sbSelect('onboarding_pipeline_stages', `pipeline_id=eq.${pipelineId}&order=sort_order.asc`);
+  } catch(e) { return []; }
+}
+async function aiResolvePipelineByName(name) {
+  try {
+    const rows = await sbSelect('onboarding_pipelines', 'order=created_at.asc');
+    if (!name) return rows.find(p => p.is_default) || rows[0] || null;
+    const trimmed = name.trim().toLowerCase();
+    return rows.find(p => p.name.toLowerCase() === trimmed) || rows.find(p => p.name.toLowerCase().includes(trimmed)) || rows.find(p => p.is_default) || rows[0] || null;
+  } catch(e) { return null; }
+}
+function matchStageByQuery(stages, query) {
+  const q = (query || '').trim().toLowerCase();
+  return stages.find(s => s.stage_key.toLowerCase() === q) || stages.find(s => s.label.toLowerCase() === q) || stages.find(s => s.label.toLowerCase().includes(q));
+}
+
 async function aiFindOnboardingRecord(businessName) {
   const name = (businessName || '').trim();
   if (!name) return null;
@@ -14252,37 +14722,43 @@ async function executeAiTool(name, input) {
       const businessName = (input.business_name || '').trim();
       if (!businessName) return { error: 'A business name is required.' };
       if (!['smb', 'whitelabel', 'support'].includes(input.portfolio)) return { error: 'A valid portfolio (smb, whitelabel, or support) is required.' };
+      const pipeline = await aiResolvePipelineByName(input.pipeline_name);
+      if (!pipeline) return { error: 'No onboarding pipeline exists yet — create one first with create_onboarding_pipeline.' };
       const cat = getCatalog(input.portfolio) || [];
       const products = cat.map(p => {
         const match = (input.products || []).find(x => x.key === p.key);
         return { key: p.key, selected: !!match, price: match ? (match.price || 0) : 0 };
       });
-      const record = await createOnboardingRecord({ businessName, organization: input.organization || null, portfolio: input.portfolio, products });
+      const record = await createOnboardingRecord({ businessName, organization: input.organization || null, portfolio: input.portfolio, products, pipelineId: pipeline.id });
       if (!record) return { error: 'Could not create the onboarding record.' };
       if (typeof rebuildOnboardingPage === 'function') rebuildOnboardingPage();
-      return { ok: true, business_name: businessName, portfolio: PORTFOLIO_LABELS[input.portfolio], stage: getOnboardingStageLabel('contract_signed') };
+      const stages = await aiGetPipelineStages(pipeline.id);
+      return { ok: true, business_name: businessName, portfolio: PORTFOLIO_LABELS[input.portfolio], pipeline: pipeline.name, stage: stages[0] ? stages[0].label : '' };
     }
     case 'update_onboarding_stage': {
       if (!requirePermission('edit')) return { error: 'This account doesn\'t have permission to update onboarding records.' };
-      if (!ONBOARDING_STAGE_ORDER.includes(input.stage)) return { error: 'Not a valid stage.' };
       const r = await aiFindOnboardingRecord(input.business_name);
       if (!r) return { error: `No active onboarding record found for "${input.business_name}".` };
+      const stages = await aiGetPipelineStages(r.pipeline_id);
+      const target = matchStageByQuery(stages, input.stage);
+      if (!target) return { error: `"${input.stage}" isn't a stage in this record's pipeline. Use list_onboarding_pipelines to see its actual stages.` };
       let checklist = [];
       try { checklist = await sbSelect('onboarding_checklist_items', `onboarding_id=eq.${r.id}`); } catch(e) { console.warn(e.message); }
-      const currentIdx = ONBOARDING_STAGE_ORDER.indexOf(r.stage);
-      const newIdx = ONBOARDING_STAGE_ORDER.indexOf(input.stage);
+      const currentIdx = stages.findIndex(s => s.stage_key === r.stage);
+      const newIdx = stages.findIndex(s => s.stage_key === target.stage_key);
       let warning;
       if (newIdx > currentIdx) {
-        const skipped = ONBOARDING_STAGE_ORDER.slice(currentIdx, newIdx);
+        const skipped = stages.slice(currentIdx, newIdx).map(s => s.stage_key);
         const incomplete = checklist.filter(c => skipped.includes(c.stage) && !c.done).length;
         if (incomplete > 0) warning = `${incomplete} checklist item(s) between the old and new stage weren't checked off — mention this to the user.`;
       }
       const updated_at = new Date().toISOString();
-      const patch = { stage: input.stage, updated_at };
-      if (input.stage === 'live' && !r.went_live_at) patch.went_live_at = updated_at;
+      const patch = { stage: target.stage_key, updated_at };
+      const isLastStage = stages.length > 0 && target.stage_key === stages[stages.length - 1].stage_key;
+      if (isLastStage && !r.went_live_at) patch.went_live_at = updated_at;
       try { await sbPatch('onboarding_records', `id=eq.${r.id}`, patch); } catch(e) { return { error: 'Could not update the stage: ' + e.message }; }
       if (typeof rebuildOnboardingPage === 'function') rebuildOnboardingPage();
-      return { ok: true, business_name: r.business_name, new_stage: getOnboardingStageLabel(input.stage), warning };
+      return { ok: true, business_name: r.business_name, new_stage: target.label, warning };
     }
     case 'add_onboarding_note': {
       if (!requirePermission('edit')) return { error: 'This account doesn\'t have permission to add onboarding notes.' };
@@ -14297,7 +14773,15 @@ async function executeAiTool(name, input) {
     case 'list_onboarding': {
       let rows = [];
       try { rows = await sbSelect('onboarding_records', 'status=eq.active&order=created_at.desc'); } catch(e) { return { error: e.message }; }
-      return { results: rows.map(r => ({ business_name: r.business_name, portfolio: PORTFOLIO_LABELS[r.portfolio] || r.portfolio, stage: getOnboardingStageLabel(r.stage) })) };
+      let pipelines = [];
+      let allStages = [];
+      try { pipelines = await sbSelect('onboarding_pipelines', 'order=created_at.asc'); } catch(e) {}
+      try { allStages = await sbSelect('onboarding_pipeline_stages', 'order=sort_order.asc'); } catch(e) {}
+      return { results: rows.map(r => {
+        const pipeline = pipelines.find(p => p.id === r.pipeline_id);
+        const stageRow = allStages.find(s => s.pipeline_id === r.pipeline_id && s.stage_key === r.stage);
+        return { business_name: r.business_name, portfolio: PORTFOLIO_LABELS[r.portfolio] || r.portfolio, pipeline: pipeline ? pipeline.name : 'Unknown', stage: stageRow ? stageRow.label : r.stage };
+      }) };
     }
     case 'activate_onboarding_as_client': {
       if (!requirePermission('edit')) return { error: 'This account doesn\'t have permission to activate onboarding records.' };
@@ -14307,6 +14791,64 @@ async function executeAiTool(name, input) {
       if (result.error) return { error: result.error };
       if (typeof rebuildOnboardingPage === 'function') rebuildOnboardingPage();
       return result;
+    }
+    case 'delete_onboarding': {
+      if (!requirePermission('edit')) return { error: 'This account doesn\'t have permission to delete onboarding records.' };
+      const r = await aiFindOnboardingRecord(input.business_name);
+      if (!r) return { error: `No active onboarding record found for "${input.business_name}".` };
+      try { await sbDelete('onboarding_records', `id=eq.${r.id}`); } catch(e) { return { error: 'Could not delete: ' + e.message }; }
+      ONBOARDING_RECORDS = ONBOARDING_RECORDS.filter(x => x.id !== r.id);
+      if (currentOnboardingId === r.id) closeViewOnboardingModal();
+      if (typeof rebuildOnboardingPage === 'function') rebuildOnboardingPage();
+      return { ok: true, business_name: r.business_name };
+    }
+    case 'add_onboarding_checklist_item': {
+      if (!requirePermission('admin')) return { error: 'This account doesn\'t have permission to edit onboarding checklists — Admin only.' };
+      const label = (input.label || '').trim();
+      if (!label) return { error: 'An item label is required.' };
+      const r = await aiFindOnboardingRecord(input.business_name);
+      if (!r) return { error: `No active onboarding record found for "${input.business_name}".` };
+      const stages = await aiGetPipelineStages(r.pipeline_id);
+      const target = matchStageByQuery(stages, input.stage);
+      if (!target) return { error: `"${input.stage}" isn't a stage in this record's pipeline.` };
+      let existing = [];
+      try { existing = await sbSelect('onboarding_checklist_items', `onboarding_id=eq.${r.id}&stage=eq.${target.stage_key}`); } catch(e) {}
+      const item = {
+        id: (crypto.randomUUID ? crypto.randomUUID() : 'obc_' + Date.now() + Math.random().toString(16).slice(2)),
+        onboarding_id: r.id, stage: target.stage_key, label, done: false, sort_order: existing.length,
+      };
+      try { await sbUpsert('onboarding_checklist_items', item); } catch(e) { return { error: 'Could not add the item: ' + e.message }; }
+      if (currentOnboardingId === r.id) currentOnboardingChecklist.push(item);
+      return { ok: true, business_name: r.business_name, stage: target.label, label };
+    }
+    case 'remove_onboarding_checklist_item': {
+      if (!requirePermission('admin')) return { error: 'This account doesn\'t have permission to edit onboarding checklists — Admin only.' };
+      const r = await aiFindOnboardingRecord(input.business_name);
+      if (!r) return { error: `No active onboarding record found for "${input.business_name}".` };
+      let items = [];
+      try { items = await sbSelect('onboarding_checklist_items', `onboarding_id=eq.${r.id}`); } catch(e) { return { error: e.message }; }
+      const target = items.find(c => c.label.toLowerCase().includes((input.label || '').toLowerCase()));
+      if (!target) return { error: `No checklist item matching "${input.label}" found for "${r.business_name}".` };
+      try { await sbDelete('onboarding_checklist_items', `id=eq.${target.id}`); } catch(e) { return { error: 'Could not remove the item: ' + e.message }; }
+      if (currentOnboardingId === r.id) currentOnboardingChecklist = currentOnboardingChecklist.filter(c => c.id !== target.id);
+      return { ok: true, business_name: r.business_name, removed_label: target.label };
+    }
+    case 'list_onboarding_pipelines': {
+      let pipelines = [];
+      let allStages = [];
+      try { pipelines = await sbSelect('onboarding_pipelines', 'order=created_at.asc'); } catch(e) { return { error: e.message }; }
+      try { allStages = await sbSelect('onboarding_pipeline_stages', 'order=sort_order.asc'); } catch(e) {}
+      return { results: pipelines.map(p => ({
+        name: p.name, is_default: !!p.is_default,
+        stages: allStages.filter(s => s.pipeline_id === p.id).sort((a, b) => a.sort_order - b.sort_order).map(s => s.label),
+      })) };
+    }
+    case 'create_onboarding_pipeline': {
+      if (!requirePermission('admin')) return { error: 'This account doesn\'t have permission to create onboarding pipelines — Admin only.' };
+      const result = await createOnboardingPipeline({ name: input.name, stages: input.stages });
+      if (result.error) return { error: result.error };
+      if (typeof rebuildOnboardingPage === 'function') rebuildOnboardingPage();
+      return { ok: true, name: result.pipeline.name, stages: result.stages.map(s => s.label) };
     }
     default:
       return { error: 'Unknown tool: ' + name };
@@ -14367,13 +14909,26 @@ function describeAiAction(tool) {
     return `🧭 Start onboarding for <b>${escAttr(i.business_name)}</b> in ${escAttr(PORTFOLIO_LABELS[i.portfolio] || i.portfolio)}${i.organization ? ' — org: ' + escAttr(i.organization) : ''}${prodCount ? ` — ${prodCount} product(s)` : ''}`;
   }
   if (tool.name === 'update_onboarding_stage') {
-    return `➡️ Move <b>${escAttr(i.business_name)}</b>'s onboarding to "${escAttr(getOnboardingStageLabel(i.stage))}"`;
+    return `➡️ Move <b>${escAttr(i.business_name)}</b>'s onboarding to "${escAttr(i.stage)}"`;
   }
   if (tool.name === 'add_onboarding_note') {
     return `📝 Add a note to <b>${escAttr(i.business_name)}</b>'s onboarding: "${escAttr(i.note)}"`;
   }
   if (tool.name === 'activate_onboarding_as_client') {
     return `🎉 Activate <b>${escAttr(i.business_name)}</b> as a real client`;
+  }
+  if (tool.name === 'delete_onboarding') {
+    return `🗑️ Permanently delete <b>${escAttr(i.business_name)}</b>'s onboarding record — its checklist, notes, and product selections too. This can't be undone.`;
+  }
+  if (tool.name === 'add_onboarding_checklist_item') {
+    return `✅ Add checklist item "${escAttr(i.label)}" to the "${escAttr(i.stage)}" stage of <b>${escAttr(i.business_name)}</b>'s onboarding`;
+  }
+  if (tool.name === 'remove_onboarding_checklist_item') {
+    return `🗑️ Remove the checklist item matching "${escAttr(i.label)}" from <b>${escAttr(i.business_name)}</b>'s onboarding`;
+  }
+  if (tool.name === 'create_onboarding_pipeline') {
+    const stageCount = Array.isArray(i.stages) ? i.stages.length : 0;
+    return `⚙️ Create a new onboarding pipeline "<b>${escAttr(i.name)}</b>" with ${stageCount} stage(s): ${(i.stages || []).map(s => escAttr(s.label)).join(' → ')}`;
   }
   return `Run ${escAttr(tool.name)}?`;
 }
@@ -14519,6 +15074,16 @@ const AI_TOOL_LABELS = {
   create_workflow: '🔁 Created a workflow',
   update_workflow: '🔁 Updated a workflow',
   delete_workflow: '🗑️ Deleted a workflow',
+  create_onboarding: '🧭 Started an onboarding record',
+  update_onboarding_stage: '🧭 Moved an onboarding stage',
+  add_onboarding_note: '📝 Added an onboarding note',
+  list_onboarding: '🧭 Checked the onboarding pipeline',
+  activate_onboarding_as_client: '🎉 Activated onboarding as a client',
+  delete_onboarding: '🗑️ Deleted an onboarding record',
+  add_onboarding_checklist_item: '✅ Added a checklist item',
+  remove_onboarding_checklist_item: '🗑️ Removed a checklist item',
+  list_onboarding_pipelines: '⚙️ Checked onboarding pipelines',
+  create_onboarding_pipeline: '⚙️ Created a new onboarding pipeline',
 };
 
 let nirvanaVoiceReplyEnabled = (localStorage.getItem('csh_nirvana_voice_v1') === '1');
