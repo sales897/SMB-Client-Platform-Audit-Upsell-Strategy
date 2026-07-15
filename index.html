@@ -1875,8 +1875,8 @@ tr.hidden-row { display: none; }
 .wfb-merge-item span { font-size: 9px; color: var(--text3); }
 .wfb-node-hd { display: flex; align-items: center; gap: 6px; font-size: 9px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: var(--node-color, var(--text3)); margin-bottom: 3px; }
 .wfb-node-hd .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--node-color); box-shadow: 0 0 6px var(--node-color); }
-.wfb-node-hd .menu { margin-left: auto; color: var(--text3); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; font-size: 11px; flex-shrink: 0; }
-.wfb-node-hd .menu:hover { background: var(--bg4); color: var(--text); }
+.wfb-node-hd .menu, .wfb-node-hd .wfb-node-close { margin-left: auto; color: var(--text3); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; font-size: 11px; flex-shrink: 0; }
+.wfb-node-hd .menu:hover, .wfb-node-hd .wfb-node-close:hover { background: var(--bg4); color: var(--text); }
 .wfb-node-label { font-size: var(--font-sm); font-weight: 700; color: var(--text); }
 .wfb-node-sublabel { font-size: var(--font-2xs); color: var(--text3); margin-top: 1px; }
 .wfb-branch-label {
@@ -13101,14 +13101,14 @@ function renderWorkflowCanvas() {
     if (n.id === wfbExpandedNodeId) {
       const schema = getNodeFieldSchema(n);
       return `<div class="wfb-node wfb-node-expanded" style="left:${n.pos_x}px;top:${n.pos_y}px;--node-color:${color}" data-node-id="${n.id}">
-        <div class="wfb-node-hd"><span class="dot"></span>${icon} ${escAttr(typeLabel)}<span class="menu" onclick="event.stopImmediatePropagation();closeWfbExpandedNode()" title="Close">✕</span></div>
+        <div class="wfb-node-hd"><span class="dot"></span>${icon} ${escAttr(typeLabel)}<span class="wfb-node-close" data-action="close-node" title="Close">✕</span></div>
         <label class="wfb-field-label">Label</label>
         <input type="text" class="wfb-field-input" id="wfb-field-${n.id}-label" value="${escAttr(n.label)}">
         ${schema.map(f => renderWfbField(n, f)).join('')}
         <div class="wfb-expanded-btns">
-          <button class="wfb-mini-btn danger" onclick="event.stopImmediatePropagation();deleteWorkflowNode('${n.id}')">🗑️</button>
-          <button class="wfb-mini-btn" onclick="event.stopImmediatePropagation();closeWfbExpandedNode()">Cancel</button>
-          <button class="wfb-mini-btn primary" onclick="event.stopImmediatePropagation();saveExpandedWfbNode('${n.id}')">Save</button>
+          <button class="wfb-mini-btn danger" data-action="delete-node">🗑️</button>
+          <button class="wfb-mini-btn" data-action="close-node">Cancel</button>
+          <button class="wfb-mini-btn primary" data-action="save-node">Save</button>
         </div>
       </div>`;
     }
@@ -13219,15 +13219,25 @@ function initWorkflowCanvasInteractions() {
   });
 
   nodesLayer.addEventListener('click', (e) => {
+    // Expanded-node controls (close/cancel/delete/save) are handled
+    // exclusively here via data-action, with NO inline onclick on the
+    // buttons themselves (2026-07-15 rewrite) -- having both an inline
+    // handler AND this delegated one touching the same element was the
+    // actual risk the earlier "takes several clicks" bug came from, even
+    // after stopImmediatePropagation() was added. One handler, one place,
+    // no race.
+    const actionEl = e.target.closest('[data-action]');
+    if (actionEl) {
+      e.stopPropagation();
+      const nodeId = actionEl.closest('.wfb-node').dataset.nodeId;
+      const action = actionEl.dataset.action;
+      if (action === 'close-node') closeWfbExpandedNode();
+      else if (action === 'delete-node') deleteWorkflowNode(nodeId);
+      else if (action === 'save-node') saveExpandedWfbNode(nodeId);
+      return;
+    }
     const menuBtn = e.target.closest('.menu');
     if (!menuBtn) return;
-    // An expanded node's "✕" also carries class "menu" (same visual slot as
-    // the compact node's "⋮"), but it already has its own inline onclick
-    // that closes the node directly -- this delegated handler must never
-    // also fire toggleWfbNodeMenu for it, or the resulting stray floating
-    // menu sits on top of the close button and eats the next several clicks
-    // before one finally lands cleanly.
-    if (menuBtn.closest('.wfb-node-expanded')) return;
     e.stopPropagation();
     toggleWfbNodeMenu(menuBtn.closest('.wfb-node').dataset.nodeId, menuBtn);
   });
