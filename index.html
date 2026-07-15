@@ -385,7 +385,7 @@ body.ai-panel-open .main {
    reference "command center" layout. Uses theme tokens throughout (--bg2,
    --border, --text, etc.) so it adapts across Light/Dark/Blackout the same
    as everything else -- nothing here is a hardcoded color. */
-.home-vitals-grid { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, minmax(190px, 1fr)); gap: var(--space-4); margin-bottom: 24px; }
+.home-vitals-grid { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(4, minmax(160px, 1fr)); gap: var(--space-4); margin-bottom: 24px; }
 .vital-block {
   position: relative; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm);
   padding: var(--space-4); display: flex; flex-direction: column;
@@ -410,6 +410,13 @@ body.ai-panel-open .main {
 .vital-legend span { display: flex; align-items: center; gap: 6px; color: var(--text2); }
 .vital-legend i { width: 7px; height: 7px; border-radius: 2px; display: inline-block; flex-shrink: 0; }
 .vital-stackbar { display: flex; height: 18px; border-radius: var(--radius-xs); overflow: hidden; margin: var(--space-2) 0; box-shadow: 0 0 10px rgba(226,84,31,.15); }
+.vital-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; min-height: 0; }
+.vital-list-item { display: flex; align-items: center; gap: 8px; font-size: var(--font-2xs); padding: 5px 7px; background: var(--bg3); border-radius: var(--radius-xs); cursor: pointer; transition: background var(--transition-base); }
+.vital-list-item:hover { background: var(--bg4); }
+.vital-list-item .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 6px currentColor; }
+.vital-list-item .title { color: var(--text); font-weight: 600; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vital-list-item .meta { color: var(--text3); flex-shrink: 0; }
+.vital-list-empty { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--text3); font-size: var(--font-2xs); text-align: center; }
 @media (max-width: 900px) {
   .home-vitals-grid { grid-template-columns: 1fr; grid-template-rows: none; }
 }
@@ -2059,6 +2066,24 @@ tr.hidden-row { display: none; }
     <div class="home-greeting-sub" id="homeGreetingSub">Here's what's happening across the Hub today.</div>
 
     <div class="home-vitals-grid" id="homeVitalsGrid">
+
+      <div class="vital-block">
+        <div class="vital-block-hd">
+          <h3><span class="vital-dot" style="background:var(--green);color:var(--green)"></span>My Tasks</h3>
+          <button class="vital-ask" onclick="askNirvanaAboutVital('tasks')" title="Ask Nirvana about this" aria-label="Ask Nirvana about my tasks">✨</button>
+        </div>
+        <div class="vital-sub">Open tasks assigned to you, across every client</div>
+        <div class="vital-list" id="vitalTasksList"></div>
+      </div>
+
+      <div class="vital-block">
+        <div class="vital-block-hd">
+          <h3><span class="vital-dot" style="background:var(--orange);color:var(--orange)"></span>My Reminders</h3>
+          <button class="vital-ask" onclick="askNirvanaAboutVital('reminders')" title="Ask Nirvana about this" aria-label="Ask Nirvana about my reminders">✨</button>
+        </div>
+        <div class="vital-sub">Personal reminders — not shared with the team</div>
+        <div class="vital-list" id="vitalRemindersList"></div>
+      </div>
 
       <div class="vital-block">
         <div class="vital-block-hd">
@@ -4515,12 +4540,49 @@ function rebuildHomePage() {
 // already computed elsewhere in the app -- nothing here is placeholder.
 function renderHomeVitalsGrid() {
   if (!document.getElementById('homeVitalsGrid')) return;
+  renderVitalTasks();
+  renderVitalReminders();
   renderVitalAttention();
   renderVitalOnboarding();
   renderVitalAdSpend();
   renderVitalCollections();
   renderVitalKpi();
   renderVitalAdoptionGap();
+}
+
+function renderVitalTasks() {
+  const wrap = document.getElementById('vitalTasksList');
+  if (!wrap) return;
+  const tasks = getMyOpenTasks();
+  if (tasks.length === 0) {
+    wrap.innerHTML = '<div class="vital-list-empty">Nothing on your plate 🎉</div>';
+    return;
+  }
+  const today = new Date().toISOString().slice(0, 10);
+  wrap.innerHTML = tasks.slice(0, 6).map(t => {
+    const overdue = t.due_date && t.due_date < today;
+    const safeClient = escOnclickArg(t.client_name);
+    return `<div class="vital-list-item" onclick="openClientNotesTasksModal('${safeClient}')" tabindex="0" role="button" aria-label="Open notes and tasks for ${escAttr(t.client_name)}">
+      <span class="dot" style="background:${overdue ? 'var(--red)' : 'var(--green)'};color:${overdue ? 'var(--red)' : 'var(--green)'}"></span>
+      <span class="title">${escAttr(t.title)}</span>
+      <span class="meta">${t.due_date ? (overdue ? 'Overdue' : fmtDate(t.due_date)) : escAttr(t.client_name)}</span>
+    </div>`;
+  }).join('');
+}
+
+function renderVitalReminders() {
+  const wrap = document.getElementById('vitalRemindersList');
+  if (!wrap) return;
+  if (REMINDERS.length === 0) {
+    wrap.innerHTML = '<div class="vital-list-empty">No reminders set</div>';
+    return;
+  }
+  wrap.innerHTML = REMINDERS.slice(0, 6).map(r => `
+    <div class="vital-list-item">
+      <span class="dot" style="background:var(--orange);color:var(--orange)"></span>
+      <span class="title">${escAttr(r.title)}</span>
+      <span class="meta">${fmtDate((r.remind_at || '').slice(0, 10))}</span>
+    </div>`).join('');
 }
 
 function renderVitalAttention() {
@@ -4666,6 +4728,8 @@ function renderVitalAdoptionGap() {
 // panel and asks a canned, topic-relevant question through the same send
 // pathway the panel's own quick-actions grid already uses.
 const VITAL_NIRVANA_PROMPTS = {
+  tasks: "What tasks do I have open right now, and what should I tackle first?",
+  reminders: "Do I have any reminders coming up that I should know about?",
   attention: "Which accounts need attention today, and what should I prioritize first?",
   onboarding: "Which onboarding accounts are stuck or falling behind on their stage?",
   adspend: "Which ad spend accounts are eligible for promo but not using it yet?",
