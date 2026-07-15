@@ -1911,6 +1911,17 @@ tr.hidden-row { display: none; }
 .wfb-build-confirm-item:last-of-type { border-bottom: none; }
 .wfb-ai-footer { padding: var(--space-3); border-top: 1px solid var(--border); }
 .wfb-ai-disclaimer { font-size: var(--font-2xs); color: var(--text3); margin-top: 6px; text-align: center; }
+.wfb-mode-toggle { display: flex; gap: 2px; background: var(--bg3); border-radius: var(--radius-sm); padding: 3px; margin-bottom: 8px; }
+.wfb-mode-btn { flex: 1; background: none; border: none; padding: 7px; font-size: var(--font-xs); font-weight: 700; border-radius: var(--radius-xs); color: var(--text3); cursor: pointer; transition: all var(--transition-base); }
+.wfb-mode-btn.active { background: linear-gradient(90deg, var(--orange), var(--orange2)); color: #fff; box-shadow: 0 0 10px rgba(226,84,31,.45); }
+.wfb-mode-btn:not(.active):hover { color: var(--text); background: var(--bg4); }
+.wfb-chat-textarea { min-height: 36px; max-height: 120px; resize: none; overflow-y: auto; line-height: 1.4; padding-top: 8px; padding-bottom: 8px; }
+.cn-field-row { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; flex-wrap: wrap; }
+.cn-field-row .field-input { margin-bottom: 0; }
+.cn-field-row .cn-field-label { flex: 1; min-width: 130px; }
+.cn-field-row .cn-field-type { width: 110px; }
+.cn-field-row .cn-field-options { flex: 1; min-width: 160px; }
+.cn-field-merge-label { display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--text3); white-space: nowrap; }
 
 .wfb-statusbar { display: flex; gap: var(--space-4); align-items: center; padding: var(--space-2) var(--space-3); font-size: var(--font-xs); color: var(--text3); border-top: 1px solid var(--border); margin-top: var(--space-2); flex-shrink: 0; }
 .wfb-statusbar b { color: var(--text2); }
@@ -2943,7 +2954,12 @@ tr.hidden-row { display: none; }
           <div class="wfb-node-item" onclick="addWorkflowNodeFromPalette('logic','split_path','Split Path')"><span class="wfb-node-dot" style="background:var(--pink);color:var(--pink)"></span>Split Path</div>
           <div class="wfb-node-item" onclick="addWorkflowNodeFromPalette('logic','merge_paths','Merge Paths')"><span class="wfb-node-dot" style="background:var(--pink);color:var(--pink)"></span>Merge Paths</div>
         </div>
-        <div class="wfb-sidebar-tip">💡 Tip: Drag nodes to the canvas (coming in a later block).<br>Double-click a node to edit (also coming).</div>
+        <div class="wfb-node-group">
+          <div class="wfb-node-group-hd">CUSTOM</div>
+          <div id="wfbCustomNodeTypesList"></div>
+          <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:4px" onclick="openCreateCustomNodeTypeModal()">＋ Custom Node Type</button>
+        </div>
+        <div class="wfb-sidebar-tip">💡 Tip: Click any node in the canvas to edit or delete it.<br>Drag from a node's dot to connect it to another.</div>
       </div>
 
       <div class="wfb-canvas-wrap">
@@ -2987,11 +3003,11 @@ tr.hidden-row { display: none; }
           <div id="wfbAiChatThread"></div>
         </div>
         <div class="wfb-ai-footer">
-          <input type="text" class="field-input" id="wfbAiInput" placeholder="Ask anything, or describe a change to build..." style="height:36px;margin-bottom:8px" onkeydown="if(event.key==='Enter'){sendWfbAiMessage();}">
-          <div style="display:flex;gap:6px">
-            <button class="btn btn-ghost btn-sm" style="flex:1" onclick="sendWfbAiMessage()" title="Discuss, suggest, or ask questions — no changes are made">💬 Ask</button>
-            <button class="btn btn-primary btn-sm" style="flex:1" onclick="sendWfbBuildMessage()" title="Let Nirvana actually make the changes — you'll review and confirm first">🔨 Build</button>
+          <div class="wfb-mode-toggle">
+            <button class="wfb-mode-btn active" id="wfbModeAskBtn" onclick="setWfbChatMode('ask')" title="Discuss, suggest, or ask questions — no changes are made">💬 Ask</button>
+            <button class="wfb-mode-btn" id="wfbModeBuildBtn" onclick="setWfbChatMode('build')" title="Let Nirvana actually make the changes — you'll review and confirm first">🔨 Build</button>
           </div>
+          <textarea class="field-input wfb-chat-textarea" id="wfbAiInput" rows="1" placeholder="Ask anything about your workflow... (Shift+Enter for a new line)" oninput="autoGrowWfbInput(this)" onkeydown="handleWfbInputKeydown(event)"></textarea>
           <div class="wfb-ai-disclaimer">✨ Nirvana can make mistakes. Review before applying.</div>
         </div>
       </div>
@@ -3671,6 +3687,32 @@ tr.hidden-row { display: none; }
 <!-- MANAGE PIPELINES MODAL -->
 <!-- WORKFLOW BRANCH LABEL MODAL -->
 <!-- WORKFLOW SAVE MODAL -->
+<!-- CREATE CUSTOM NODE TYPE MODAL -->
+<div class="modal-overlay" id="createCustomNodeTypeModal">
+  <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="cnModalTitle">
+    <h3 id="cnModalTitle">🧩 Create Custom Node Type</h3>
+    <label for="cnCategorySelect" class="field-label">Category</label>
+    <select id="cnCategorySelect" class="field-input">
+      <option value="trigger">Trigger</option>
+      <option value="condition">Condition</option>
+      <option value="action" selected>Action</option>
+      <option value="delay">Delay</option>
+      <option value="logic">Logic</option>
+    </select>
+    <label for="cnTypeName" class="field-label">Type Name</label>
+    <input type="text" id="cnTypeName" class="field-input" placeholder="e.g. Send SMS">
+    <label for="cnTypeIcon" class="field-label">Icon (one emoji, optional)</label>
+    <input type="text" id="cnTypeIcon" class="field-input" placeholder="📱" maxlength="4">
+    <label class="field-label">Fields this node type needs</label>
+    <div id="cnFieldsList"></div>
+    <button class="btn btn-sm" style="margin:8px 0" onclick="addCustomNodeTypeFieldRow()">＋ Add Field</button>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" onclick="closeCreateCustomNodeTypeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCustomNodeType()">Create</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="wfbSaveModal">
   <div class="modal" style="max-width:360px" role="dialog" aria-modal="true" aria-labelledby="wfbSaveModalTitle">
     <h3 id="wfbSaveModalTitle">💾 Save Workflow</h3>
@@ -12980,6 +13022,7 @@ async function rebuildWorkflowsPage() {
   await loadWorkflows();
   if (!document.getElementById('wfbCanvas')) return;
   initWorkflowCanvasInteractions();
+  await loadWorkflowCustomNodeTypes();
   if (!currentWorkflowGraphId || !WORKFLOWS.find(w => w.id === currentWorkflowGraphId)) {
     currentWorkflowGraphId = WORKFLOWS.length > 0 ? WORKFLOWS[WORKFLOWS.length - 1].id : null;
   }
@@ -13034,7 +13077,8 @@ function renderWorkflowCanvas() {
 
   nodesLayer.innerHTML = workflowNodesCache.map(n => {
     const color = WORKFLOW_NODE_COLORS[n.node_type] || 'var(--text3)';
-    const icon = WORKFLOW_NODE_ICONS[n.node_type] || '📋';
+    const customType = WORKFLOW_CUSTOM_NODE_TYPES.find(ct => ct.subtype_key === n.subtype);
+    const icon = customType ? customType.icon : (WORKFLOW_NODE_ICONS[n.node_type] || '📋');
     const typeLabel = WORKFLOW_NODE_TYPE_LABELS[n.node_type] || n.node_type;
     if (n.id === wfbExpandedNodeId) {
       const schema = getNodeFieldSchema(n);
@@ -13360,7 +13404,89 @@ const WORKFLOW_MERGE_FIELDS = [
 const WORKFLOW_CONDITION_OPERATORS = ['>=', '>', '==', '<', '<=', 'contains'];
 const WORKFLOW_DELAY_UNITS = ['minutes', 'hours', 'days'];
 
+// Fully customizable node types (2026-07-15) -- unlike the curated built-in
+// subtypes above, these are entirely user-defined: category, name, icon,
+// and an arbitrary list of fields (text/textarea/select/number, each
+// optionally merge-field-enabled). Persisted so they show up in the
+// palette permanently, not just for this session, and Nirvana's Build mode
+// can create nodes using them the same as any built-in subtype.
+let WORKFLOW_CUSTOM_NODE_TYPES = [];
+async function loadWorkflowCustomNodeTypes() {
+  try { WORKFLOW_CUSTOM_NODE_TYPES = await sbSelect('workflow_custom_node_types', 'order=created_at.asc'); }
+  catch(e) { console.warn('workflow_custom_node_types unavailable:', e.message); WORKFLOW_CUSTOM_NODE_TYPES = []; }
+  renderCustomNodeTypesPalette();
+}
+function renderCustomNodeTypesPalette() {
+  const wrap = document.getElementById('wfbCustomNodeTypesList');
+  if (!wrap) return;
+  const colorByType = { trigger: 'var(--green)', condition: 'var(--orange)', action: 'var(--purple)', delay: 'var(--blue)', logic: 'var(--pink)' };
+  wrap.innerHTML = WORKFLOW_CUSTOM_NODE_TYPES.map(ct => {
+    const color = colorByType[ct.node_type] || 'var(--text3)';
+    return `<div class="wfb-node-item" onclick="addWorkflowNodeFromPalette('${ct.node_type}','${ct.subtype_key}','${escAttr(ct.label)}')">
+      <span class="wfb-node-dot" style="background:${color};color:${color}"></span>${escAttr(ct.icon)} ${escAttr(ct.label)}
+    </div>`;
+  }).join('') || '<div style="font-size:var(--font-2xs);color:var(--text3);padding:4px 0">None yet.</div>';
+}
+
+function openCreateCustomNodeTypeModal() {
+  document.getElementById('cnCategorySelect').value = 'action';
+  document.getElementById('cnTypeName').value = '';
+  document.getElementById('cnTypeIcon').value = '';
+  document.getElementById('cnFieldsList').innerHTML = '';
+  addCustomNodeTypeFieldRow();
+  document.getElementById('createCustomNodeTypeModal').classList.add('open');
+}
+function closeCreateCustomNodeTypeModal() {
+  document.getElementById('createCustomNodeTypeModal').classList.remove('open');
+}
+function addCustomNodeTypeFieldRow() {
+  const wrap = document.getElementById('cnFieldsList');
+  const row = document.createElement('div');
+  row.className = 'cn-field-row';
+  row.innerHTML = `
+    <input type="text" class="field-input cn-field-label" placeholder="Field label (e.g. Phone Number)">
+    <select class="field-input cn-field-type" onchange="this.parentElement.querySelector('.cn-field-options').style.display = this.value === 'select' ? '' : 'none'">
+      <option value="text">Text</option>
+      <option value="textarea">Text Area</option>
+      <option value="select">Dropdown</option>
+      <option value="number">Number</option>
+    </select>
+    <input type="text" class="field-input cn-field-options" placeholder="Options, comma-separated" style="display:none">
+    <label class="cn-field-merge-label"><input type="checkbox" class="cn-field-merge"> {{merge}}</label>
+    <button class="row-action-btn danger" onclick="this.closest('.cn-field-row').remove()">×</button>`;
+  wrap.appendChild(row);
+}
+async function saveCustomNodeType() {
+  if (!requirePermission('edit')) return;
+  const nodeType = document.getElementById('cnCategorySelect').value;
+  const label = document.getElementById('cnTypeName').value.trim();
+  if (!label) { showToast('Please enter a type name.', 'warning'); return; }
+  const icon = document.getElementById('cnTypeIcon').value.trim() || '📋';
+  const fieldRows = Array.from(document.querySelectorAll('#cnFieldsList .cn-field-row'));
+  const fields = fieldRows.map(row => {
+    const flabel = row.querySelector('.cn-field-label').value.trim();
+    const ftype = row.querySelector('.cn-field-type').value;
+    const merge = row.querySelector('.cn-field-merge').checked;
+    const optionsRaw = row.querySelector('.cn-field-options').value.trim();
+    const key = flabel.toLowerCase().replace(/[^a-z0-9]+/g, '_').slice(0, 24) || 'field';
+    const field = { key, label: flabel, type: ftype, merge, source: 'config' };
+    if (ftype === 'select') field.options = optionsRaw.split(',').map(s => s.trim()).filter(Boolean);
+    return field;
+  }).filter(f => f.label);
+  if (fields.length === 0) { showToast('Add at least one field.', 'warning'); return; }
+  const subtypeKey = 'custom_' + label.toLowerCase().replace(/[^a-z0-9]+/g, '_').slice(0, 30) + '_' + Date.now().toString(36);
+  const record = { id: (crypto.randomUUID ? crypto.randomUUID() : 'cnt_' + Date.now()), node_type: nodeType, subtype_key: subtypeKey, label, icon, fields, created_by: (getCurrentUser() || {}).name || 'Guest' };
+  try { await sbUpsert('workflow_custom_node_types', record); }
+  catch(e) { showToast('Could not save: ' + e.message, 'error'); return; }
+  WORKFLOW_CUSTOM_NODE_TYPES.push(record);
+  renderCustomNodeTypesPalette();
+  closeCreateCustomNodeTypeModal();
+  showToast(`"${label}" custom node type created — find it under CUSTOM in the palette.`, 'success');
+}
+
 function getNodeFieldSchema(node) {
+  const custom = WORKFLOW_CUSTOM_NODE_TYPES.find(ct => ct.subtype_key === node.subtype);
+  if (custom) return custom.fields;
   if (node.node_type === 'trigger') return [{ key: 'sublabel', label: 'Source', type: 'text' }];
   if (node.node_type === 'condition') return [
     { key: 'field', label: 'Field', type: 'text', source: 'config' },
@@ -13807,6 +13933,7 @@ async function sendWfbBuildMessage() {
   if (!text) return;
   if (!requirePermission('edit')) return;
   input.value = '';
+  resetWfbInputHeight();
   appendWfbChatMsg('user', text);
   const thinkingId = appendWfbChatMsg('ai', '…planning changes…');
   const systemPrompt = `You are Nirvana, embedded in Niche Inc.'s visual Workflow Builder, in BUILD mode — the user wants you to actually make changes to the currently open workflow's node graph (add/update/delete nodes, connect or disconnect them), not just discuss it. Use the tools available to make the requested changes, referencing the real node/edge IDs from the graph description below. If a request is ambiguous about exact placement or wording, make a reasonable choice rather than asking — the user will see exactly what you're proposing before anything is actually saved, so it's fine to commit to specifics. Keep your text reply brief — one or two sentences — since the tool calls themselves are what matters here, not a long explanation.
@@ -13825,6 +13952,43 @@ ${serializeWorkflowGraphForAi()}`;
   } catch(e) {
     updateWfbChatMsg(thinkingId, "I couldn't reach the AI just now — try again in a moment.");
   }
+}
+
+// Ask/Build mode toggle (2026-07-15) -- a real persistent selected state
+// (only one is ever visually active) rather than two independent
+// one-off buttons, so it's actually clear which mode will be used when you
+// hit Enter or Send. Shift+Enter inserts a newline (default textarea
+// behavior, just don't also send); plain Enter sends via whichever mode is
+// currently active.
+let wfbChatMode = 'ask';
+function setWfbChatMode(mode) {
+  wfbChatMode = mode;
+  const askBtn = document.getElementById('wfbModeAskBtn');
+  const buildBtn = document.getElementById('wfbModeBuildBtn');
+  if (askBtn) askBtn.classList.toggle('active', mode === 'ask');
+  if (buildBtn) buildBtn.classList.toggle('active', mode === 'build');
+  const input = document.getElementById('wfbAiInput');
+  if (input) input.placeholder = mode === 'ask'
+    ? 'Ask anything about your workflow... (Shift+Enter for a new line)'
+    : 'Describe a change to build... (Shift+Enter for a new line)';
+}
+function handleWfbInputKeydown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendWfbChatMessage();
+  }
+}
+function autoGrowWfbInput(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+function resetWfbInputHeight() {
+  const el = document.getElementById('wfbAiInput');
+  if (el) el.style.height = '';
+}
+function sendWfbChatMessage() {
+  if (wfbChatMode === 'build') sendWfbBuildMessage();
+  else sendWfbAiMessage();
 }
 
 async function analyzeAndImproveWorkflow() {
@@ -13847,6 +14011,7 @@ async function sendWfbAiMessage() {
   const text = input.value.trim();
   if (!text) return;
   input.value = '';
+  resetWfbInputHeight();
   appendWfbChatMsg('user', text);
   const thinkingId = appendWfbChatMsg('ai', '…thinking…');
   const systemPrompt = `You are Nirvana, an AI assistant embedded directly in Niche Inc.'s visual Workflow Builder, currently in ASK mode — you can discuss and analyze this workflow, but you have no tools here and cannot make any actual changes to it. The user is looking at a specific workflow's node graph, described below. Answer their question about THIS workflow specifically — reference actual node names/labels from the graph, and point out exactly which node or connection is the problem when relevant. If they ask you to "analyze," "review," or "improve" the workflow, don't just repeat the structural issues listed below — give real design judgment too: missing paths worth adding, redundant steps, timing/sequencing concerns, and unused merge-field personalization opportunities, referencing specific node names. If they ask you to fix, build, add, connect, delete, or otherwise change anything, don't just say you can't — briefly describe the specific fix you'd make (which node, what change), then tell them to click Build and ask you the same thing again, and you'll actually do it there. Keep answers concise (a few sentences to a short list), since this is a small side panel, not a full chat window.
@@ -13867,8 +14032,8 @@ function appendWfbChatMsg(role, text) {
   div.className = 'wfb-chat-msg ' + role;
   div.id = id;
   div.innerHTML = role === 'user'
-    ? `<div class="bubble">${escAttr(text)}</div>`
-    : `<div class="who">✨ Nirvana</div><div class="bubble">${escAttr(text)}</div>`;
+    ? `<div class="bubble">${escAttr(text).replace(/\n/g, '<br>')}</div>`
+    : `<div class="who">✨ Nirvana</div><div class="bubble">${renderAiMarkdown(text)}</div>`;
   thread.appendChild(div);
   thread.scrollTop = thread.scrollHeight;
   return id;
@@ -13877,7 +14042,7 @@ function updateWfbChatMsg(id, text) {
   const el = document.getElementById(id);
   if (!el) return;
   const bubble = el.querySelector('.bubble');
-  if (bubble) bubble.textContent = text;
+  if (bubble) bubble.innerHTML = renderAiMarkdown(text);
 }
 
 function testWorkflowRun() { showToast('Test-run simulation is coming in a later block.', 'info'); }
