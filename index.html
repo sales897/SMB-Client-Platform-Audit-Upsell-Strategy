@@ -1803,9 +1803,12 @@ tr.hidden-row { display: none; }
 .wfb-canvas-scroll {
   flex: 1; overflow: auto; background: var(--bg); border: 1px solid var(--border);
   background-image: radial-gradient(var(--border) 1px, transparent 1px); background-size: 18px 18px;
+  cursor: grab;
 }
+.wfb-canvas-scroll.panning { cursor: grabbing; }
 .wfb-canvas { position: relative; transform-origin: 0 0; }
 .wfb-edges { position: absolute; top: 0; left: 0; overflow: visible; pointer-events: none; }
+.wfb-edge-hit { pointer-events: stroke; cursor: pointer; }
 .wfb-node {
   position: absolute; width: 172px; background: var(--bg2); border: 1px solid var(--node-color, var(--border));
   border-radius: var(--radius-sm); padding: 8px 10px; box-shadow: 0 0 0 1px rgba(0,0,0,.15), 0 2px 10px rgba(0,0,0,.25);
@@ -3631,6 +3634,7 @@ tr.hidden-row { display: none; }
     <label for="wfbNodeEditSublabel" class="field-label">Sublabel (optional)</label>
     <input type="text" id="wfbNodeEditSublabel" class="field-input">
     <div class="modal-btns">
+      <button class="btn btn-ghost" style="color:var(--red);margin-right:auto" onclick="deleteWorkflowNode(wfbEditingNodeId)">🗑️ Delete Node</button>
       <button class="btn btn-ghost" onclick="closeWfbNodeEditModal()">Cancel</button>
       <button class="btn btn-primary" onclick="saveWfbNodeEdit()">Save</button>
     </div>
@@ -12995,7 +12999,9 @@ function renderWorkflowCanvas() {
     const x2 = t.pos_x, y2 = t.pos_y + WFB_NODE_H / 2;
     const midX = (x1 + x2) / 2;
     const pathColor = e.branch_label === 'No' ? resolveCssColor('var(--red)') : e.branch_label === 'Yes' ? resolveCssColor('var(--green)') : resolveCssColor('var(--border)');
-    edgesHtml += `<path d="M ${x1} ${y1} C ${midX} ${y1}, ${midX} ${y2}, ${x2} ${y2}" fill="none" stroke="${pathColor}" stroke-width="2" />
+    const pathD = `M ${x1} ${y1} C ${midX} ${y1}, ${midX} ${y2}, ${x2} ${y2}`;
+    edgesHtml += `<path d="${pathD}" fill="none" stroke="${pathColor}" stroke-width="2" />
+      <path class="wfb-edge-hit" d="${pathD}" fill="none" stroke="transparent" stroke-width="14" onmousedown="event.stopPropagation()" onclick="deleteWorkflowEdgeConfirm('${e.id}')"><title>Click to remove this connection</title></path>
       <circle cx="${x1}" cy="${y1}" r="3.5" fill="${pathColor}" />
       <circle cx="${x2}" cy="${y2}" r="3.5" fill="${pathColor}" />`;
     if (e.branch_label) {
@@ -13041,6 +13047,7 @@ function applyWorkflowZoomTransform() {
 // listeners, since renderWorkflowCanvas() fully rebuilds that innerHTML on
 // every change -- per-node listeners would need re-binding constantly.
 let wfbDragState = null;
+let wfbPanState = null;
 let wfbConnectState = null;
 let wfbBranchModalResolve = null;
 
@@ -13060,6 +13067,7 @@ function initWorkflowCanvasInteractions() {
       return;
     }
     if (nodeEl && !e.target.closest('.menu')) {
+      e.stopPropagation();
       const node = workflowNodesCache.find(n => n.id === nodeEl.dataset.nodeId);
       if (!node) return;
       nodeEl.classList.add('dragging');
@@ -13069,15 +13077,37 @@ function initWorkflowCanvasInteractions() {
     }
   });
 
-  nodesLayer.addEventListener('dblclick', (e) => {
-    const nodeEl = e.target.closest('.wfb-node');
-    if (nodeEl) openWorkflowNodeEditor(nodeEl.dataset.nodeId);
-  });
-
   nodesLayer.addEventListener('click', (e) => {
     const menuBtn = e.target.closest('.menu');
     if (menuBtn) { e.stopPropagation(); toggleWfbNodeMenu(menuBtn.closest('.wfb-node').dataset.nodeId, menuBtn); }
   });
+
+  // Click-and-drag to pan the canvas, freely in both directions -- only
+  // when the mousedown didn't start on a node (those stopPropagation above).
+  const scrollWrap = document.getElementById('wfbCanvasScroll');
+  if (scrollWrap && !scrollWrap.dataset.wfbPanInit) {
+    scrollWrap.dataset.wfbPanInit = '1';
+    scrollWrap.addEventListener('mousedown', (e) => {
+      wfbPanState = { startX: e.clientX, startY: e.clientY, startScrollLeft: scrollWrap.scrollLeft, startScrollTop: scrollWrap.scrollTop };
+      scrollWrap.classList.add('panning');
+      document.addEventListener('mousemove', onWfbPanMove);
+      document.addEventListener('mouseup', onWfbPanEnd, { once: true });
+    });
+  }
+}
+
+function onWfbPanMove(e) {
+  if (!wfbPanState) return;
+  const scrollWrap = document.getElementById('wfbCanvasScroll');
+  if (!scrollWrap) return;
+  scrollWrap.scrollLeft = wfbPanState.startScrollLeft - (e.clientX - wfbPanState.startX);
+  scrollWrap.scrollTop = wfbPanState.startScrollTop - (e.clientY - wfbPanState.startY);
+}
+function onWfbPanEnd() {
+  document.removeEventListener('mousemove', onWfbPanMove);
+  wfbPanState = null;
+  const scrollWrap = document.getElementById('wfbCanvasScroll');
+  if (scrollWrap) scrollWrap.classList.remove('panning');
 }
 
 function onWfbNodeDragMove(e) {
@@ -13090,12 +13120,18 @@ function onWfbNodeDragMove(e) {
   node.pos_y = Math.max(0, Math.round(wfbDragState.startPosY + dy));
   renderWorkflowCanvas();
 }
-async function onWfbNodeDragEnd() {
+async function onWfbNodeDragEnd(e) {
   document.removeEventListener('mousemove', onWfbNodeDragMove);
   if (!wfbDragState) return;
-  const node = workflowNodesCache.find(n => n.id === wfbDragState.nodeId);
+  const { nodeId, startMouseX, startMouseY } = wfbDragState;
+  const totalMove = Math.hypot(e.clientX - startMouseX, e.clientY - startMouseY);
+  const node = workflowNodesCache.find(n => n.id === nodeId);
   wfbDragState = null;
   if (!node) return;
+  // A click with no real movement opens the editor instead of "saving" a
+  // no-op reposition -- this is what makes a plain click on a node open
+  // modify/delete, rather than requiring the small ⋮ menu or a double-click.
+  if (totalMove < 4) { openWorkflowNodeEditor(nodeId); return; }
   try { await sbPatch('workflow_nodes', `id=eq.${node.id}`, { pos_x: node.pos_x, pos_y: node.pos_y }); }
   catch(e) { console.warn('Could not save node position:', e.message); }
 }
@@ -13178,14 +13214,26 @@ function closeAllWfbNodeMenus() {
   if (m) m.remove();
 }
 
+async function deleteWorkflowEdgeConfirm(edgeId) {
+  const confirmed = await showConfirmDialog('Remove this connection between the two nodes?', { title: '🗑️ Delete Connection', confirmLabel: 'Delete', danger: true });
+  if (!confirmed) return;
+  try { await sbDelete('workflow_edges', `id=eq.${edgeId}`); }
+  catch(e) { showToast('Could not remove that connection: ' + e.message, 'error'); return; }
+  workflowEdgesCache = workflowEdgesCache.filter(e => e.id !== edgeId);
+  renderWorkflowCanvas();
+  showToast('Connection removed.', 'success');
+}
+
 async function deleteWorkflowNode(nodeId) {
   closeAllWfbNodeMenus();
+  if (!nodeId) return;
   const confirmed = await showConfirmDialog('Delete this node? Any connections to or from it will be removed too.', { title: '🗑️ Delete Node', confirmLabel: 'Delete', danger: true });
   if (!confirmed) return;
   try { await sbDelete('workflow_nodes', `id=eq.${nodeId}`); }
   catch(e) { showToast('Could not delete: ' + e.message, 'error'); return; }
   workflowNodesCache = workflowNodesCache.filter(n => n.id !== nodeId);
   workflowEdgesCache = workflowEdgesCache.filter(e => e.source_node_id !== nodeId && e.target_node_id !== nodeId);
+  closeWfbNodeEditModal();
   renderWorkflowCanvas();
   showToast('Node deleted.', 'success');
 }
