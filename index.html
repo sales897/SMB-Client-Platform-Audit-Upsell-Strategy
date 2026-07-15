@@ -391,7 +391,7 @@ body.ai-panel-open .main {
    fill whatever's left. Scoped to #page-home only -- every other page keeps
    its normal scrolling behavior untouched. Print styles are unaffected since
    they live in their own @media print block. */
-#page-home { display: flex; flex-direction: column; height: calc(100vh - 56px - 60px); overflow: hidden; padding: 16px 28px 14px; }
+#page-home.active { display: flex; flex-direction: column; height: calc(100vh - 56px - 60px); overflow: hidden; padding: 16px 28px 14px; }
 #page-home .ai-insights-banner { margin-bottom: 10px; padding: var(--space-3) var(--space-4); flex-shrink: 0; }
 #page-home .home-greeting { margin-bottom: 2px; flex-shrink: 0; }
 #page-home .home-greeting-sub { margin-bottom: 10px; flex-shrink: 0; }
@@ -407,7 +407,19 @@ body.ai-panel-open .main {
 .vital-block::before, .vital-block::after { content: ''; position: absolute; width: 14px; height: 14px; border-color: var(--orange); border-style: solid; opacity: .75; }
 .vital-block::before { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
 .vital-block::after { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
-.vital-block-hd { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-bottom: 2px; }
+.vital-block-hd { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-bottom: 2px; position: relative; }
+.vital-block[draggable="true"] { cursor: grab; }
+.vital-block[draggable="true"]:active { cursor: grabbing; }
+.vital-block.dragging { opacity: .4; }
+.vital-block-actions { display: flex; gap: 2px; flex-shrink: 0; }
+.vital-swap-menu {
+  position: absolute; top: 26px; right: 0; z-index: 60;
+  background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  box-shadow: var(--shadow); padding: 4px; min-width: 175px;
+}
+.vital-swap-item { padding: 6px 10px; font-size: var(--font-2xs); border-radius: var(--radius-xs); cursor: pointer; color: var(--text2); }
+.vital-swap-item:hover { background: var(--bg4); color: var(--text); }
+.vital-swap-item.active { color: var(--orange); font-weight: 700; }
 .vital-block-hd h3 { margin: 0; font-size: var(--font-xs); letter-spacing: .5px; text-transform: uppercase; color: var(--text); display: flex; align-items: center; gap: 7px; font-weight: 700; }
 .vital-dot { width: 6px; height: 6px; border-radius: 50%; box-shadow: 0 0 8px currentColor; animation: vitalPulse 2.2s infinite; flex-shrink: 0; }
 @keyframes vitalPulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
@@ -433,7 +445,7 @@ body.ai-panel-open .main {
 .vital-list-empty { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--text3); font-size: var(--font-2xs); text-align: center; }
 @media (max-width: 900px) {
   .home-vitals-grid { grid-template-columns: 1fr; grid-template-rows: none; }
-  #page-home { height: auto; overflow: visible; }
+  #page-home.active { height: auto; overflow: visible; }
   #page-home .vital-block { overflow: visible; min-height: 220px; }
   #page-home .page-footer { display: block; }
 }
@@ -453,6 +465,10 @@ body.ai-panel-open .main {
   content: '';
   position: absolute; top: 0; left: 0; right: 0; height: 3px;
   background: linear-gradient(90deg, var(--orange), var(--orange2));
+}
+.kpi::after {
+  content: ''; position: absolute; bottom: -1px; right: -1px; width: 14px; height: 14px;
+  border-color: var(--orange); border-style: solid; border-width: 0 2px 2px 0; opacity: .75;
 }
 .kpi-icon { font-size: 22px; margin-bottom: 10px; }
 .kpi-val { font-family: var(--font-mono); font-size: var(--font-3xl); font-weight: 800; color: var(--text); line-height: 1; }
@@ -480,7 +496,14 @@ body.ai-panel-open .main {
   border-radius: var(--radius);
   padding: var(--space-5);
   box-shadow: var(--shadow);
+  position: relative;
 }
+.card::before, .card::after {
+  content: ''; position: absolute; width: 14px; height: 14px;
+  border-color: var(--orange); border-style: solid; opacity: .75;
+}
+.card::before { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
+.card::after { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
 .card-header {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: var(--space-4);
@@ -750,46 +773,105 @@ body.ai-panel-open .main {
 .field-input::placeholder { color: var(--text3); }
 
 /* ─── LOGIN GATE ───────────────────────────────────────────────────────────── */
+/* Login gate: "vault" redesign (2026-07-14) -- rotating glow rings around a
+   boxless, floating sign-in form, centered on the full screen. On success,
+   the rings accelerate and fade, then two solid door panels (the ONLY
+   opaque part of the gate -- the gate itself is transparent) slide apart to
+   reveal the real Hub already rendered underneath. Everything here uses
+   theme tokens (var(--bg), var(--orange), etc.) so it still follows
+   Light/Dark/Blackout like the rest of the app. */
+@keyframes loginRingSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+@keyframes loginRingSpinRev { from { transform: rotate(360deg); } to { transform: rotate(0deg); } }
+@keyframes loginFlashPulse {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(.3); }
+  35% { opacity: 1; transform: translate(-50%, -50%) scale(1.6); }
+  100% { opacity: 0; transform: translate(-50%, -50%) scale(3); }
+}
 .login-gate {
   position: fixed; inset: 0; z-index: 5000;
-  background: var(--bg); display: flex; align-items: center; justify-content: center;
-  padding: 20px;
+  background: transparent; display: flex; align-items: center; justify-content: center;
+  padding: 20px; overflow: hidden;
 }
+.login-vault-door {
+  position: absolute; top: 0; bottom: 0; width: 50%; background: var(--bg); z-index: 1;
+  transition: transform 1.4s cubic-bezier(.76, 0, .24, 1);
+}
+.login-vault-door.left { left: 0; }
+.login-vault-door.right { right: 0; }
+.login-gate.doors .login-vault-door.left { transform: translateX(-100%); }
+.login-gate.doors .login-vault-door.right { transform: translateX(100%); }
+@keyframes loginStarTwinkle {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
+}
+.login-star {
+  position: absolute; border-radius: 50%; z-index: 1;
+  animation-name: loginStarTwinkle; animation-iteration-count: infinite; animation-timing-function: ease-in-out;
+  transition: opacity .6s ease;
+}
+.login-gate.opening .login-star { opacity: 0 !important; animation-play-state: paused; }
+.login-orbit {
+  position: absolute; border-radius: 50%; border: 1px dashed rgba(226,84,31,.5); z-index: 2;
+  transition: transform 1s ease, opacity 1s ease;
+}
+#loginRing1 { width: 520px; height: 520px; box-shadow: 0 0 50px rgba(226,84,31,.45), inset 0 0 50px rgba(226,84,31,.18); animation: loginRingSpin 46s linear infinite; }
+#loginRing2 { width: 600px; height: 600px; border-color: rgba(226,84,31,.3); box-shadow: 0 0 34px rgba(226,84,31,.25); animation: loginRingSpinRev 60s linear infinite; }
+.login-gate.accelerating #loginRing1 { animation-duration: 2.2s; }
+.login-gate.accelerating #loginRing2 { animation-duration: 3s; }
+.login-gate.opening #loginRing1, .login-gate.opening #loginRing2 { transform: scale(2.4); opacity: 0; }
+.login-orbit-dot {
+  position: absolute; width: 6px; height: 6px; border-radius: 50%; background: var(--orange); z-index: 2;
+  box-shadow: 0 0 10px var(--orange), 0 0 20px rgba(226,84,31,.5); transition: opacity .6s ease;
+}
+.login-gate.opening .login-orbit-dot { opacity: 0; }
+.login-flash {
+  position: absolute; top: 50%; left: 50%; width: 100px; height: 100px; border-radius: 50%; z-index: 3;
+  background: radial-gradient(circle, rgba(255,220,180,1), rgba(226,84,31,.7) 35%, transparent 72%);
+  opacity: 0; pointer-events: none;
+}
+.login-gate.opening .login-flash { animation: loginFlashPulse 1.3s ease-out forwards; }
+.login-access-text {
+  position: absolute; z-index: 4; font-size: 15px; font-weight: 800; color: var(--text); letter-spacing: 3px;
+  text-shadow: 0 0 24px rgba(226,84,31,.9); opacity: 0; transition: opacity .5s ease;
+}
+.login-gate.granted .login-access-text { opacity: 1; }
 .login-card {
-  width: 100%; max-width: 380px; background: var(--bg2); border: 1px solid var(--border);
-  border-radius: var(--radius-lg); padding: 34px 28px; box-shadow: var(--shadow);
+  position: relative; z-index: 2; width: 100%; max-width: 260px; text-align: center;
+  transition: opacity .6s ease, transform .6s ease, filter .6s ease;
 }
-.login-logo-img { height: 52px; width: auto; display: block; margin: 0 auto 14px; }
+.login-gate.opening .login-card { opacity: 0; transform: scale(.8); filter: blur(6px); }
+.login-logo-img { height: 52px; width: auto; display: block; margin: 0 auto 10px; filter: drop-shadow(0 0 20px rgba(226,84,31,.55)); }
 .password-toggle-btn {
   position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
   background: none; border: none; cursor: pointer; font-size: 14px;
   padding: 6px 8px; opacity: .6; transition: opacity var(--transition-base);
 }
 .password-toggle-btn:hover { opacity: 1; }
-.login-title { font-size: 19px; font-weight: 800; color: var(--text); text-align: center; }
-.login-sub { font-size: 12px; color: var(--text3); text-align: center; margin-bottom: 26px; }
+.login-title { font-size: 15px; font-weight: 800; color: var(--text); text-align: center; letter-spacing: 1.5px; text-shadow: 0 0 12px rgba(226,84,31,.5); }
+.login-sub { font-size: 9px; color: var(--text3); text-align: center; margin-bottom: 14px; letter-spacing: .5px; }
 .google-btn {
   width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;
-  background: #fff; color: #1f1f1f; border: 1px solid #dadce0; border-radius: var(--radius-sm);
+  background: #fff; color: #1f1f1f; border: 1px solid #dadce0; border-radius: var(--radius-pill);
   padding: 10px 16px; font-size: 13px; font-weight: 600; cursor: pointer; transition: box-shadow var(--transition-base);
 }
 .google-btn:hover { box-shadow: 0 1px 8px rgba(0,0,0,.35); }
-.login-divider { display: flex; align-items: center; gap: 12px; margin: 20px 0; color: var(--text3); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; }
+.login-divider { display: flex; align-items: center; gap: 12px; margin: 12px 0; color: var(--text3); font-size: 9px; text-transform: uppercase; letter-spacing: .1em; }
 .login-divider::before, .login-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 .login-error {
   background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.3); color: var(--red);
   border-radius: var(--radius-sm); padding: 10px 12px; font-size: 12px; margin-bottom: 14px; line-height: 1.5;
 }
-.login-label { font-size: 11px; color: var(--text3); display: block; margin-bottom: 5px; margin-top: 12px; }
+.login-label { font-size: 10px; color: var(--text3); display: block; margin-bottom: 4px; margin-top: 8px; text-align: left; }
 .login-input {
-  width: 100%; padding: 10px 14px; background: var(--bg3); border: 1px solid var(--border);
-  border-radius: var(--radius-sm); color: var(--text); font-size: 13px; outline: none; transition: border-color var(--transition-slow);
+  width: 100%; padding: 9px 14px; background: rgba(226,84,31,.05); border: 1px solid rgba(226,84,31,.3);
+  border-radius: var(--radius-pill); color: var(--text); font-size: 12px; outline: none; transition: border-color var(--transition-slow);
+  box-shadow: 0 0 10px rgba(226,84,31,.1);
 }
 .login-input:focus { border-color: var(--orange); }
-.login-toggle { text-align: center; font-size: 12px; color: var(--text3); margin-top: 16px; }
+.login-toggle { text-align: center; font-size: 11px; color: var(--text3); margin-top: 10px; }
 .login-toggle a { color: var(--orange); text-decoration: none; font-weight: 600; cursor: pointer; }
 .login-toggle a:hover { text-decoration: underline; }
-.login-footnote { text-align: center; font-size: 10.5px; color: var(--text3); margin-top: 22px; line-height: 1.5; }
+.login-footnote { text-align: center; font-size: 9px; color: var(--text3); margin-top: 12px; line-height: 1.4; }
 
 /* ─── EMPTY STATES ─────────────────────────────────────────────────────────── */
 .empty-state {
@@ -1673,6 +1755,11 @@ tr.hidden-row { display: none; }
 
 <!-- LOGIN GATE — visible until a Supabase Auth session is verified against the team_members allowlist -->
 <div id="loginGate" class="login-gate">
+  <div class="login-orbit" id="loginRing1"></div>
+  <div class="login-orbit" id="loginRing2"></div>
+  <div class="login-orbit-dot" style="top:15%;left:50%"></div>
+  <div class="login-orbit-dot" style="bottom:18%;right:20%"></div>
+  <div class="login-flash"></div>
   <div class="login-card">
     <img id="loginLogoImg" alt="Client Success Hub" class="login-logo-img">
     <div class="login-title">Client Success Hub</div>
@@ -1701,8 +1788,22 @@ tr.hidden-row { display: none; }
       First time here? <a href="#" onclick="toggleLoginMode(event)">Create your password</a>
     </div>
 
-    <div class="login-footnote">Access is invite-only — ask an Admin if you don't have an account yet.</div>
   </div>
+  <div class="login-vault-door left"></div>
+  <div class="login-vault-door right"></div>
+  <div class="login-star" style="top:47.2%;left:30.4%;width:2.0px;height:2.0px;background:var(--orange);box-shadow:0 0 6.0px var(--orange);animation-delay:3.09s;animation-duration:5.56s"></div>
+  <div class="login-star" style="top:29.4%;left:25.8%;width:3.0px;height:3.0px;background:var(--orange);box-shadow:0 0 9.0px var(--orange);animation-delay:0.99s;animation-duration:6.22s"></div>
+  <div class="login-star" style="top:66.4%;left:36.2%;width:1.6px;height:1.6px;background:var(--text3);box-shadow:0 0 4.8px var(--text3);animation-delay:0.34s;animation-duration:5.84s"></div>
+  <div class="login-star" style="top:60.5%;left:50.7%;width:2.5px;height:2.5px;background:var(--text3);box-shadow:0 0 7.5px var(--text3);animation-delay:4.98s;animation-duration:5.73s"></div>
+  <div class="login-star" style="top:35.5%;left:46.7%;width:2.6px;height:2.6px;background:var(--orange);box-shadow:0 0 7.8px var(--orange);animation-delay:7.6s;animation-duration:5.67s"></div>
+  <div class="login-star" style="top:3.6%;left:21.7%;width:1.9px;height:1.9px;background:var(--text3);box-shadow:0 0 5.7px var(--text3);animation-delay:6.43s;animation-duration:4.9s"></div>
+  <div class="login-star" style="top:13.7%;left:4.5%;width:2.0px;height:2.0px;background:var(--orange);box-shadow:0 0 6.0px var(--orange);animation-delay:0.97s;animation-duration:6.76s"></div>
+  <div class="login-star" style="top:86.5%;left:67.8%;width:2.8px;height:2.8px;background:var(--orange);box-shadow:0 0 8.4px var(--orange);animation-delay:5.34s;animation-duration:6.93s"></div>
+  <div class="login-star" style="top:52.7%;left:11.3%;width:2.4px;height:2.4px;background:var(--text3);box-shadow:0 0 7.2px var(--text3);animation-delay:3.79s;animation-duration:4.94s"></div>
+  <div class="login-star" style="top:37.0%;left:49.4%;width:2.3px;height:2.3px;background:var(--orange);box-shadow:0 0 6.9px var(--orange);animation-delay:1.43s;animation-duration:4.09s"></div>
+  <div class="login-star" style="top:77.7%;left:12.9%;width:2.8px;height:2.8px;background:var(--orange);box-shadow:0 0 8.4px var(--orange);animation-delay:6.69s;animation-duration:7.81s"></div>
+  <div class="login-star" style="top:54.1%;left:73.9%;width:1.6px;height:1.6px;background:var(--text3);box-shadow:0 0 4.8px var(--text3);animation-delay:0.85s;animation-duration:7.0s"></div>
+  <div class="login-access-text">✓ ACCESS GRANTED</div>
 </div>
 
 
@@ -2080,91 +2181,12 @@ tr.hidden-row { display: none; }
       <button class="ai-insights-refresh" id="aiInsightsRefreshBtn" onclick="loadAiInsightsBanner()" title="Get a new insight" aria-label="Get a new insight">🔄</button>
     </div>
     <div class="home-greeting" id="homeGreeting">Good morning 👋</div>
-    <div class="home-greeting-sub" id="homeGreetingSub">Here's what's happening across the Hub today.</div>
-
-    <div class="home-vitals-grid" id="homeVitalsGrid">
-
-      <div class="vital-block">
-        <div class="vital-block-hd">
-          <h3><span class="vital-dot" style="background:var(--green);color:var(--green)"></span>My Tasks</h3>
-          <button class="vital-ask" onclick="askNirvanaAboutVital('tasks')" title="Ask Nirvana about this" aria-label="Ask Nirvana about my tasks">✨</button>
-        </div>
-        <div class="vital-sub">Open tasks assigned to you, across every client</div>
-        <div class="vital-list" id="vitalTasksList"></div>
-      </div>
-
-      <div class="vital-block">
-        <div class="vital-block-hd">
-          <h3><span class="vital-dot" style="background:var(--orange);color:var(--orange)"></span>My Reminders</h3>
-          <button class="vital-ask" onclick="askNirvanaAboutVital('reminders')" title="Ask Nirvana about this" aria-label="Ask Nirvana about my reminders">✨</button>
-        </div>
-        <div class="vital-sub">Personal reminders — not shared with the team</div>
-        <div class="vital-list" id="vitalRemindersList"></div>
-      </div>
-
-      <div class="vital-block">
-        <div class="vital-block-hd">
-          <h3><span class="vital-dot" style="background:var(--red);color:var(--red)"></span>Needs Attention</h3>
-          <button class="vital-ask" onclick="askNirvanaAboutVital('attention')" title="Ask Nirvana about this" aria-label="Ask Nirvana about accounts needing attention">✨</button>
-        </div>
-        <div class="vital-sub">Collections flagged pending, in review, or escalated</div>
-        <div class="vital-ring-wrap">
-          <div class="vital-ring-canvas-wrap"><canvas id="vitalAttentionRing"></canvas><div class="vital-ring-label" id="vitalAttentionCount">0</div></div>
-          <div class="vital-legend" id="vitalAttentionLegend"></div>
-        </div>
-      </div>
-
-      <div class="vital-block">
-        <div class="vital-block-hd">
-          <h3><span class="vital-dot" style="background:var(--purple);color:var(--purple)"></span>Onboarding Pipeline</h3>
-          <button class="vital-ask" onclick="askNirvanaAboutVital('onboarding')" title="Ask Nirvana about this" aria-label="Ask Nirvana about onboarding">✨</button>
-        </div>
-        <div class="vital-sub">Clients moving through setup stages</div>
-        <div class="vital-chart-wrap"><canvas id="vitalOnboardingFunnel"></canvas></div>
-      </div>
-
-      <div class="vital-block">
-        <div class="vital-block-hd">
-          <h3><span class="vital-dot" style="background:var(--orange);color:var(--orange)"></span>Ad Spend Budget</h3>
-          <button class="vital-ask" onclick="askNirvanaAboutVital('adspend')" title="Ask Nirvana about this" aria-label="Ask Nirvana about ad spend">✨</button>
-        </div>
-        <div class="vital-sub">Promo adoption rate across eligible accounts</div>
-        <div class="vital-ring-wrap">
-          <div class="vital-ring-canvas-wrap"><canvas id="vitalAdSpendRing"></canvas><div class="vital-ring-label" id="vitalAdSpendPct">0%</div></div>
-          <div><div class="vital-stat" id="vitalAdSpendBudget">$0</div><div class="vital-stat-sub">total budget</div></div>
-        </div>
-      </div>
-
-      <div class="vital-block">
-        <div class="vital-block-hd">
-          <h3><span class="vital-dot" style="background:var(--red);color:var(--red)"></span>Collections Status</h3>
-          <button class="vital-ask" onclick="askNirvanaAboutVital('collections')" title="Ask Nirvana about this" aria-label="Ask Nirvana about collections">✨</button>
-        </div>
-        <div class="vital-sub">Dollar total per status</div>
-        <div class="vital-stat" id="vitalCollectionsTotal">$0</div>
-        <div class="vital-stackbar" id="vitalCollectionsBar"></div>
-      </div>
-
-      <div class="vital-block">
-        <div class="vital-block-hd">
-          <h3><span class="vital-dot" style="background:var(--green);color:var(--green)"></span>SuccessOS KPI Scores</h3>
-          <button class="vital-ask" onclick="askNirvanaAboutVital('kpi')" title="Ask Nirvana about this" aria-label="Ask Nirvana about SuccessOS scores">✨</button>
-        </div>
-        <div class="vital-sub">Health / Engagement / Retention trend</div>
-        <div class="vital-chart-wrap"><canvas id="vitalKpiLine"></canvas></div>
-        <div class="vital-stat" id="vitalKpiAvg" style="margin-top:6px;font-size:16px"></div>
-      </div>
-
-      <div class="vital-block">
-        <div class="vital-block-hd">
-          <h3><span class="vital-dot" style="background:var(--yellow);color:var(--yellow)"></span>Product Adoption Gap</h3>
-          <button class="vital-ask" onclick="askNirvanaAboutVital('adoption')" title="Ask Nirvana about this" aria-label="Ask Nirvana about product adoption gap">✨</button>
-        </div>
-        <div class="vital-sub">Clients not using each product (SMB)</div>
-        <div class="vital-chart-wrap"><canvas id="vitalAdoptionGap"></canvas></div>
-      </div>
-
+    <div class="home-greeting-sub" id="homeGreetingSub">Here's what's happening across the Hub today.
+      <span style="color:var(--text3)"> · Drag a block to rearrange, ⇄ to swap it for something else</span>
+      <a href="javascript:void(0)" onclick="resetHomeLayout()" style="color:var(--text3);text-decoration:underline;margin-left:6px">Reset layout</a>
     </div>
+
+    <div class="home-vitals-grid" id="homeVitalsGrid"></div>
 
     <div class="page-footer">Client Success Hub · Niche Inc. · Home</div>
   </div>
@@ -4024,6 +4046,10 @@ function toggleTheme() {
   const next = (THEME_META[current] || THEME_META.dark).next;
   applyTheme(next, true);
 }
+// Apply the saved theme immediately, before login -- previously this only ran
+// inside bootApp() (post-auth), so the login gate always showed the default
+// theme regardless of what the person had actually selected last time.
+applyTheme(getSavedTheme(), false);
 
 const prioMeta = {
   high:   { ptag: 'prio-high', plbl: '🔥 High Priority' },
@@ -4548,9 +4574,135 @@ function refreshNavBadges() {
 function rebuildHomePage() {
   if (!document.getElementById('page-home')) return;
   renderHomeGreeting();
-  renderHomeVitalsGrid();
+  buildHomeVitalsGrid();
   loadAiInsightsBanner();
 }
+
+// Customizable Home vitals grid (2026-07-14) -- each of the 8 slots can hold
+// any of these widget types, freely reordered by drag-and-drop or swapped via
+// the ⇄ picker. Layout is personal, saved to this browser's localStorage
+// (same instant-cache pattern used elsewhere in the app, e.g. TEAM_CACHE_KEY)
+// -- it doesn't sync across devices, which is a reasonable scope for a
+// personal dashboard-arrangement preference.
+const HOME_WIDGET_DEFS = {
+  tasks: {
+    label: 'My Tasks', dot: 'var(--green)', sub: 'Open tasks assigned to you, across every client',
+    body: '<div class="vital-list" id="vitalTasksList"></div>',
+  },
+  reminders: {
+    label: 'My Reminders', dot: 'var(--orange)', sub: 'Personal reminders — not shared with the team',
+    body: '<div class="vital-list" id="vitalRemindersList"></div>',
+  },
+  attention: {
+    label: 'Needs Attention', dot: 'var(--red)', sub: 'Collections flagged pending, in review, or escalated',
+    body: '<div class="vital-ring-wrap"><div class="vital-ring-canvas-wrap"><canvas id="vitalAttentionRing"></canvas><div class="vital-ring-label" id="vitalAttentionCount">0</div></div><div class="vital-legend" id="vitalAttentionLegend"></div></div>',
+  },
+  onboarding: {
+    label: 'Onboarding Pipeline', dot: 'var(--purple)', sub: 'Clients moving through setup stages',
+    body: '<div class="vital-chart-wrap"><canvas id="vitalOnboardingFunnel"></canvas></div>',
+  },
+  adspend: {
+    label: 'Ad Spend Budget', dot: 'var(--orange)', sub: 'Promo adoption rate across eligible accounts',
+    body: '<div class="vital-ring-wrap"><div class="vital-ring-canvas-wrap"><canvas id="vitalAdSpendRing"></canvas><div class="vital-ring-label" id="vitalAdSpendPct">0%</div></div><div><div class="vital-stat" id="vitalAdSpendBudget">$0</div><div class="vital-stat-sub">total budget</div></div></div>',
+  },
+  collections: {
+    label: 'Collections Status', dot: 'var(--red)', sub: 'Dollar total per status',
+    body: '<div class="vital-stat" id="vitalCollectionsTotal">$0</div><div class="vital-stackbar" id="vitalCollectionsBar"></div>',
+  },
+  kpi: {
+    label: 'SuccessOS KPI Scores', dot: 'var(--green)', sub: 'Health / Engagement / Retention trend',
+    body: '<div class="vital-chart-wrap"><canvas id="vitalKpiLine"></canvas></div><div class="vital-stat" id="vitalKpiAvg" style="margin-top:6px;font-size:16px"></div>',
+  },
+  adoption: {
+    label: 'Product Adoption Gap', dot: 'var(--yellow)', sub: 'Clients not using each product (SMB)',
+    body: '<div class="vital-chart-wrap"><canvas id="vitalAdoptionGap"></canvas></div>',
+  },
+};
+const HOME_LAYOUT_DEFAULT = ['tasks', 'reminders', 'attention', 'onboarding', 'adspend', 'collections', 'kpi', 'adoption'];
+const HOME_LAYOUT_KEY = 'csh_home_layout_v1';
+
+function getHomeLayout() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(HOME_LAYOUT_KEY) || 'null');
+    if (Array.isArray(saved) && saved.length === HOME_LAYOUT_DEFAULT.length && saved.every(k => HOME_WIDGET_DEFS[k])) return saved;
+  } catch (e) {}
+  return [...HOME_LAYOUT_DEFAULT];
+}
+function saveHomeLayout(layout) {
+  try { localStorage.setItem(HOME_LAYOUT_KEY, JSON.stringify(layout)); } catch (e) {}
+}
+function resetHomeLayout() {
+  saveHomeLayout([...HOME_LAYOUT_DEFAULT]);
+  buildHomeVitalsGrid();
+}
+
+function buildHomeVitalsGrid() {
+  const grid = document.getElementById('homeVitalsGrid');
+  if (!grid) return;
+  const layout = getHomeLayout();
+  grid.innerHTML = layout.map((key, i) => {
+    const def = HOME_WIDGET_DEFS[key] || HOME_WIDGET_DEFS[HOME_LAYOUT_DEFAULT[i]];
+    const swapOptions = Object.entries(HOME_WIDGET_DEFS).map(([k, d]) =>
+      `<div class="vital-swap-item${k === key ? ' active' : ''}" onclick="swapVitalWidget(${i}, '${k}')">${escAttr(d.label)}</div>`).join('');
+    return `
+      <div class="vital-block" draggable="true" data-slot="${i}"
+           ondragstart="vitalDragStart(event)" ondragover="vitalDragOver(event)" ondrop="vitalDrop(event)" ondragend="vitalDragEnd(event)">
+        <div class="vital-block-hd">
+          <h3><span class="vital-dot" style="background:${def.dot};color:${def.dot}"></span>${escAttr(def.label)}</h3>
+          <div class="vital-block-actions">
+            <button class="vital-ask" onclick="event.stopPropagation();askNirvanaAboutVital('${key}')" title="Ask Nirvana about this" aria-label="Ask Nirvana about ${escAttr(def.label)}">✨</button>
+            <button class="vital-ask" onclick="event.stopPropagation();openVitalSwapMenu(${i})" title="Swap this block" aria-label="Swap this block for another">⇄</button>
+          </div>
+          <div class="vital-swap-menu" id="vitalSwapMenu-${i}" style="display:none">${swapOptions}</div>
+        </div>
+        <div class="vital-sub">${escAttr(def.sub)}</div>
+        ${def.body}
+      </div>`;
+  }).join('');
+  renderHomeVitalsGrid();
+}
+
+let vitalDragSrcSlot = null;
+function vitalDragStart(e) {
+  vitalDragSrcSlot = parseInt(e.currentTarget.dataset.slot, 10);
+  e.dataTransfer.effectAllowed = 'move';
+  e.currentTarget.classList.add('dragging');
+}
+function vitalDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+}
+function vitalDrop(e) {
+  e.preventDefault();
+  const targetSlot = parseInt(e.currentTarget.dataset.slot, 10);
+  if (vitalDragSrcSlot === null || targetSlot === vitalDragSrcSlot) return;
+  const layout = getHomeLayout();
+  const [moved] = layout.splice(vitalDragSrcSlot, 1);
+  layout.splice(targetSlot, 0, moved);
+  saveHomeLayout(layout);
+  vitalDragSrcSlot = null;
+  buildHomeVitalsGrid();
+}
+function vitalDragEnd(e) {
+  e.currentTarget.classList.remove('dragging');
+}
+
+function openVitalSwapMenu(slot) {
+  document.querySelectorAll('.vital-swap-menu').forEach(m => { if (m.id !== 'vitalSwapMenu-' + slot) m.style.display = 'none'; });
+  const menu = document.getElementById('vitalSwapMenu-' + slot);
+  if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+}
+function swapVitalWidget(slot, key) {
+  const layout = getHomeLayout();
+  layout[slot] = key;
+  saveHomeLayout(layout);
+  buildHomeVitalsGrid();
+}
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.vital-swap-menu') && !e.target.closest('[onclick*="openVitalSwapMenu"]')) {
+    document.querySelectorAll('.vital-swap-menu').forEach(m => m.style.display = 'none');
+  }
+});
 
 // Home vitals grid (2026-07-14) -- six chart-driven blocks replacing the old
 // KPI row + Quick Access + Today's Focus stack. Every block pulls real data
@@ -7724,8 +7876,25 @@ async function confirmSignOut() {
   signOutUser();
 }
 
-function showLoginGate() { const gate = document.getElementById('loginGate'); if (gate) gate.style.display = 'flex'; }
+function showLoginGate() { const gate = document.getElementById('loginGate'); if (gate) { gate.style.display = 'flex'; gate.classList.remove('accelerating', 'opening', 'doors', 'granted'); } }
 function hideLoginGate() { const gate = document.getElementById('loginGate'); if (gate) gate.style.display = 'none'; }
+
+// "Vault opening" sign-in sequence (2026-07-14) -- on successful auth, the
+// orbit rings accelerate, flash, and fade; the vault doors (two solid panels
+// that are the ONLY opaque part of #loginGate -- the gate itself is
+// transparent) slide apart to reveal the real, already-rendered Hub
+// underneath, then "ACCESS GRANTED" holds briefly before the gate is fully
+// removed from layout. Data loading (applyPermissionsToUI, bootApp, etc.)
+// is NOT blocked by this -- it proceeds immediately in parallel.
+function playLoginVaultThenEnter() {
+  const gate = document.getElementById('loginGate');
+  if (!gate) return;
+  gate.classList.add('accelerating');
+  setTimeout(() => gate.classList.add('opening'), 500);
+  setTimeout(() => gate.classList.add('doors'), 1300);
+  setTimeout(() => gate.classList.add('granted'), 2100);
+  setTimeout(() => hideLoginGate(), 3400);
+}
 
 // Runs whenever Supabase confirms a valid session (fresh sign-in, OAuth redirect
 // return, or an existing session restored from a previous visit). Checks the
@@ -7769,7 +7938,7 @@ async function authorizeSession(session) {
   }
 
   CURRENT_AUTH_USER = { id: match.id, name: match.name, email: match.email, role: match.role, avatar: match.avatar || '', authId: session.user.id };
-  hideLoginGate();
+  playLoginVaultThenEnter();
   applyPermissionsToUI();
   loadNotifications();
   loadReminders();
