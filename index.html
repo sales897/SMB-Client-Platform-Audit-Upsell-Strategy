@@ -1071,7 +1071,6 @@ tr.hidden-row { display: none; }
 .kpi-star-picker .star { font-size: var(--font-2xl); line-height: 1; color: var(--border); transition: color var(--transition-fast), transform var(--transition-fast); }
 .kpi-star-picker.editable .star { cursor: pointer; }
 .kpi-star-picker.editable .star:hover { transform: scale(1.15); }
-.kpi-star-picker .star.filled { color: var(--yellow); }
 .kpi-score-label { font-size: var(--font-xs); color: var(--text3); margin-bottom: var(--space-3); }
 .kpi-trend-badge { font-size: var(--font-2xs); font-weight: 700; padding: var(--space-1) var(--space-2); border-radius: var(--radius); display: inline-block; margin-bottom: var(--space-3); }
 .kpi-trend-up { background: rgba(34,197,94,.15); color: var(--green); }
@@ -1489,6 +1488,31 @@ tr.hidden-row { display: none; }
   min-width: 16px; height: 16px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center;
   padding: 0 3px;
 }
+/* Bell glow states (2026-07-16): yellow at rest, red while there are unread
+   notifications, back to yellow once everything's read. Applied by
+   renderNotificationBell() via class toggling on any element with the
+   .bell-glow marker class. */
+.bell-glow { color: var(--yellow); filter: drop-shadow(0 0 5px rgba(234,179,8,.8)); transition: color var(--transition-base), filter var(--transition-base); }
+.bell-glow.unread { color: var(--red); filter: drop-shadow(0 0 6px rgba(239,68,68,.85)); animation: bellPulse 1.6s ease-in-out infinite; }
+@keyframes bellPulse {
+  0%, 100% { filter: drop-shadow(0 0 6px rgba(239,68,68,.85)); }
+  50% { filter: drop-shadow(0 0 10px rgba(239,68,68,1)); }
+}
+/* Standalone quick-access bell under the profile badge */
+.topbar-bell-wrap { display: flex; justify-content: center; margin-top: 4px; }
+.topbar-bell-btn { background: none; border: none; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; position: relative; }
+/* Star glow (2026-07-16): filled rating stars glow yellow, matching the
+   bell's at-rest glow so both read as the same "active/positive" signal
+   language across the Hub. */
+.kpi-star-picker .star.filled { color: var(--yellow); filter: drop-shadow(0 0 4px rgba(234,179,8,.75)); }
+.star-glow-filled { filter: drop-shadow(0 0 4px rgba(234,179,8,.75)); }
+/* General yellow glow for every star icon in the Hub (KPI badges, filter
+   pills, workflow trigger labels, etc.) -- the interactive rating picker
+   above is a special case (unfilled stars must stay neutral so the rating
+   itself stays legible), so it's explicitly reset back below rather than
+   inheriting this default. */
+[data-icon="star"] { color: var(--yellow); filter: drop-shadow(0 0 4px rgba(234,179,8,.7)); }
+.kpi-star-picker .star:not(.filled) [data-icon="star"] { color: var(--border); filter: none; }
 .notif-panel {
   position: fixed; top: 70px; right: 24px; z-index: 2500;
   width: 320px; max-height: 420px; overflow-y: auto;
@@ -2251,6 +2275,12 @@ tr.hidden-row { display: none; }
       <span id="userBadgeName">Guest</span>
       <span class="role-pill user" id="userBadgeRole">User</span>
     </div>
+    <div class="topbar-bell-wrap">
+      <button class="topbar-bell-btn" id="topbarBellBtn" onclick="toggleNotificationPanel()" title="Notifications" aria-label="Notifications">
+        <span class="bell-glow" id="topbarBellIcon"><span class="icon" data-icon="bell" data-icon-size="19"></span></span>
+        <span class="notif-badge" id="topbarBellNotifBadge" style="display:none">0</span>
+      </button>
+    </div>
     <div class="profile-menu" id="profileMenu" style="display:none">
       <div class="profile-menu-header">
         <span class="user-avatar" id="profileMenuAvatar">?</span>
@@ -2276,7 +2306,7 @@ tr.hidden-row { display: none; }
       </div>
       <div class="profile-menu-divider"></div>
       <div class="profile-menu-item" id="notifBellBtn" onclick="toggleProfileMenu();toggleNotificationPanel()">
-        <span class="icon" data-icon="bell" data-icon-size="15"></span> <span style="flex:1" data-i18n="pref_notifications">Notifications</span>
+        <span class="icon bell-glow" data-icon="bell" data-icon-size="15"></span> <span style="flex:1" data-i18n="pref_notifications">Notifications</span>
         <span class="notif-badge" id="notifBadge" style="display:none;position:static">0</span>
       </div>
       <div class="profile-menu-item nav-item" onclick="showPage('settings')">
@@ -7635,7 +7665,7 @@ function getKpiTrend(key) {
 
 function starsHtml(score, size) {
   let h = '';
-  for (let i = 1; i <= 5; i++) h += `<span style="font-size:${size}px;color:${i <= score ? 'var(--yellow)' : 'var(--border)'}"><span class="icon" data-icon="star" data-icon-size="14"></span></span>`;
+  for (let i = 1; i <= 5; i++) h += `<span style="font-size:${size}px;color:${i <= score ? 'var(--yellow)' : 'var(--border)'}${i <= score ? ';filter:drop-shadow(0 0 4px rgba(234,179,8,.75))' : ''}"><span class="icon" data-icon="star" data-icon-size="14"></span></span>`;
   return h;
 }
 function starPickerHtml(key, score) {
@@ -10525,6 +10555,11 @@ function renderNotificationBell() {
   const unread = NOTIFICATIONS.filter(n => !n.read).length;
   if (badge) { badge.style.display = unread > 0 ? '' : 'none'; badge.textContent = unread; }
   if (avatarBadge) { avatarBadge.style.display = unread > 0 ? '' : 'none'; avatarBadge.textContent = unread; }
+  // Bell glow: yellow at rest, red (with a subtle pulse) while anything is
+  // unread, back to yellow the moment everything's read.
+  document.querySelectorAll('.bell-glow').forEach(el => el.classList.toggle('unread', unread > 0));
+  const topbarBellBadge = document.getElementById('topbarBellNotifBadge');
+  if (topbarBellBadge) { topbarBellBadge.style.display = unread > 0 ? '' : 'none'; topbarBellBadge.textContent = unread; }
 }
 
 // ════════════════════════════════════════════════════════════════════════
