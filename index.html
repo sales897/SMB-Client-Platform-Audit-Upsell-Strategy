@@ -2136,8 +2136,25 @@ tr.hidden-row { display: none; }
 .wfb-canvas-wrap { flex: 1; min-width: 0; display: flex; flex-direction: column; position: relative; }
 .wfb-canvas-toolbar {
   display: flex; align-items: center; gap: var(--space-2); background: var(--bg2); border: 1px solid var(--border);
-  border-bottom: none; border-radius: var(--radius) var(--radius) 0 0; padding: var(--space-2) var(--space-3);
+  border-bottom: none; padding: var(--space-2) var(--space-3);
 }
+.wfb-tabs-bar {
+  display: flex; align-items: flex-end; gap: 2px; background: var(--bg1); border: 1px solid var(--border); border-bottom: none;
+  border-radius: var(--radius) var(--radius) 0 0; padding: 6px 6px 0; overflow-x: auto; scrollbar-width: thin;
+}
+.wfb-tab {
+  display: flex; align-items: center; gap: 6px; padding: 8px 12px; font-size: var(--font-2xs); font-weight: 600; color: var(--text3);
+  background: var(--bg2); border: 1px solid var(--border); border-bottom: none; border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  cursor: pointer; white-space: nowrap; max-width: 180px; transition: color var(--transition-base), background var(--transition-base);
+}
+.wfb-tab:hover { color: var(--text); }
+.wfb-tab.active { background: var(--bg3); color: var(--orange); border-color: var(--orange); position: relative; top: 1px; }
+.wfb-tab-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wfb-tab-close { flex-shrink: 0; opacity: 0; width: 14px; height: 14px; display: flex; align-items: center; justify-content: center; border-radius: 4px; }
+.wfb-tab:hover .wfb-tab-close { opacity: .6; }
+.wfb-tab-close:hover { opacity: 1 !important; background: var(--bg4); }
+.wfb-tab-new { flex-shrink: 0; width: 28px; height: 32px; display: flex; align-items: center; justify-content: center; color: var(--text3); cursor: pointer; border-radius: var(--radius-sm); }
+.wfb-tab-new:hover { color: var(--orange); background: var(--bg2); }
 .wfb-workflow-name { font-weight: 700; color: var(--text); font-size: var(--font-sm); }
 .wfb-autosave { font-size: var(--font-2xs); color: var(--text3); }
 .wfb-canvas-controls { margin-left: auto; display: flex; gap: 4px; }
@@ -3285,7 +3302,7 @@ select.wfb-field-input { padding-right: 26px; }
         <div class="wfb-subtitle" data-i18n="wfb_subtitle">Design intelligent automations with our visual workflow builder.</div>
       </div>
       <div class="wfb-header-actions">
-        <button class="btn btn-ghost btn-sm" onclick="testWorkflowRun()">▸ <span data-i18n="wfb_test_btn">Test Workflow</span></button>
+        <button class="btn btn-ghost btn-sm" onclick="openWfbTestRunPanel()">▸ <span data-i18n="wfb_test_btn">Test Workflow</span></button>
         <button class="btn btn-primary btn-sm" onclick="openWfbSaveModal()"><span class="icon" data-icon="save" data-icon-size="13"></span> <span data-i18n="wfb_save_btn">Save</span></button>
       </div>
     </div>
@@ -3339,8 +3356,8 @@ select.wfb-field-input { padding-right: 26px; }
       </div>
 
       <div class="wfb-canvas-wrap">
+        <div class="wfb-tabs-bar" id="wfbTabsBar"></div>
         <div class="wfb-canvas-toolbar">
-          <div class="wfb-workflow-name" id="wfbWorkflowName">Loading…</div>
           <span class="wfb-autosave" id="wfbAutosaveNote"></span>
           <div class="wfb-canvas-controls">
             <button class="wfb-icon-btn" title="Version History" onclick="openWfbVersionHistory()"><span class="icon" data-icon="clock" data-icon-size="13"></span></button>
@@ -3394,7 +3411,7 @@ select.wfb-field-input { padding-right: 26px; }
       <span>● Workflow Status: <b id="wfbStatusText">Draft</b></span>
       <span><span class="icon" data-icon="clock" data-icon-size="13"></span> Last Updated: <span id="wfbLastUpdated">—</span></span>
       <span><span class="icon" data-icon="user" data-icon-size="14"></span> Created by: <span id="wfbCreatedBy">—</span></span>
-      <button class="btn btn-ghost btn-sm" onclick="showToast('Run logs are coming in a later block.','info')"><span class="icon" data-icon="clipboard" data-icon-size="16"></span> Show Logs</button>
+      <button class="btn btn-ghost btn-sm" onclick="openWfbTestRunLogs()"><span class="icon" data-icon="clipboard" data-icon-size="16"></span> Show Logs</button>
     </div>
   </div>
 
@@ -4240,6 +4257,20 @@ select.wfb-field-input { padding-right: 26px; }
 <!-- WORKFLOW BRANCH LABEL MODAL -->
 <!-- WORKFLOW SAVE MODAL -->
 <!-- CREATE CUSTOM NODE TYPE MODAL -->
+<div class="modal-overlay" id="wfbTestRunModal">
+  <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="wfbTestRunTitle">
+    <h3 id="wfbTestRunTitle">▶ Test Workflow</h3>
+    <p style="font-size:var(--font-2xs);color:var(--text3);margin:-6px 0 12px">Describe a hypothetical scenario and Nirvana will walk through this workflow step by step, telling you exactly what would happen — nothing here actually runs for real or sends anything.</p>
+    <label for="wfbTestScenarioInput" class="field-label">Scenario</label>
+    <textarea id="wfbTestScenarioInput" class="field-input" rows="3" placeholder="e.g. A new lead named Sarah signs up with a $6,000 monthly budget and comes from a referral"></textarea>
+    <div id="wfbTestRunResult" style="margin-top:14px"></div>
+    <div class="wfb-expanded-btns" style="margin-top:12px">
+      <button class="wfb-mini-btn" onclick="closeWfbTestRunPanel()">Close</button>
+      <button class="wfb-mini-btn primary" id="wfbTestRunBtn" onclick="runWfbWorkflowTest()">▶ Run Simulation</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="wfbVersionHistoryModal">
   <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="wfbVersionHistoryTitle">
     <h3 id="wfbVersionHistoryTitle"><span class="icon" data-icon="clock" data-icon-size="14"></span> Version History</h3>
@@ -14183,7 +14214,13 @@ async function loadWorkflows() {
     console.warn('workflows table unavailable, using local cache:', e.message);
     try { WORKFLOWS = JSON.parse(localStorage.getItem(WORKFLOWS_CACHE_KEY) || '[]'); } catch(e2) { WORKFLOWS = []; }
   }
-  rebuildWorkflowsPage();
+  // Deliberately does NOT call rebuildWorkflowsPage() here. Its one real
+  // caller (rebuildWorkflowsPage itself) already awaits this function and
+  // continues with everything that needs to happen next -- calling it
+  // again from in here created an unbounded loop: rebuildWorkflowsPage
+  // awaits loadWorkflows, which fired rebuildWorkflowsPage, which awaited
+  // loadWorkflows again, forever, continuously wiping and rebuilding the
+  // canvas in the background the entire time the Workflows page was open.
 }
 
 async function persistWorkflow(wf) {
@@ -14272,6 +14309,74 @@ const WORKFLOW_NODE_ICONS = { trigger: '⚡', condition: '❓', action: '▸', d
 const WORKFLOW_NODE_TYPE_LABELS = { trigger: 'Trigger', condition: 'Condition', action: 'Action', delay: 'Delay', logic: 'Logic', end: 'End' };
 const WFB_NODE_W = 172, WFB_NODE_H = 62;
 
+// ─── Test-run simulation (2026-07-16) ────────────────────────────────────
+// Nirvana walks the CURRENT graph against a hypothetical scenario and
+// narrates what would actually happen at each step -- nothing here is a
+// real execution; no email sends, no task gets created, no notification
+// goes out. It's judgment over the graph, not code executing it, which is
+// exactly why it needs Nirvana rather than a literal condition evaluator:
+// deciding whether "a $6,000 budget" satisfies "budget >= 5000" is a
+// one-line comparison, but deciding whether "seems like a good fit"
+// satisfies a fuzzy condition genuinely needs reasoning.
+function openWfbTestRunPanel() {
+  if (!currentWorkflowGraphId || workflowNodesCache.length === 0) { showToast('This workflow has nothing in it to test yet.', 'warning'); return; }
+  document.getElementById('wfbTestScenarioInput').value = '';
+  document.getElementById('wfbTestRunResult').innerHTML = '';
+  document.getElementById('wfbTestRunModal').classList.add('open');
+}
+function closeWfbTestRunPanel() {
+  document.getElementById('wfbTestRunModal').classList.remove('open');
+}
+async function runWfbWorkflowTest() {
+  const scenario = document.getElementById('wfbTestScenarioInput').value.trim();
+  if (!scenario) { showToast('Describe a scenario first.', 'warning'); return; }
+  const btn = document.getElementById('wfbTestRunBtn');
+  const resultEl = document.getElementById('wfbTestRunResult');
+  btn.disabled = true;
+  resultEl.innerHTML = `<div style="padding:16px;text-align:center;color:var(--text3);font-size:var(--font-xs)">Nirvana is walking through the workflow…</div>`;
+  const systemPrompt = `${langInstructionShort()}You are Nirvana, embedded in Niche Inc.'s visual Workflow Builder. The user wants you to SIMULATE a test run of the currently open workflow against a hypothetical scenario they describe — not actually execute anything. Walk the graph step by step starting from the trigger, following the real node/edge IDs and structure below. At each Condition node, judge from the scenario described whether it would evaluate Yes or No, using real judgment for anything not spelled out in exact numbers (e.g. infer whether a described situation counts as "urgent" or "a good fit" the way a person would). At each Action/Delay/Logic node, describe concretely what would happen. If the path reaches a dead end that isn't an End node, or the scenario doesn't clearly trigger this workflow at all, say so plainly.
+
+Format your reply as a numbered step-by-step walkthrough (one line per node reached, in order), followed by a final line starting with "Verdict:" summarizing whether this ran the way you'd expect a well-built workflow to, and flagging anything that seems off. Keep each step to one line. No preamble before the numbered list.
+
+${serializeWorkflowGraphForAi()}
+
+Scenario to test: ${scenario}`;
+  try {
+    const narrative = await quickAiCompletion(systemPrompt, 'Run the test.');
+    const verdictMatch = narrative.match(/Verdict:\s*(.+)/i);
+    const verdict = verdictMatch ? verdictMatch[1].trim() : null;
+    resultEl.innerHTML = `<div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;white-space:pre-wrap;font-size:var(--font-xs);line-height:1.6;color:var(--text)">${escAttr(narrative)}</div>`;
+    const testRun = {
+      id: 'wtr_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+      workflow_id: currentWorkflowGraphId, scenario, result_narrative: narrative, verdict,
+      created_by: (getCurrentUser() || {}).name || 'Unknown', created_at: new Date().toISOString(),
+    };
+    try { await sbUpsert('workflow_test_runs', testRun); } catch(e) { console.warn('Could not save test run:', e.message); }
+  } catch(e) {
+    resultEl.innerHTML = `<div style="color:var(--red);font-size:var(--font-xs);padding:10px">Couldn't run the simulation: ${escAttr(e.message)}</div>`;
+  } finally {
+    btn.disabled = false;
+  }
+}
+async function openWfbTestRunLogs() {
+  if (!currentWorkflowGraphId) { showToast('Open a workflow first.', 'warning'); return; }
+  let runs = [];
+  try { runs = await sbSelect('workflow_test_runs', `workflow_id=eq.${currentWorkflowGraphId}&order=created_at.desc&limit=20`); }
+  catch(e) { console.warn('Could not load test runs:', e.message); }
+  openWfbTestRunPanel();
+  const resultEl = document.getElementById('wfbTestRunResult');
+  if (runs.length === 0) {
+    resultEl.innerHTML = emptyStateHTML({ icon: hubIcon('clipboard', 28), title: 'No test runs yet', sub: 'Describe a scenario above and run one.', compact: true });
+    return;
+  }
+  resultEl.innerHTML = `<div style="font-weight:700;font-size:var(--font-2xs);color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Past Test Runs</div>` +
+    runs.map(r => `
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;margin-bottom:8px">
+        <div style="font-size:var(--font-2xs);color:var(--text3);margin-bottom:4px">${fmtNoteTime(r.created_at)} · "${escAttr(r.scenario)}"</div>
+        <div style="white-space:pre-wrap;font-size:var(--font-xs);line-height:1.6;color:var(--text)">${escAttr(r.result_narrative)}</div>
+      </div>`).join('');
+}
+
 async function rebuildWorkflowsPage() {
   await loadWorkflows();
   if (!document.getElementById('wfbCanvas')) return;
@@ -14280,6 +14385,7 @@ async function rebuildWorkflowsPage() {
   if (!currentWorkflowGraphId || !WORKFLOWS.find(w => w.id === currentWorkflowGraphId)) {
     currentWorkflowGraphId = WORKFLOWS.length > 0 ? WORKFLOWS[WORKFLOWS.length - 1].id : null;
   }
+  renderWfbTabs();
   if (currentWorkflowGraphId) {
     await loadWorkflowGraph(currentWorkflowGraphId);
   } else {
@@ -14288,6 +14394,47 @@ async function rebuildWorkflowsPage() {
     workflowNodesCache = []; workflowEdgesCache = [];
     renderWorkflowCanvas();
   }
+}
+
+// Tab bar (2026-07-16) -- there was previously no way to see more than one
+// workflow at a time, let alone create a new one; the builder just silently
+// opened whichever workflow happened to be last in the array. Real browser-
+// tab-style switching, plus a "+" to start a fresh one.
+function renderWfbTabs() {
+  const bar = document.getElementById('wfbTabsBar');
+  if (!bar) return;
+  bar.innerHTML = WORKFLOWS.map(w => `
+    <div class="wfb-tab${w.id === currentWorkflowGraphId ? ' active' : ''}" onclick="switchWfbWorkflowTab('${w.id}')" title="${escAttr(w.name)}">
+      <span class="wfb-tab-label">${escAttr(w.name || 'Untitled')}</span>
+      <span class="wfb-tab-close" onclick="event.stopPropagation();confirmDeleteWfbWorkflowTab('${w.id}')" title="Delete this workflow">${hubIcon('close', 10)}</span>
+    </div>`).join('') + `<div class="wfb-tab-new" onclick="createNewWfbWorkflow()" title="New workflow">${hubIcon('plus', 14)}</div>`;
+}
+async function switchWfbWorkflowTab(workflowId) {
+  if (workflowId === currentWorkflowGraphId) return;
+  closeWfbExpandedNode();
+  currentWorkflowGraphId = workflowId;
+  renderWfbTabs();
+  await loadWorkflowGraph(workflowId);
+}
+async function createNewWfbWorkflow() {
+  if (!requirePermission('edit')) return;
+  const name = window.prompt('Name this workflow:', '');
+  if (!name || !name.trim()) return;
+  const wf = { id: 'wf_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8), name: name.trim(), status: 'draft', active: false, created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
+  await persistWorkflow(wf);
+  currentWorkflowGraphId = wf.id;
+  renderWfbTabs();
+  await loadWorkflowGraph(wf.id);
+  showToast(`Created "${wf.name}" — describe it to Nirvana or build it manually.`, 'success');
+}
+async function confirmDeleteWfbWorkflowTab(workflowId) {
+  const wf = WORKFLOWS.find(w => w.id === workflowId);
+  if (!wf) return;
+  const confirmed = await showConfirmDialog(`Delete "${escAttr(wf.name)}"? This removes the workflow and everything in it.`, { title: hubIcon('trash', 16) + ' Delete Workflow', confirmLabel: 'Delete', danger: true });
+  if (!confirmed) return;
+  try { await sbDelete('workflow_nodes', `workflow_id=eq.${workflowId}`); } catch(e) {}
+  try { await sbDelete('workflow_edges', `workflow_id=eq.${workflowId}`); } catch(e) {}
+  await deleteWorkflowById(workflowId);
 }
 
 async function loadWorkflowGraph(workflowId) {
@@ -15685,7 +15832,6 @@ function updateWfbChatMsg(id, text) {
   if (bubble) bubble.innerHTML = renderAiMarkdown(text);
 }
 
-function testWorkflowRun() { showToast('Test-run simulation is coming in a later block.', 'info'); }
 
 function openWfbSaveModal() {
   if (!currentWorkflowGraphId) { showToast('No workflow is open.', 'warning'); return; }
