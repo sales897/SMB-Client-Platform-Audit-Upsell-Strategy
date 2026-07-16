@@ -15828,6 +15828,7 @@ async function assignChatWidgetToHuman(convId) {
   catch(e) { showToast('Could not update: ' + e.message, 'error'); return; }
   rebuildChatWidgetInbox();
   openChatWidgetConversation(convId);
+  rebuildCwHeaderStats();
   showToast(`"${c.lead_name || 'This lead'}" assigned to a human teammate.`, 'success');
 }
 
@@ -15841,6 +15842,7 @@ async function transferChatWidgetLead(convId) {
   catch(e) { showToast('Could not update: ' + e.message, 'error'); return; }
   rebuildChatWidgetInbox();
   openChatWidgetConversation(convId);
+  rebuildCwHeaderStats();
   showToast(`"${c.lead_name || 'This lead'}" marked for transfer.`, 'success');
 }
 
