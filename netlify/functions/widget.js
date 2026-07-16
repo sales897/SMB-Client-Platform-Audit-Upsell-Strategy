@@ -29,13 +29,18 @@
   const SUPABASE_URL = 'https://banmahudemvjkygwihsd.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhbm1haHVkZW12amt5Z3dpaHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5MjIzOTIsImV4cCI6MjA5ODQ5ODM5Mn0.01Y4i_nAFt-wmN-YNcE3dw_3od0NoU4HgvjwSCWw0cc';
   const CHAT_ENDPOINT = 'https://niche-client-hub.netlify.app/.netlify/functions/widget-chat';
+  const POLL_ENDPOINT = 'https://niche-client-hub.netlify.app/.netlify/functions/widget-poll';
   const STORAGE_KEY = 'niche_widget_conv_' + WIDGET_ID;
+  const POLL_INTERVAL_MS = 4000;
 
   let widgetConfig = null;
   let conversationId = null;
   try { conversationId = localStorage.getItem(STORAGE_KEY) || null; } catch (e) {}
   let isOpen = false;
   let isSending = false;
+  let pollTimer = null;
+  let lastSeenAt = null; // ISO timestamp of the newest message already shown -- polling only asks for messages after this
+  let handledByHuman = false;
 
   async function fetchWidgetConfig() {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/chat_widgets?id=eq.${encodeURIComponent(WIDGET_ID)}&select=*`, {
@@ -104,6 +109,10 @@
       .msg { max-width: 82%; padding: 8px 12px; border-radius: 12px; font-size: 13px; line-height: 1.5; }
       .msg.lead { align-self: flex-end; background: ${color}; color: #fff; border-bottom-right-radius: 3px; }
       .msg.assistant { align-self: flex-start; background: #1c150f; color: #f3ede7; border-bottom-left-radius: 3px; }
+      .msg.human { align-self: flex-start; background: #16213a; color: #f3ede7; border-bottom-left-radius: 3px; border: 1px solid #2a3d5c; }
+      .msg-who { font-size: 10px; font-weight: 700; opacity: .65; margin-bottom: 3px; text-transform: uppercase; letter-spacing: .03em; }
+      .status-banner { font-size: 11px; color: #8ecbff; background: #16213a; padding: 6px 14px; text-align: center; border-bottom: 1px solid #2a3d5c; display: none; }
+      .status-banner.show { display: block; }
       .typing { align-self: flex-start; color: #8a7a6c; font-size: 12px; padding: 4px 12px; }
       .composer { display: flex; gap: 8px; padding: 12px; border-top: 1px solid #262626; background: #0f0906; }
       .composer input { flex: 1; background: #1c150f; border: 1px solid #332318; border-radius: 20px; padding: 9px 14px; color: #f3ede7; font-size: 13px; outline: none; }
@@ -114,6 +123,7 @@
 
     const orb = el('button', { class: 'orb', 'aria-label': 'Open chat', onclick: togglePanel }, '💬');
     const closeBtn = el('button', { class: 'close', 'aria-label': 'Close chat', onclick: togglePanel }, '✕');
+    const statusBanner = el('div', { class: 'status-banner' }, '');
     const thread = el('div', { class: 'thread' });
     const input = el('input', { type: 'text', placeholder: 'Type a message…', onkeydown: (e) => { if (e.key === 'Enter') sendMessage(); } });
     const sendBtn = el('button', { onclick: sendMessage }, '➤');
@@ -122,6 +132,7 @@
         el('div', {}, el('div', { class: 'name' }, widgetConfig.agent_name || 'Assistant'), el('div', { class: 'sub' }, 'AI Assistant')),
         closeBtn
       ),
+      statusBanner,
       thread,
       el('div', { class: 'composer' }, input, sendBtn)
     );
@@ -133,14 +144,24 @@
       panel.classList.toggle('open', isOpen);
       if (isOpen && thread.children.length === 0) {
         appendMessage('assistant', widgetConfig.welcome_prompt || `Hi! I'm ${widgetConfig.agent_name || 'your AI assistant'}. How can I help?`);
+        lastSeenAt = new Date().toISOString();
       }
-      if (isOpen) input.focus();
+      if (isOpen) {
+        input.focus();
+        startPolling();
+      } else {
+        stopPolling();
+      }
     }
 
-    function appendMessage(role, text) {
-      const bubble = el('div', { class: `msg ${role}` }, text);
+    function appendMessage(role, text, who) {
+      const bubble = el('div', { class: `msg ${role}` },
+        who ? el('div', { class: 'msg-who' }, who) : null,
+        text
+      );
       thread.appendChild(bubble);
       thread.scrollTop = thread.scrollHeight;
+      return bubble;
     }
 
     async function sendMessage() {
@@ -165,6 +186,8 @@
         conversationId = data.conversation_id;
         try { localStorage.setItem(STORAGE_KEY, conversationId); } catch (e) {}
         appendMessage('assistant', data.reply || "Sorry, I didn't catch that — could you try again?");
+        lastSeenAt = new Date().toISOString();
+        if (!pollTimer) startPolling();
       } catch (e) {
         typingEl.remove();
         appendMessage('assistant', "Sorry, I'm having trouble connecting right now. Please try again in a moment.");
@@ -172,6 +195,43 @@
       } finally {
         isSending = false;
         sendBtn.disabled = false;
+      }
+    }
+
+    // Polling picks up messages this widget didn't just send itself --
+    // specifically, a human team member replying live from the Hub's
+    // Inbox. Only runs while the panel is open, and only against this
+    // one conversation_id (never a list of conversations).
+    function startPolling() {
+      if (pollTimer || !conversationId) return;
+      pollTimer = setInterval(pollForNewMessages, POLL_INTERVAL_MS);
+    }
+    function stopPolling() {
+      if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    }
+    async function pollForNewMessages() {
+      if (!conversationId) return;
+      try {
+        const params = new URLSearchParams({ conversation_id: conversationId });
+        if (lastSeenAt) params.set('after', lastSeenAt);
+        const res = await fetch(`${POLL_ENDPOINT}?${params.toString()}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const newMessages = (data.messages || []).filter((m) => m.role !== 'lead'); // never echo the visitor's own messages back at them
+        newMessages.forEach((m) => {
+          appendMessage(m.role, m.content, m.role === 'human' ? 'Team member' : null);
+          lastSeenAt = m.created_at;
+        });
+        if (data.handled_by === 'human' && !handledByHuman) {
+          handledByHuman = true;
+          statusBanner.textContent = "You're now connected with a team member.";
+          statusBanner.classList.add('show');
+        } else if (data.handled_by !== 'human' && handledByHuman) {
+          handledByHuman = false;
+          statusBanner.classList.remove('show');
+        }
+      } catch (e) {
+        // Silent -- polling failures shouldn't interrupt the visitor's chat.
       }
     }
   }

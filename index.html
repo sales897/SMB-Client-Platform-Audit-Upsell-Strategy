@@ -1883,6 +1883,17 @@ tr.hidden-row { display: none; }
 .cw-lead-score-bar { height: 6px; background: var(--bg4); border-radius: 3px; overflow: hidden; margin-top: 4px; }
 .cw-lead-score-fill { height: 100%; background: linear-gradient(90deg, var(--orange), var(--green)); box-shadow: 0 0 8px rgba(226,84,31,.5); }
 .cw-resolution-summary-row { display: flex; align-items: center; justify-content: space-between; font-size: var(--font-xs); padding: 4px 0; }
+.cw-msg-human { align-self: flex-end; background: rgba(59,130,246,.18); color: var(--text); border: 1px solid rgba(59,130,246,.35); }
+.cw-msg-who { font-size: 9px; font-weight: 800; opacity: .7; margin-bottom: 3px; text-transform: uppercase; letter-spacing: .03em; }
+.cw-smart-replies { display: flex; flex-wrap: wrap; gap: 6px; margin: var(--space-2) 0; }
+.cw-smart-reply-chip { background: var(--bg3); border: 1px solid var(--border); color: var(--text2); font-size: var(--font-2xs); padding: 5px 10px; border-radius: var(--radius-pill); cursor: pointer; }
+.cw-smart-reply-chip:hover { border-color: var(--orange); color: var(--orange); }
+.cw-reply-composer { display: flex; gap: 8px; align-items: flex-end; margin-top: var(--space-2); }
+.cw-reply-composer textarea { flex: 1; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-size: var(--font-sm); padding: 8px 12px; resize: none; min-height: 38px; max-height: 100px; font-family: inherit; }
+.cw-reply-send-btn { background: linear-gradient(135deg, var(--orange), var(--orange2)); border: none; color: #fff; border-radius: 50%; width: 38px; height: 38px; flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 12px rgba(226,84,31,.4); }
+.cw-reply-send-btn:disabled { opacity: .5; cursor: default; }
+.cw-live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green); display: inline-block; animation: cwLivePulse 1.8s ease-in-out infinite; }
+@keyframes cwLivePulse { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
 .cw-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; box-shadow: 0 0 6px currentColor; }
 .cw-header-actions-row { display: flex; gap: 6px; }
 
@@ -16434,7 +16445,7 @@ async function openChatWidgetConversation(id) {
       <div style="display:flex;align-items:flex-start;justify-content:space-between">
         <div>
           <div style="font-weight:700;font-size:var(--font-lg);color:var(--text)">${escAttr(c.lead_name || 'Unknown Lead')} <span class="cw-resolution-badge cw-resolution-${c.resolution}" style="margin-left:6px">${CW_RESOLUTION_LABELS[c.resolution] || c.resolution}</span></div>
-          <div style="font-size:var(--font-xs);color:var(--text3);margin-top:2px">${escAttr(c.channel || 'Website')} · ${fmtNoteTime(c.created_at)}</div>
+          <div style="font-size:var(--font-xs);color:var(--text3);margin-top:2px;display:flex;align-items:center;gap:6px"><span class="cw-live-dot"></span> Live · ${escAttr(c.channel || 'Website')} · ${fmtNoteTime(c.created_at)}</div>
         </div>
         <div class="cw-header-actions-row">
           <button class="cw-glow-btn" style="padding:7px 14px;font-size:var(--font-xs)" onclick="addChatWidgetLeadAsClient('${c.id}')">${cwIcon('user',14)} Add to Client</button>
@@ -16458,8 +16469,13 @@ async function openChatWidgetConversation(id) {
         <div style="font-size:var(--font-sm);color:var(--text)">${new Date(c.appointment_at).toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})}, ${new Date(c.appointment_at).toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'})}</div>
         <div style="font-size:var(--font-xs);color:var(--text3);margin-top:2px">${escAttr(c.appointment_service || 'Consultation')}</div>
       </div>` : ''}
-      <div class="cw-detail-thread">
-        ${messages.map(m => `<div class="cw-msg cw-msg-${m.role}">${escAttr(m.content)}</div>`).join('') || '<div style="color:var(--text3);font-size:var(--font-sm)">No messages yet.</div>'}
+      <div class="cw-detail-thread" id="cwDetailThread">
+        ${renderCwMessagesHtml(messages)}
+      </div>
+      <div class="cw-smart-replies" id="cwSmartReplies"></div>
+      <div class="cw-reply-composer">
+        <textarea id="cwReplyInput" placeholder="Reply as a team member..." oninput="autoGrowCwInput(this)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendCwHumanReply('${c.id}')}"></textarea>
+        <button class="cw-reply-send-btn" id="cwReplySendBtn" onclick="sendCwHumanReply('${c.id}')">${cwIcon('send',15)}</button>
       </div>
     </div>
     <div class="cw-summary-col">
@@ -16484,6 +16500,110 @@ async function openChatWidgetConversation(id) {
       <div class="cw-resolution-summary-row"><span style="display:flex;align-items:center;gap:6px"><span class="cw-dot" style="background:var(--purple)"></span>Handled by AI</span><span>${counts.handled_ai}</span></div>
       <div class="cw-resolution-summary-row"><span style="display:flex;align-items:center;gap:6px"><span class="cw-dot" style="background:var(--orange)"></span>Handled by Human</span><span>${counts.handled_human}</span></div>
     </div>`;
+  startCwConversationPolling(id);
+  generateCwSmartReplies(id);
+}
+
+function renderCwMessagesHtml(messages) {
+  if (!messages.length) return '<div style="color:var(--text3);font-size:var(--font-sm)">No messages yet.</div>';
+  return messages.map(m => `<div class="cw-msg cw-msg-${m.role}">${m.role === 'human' ? '<div class="cw-msg-who">Team Member</div>' : ''}${escAttr(m.content)}</div>`).join('');
+}
+
+// ─── Live polling for the open conversation ────────────────────────────────
+// While a conversation is open in the Hub, poll for new messages the same
+// way the widget itself does -- so an incoming reply from the lead shows
+// up without the team member needing to click away and back.
+let cwPollTimer = null;
+let cwPollingConvId = null;
+function startCwConversationPolling(convId) {
+  stopCwConversationPolling();
+  cwPollingConvId = convId;
+  cwPollTimer = setInterval(() => pollCwConversationOnce(convId), 4000);
+}
+function stopCwConversationPolling() {
+  if (cwPollTimer) { clearInterval(cwPollTimer); cwPollTimer = null; }
+  cwPollingConvId = null;
+}
+async function pollCwConversationOnce(convId) {
+  if (convId !== cwActiveConversationId) { stopCwConversationPolling(); return; }
+  let fresh;
+  try { fresh = await sbSelect('widget_messages', `conversation_id=eq.${convId}&order=created_at.asc`); }
+  catch(e) { return; }
+  const cached = CW_MESSAGES_CACHE[convId] || [];
+  if (fresh.length === cached.length) return; // nothing new
+  CW_MESSAGES_CACHE[convId] = fresh;
+  const threadEl = document.getElementById('cwDetailThread');
+  if (threadEl) {
+    threadEl.innerHTML = renderCwMessagesHtml(fresh);
+    threadEl.scrollTop = threadEl.scrollHeight;
+  }
+  // A new inbound message from the lead is worth refreshing the whole
+  // conversation record for too (resolution/intent may have changed).
+  try {
+    const rows = await sbSelect('widget_conversations', `id=eq.${convId}`);
+    if (rows && rows[0]) {
+      const idx = CW_CONVERSATIONS.findIndex(c => c.id === convId);
+      if (idx >= 0) CW_CONVERSATIONS[idx] = rows[0];
+      rebuildChatWidgetInbox();
+    }
+  } catch(e) {}
+  generateCwSmartReplies(convId);
+}
+
+async function sendCwHumanReply(convId) {
+  const input = document.getElementById('cwReplyInput');
+  const btn = document.getElementById('cwReplySendBtn');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  input.style.height = '';
+  btn.disabled = true;
+  const msg = { id: 'msg_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8), conversation_id: convId, role: 'human', content: text, created_at: new Date().toISOString() };
+  try {
+    await sbUpsert('widget_messages', msg);
+    await sbPatch('widget_conversations', `id=eq.${convId}`, { handled_by: 'human', updated_at: new Date().toISOString() });
+  } catch(e) {
+    showToast('Could not send reply: ' + e.message, 'error');
+    btn.disabled = false;
+    return;
+  }
+  const cached = CW_MESSAGES_CACHE[convId] || [];
+  cached.push(msg);
+  CW_MESSAGES_CACHE[convId] = cached;
+  const threadEl = document.getElementById('cwDetailThread');
+  if (threadEl) { threadEl.innerHTML = renderCwMessagesHtml(cached); threadEl.scrollTop = threadEl.scrollHeight; }
+  const conv = CW_CONVERSATIONS.find(c => c.id === convId);
+  if (conv) conv.handled_by = 'human';
+  btn.disabled = false;
+  document.getElementById('cwSmartReplies').innerHTML = '';
+}
+
+// Smart replies: Nirvana drafts 2-3 short suggested responses based on the
+// actual live conversation, for a team member to send with one click (or
+// edit first) rather than typing from scratch every time they step in.
+async function generateCwSmartReplies(convId) {
+  const wrap = document.getElementById('cwSmartReplies');
+  if (!wrap) return;
+  wrap.innerHTML = `<span style="font-size:var(--font-2xs);color:var(--text3)">${cwIcon('sparkle',11)} Nirvana is drafting replies…</span>`;
+  const messages = CW_MESSAGES_CACHE[convId] || [];
+  if (messages.length === 0) { wrap.innerHTML = ''; return; }
+  const thread = messages.slice(-8).map(m => `${m.role === 'lead' ? 'Visitor' : m.role === 'human' ? 'Team' : 'AI'}: ${m.content}`).join('\n');
+  const systemPrompt = `You are Nirvana, drafting quick-reply SUGGESTIONS for a Hub team member who's looking at this live chat widget conversation. Based on the conversation below, suggest exactly 3 short, natural replies the team member could send next (1 sentence each). Respond with ONLY the 3 replies, one per line, no numbering, no extra text.
+
+CONVERSATION:
+${thread}`;
+  try {
+    const raw = await quickAiCompletion(systemPrompt, 'Suggest 3 replies.');
+    const lines = raw.split('\n').map(l => l.replace(/^[-•\d.)\s]+/, '').trim()).filter(Boolean).slice(0, 3);
+    if (lines.length === 0) { wrap.innerHTML = ''; return; }
+    wrap.innerHTML = lines.map(l => `<span class="cw-smart-reply-chip" onclick="useCwSmartReply(this)">${escAttr(l)}</span>`).join('');
+  } catch(e) {
+    wrap.innerHTML = '';
+  }
+}
+function useCwSmartReply(el) {
+  const input = document.getElementById('cwReplyInput');
+  if (input) { input.value = el.textContent; autoGrowCwInput(input); input.focus(); }
 }
 
 async function assignChatWidgetToHuman(convId) {
