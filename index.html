@@ -3343,6 +3343,7 @@ select.wfb-field-input { padding-right: 26px; }
           <div class="wfb-workflow-name" id="wfbWorkflowName">Loading…</div>
           <span class="wfb-autosave" id="wfbAutosaveNote"></span>
           <div class="wfb-canvas-controls">
+            <button class="wfb-icon-btn" title="Version History" onclick="openWfbVersionHistory()"><span class="icon" data-icon="clock" data-icon-size="13"></span></button>
             <button class="wfb-icon-btn" title="Zoom to fit" onclick="workflowZoomFit()"><span class="icon" data-icon="expand" data-icon-size="13"></span></button>
             <button class="wfb-icon-btn" title="Refresh" onclick="loadWorkflowGraph(currentWorkflowGraphId)">↻</button>
             <button class="wfb-icon-btn" title="Zoom out" onclick="workflowZoom(-0.1)">−</button>
@@ -4239,6 +4240,17 @@ select.wfb-field-input { padding-right: 26px; }
 <!-- WORKFLOW BRANCH LABEL MODAL -->
 <!-- WORKFLOW SAVE MODAL -->
 <!-- CREATE CUSTOM NODE TYPE MODAL -->
+<div class="modal-overlay" id="wfbVersionHistoryModal">
+  <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="wfbVersionHistoryTitle">
+    <h3 id="wfbVersionHistoryTitle"><span class="icon" data-icon="clock" data-icon-size="14"></span> Version History</h3>
+    <p style="font-size:var(--font-2xs);color:var(--text3);margin:-6px 0 12px">Every change — yours or Nirvana's — is saved here first. Restore any point to go back.</p>
+    <div id="wfbVersionHistoryList" style="max-height:420px;overflow-y:auto"></div>
+    <div class="wfb-expanded-btns" style="margin-top:12px">
+      <button class="wfb-mini-btn" onclick="closeWfbVersionHistory()">Close</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="createCustomNodeTypeModal">
   <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="cnModalTitle">
     <h3 id="cnModalTitle"><span class="icon" data-icon="puzzle" data-icon-size="14"></span> Create Custom Node Type</h3>
@@ -15125,6 +15137,87 @@ ${issuesDesc}`;
 // for text + tool_use blocks) but self-contained with its own message
 // array rather than sharing aiAgentMessages, since that's the floating
 // panel's own conversation state, not this one's.
+// ─── Workflow version history (2026-07-16) ──────────────────────────────
+// Every destructive change -- Nirvana rebuilding a workflow from a
+// description, or a manual bulk edit -- takes a snapshot of the graph
+// FIRST, before anything changes. This is what "always save a draft so we
+// can go back" actually means: not a single undo buffer, but a real
+// history you can scroll through and restore from at any point.
+async function saveWorkflowVersion(label, isAutosave) {
+  if (!currentWorkflowGraphId) return;
+  const version = {
+    id: 'wfv_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+    workflow_id: currentWorkflowGraphId,
+    label: label || 'Snapshot',
+    created_by: (getCurrentUser() || {}).name || 'Nirvana',
+    is_autosave: isAutosave !== false,
+    nodes_snapshot: JSON.parse(JSON.stringify(workflowNodesCache)),
+    edges_snapshot: JSON.parse(JSON.stringify(workflowEdgesCache)),
+    created_at: new Date().toISOString(),
+  };
+  try { await sbUpsert('workflow_versions', version); }
+  catch(e) { console.warn('Could not save workflow version:', e.message); }
+  return version;
+}
+async function loadWorkflowVersions(workflowId) {
+  try { return await sbSelect('workflow_versions', `workflow_id=eq.${workflowId}&order=created_at.desc&limit=30`); }
+  catch(e) { console.warn('Could not load workflow versions:', e.message); return []; }
+}
+async function restoreWorkflowVersion(versionId) {
+  const confirmed = await showConfirmDialog('Restore this version? Your current graph will be saved as a version too, so you can always come back to it.', { title: hubIcon('clock',16) + ' Restore Version', confirmLabel: 'Restore', danger: false });
+  if (!confirmed) return;
+  const versions = await loadWorkflowVersions(currentWorkflowGraphId);
+  const version = versions.find(v => v.id === versionId);
+  if (!version) { showToast('Could not find that version.', 'error'); return; }
+  // Save the CURRENT state before overwriting it -- restoring is itself a
+  // destructive action and deserves the same safety net.
+  await saveWorkflowVersion('Before restoring an earlier version', true);
+  try {
+    await sbDelete('workflow_nodes', `workflow_id=eq.${currentWorkflowGraphId}`);
+    await sbDelete('workflow_edges', `workflow_id=eq.${currentWorkflowGraphId}`);
+    const restoredNodes = version.nodes_snapshot || [];
+    const restoredEdges = version.edges_snapshot || [];
+    for (const n of restoredNodes) await sbUpsert('workflow_nodes', n);
+    for (const e of restoredEdges) await sbUpsert('workflow_edges', e);
+    workflowNodesCache = restoredNodes;
+    workflowEdgesCache = restoredEdges;
+  } catch(e) {
+    showToast('Could not restore that version: ' + e.message, 'error');
+    return;
+  }
+  renderWorkflowCanvas();
+  closeWfbVersionHistory();
+  showToast('Restored. Your previous state was saved as a version too.', 'success');
+}
+
+async function openWfbVersionHistory() {
+  if (!currentWorkflowGraphId) { showToast('Open a workflow first.', 'warning'); return; }
+  const modal = document.getElementById('wfbVersionHistoryModal');
+  const list = document.getElementById('wfbVersionHistoryList');
+  list.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text3);font-size:var(--font-xs)">Loading…</div>`;
+  modal.classList.add('open');
+  const versions = await loadWorkflowVersions(currentWorkflowGraphId);
+  if (versions.length === 0) {
+    list.innerHTML = emptyStateHTML({ icon: hubIcon('clock', 28), title: 'No versions yet', sub: 'A version is saved automatically the first time something changes this workflow.', compact: true });
+    return;
+  }
+  list.innerHTML = versions.map((v, i) => `
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:8px">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+        <div>
+          <div style="font-weight:700;font-size:var(--font-xs);color:var(--text);display:flex;align-items:center;gap:6px">
+            ${i === 0 ? `<span style="color:var(--orange)">${hubIcon('sparkle',12)} Most recent</span> · ` : ''}${escAttr(v.label)}
+          </div>
+          <div style="font-size:var(--font-2xs);color:var(--text3);margin-top:2px">${fmtNoteTime(v.created_at)} · by ${escAttr(v.created_by || 'Nirvana')} · ${(v.nodes_snapshot||[]).length} nodes, ${(v.edges_snapshot||[]).length} connections</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="restoreWorkflowVersion('${v.id}')" style="flex-shrink:0">${hubIcon('refresh',12)} Restore</button>
+      </div>
+    </div>`).join('');
+}
+function closeWfbVersionHistory() {
+  document.getElementById('wfbVersionHistoryModal').classList.remove('open');
+}
+
 const WORKFLOW_BUILD_TOOLS = [
   {
     name: 'add_node',
@@ -15179,6 +15272,42 @@ const WORKFLOW_BUILD_TOOLS = [
     name: 'delete_edge',
     description: 'Remove a connection between two nodes, by the edge\'s real ID from the graph description.',
     input_schema: { type: 'object', properties: { edge_id: { type: 'string' } }, required: ['edge_id'] },
+  },
+  {
+    name: 'rebuild_workflow',
+    description: 'Replace the ENTIRE current workflow with a new one built from scratch. Use this specifically when the user describes a full workflow/scenario that has nothing to do with what currently exists in the graph -- NOT for incremental edits to what\'s already there (use add_node/update_node/delete_node for that instead). This deletes everything currently in the graph and creates the full new node/edge set in one atomic step, so nothing from the old workflow is left behind as orphaned, disconnected nodes.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        nodes: {
+          type: 'array',
+          description: 'The complete new set of nodes, in the order they should flow.',
+          items: {
+            type: 'object',
+            properties: {
+              temp_id: { type: 'string', description: 'A short local identifier you make up (e.g. "n1"), used only to wire up edges within this same call.' },
+              node_type: { type: 'string', enum: ['trigger', 'condition', 'action', 'delay', 'logic', 'end'] },
+              subtype: { type: 'string' },
+              label: { type: 'string' }, sublabel: { type: 'string' },
+              field: { type: 'string' }, operator: { type: 'string' }, value: { type: 'string' },
+              duration: { type: 'number' }, unit: { type: 'string' },
+              recipient: { type: 'string' }, tag: { type: 'string' },
+            },
+            required: ['temp_id', 'node_type', 'subtype', 'label'],
+          },
+        },
+        edges: {
+          type: 'array',
+          description: 'Connections between the nodes above, referencing their temp_ids.',
+          items: {
+            type: 'object',
+            properties: { source_temp_id: { type: 'string' }, target_temp_id: { type: 'string' }, branch_label: { type: 'string', enum: ['Yes', 'No'] } },
+            required: ['source_temp_id', 'target_temp_id'],
+          },
+        },
+      },
+      required: ['nodes', 'edges'],
+    },
   },
 ];
 
@@ -15281,7 +15410,75 @@ async function executeWorkflowBuildTool(toolUse) {
     workflowEdgesCache = workflowEdgesCache.filter(e => e.id !== input.edge_id);
     return { ok: true, summary: 'Removed a connection' };
   }
+  if (name === 'rebuild_workflow') {
+    // This is the one genuinely destructive tool in the set -- always
+    // save what's there now before replacing it, whether or not the
+    // graph looks like it has anything worth keeping.
+    await saveWorkflowVersion('Before Nirvana rebuilt this workflow from scratch', true);
+    try { await sbDelete('workflow_nodes', `workflow_id=eq.${workflowId}`); } catch(e) {}
+    try { await sbDelete('workflow_edges', `workflow_id=eq.${workflowId}`); } catch(e) {}
+    const idMap = {};
+    const newNodes = [];
+    let y = 60;
+    for (const n of (input.nodes || [])) {
+      const realId = crypto.randomUUID ? crypto.randomUUID() : 'n_' + Date.now() + Math.random().toString(16).slice(2);
+      idMap[n.temp_id] = realId;
+      const config = {};
+      ['field', 'operator', 'value', 'duration', 'unit', 'recipient', 'tag'].forEach(k => { if (n[k] !== undefined) config[k] = n[k]; });
+      newNodes.push({ id: realId, workflow_id: workflowId, node_type: n.node_type, subtype: n.subtype || 'custom', label: n.label, sublabel: n.sublabel || null, config, pos_x: 60, pos_y: y });
+      y += WFB_NODE_H + 40;
+    }
+    for (const n of newNodes) { try { await sbUpsert('workflow_nodes', n); } catch(e) {} }
+    const newEdges = [];
+    for (const e of (input.edges || [])) {
+      const sourceId = idMap[e.source_temp_id], targetId = idMap[e.target_temp_id];
+      if (!sourceId || !targetId) continue;
+      newEdges.push({ id: crypto.randomUUID ? crypto.randomUUID() : 'e_' + Date.now() + Math.random().toString(16).slice(2), workflow_id: workflowId, source_node_id: sourceId, target_node_id: targetId, branch_label: e.branch_label || null });
+    }
+    for (const e of newEdges) { try { await sbUpsert('workflow_edges', e); } catch(e) {} }
+    workflowNodesCache = newNodes;
+    workflowEdgesCache = newEdges;
+    return { ok: true, summary: `Rebuilt from scratch: ${newNodes.length} node${newNodes.length === 1 ? '' : 's'}, ${newEdges.length} connection${newEdges.length === 1 ? '' : 's'}. The previous version was saved automatically -- see History to go back.` };
+  }
   return { ok: false, summary: 'Unknown tool: ' + name };
+}
+
+// ─── Health check (2026-07-16) ──────────────────────────────────────────
+// Runs automatically after every build turn (both incremental edits and a
+// full rebuild) and surfaces real problems without being asked -- a
+// disconnected node, a condition missing one of its branches, no trigger
+// at all. This is what "detects problems and lets me know right away"
+// means in practice: proactive, not something you have to remember to ask
+// Nirvana to check.
+function validateWorkflowGraph() {
+  const issues = [];
+  const nodes = workflowNodesCache;
+  const edges = workflowEdgesCache;
+  if (nodes.length === 0) return issues;
+  const triggers = nodes.filter(n => n.node_type === 'trigger');
+  if (triggers.length === 0) issues.push('No trigger node -- this workflow has nothing to start it.');
+  if (triggers.length > 1) issues.push(`${triggers.length} trigger nodes found -- usually a workflow should start from just one.`);
+  const hasIncoming = new Set(edges.map(e => e.target_node_id));
+  const hasOutgoing = new Set(edges.map(e => e.source_node_id));
+  nodes.forEach(n => {
+    const incoming = hasIncoming.has(n.id);
+    const outgoing = hasOutgoing.has(n.id);
+    if (n.node_type === 'trigger') {
+      if (!outgoing) issues.push(`"${n.label}" (trigger) isn't connected to anything -- it won't lead anywhere.`);
+    } else if (n.node_type === 'end') {
+      if (!incoming) issues.push(`"${n.label}" (end) has nothing connecting into it -- it's unreachable.`);
+    } else {
+      if (!incoming && !outgoing) issues.push(`"${n.label}" is completely disconnected from the rest of the workflow.`);
+      else if (!incoming) issues.push(`"${n.label}" has no connection leading into it -- it can never actually run.`);
+    }
+  });
+  const conditionNodes = nodes.filter(n => n.node_type === 'condition');
+  conditionNodes.forEach(n => {
+    const branches = edges.filter(e => e.source_node_id === n.id).map(e => e.branch_label);
+    if (!branches.includes('Yes')) issues.push(`"${n.label}" (condition) has no "Yes" branch.`);
+    if (!branches.includes('No')) issues.push(`"${n.label}" (condition) has no "No" branch.`);
+  });
+  return issues;
 }
 
 function describeWfbBuildTool(t) {
@@ -15292,6 +15489,7 @@ function describeWfbBuildTool(t) {
   if (t.name === 'delete_node') return `🗑️ Delete ${nodeLabel(i.node_id)}`;
   if (t.name === 'add_edge') return `🔗 Connect ${nodeLabel(i.source_node_id)} → ${nodeLabel(i.target_node_id)}${i.branch_label ? ' [' + escAttr(i.branch_label) + ']' : ''}`;
   if (t.name === 'delete_edge') return `✂️ Remove a connection`;
+  if (t.name === 'rebuild_workflow') return `${hubIcon('sparkle',13)} Rebuild the entire workflow from scratch (${(i.nodes||[]).length} nodes, ${(i.edges||[]).length} connections) — your current version will be saved first`;
   return escAttr(t.name);
 }
 
@@ -15311,6 +15509,12 @@ function showWfbBuildConfirmation(toolUses) {
   thread.scrollTop = thread.scrollHeight;
   document.getElementById('wfbBuildConfirmBtn').onclick = async () => {
     div.querySelector('.wfb-expanded-btns').innerHTML = '<span style="font-size:10px;color:var(--text3)">Applying…</span>';
+    // Every build turn gets a version saved first, not just the dedicated
+    // rebuild tool -- a string of incremental add/update/delete calls can
+    // reshape a workflow just as much as a full rebuild, and deserves the
+    // same safety net.
+    const alreadyVersioned = toolUses.some(t => t.name === 'rebuild_workflow');
+    if (!alreadyVersioned) await saveWorkflowVersion('Before Nirvana applied changes', true);
     const results = [];
     for (const t of toolUses) {
       try { results.push(await executeWorkflowBuildTool(t)); }
@@ -15319,6 +15523,10 @@ function showWfbBuildConfirmation(toolUses) {
     div.remove();
     appendWfbChatMsg('ai', results.map(r => (r.ok ? '✅ ' : '⚠️ ') + r.summary).join('\n'));
     renderWorkflowCanvas();
+    const issues = validateWorkflowGraph();
+    if (issues.length > 0) {
+      appendWfbChatMsg('ai', `${hubIcon('alert',13)} Before you go, I noticed ${issues.length === 1 ? 'something worth' : 'a few things worth'} a look:\n${issues.map(i => '• ' + i).join('\n')}`);
+    }
   };
 }
 
@@ -15332,6 +15540,10 @@ async function sendWfbBuildMessage() {
   appendWfbChatMsg('user', text);
   const thinkingId = appendWfbChatMsg('ai', '…planning changes…');
   const systemPrompt = `${langInstructionShort()}You are Nirvana, embedded in Niche Inc.'s visual Workflow Builder, in BUILD mode — the user wants you to actually make changes to the currently open workflow's node graph (add/update/delete nodes, connect or disconnect them), not just discuss it. Use the tools available to make the requested changes, referencing the real node/edge IDs from the graph description below. If a request is ambiguous about exact placement or wording, make a reasonable choice rather than asking — the user will see exactly what you're proposing before anything is actually saved, so it's fine to commit to specifics. Keep your text reply brief — one or two sentences — since the tool calls themselves are what matters here, not a long explanation.
+
+Before making any change, decide: is the user describing a genuinely NEW workflow/scenario that has nothing to do with what's currently in the graph, or are they asking to adjust/extend what's already there? For a genuinely new scenario, use rebuild_workflow to replace the whole graph in one atomic step — never leave the old nodes sitting there disconnected while you add new ones alongside them with add_node; that leaves a mess of orphaned nodes behind, which is exactly what NOT to do. For anything that's clearly building on or adjusting the existing graph, use the granular add_node/update_node/delete_node/add_edge/delete_edge tools instead, and only touch what actually needs to change.
+
+Every change gets saved as a version automatically before it's applied, so nothing is ever truly destructive — the person can always go back. After changes are applied, the workflow is automatically checked for real problems (disconnected nodes, missing branches, no trigger) and flagged to the user if anything's off — you don't need to check this yourself, but keep it in mind: build things that would actually pass that check.
 
 ${serializeWorkflowGraphForAi()}`;
   try {
