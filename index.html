@@ -2118,7 +2118,7 @@ tr.hidden-row { display: none; }
     <label for="loginPassword" class="login-label">Password</label>
     <div style="position:relative">
       <input type="password" id="loginPassword" class="login-input" placeholder="••••••••" autocomplete="current-password" style="padding-right:40px">
-      <button type="button" class="password-toggle-btn" id="passwordToggleBtn" onclick="togglePasswordVisibility()" title="Show password" aria-label="Show password" tabindex="-1">👁️</button>
+      <button type="button" class="password-toggle-btn" id="passwordToggleBtn" onclick="togglePasswordVisibility()" title="Show password" aria-label="Show password" tabindex="-1"><span class="icon" data-icon="eye" data-icon-size="14"></span></button>
     </div>
 
     <button class="btn btn-primary" id="loginSubmitBtn" style="width:100%;margin-top:14px" onclick="submitLoginForm()">Sign In</button>
@@ -2142,7 +2142,7 @@ tr.hidden-row { display: none; }
   <div class="login-star" style="top:37.0%;left:49.4%;width:2.3px;height:2.3px;background:var(--orange);box-shadow:0 0 6.9px var(--orange);animation-delay:1.43s;animation-duration:4.09s"></div>
   <div class="login-star" style="top:77.7%;left:12.9%;width:2.8px;height:2.8px;background:var(--orange);box-shadow:0 0 8.4px var(--orange);animation-delay:6.69s;animation-duration:7.81s"></div>
   <div class="login-star" style="top:54.1%;left:73.9%;width:1.6px;height:1.6px;background:var(--text3);box-shadow:0 0 4.8px var(--text3);animation-delay:0.85s;animation-duration:7.0s"></div>
-  <div class="login-access-text">✓ ACCESS GRANTED</div>
+  <div class="login-access-text"><span class="icon" data-icon="check" data-icon-size="12"></span> ACCESS GRANTED</div>
 </div>
 
 
@@ -2156,7 +2156,7 @@ tr.hidden-row { display: none; }
     </div>
   </div>
 
-  <button class="nav-toggle" onclick="toggleMobileNav()" aria-label="Toggle navigation menu">☰</button>
+  <button class="nav-toggle" onclick="toggleMobileNav()" aria-label="Toggle navigation menu"><span class="icon" data-icon="menu" data-icon-size="15"></span></button>
 
   <div class="top-nav-items" id="topNavItems">
     <div class="nav-item active" onclick="showPage('home')" style="font-weight:700">
@@ -2264,7 +2264,7 @@ tr.hidden-row { display: none; }
       </div>
       <div class="profile-menu-section-label">Preferences</div>
       <div class="profile-menu-item" id="themeToggle" onclick="toggleTheme()" title="Switch light/dark/blackout mode">
-        <span id="themeToggleIcon">🌙</span> <span style="flex:1" data-i18n="pref_theme">Theme</span>
+        <span id="themeToggleIcon"><span class="icon" data-icon="moon" data-icon-size="13"></span></span> <span style="flex:1" data-i18n="pref_theme">Theme</span>
       </div>
       <div class="profile-menu-item" id="languageToggle" onclick="toggleLanguage()" title="Switch between English and Spanish">
         <span class="icon" data-icon="globe" data-icon-size="15"></span> <span style="flex:1" data-i18n="pref_language">Language</span>
@@ -2335,15 +2335,15 @@ tr.hidden-row { display: none; }
 
     <div class="cnt-columns">
       <div class="cnt-section">
-        <div class="cnt-section-title">📝 <span data-i18n="cnt_notes_section">Notes</span></div>
+        <div class="cnt-section-title"><span class="icon" data-icon="note" data-icon-size="14"></span> <span data-i18n="cnt_notes_section">Notes</span></div>
         <div class="notes-thread cnt-column-scroll" id="cntNotesThread"></div>
         <label for="cntNewNoteText" class="field-label" style="margin-top:12px" data-i18n="cnt_add_a_note">Add a Note</label>
         <div class="note-toolbar">
           <button type="button" class="note-fmt-btn" onclick="wrapNoteSelection('**','**','bold text')" title="Bold"><b>B</b></button>
           <button type="button" class="note-fmt-btn" onclick="wrapNoteSelection('*','*','italic text')" title="Italic"><i>I</i></button>
-          <button type="button" class="note-fmt-btn" onclick="wrapNoteSelection('==','==','highlighted text')" title="Highlight" aria-label="Highlight selected text">🖍️</button>
-          <button type="button" class="note-fmt-btn" onclick="insertNoteLink()" title="Insert Link" aria-label="Insert link">🔗</button>
-          <button type="button" class="note-fmt-btn voice-btn" id="noteVoiceBtn" onclick="toggleVoiceInput('cntNewNoteText','noteVoiceBtn')" title="Speak your note" aria-label="Speak your note">🎤</button>
+          <button type="button" class="note-fmt-btn" onclick="wrapNoteSelection('==','==','highlighted text')" title="Highlight" aria-label="Highlight selected text"><span class="icon" data-icon="edit" data-icon-size="13"></span></button>
+          <button type="button" class="note-fmt-btn" onclick="insertNoteLink()" title="Insert Link" aria-label="Insert link"><span class="icon" data-icon="link" data-icon-size="13"></span></button>
+          <button type="button" class="note-fmt-btn voice-btn" id="noteVoiceBtn" onclick="toggleVoiceInput('cntNewNoteText','noteVoiceBtn')" title="Speak your note" aria-label="Speak your note"><span class="icon" data-icon="mic" data-icon-size="13"></span></button>
         </div>
         <div style="position:relative;margin-bottom:10px">
           <textarea id="cntNewNoteText" rows="2" placeholder="What's happening? Type @ to tag a teammate" data-i18n-placeholder="cnt_note_placeholder" class="field-input" style="margin-bottom:0;resize:vertical;font-family:inherit" oninput="handleNoteMentionInput(event)" onkeydown="handleNoteMentionKeydown(event)"></textarea>
@@ -2413,7 +2413,7 @@ tr.hidden-row { display: none; }
   <div class="ai-agent-header">
     <div class="ai-agent-header-title"><img class="ai-agent-header-icon" src="data:image/jpeg;base64,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" alt="Nirvana"> Nirvana</div>
     <div class="ai-agent-header-actions">
-      <button id="aiVoiceReplyBtn" onclick="toggleNirvanaVoiceReply()" title="Voice replies: Off (click to enable)" aria-label="Voice replies: Off (click to enable)">🔇</button>
+      <button id="aiVoiceReplyBtn" onclick="toggleNirvanaVoiceReply()" title="Voice replies: Off (click to enable)" aria-label="Voice replies: Off (click to enable)"><span class="icon" data-icon="mic" data-icon-size="13"></span></button>
       <button onclick="clearAiAgentChat()" title="Clear conversation" aria-label="Clear conversation"><span class="icon" data-icon="trash" data-icon-size="13"></span></button>
       <button onclick="toggleAiAgentPanel()" title="Close" aria-label="Close Nirvana"><span class="icon" data-icon="close" data-icon-size="12"></span></button>
     </div>
@@ -2428,14 +2428,14 @@ tr.hidden-row { display: none; }
   <div class="ai-agent-confirm" id="aiAgentConfirm" style="display:none"></div>
   <div class="ai-agent-input-row">
     <input type="text" id="aiAgentInput" placeholder="Find a client, ask a question, or tell me what to do…" onkeydown="if(event.key==='Enter') sendAiAgentMessage()">
-    <button id="aiVoiceBtn" class="ai-voice-btn" onclick="toggleVoiceInput('aiAgentInput','aiVoiceBtn')" title="Speak to Nirvana" aria-label="Speak to Nirvana">🎤</button>
+    <button id="aiVoiceBtn" class="ai-voice-btn" onclick="toggleVoiceInput('aiAgentInput','aiVoiceBtn')" title="Speak to Nirvana" aria-label="Speak to Nirvana"><span class="icon" data-icon="mic" data-icon-size="13"></span></button>
     <button id="aiAgentSendBtn" onclick="sendAiAgentMessage()">Send</button>
   </div>
 </div>
 
 <div class="notif-panel" id="notificationPanel" style="display:none">
   <div class="notif-panel-header">
-    <span>🔔 <span data-i18n="pref_notifications">Notifications</span></span>
+    <span><span class="icon" data-icon="bell" data-icon-size="13"></span> <span data-i18n="pref_notifications">Notifications</span></span>
     <a href="#" onclick="markAllNotificationsRead(event)" style="font-size:11px;color:var(--orange);text-decoration:none" data-i18n="mark_all_read">Mark all read</a>
   </div>
   <div id="notificationList"></div>
@@ -2469,8 +2469,8 @@ tr.hidden-row { display: none; }
       <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="users" data-icon-size="16"></span></div><div class="kpi-val orange" id="cl-total">0</div><div class="kpi-lbl" data-i18n="cl_unique_clients">Unique Clients</div><div class="kpi-sub" data-i18n="cl_across_portfolios">Across all portfolios</div></div>
       <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="chart" data-icon-size="16"></span></div><div class="kpi-val" id="cl-smb-count">0</div><div class="kpi-lbl" data-i18n="cl_smb_clients">SMB Clients</div></div>
       <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="tag" data-icon-size="14"></span></div><div class="kpi-val green" id="cl-wl-count">0</div><div class="kpi-lbl" data-i18n="cl_wl_partners">White Label Partners</div></div>
-      <div class="kpi"><div class="kpi-icon">🎫</div><div class="kpi-val red" id="cl-support-count">0</div><div class="kpi-lbl" data-i18n="cl_support_clients">Support Clients</div></div>
-      <div class="kpi"><div class="kpi-icon">🔗</div><div class="kpi-val" id="cl-multi-count" style="color:var(--purple)">0</div><div class="kpi-lbl" data-i18n="cl_multi_portfolio">In 2+ Portfolios</div><div class="kpi-sub" data-i18n="cl_cross_sold">Cross-sold accounts</div></div>
+      <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="ticket" data-icon-size="14"></span></div><div class="kpi-val red" id="cl-support-count">0</div><div class="kpi-lbl" data-i18n="cl_support_clients">Support Clients</div></div>
+      <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="link" data-icon-size="13"></span></div><div class="kpi-val" id="cl-multi-count" style="color:var(--purple)">0</div><div class="kpi-lbl" data-i18n="cl_multi_portfolio">In 2+ Portfolios</div><div class="kpi-sub" data-i18n="cl_cross_sold">Cross-sold accounts</div></div>
     </div>
     <div class="card">
       <div class="card-header">
@@ -2483,8 +2483,8 @@ tr.hidden-row { display: none; }
           <button class="filter-pill active" onclick="filterClientsByPortfolio('all',this)" data-i18n="cl_all_portfolios">All Portfolios</button>
           <button class="filter-pill" onclick="filterClientsByPortfolio('smb',this)"><span class="icon" data-icon="chart" data-icon-size="16"></span> SMB</button>
           <button class="filter-pill" onclick="filterClientsByPortfolio('whitelabel',this)"><span class="icon" data-icon="tag" data-icon-size="14"></span> <span data-i18n="cl_wl_partners_short">White Label</span></button>
-          <button class="filter-pill" onclick="filterClientsByPortfolio('support',this)">🎫 <span data-i18n="cl_support_clients_short">Support</span></button>
-          <button class="filter-pill" onclick="filterClientsByPortfolio('multi',this)">🔗 2+ Portfolios</button>
+          <button class="filter-pill" onclick="filterClientsByPortfolio('support',this)"><span class="icon" data-icon="ticket" data-icon-size="14"></span> <span data-i18n="cl_support_clients_short">Support</span></button>
+          <button class="filter-pill" onclick="filterClientsByPortfolio('multi',this)"><span class="icon" data-icon="link" data-icon-size="13"></span> 2+ Portfolios</button>
         </div>
         <select id="clientsProductFilter" onchange="filterClientsByProduct(this.value)" style="width:auto;max-width:200px">
           <option value="all" data-i18n="cl_all_products"><span class="icon" data-icon="package" data-icon-size="16"></span> All Products</option>
@@ -2495,7 +2495,7 @@ tr.hidden-row { display: none; }
       <div class="card" id="clDirBulkBar" style="display:none;margin-bottom:var(--space-3);padding:var(--space-2) var(--space-3);background:var(--orange-dim);border-color:rgba(226,84,31,.3);align-items:center;gap:var(--space-3)">
         <span style="font-weight:700;color:var(--text);font-size:var(--font-base)"><span id="clDirSelectedCount">0</span> selected</span>
         <button class="btn btn-primary btn-sm" onclick="openBulkActionModal('task')"><span class="icon" data-icon="plus" data-icon-size="12"></span> <span data-i18n="add_task_selected">Add Task to Selected</span></button>
-        <button class="btn btn-ghost btn-sm" onclick="openBulkActionModal('note')">📝 <span data-i18n="add_note_selected">Add Note to Selected</span></button>
+        <button class="btn btn-ghost btn-sm" onclick="openBulkActionModal('note')"><span class="icon" data-icon="note" data-icon-size="14"></span> <span data-i18n="add_note_selected">Add Note to Selected</span></button>
         <button class="btn btn-ghost btn-sm" onclick="clearDirectorySelection()" style="margin-left:auto" data-i18n="clear_selection">Clear Selection</button>
       </div>
       <div class="tbl-scroll" style="max-height:560px">
@@ -2519,7 +2519,7 @@ tr.hidden-row { display: none; }
   ════════════════════════════════════════════════════════════════════════ -->
   <div class="page active" id="page-home">
     <div class="ai-insights-banner" id="aiInsightsBanner">
-      <div class="ai-insights-icon">✨</div>
+      <div class="ai-insights-icon"><span class="icon" data-icon="sparkle" data-icon-size="14"></span></div>
       <div style="flex:1;min-width:0">
         <div class="ai-insights-label">Nirvana's take</div>
         <div class="ai-insights-text" id="aiInsightsText">Loading today's insight…</div>
@@ -2557,7 +2557,7 @@ tr.hidden-row { display: none; }
         <div class="kpi-sub" data-i18n="kpi_across_clients">Across all clients</div>
       </div>
       <div class="kpi">
-        <div class="kpi-icon">📈</div>
+        <div class="kpi-icon"><span class="icon" data-icon="trending" data-icon-size="14"></span></div>
         <div class="kpi-val" id="kpi-smb-avg">0</div>
         <div class="kpi-lbl" data-i18n="kpi_avg_products">Avg Products / Client</div>
         <div class="kpi-sub" data-i18n="kpi_upside">Significant upside potential</div>
@@ -2638,7 +2638,7 @@ tr.hidden-row { display: none; }
       <div class="card" id="smbBulkBar" style="display:none;margin-bottom:12px;padding:10px 14px;background:var(--orange-dim);border-color:rgba(226,84,31,.3);align-items:center;gap:12px">
         <span style="font-weight:700;color:var(--text);font-size:13px"><span id="smbSelectedCount">0</span> selected</span>
         <button class="btn btn-primary btn-sm" onclick="openBulkActionModal('task','smb')"><span class="icon" data-icon="plus" data-icon-size="12"></span> <span data-i18n="add_task_selected">Add Task to Selected</span></button>
-        <button class="btn btn-ghost btn-sm" onclick="openBulkActionModal('note','smb')">📝 <span data-i18n="add_note_selected">Add Note to Selected</span></button>
+        <button class="btn btn-ghost btn-sm" onclick="openBulkActionModal('note','smb')"><span class="icon" data-icon="note" data-icon-size="14"></span> <span data-i18n="add_note_selected">Add Note to Selected</span></button>
         <button class="btn btn-ghost btn-sm" onclick="clearClientSelection('smb')" style="margin-left:auto" data-i18n="clear_selection">Clear Selection</button>
       </div>
       <div class="tbl-scroll">
@@ -2668,7 +2668,7 @@ tr.hidden-row { display: none; }
         <div class="kpi-sub" data-i18n="kpi_active_platform">Active in platform</div>
       </div>
       <div class="kpi">
-        <div class="kpi-icon">🏬</div>
+        <div class="kpi-icon"><span class="icon" data-icon="store" data-icon-size="14"></span></div>
         <div class="kpi-val orange" id="kpi-whitelabel-multiloc">0</div>
         <div class="kpi-lbl" data-i18n="kpi_whitelabel_multiloc">White Label / Multilocation</div>
         <div class="kpi-sub" data-i18n="kpi_multiloc_sub">Businesses with 2+ locations</div>
@@ -2680,7 +2680,7 @@ tr.hidden-row { display: none; }
         <div class="kpi-sub" data-i18n="kpi_across_clients">Across all clients</div>
       </div>
       <div class="kpi">
-        <div class="kpi-icon">📈</div>
+        <div class="kpi-icon"><span class="icon" data-icon="trending" data-icon-size="14"></span></div>
         <div class="kpi-val" id="kpi-whitelabel-avg">0</div>
         <div class="kpi-lbl" data-i18n="kpi_avg_products">Avg Products / Client</div>
         <div class="kpi-sub" data-i18n="kpi_upside">Significant upside potential</div>
@@ -2761,7 +2761,7 @@ tr.hidden-row { display: none; }
       <div class="card" id="whitelabelBulkBar" style="display:none;margin-bottom:12px;padding:10px 14px;background:var(--orange-dim);border-color:rgba(226,84,31,.3);align-items:center;gap:12px">
         <span style="font-weight:700;color:var(--text);font-size:13px"><span id="whitelabelSelectedCount">0</span> selected</span>
         <button class="btn btn-primary btn-sm" onclick="openBulkActionModal('task','whitelabel')"><span class="icon" data-icon="plus" data-icon-size="12"></span> <span data-i18n="add_task_selected">Add Task to Selected</span></button>
-        <button class="btn btn-ghost btn-sm" onclick="openBulkActionModal('note','whitelabel')">📝 <span data-i18n="add_note_selected">Add Note to Selected</span></button>
+        <button class="btn btn-ghost btn-sm" onclick="openBulkActionModal('note','whitelabel')"><span class="icon" data-icon="note" data-icon-size="14"></span> <span data-i18n="add_note_selected">Add Note to Selected</span></button>
         <button class="btn btn-ghost btn-sm" onclick="clearClientSelection('whitelabel')" style="margin-left:auto" data-i18n="clear_selection">Clear Selection</button>
       </div>
       <div class="tbl-scroll">
@@ -2782,8 +2782,8 @@ tr.hidden-row { display: none; }
   ════════════════════════════════════════════════════════════════════════ -->
   <div class="page" id="page-voice">
     <div class="kpi-row">
-      <div class="kpi"><div class="kpi-icon">🎙️</div><div class="kpi-val green" id="va-using">0</div><div class="kpi-lbl" data-i18n="voice_using">Clients with Voice Agent</div><div class="kpi-sub" id="va-using-pct">0% of all clients</div></div>
-      <div class="kpi"><div class="kpi-icon">📥</div><div class="kpi-val red" id="va-not-using">0</div><div class="kpi-lbl" data-i18n="voice_not_using">Clients NOT on Voice Agent</div><div class="kpi-sub" data-i18n="voice_upsell_targets">Upsell targets</div></div>
+      <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="mic" data-icon-size="13"></span></div><div class="kpi-val green" id="va-using">0</div><div class="kpi-lbl" data-i18n="voice_using">Clients with Voice Agent</div><div class="kpi-sub" id="va-using-pct">0% of all clients</div></div>
+      <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="download" data-icon-size="13"></span></div><div class="kpi-val red" id="va-not-using">0</div><div class="kpi-lbl" data-i18n="voice_not_using">Clients NOT on Voice Agent</div><div class="kpi-sub" data-i18n="voice_upsell_targets">Upsell targets</div></div>
       <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="chart" data-icon-size="16"></span></div><div class="kpi-val orange" id="va-adoption-pct">0%</div><div class="kpi-lbl" data-i18n="voice_adoption_rate">Adoption Rate</div><div class="kpi-sub" data-i18n="voice_across_portfolios">Across SMB, White Label, Support</div></div>
       <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="alert" data-icon-size="16"></span></div><div class="kpi-val" style="color:var(--yellow)" id="va-flagged">0</div><div class="kpi-lbl" data-i18n="voice_flagged">Flagged for Review</div><div class="kpi-sub" data-i18n="voice_has_note">Have a note attached</div></div>
     </div>
@@ -2820,9 +2820,9 @@ tr.hidden-row { display: none; }
   ════════════════════════════════════════════════════════════════════════ -->
   <div class="page" id="page-textagent">
     <div class="kpi-row">
-      <div class="kpi"><div class="kpi-icon" id="ta-yelp-icon">⭐</div><div class="kpi-val" id="ta-yelp">0</div><div class="kpi-lbl" data-i18n="ta_using_yelp">Using Yelp</div><div class="kpi-sub" data-i18n="cl_across_portfolios">Across all portfolios</div></div>
-      <div class="kpi"><div class="kpi-icon" id="ta-lsa-icon">🔍</div><div class="kpi-val" id="ta-lsa">0</div><div class="kpi-lbl" data-i18n="ta_using_lsa">Using Google LSA</div><div class="kpi-sub" data-i18n="cl_across_portfolios">Across all portfolios</div></div>
-      <div class="kpi"><div class="kpi-icon" id="ta-thumbtack-icon">📌</div><div class="kpi-val" id="ta-thumbtack">0</div><div class="kpi-lbl" data-i18n="ta_using_thumbtack">Using Thumbtack</div><div class="kpi-sub" data-i18n="cl_across_portfolios">Across all portfolios</div></div>
+      <div class="kpi"><div class="kpi-icon" id="ta-yelp-icon"><span class="icon" data-icon="star" data-icon-size="14"></span></div><div class="kpi-val" id="ta-yelp">0</div><div class="kpi-lbl" data-i18n="ta_using_yelp">Using Yelp</div><div class="kpi-sub" data-i18n="cl_across_portfolios">Across all portfolios</div></div>
+      <div class="kpi"><div class="kpi-icon" id="ta-lsa-icon"><span class="icon" data-icon="search" data-icon-size="14"></span></div><div class="kpi-val" id="ta-lsa">0</div><div class="kpi-lbl" data-i18n="ta_using_lsa">Using Google LSA</div><div class="kpi-sub" data-i18n="cl_across_portfolios">Across all portfolios</div></div>
+      <div class="kpi"><div class="kpi-icon" id="ta-thumbtack-icon"><span class="icon" data-icon="pin" data-icon-size="13"></span></div><div class="kpi-val" id="ta-thumbtack">0</div><div class="kpi-lbl" data-i18n="ta_using_thumbtack">Using Thumbtack</div><div class="kpi-sub" data-i18n="cl_across_portfolios">Across all portfolios</div></div>
       <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="chart" data-icon-size="16"></span></div><div class="kpi-val orange" id="ta-any">0</div><div class="kpi-lbl" data-i18n="ta_using_atleast_one">Using At Least One</div><div class="kpi-sub" data-i18n="ta_yelp_lsa_thumbtack">Yelp, Google LSA, or Thumbtack</div></div>
       <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="alert" data-icon-size="16"></span></div><div class="kpi-val" style="color:var(--yellow)" id="ta-stale">0</div><div class="kpi-lbl" data-i18n="ta_flagged_review">Flagged for Review</div><div class="kpi-sub" data-i18n="ta_stale_leads_sub">Stale leads: 7 days–6 months</div></div>
     </div>
@@ -2870,7 +2870,7 @@ tr.hidden-row { display: none; }
       <div id="taStaleList"></div>
     </div>
 
-    <div class="section-hd" style="margin-top:var(--space-2)"><div class="section-num" style="background:var(--blue)">💬</div><h2 style="color:var(--blue)" data-i18n="ta_activity_section">Client Activity &amp; Notes</h2></div>
+    <div class="section-hd" style="margin-top:var(--space-2)"><div class="section-num" style="background:var(--blue)"><span class="icon" data-icon="chat" data-icon-size="14"></span></div><h2 style="color:var(--blue)" data-i18n="ta_activity_section">Client Activity &amp; Notes</h2></div>
     <div class="section-div" style="background:linear-gradient(90deg,var(--blue),transparent)"></div>
     <div class="card">
       <div class="card-header">
@@ -2880,9 +2880,9 @@ tr.hidden-row { display: none; }
         <input type="text" class="search-box" id="taNotesSearch" placeholder="Search clients..." data-i18n-placeholder="search_clients" oninput="listPaginationState.taNotes=1;debouncedRebuildTextAgentNotes()">
         <div style="display:flex;gap:var(--space-2);flex-wrap:wrap" id="taNotesProductPills">
           <button class="filter-pill active" onclick="setTextAgentProductFilter('all',this)" data-i18n="cl_all_products">All Products</button>
-          <button class="filter-pill" id="taPillYelp" onclick="setTextAgentProductFilter('yelp',this)">⭐ Yelp</button>
-          <button class="filter-pill" id="taPillLsa" onclick="setTextAgentProductFilter('google_lsa',this)">🔍 Google LSA</button>
-          <button class="filter-pill" id="taPillThumbtack" onclick="setTextAgentProductFilter('thumbtack',this)">📌 Thumbtack</button>
+          <button class="filter-pill" id="taPillYelp" onclick="setTextAgentProductFilter('yelp',this)"><span class="icon" data-icon="star" data-icon-size="14"></span> Yelp</button>
+          <button class="filter-pill" id="taPillLsa" onclick="setTextAgentProductFilter('google_lsa',this)"><span class="icon" data-icon="search" data-icon-size="14"></span> Google LSA</button>
+          <button class="filter-pill" id="taPillThumbtack" onclick="setTextAgentProductFilter('thumbtack',this)"><span class="icon" data-icon="pin" data-icon-size="13"></span> Thumbtack</button>
         </div>
         <div style="display:flex;gap:var(--space-2);flex-wrap:wrap" id="taNotesPortfolioPills">
           <button class="filter-pill active" onclick="setTextAgentPortfolioFilter('all',this)" data-i18n="cl_all_portfolios">All Portfolios</button>
@@ -2924,7 +2924,7 @@ tr.hidden-row { display: none; }
         <div class="kpi-sub" data-i18n="kpi_across_clients">Across all clients</div>
       </div>
       <div class="kpi">
-        <div class="kpi-icon">📈</div>
+        <div class="kpi-icon"><span class="icon" data-icon="trending" data-icon-size="14"></span></div>
         <div class="kpi-val" id="kpi-support-avg">0</div>
         <div class="kpi-lbl" data-i18n="kpi_avg_products">Avg Products / Client</div>
         <div class="kpi-sub" data-i18n="kpi_upside">Significant upside potential</div>
@@ -3005,7 +3005,7 @@ tr.hidden-row { display: none; }
       <div class="card" id="supportBulkBar" style="display:none;margin-bottom:12px;padding:10px 14px;background:var(--orange-dim);border-color:rgba(226,84,31,.3);align-items:center;gap:12px">
         <span style="font-weight:700;color:var(--text);font-size:13px"><span id="supportSelectedCount">0</span> selected</span>
         <button class="btn btn-primary btn-sm" onclick="openBulkActionModal('task','support')"><span class="icon" data-icon="plus" data-icon-size="12"></span> <span data-i18n="add_task_selected">Add Task to Selected</span></button>
-        <button class="btn btn-ghost btn-sm" onclick="openBulkActionModal('note','support')">📝 <span data-i18n="add_note_selected">Add Note to Selected</span></button>
+        <button class="btn btn-ghost btn-sm" onclick="openBulkActionModal('note','support')"><span class="icon" data-icon="note" data-icon-size="14"></span> <span data-i18n="add_note_selected">Add Note to Selected</span></button>
         <button class="btn btn-ghost btn-sm" onclick="clearClientSelection('support')" style="margin-left:auto" data-i18n="clear_selection">Clear Selection</button>
       </div>
       <div class="tbl-scroll">
@@ -3027,7 +3027,7 @@ tr.hidden-row { display: none; }
   <div class="page" id="page-upsell">
     <div class="kpi-row">
       <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="target" data-icon-size="16"></span></div><div class="kpi-val orange" id="upsell-total-opps">0</div><div class="kpi-lbl" data-i18n="upsell_total_opps">Total Opportunities</div><div class="kpi-sub" data-i18n="upsell_across_portfolios">Across SMB, White Label, Support</div></div>
-      <div class="kpi"><div class="kpi-icon">🔥</div><div class="kpi-val red" id="upsell-high-count">0</div><div class="kpi-lbl" data-i18n="upsell_high_priority">High Priority Products</div></div>
+      <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="trending" data-icon-size="14"></span></div><div class="kpi-val red" id="upsell-high-count">0</div><div class="kpi-lbl" data-i18n="upsell_high_priority">High Priority Products</div></div>
       <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="package" data-icon-size="16"></span></div><div class="kpi-val" style="color:var(--yellow)" id="upsell-med-count">0</div><div class="kpi-lbl" data-i18n="upsell_medium_priority">Medium Priority</div></div>
       <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="check" data-icon-size="16"></span></div><div class="kpi-val green" id="upsell-low-count">0</div><div class="kpi-lbl" data-i18n="upsell_targeted_priority">Targeted Priority</div></div>
     </div>
@@ -3060,7 +3060,7 @@ tr.hidden-row { display: none; }
       </div>
     </div>
 
-    <div class="section-hd"><div class="section-num">📖</div><h2 data-i18n="kpi_sops_section">SOPs &amp; Playbooks — By KPI</h2></div>
+    <div class="section-hd"><div class="section-num"><span class="icon" data-icon="book" data-icon-size="13"></span></div><h2 data-i18n="kpi_sops_section">SOPs &amp; Playbooks — By KPI</h2></div>
     <div class="section-div"></div>
     <div id="kpiPlaybooksContainer"></div>
 
@@ -3128,7 +3128,7 @@ tr.hidden-row { display: none; }
           <div id="wfbCustomNodeTypesList"></div>
           <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:4px" onclick="openCreateCustomNodeTypeModal()">＋ Custom Node Type</button>
         </div>
-        <div class="wfb-sidebar-tip">💡 Tip: Click any node in the canvas to edit or delete it.<br>Drag from a node's dot to connect it to another.</div>
+        <div class="wfb-sidebar-tip"><span class="icon" data-icon="lightbulb" data-icon-size="14"></span> Tip: Click any node in the canvas to edit or delete it.<br>Drag from a node's dot to connect it to another.</div>
       </div>
 
       <div class="wfb-canvas-wrap">
@@ -3136,7 +3136,7 @@ tr.hidden-row { display: none; }
           <div class="wfb-workflow-name" id="wfbWorkflowName">Loading…</div>
           <span class="wfb-autosave" id="wfbAutosaveNote"></span>
           <div class="wfb-canvas-controls">
-            <button class="wfb-icon-btn" title="Zoom to fit" onclick="workflowZoomFit()">⛶</button>
+            <button class="wfb-icon-btn" title="Zoom to fit" onclick="workflowZoomFit()"><span class="icon" data-icon="expand" data-icon-size="13"></span></button>
             <button class="wfb-icon-btn" title="Refresh" onclick="loadWorkflowGraph(currentWorkflowGraphId)">↻</button>
             <button class="wfb-icon-btn" title="Zoom out" onclick="workflowZoom(-0.1)">−</button>
             <button class="wfb-icon-btn" title="Zoom in" onclick="workflowZoom(0.1)">+</button>
@@ -3153,7 +3153,7 @@ tr.hidden-row { display: none; }
           <div class="wfb-minimap-controls">
             <button class="wfb-icon-btn-sm" onclick="workflowZoom(0.1)">+</button>
             <button class="wfb-icon-btn-sm" onclick="workflowZoom(-0.1)">−</button>
-            <button class="wfb-icon-btn-sm">🔒</button>
+            <button class="wfb-icon-btn-sm"><span class="icon" data-icon="lock" data-icon-size="13"></span></button>
           </div>
         </div>
       </div>
@@ -3167,24 +3167,24 @@ tr.hidden-row { display: none; }
           </div>
         </div>
         <div class="wfb-ai-body" id="wfbAiBody">
-          <button class="btn btn-ghost btn-sm" style="width:100%;margin-bottom:var(--space-3)" onclick="analyzeAndImproveWorkflow()">🔍 Analyze Workflow &amp; Improve</button>
+          <button class="btn btn-ghost btn-sm" style="width:100%;margin-bottom:var(--space-3)" onclick="analyzeAndImproveWorkflow()"><span class="icon" data-icon="search" data-icon-size="14"></span> Analyze Workflow &amp; Improve</button>
           <div id="wfbAiSuggestions"></div>
           <div id="wfbAiChatThread"></div>
         </div>
         <div class="wfb-ai-footer">
           <div class="wfb-mode-toggle">
-            <button class="wfb-mode-btn active" id="wfbModeAskBtn" onclick="setWfbChatMode('ask')" title="Discuss, suggest, or ask questions — no changes are made">💬 Ask</button>
-            <button class="wfb-mode-btn" id="wfbModeBuildBtn" onclick="setWfbChatMode('build')" title="Let Nirvana actually make the changes — you'll review and confirm first">🔨 Build</button>
+            <button class="wfb-mode-btn active" id="wfbModeAskBtn" onclick="setWfbChatMode('ask')" title="Discuss, suggest, or ask questions — no changes are made"><span class="icon" data-icon="chat" data-icon-size="14"></span> Ask</button>
+            <button class="wfb-mode-btn" id="wfbModeBuildBtn" onclick="setWfbChatMode('build')" title="Let Nirvana actually make the changes — you'll review and confirm first"><span class="icon" data-icon="hammer" data-icon-size="14"></span> Build</button>
           </div>
           <textarea class="field-input wfb-chat-textarea" id="wfbAiInput" rows="1" placeholder="Ask anything about your workflow... (Shift+Enter for a new line)" oninput="autoGrowWfbInput(this)" onkeydown="handleWfbInputKeydown(event)"></textarea>
-          <div class="wfb-ai-disclaimer">✨ Nirvana can make mistakes. Review before applying.</div>
+          <div class="wfb-ai-disclaimer"><span class="icon" data-icon="sparkle" data-icon-size="14"></span> Nirvana can make mistakes. Review before applying.</div>
         </div>
       </div>
     </div>
 
     <div class="wfb-statusbar">
       <span>● Workflow Status: <b id="wfbStatusText">Draft</b></span>
-      <span>🕒 Last Updated: <span id="wfbLastUpdated">—</span></span>
+      <span><span class="icon" data-icon="clock" data-icon-size="13"></span> Last Updated: <span id="wfbLastUpdated">—</span></span>
       <span><span class="icon" data-icon="user" data-icon-size="14"></span> Created by: <span id="wfbCreatedBy">—</span></span>
       <button class="btn btn-ghost btn-sm" onclick="showToast('Run logs are coming in a later block.','info')"><span class="icon" data-icon="clipboard" data-icon-size="16"></span> Show Logs</button>
     </div>
@@ -3270,9 +3270,9 @@ tr.hidden-row { display: none; }
 
   <div class="page" id="page-knowledge">
     <div class="kpi-row">
-      <div class="kpi"><div class="kpi-icon">📚</div><div class="kpi-val" id="kb-total-count">0</div><div class="kpi-lbl" data-i18n="kb_entries">Knowledge Entries</div><div class="kpi-sub" data-i18n="kb_entries_sub">Available for Nirvana to search</div></div>
-      <div class="kpi"><div class="kpi-icon">🌐</div><div class="kpi-val orange" id="kb-website-count">0</div><div class="kpi-lbl" data-i18n="kb_website">Website</div><div class="kpi-sub" data-i18n="kb_website_sub">Pulled from pages</div></div>
-      <div class="kpi"><div class="kpi-icon">📄</div><div class="kpi-val" id="kb-docs-count">0</div><div class="kpi-lbl" data-i18n="kb_docs">Docs</div><div class="kpi-sub" data-i18n="kb_docs_sub">Reference material</div></div>
+      <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="book" data-icon-size="14"></span></div><div class="kpi-val" id="kb-total-count">0</div><div class="kpi-lbl" data-i18n="kb_entries">Knowledge Entries</div><div class="kpi-sub" data-i18n="kb_entries_sub">Available for Nirvana to search</div></div>
+      <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="globe" data-icon-size="14"></span></div><div class="kpi-val orange" id="kb-website-count">0</div><div class="kpi-lbl" data-i18n="kb_website">Website</div><div class="kpi-sub" data-i18n="kb_website_sub">Pulled from pages</div></div>
+      <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="note" data-icon-size="14"></span></div><div class="kpi-val" id="kb-docs-count">0</div><div class="kpi-lbl" data-i18n="kb_docs">Docs</div><div class="kpi-sub" data-i18n="kb_docs_sub">Reference material</div></div>
       <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="clipboard" data-icon-size="16"></span></div><div class="kpi-val green" id="kb-sop-count">0</div><div class="kpi-lbl" data-i18n="kb_sops">SOPs</div><div class="kpi-sub" data-i18n="kb_sops_sub">Standard procedures</div></div>
     </div>
 
@@ -3297,13 +3297,13 @@ tr.hidden-row { display: none; }
       <div style="display:flex;gap:var(--space-2);flex-wrap:wrap">
         <button class="pm-tab active" data-pk="smb" onclick="switchManagePortfolio('smb')"><span class="icon" data-icon="chart" data-icon-size="16"></span> <span data-i18n="pm_smb_dash">SMB Dashboard</span></button>
         <button class="pm-tab" data-pk="whitelabel" onclick="switchManagePortfolio('whitelabel')"><span class="icon" data-icon="tag" data-icon-size="14"></span> <span data-i18n="pm_wl_dash">White Label</span></button>
-        <button class="pm-tab" data-pk="support" onclick="switchManagePortfolio('support')">🎫 <span data-i18n="pm_support_dash">Support Dashboard</span></button>
+        <button class="pm-tab" data-pk="support" onclick="switchManagePortfolio('support')"><span class="icon" data-icon="ticket" data-icon-size="14"></span> <span data-i18n="pm_support_dash">Support Dashboard</span></button>
       </div>
     </div>
 
     <div class="kpi-row">
       <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="package" data-icon-size="16"></span></div><div class="kpi-val orange" id="pmTotalProducts">10</div><div class="kpi-lbl" data-i18n="pm_products_in_catalog">Products in Catalog</div><div class="kpi-sub" data-i18n="pm_tracked_across">Tracked across all clients</div></div>
-      <div class="kpi"><div class="kpi-icon">🔥</div><div class="kpi-val red" id="pmHighCount">0</div><div class="kpi-lbl" data-i18n="pm_high_priority">High Priority</div></div>
+      <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="trending" data-icon-size="14"></span></div><div class="kpi-val red" id="pmHighCount">0</div><div class="kpi-lbl" data-i18n="pm_high_priority">High Priority</div></div>
       <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="alert" data-icon-size="16"></span></div><div class="kpi-val" id="pmMedCount" style="color:var(--yellow)">0</div><div class="kpi-lbl" data-i18n="upsell_medium_priority">Medium Priority</div></div>
       <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="check" data-icon-size="16"></span></div><div class="kpi-val green" id="pmLowCount">0</div><div class="kpi-lbl" data-i18n="upsell_targeted_priority">Targeted Priority</div></div>
     </div>
@@ -3324,7 +3324,7 @@ tr.hidden-row { display: none; }
         <div>
           <label for="newProductPriority" class="field-label">Priority</label>
           <select id="newProductPriority" class="field-input">
-            <option value="high">🔥 High Priority</option>
+            <option value="high"><span class="icon" data-icon="trending" data-icon-size="14"></span> High Priority</option>
             <option value="medium" selected>Medium Priority</option>
             <option value="low">Targeted Priority</option>
           </select>
@@ -3354,7 +3354,7 @@ tr.hidden-row { display: none; }
     <div class="kpi-row">
       <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="building" data-icon-size="14"></span></div><div class="kpi-val orange" id="as-total">0</div><div class="kpi-lbl" data-i18n="adspend_businesses">Businesses Tracked</div></div>
       <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="dollar" data-icon-size="16"></span></div><div class="kpi-val" id="as-budget">$0</div><div class="kpi-lbl" data-i18n="adspend_budget">Total Monthly Budget</div></div>
-      <div class="kpi"><div class="kpi-icon">🎁</div><div class="kpi-val green" id="as-promo">0</div><div class="kpi-lbl" data-i18n="adspend_promo">Promo Eligible</div></div>
+      <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="gift" data-icon-size="13"></span></div><div class="kpi-val green" id="as-promo">0</div><div class="kpi-lbl" data-i18n="adspend_promo">Promo Eligible</div></div>
       <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="check" data-icon-size="16"></span></div><div class="kpi-val" style="color:var(--blue)" id="as-using">0</div><div class="kpi-lbl" data-i18n="adspend_using">Already Using</div></div>
     </div>
 
@@ -3437,7 +3437,7 @@ tr.hidden-row { display: none; }
         <input type="text" class="search-box" id="asSearch" placeholder="Search businesses..." data-i18n-placeholder="search_businesses" oninput="debouncedRebuildAdSpendTable()">
         <div style="display:flex;gap:6px;flex-wrap:wrap" id="asFilterPills">
           <button class="filter-pill active" onclick="setAdSpendFilter('all',this)"><span data-i18n="filter_all">All</span></button>
-          <button class="filter-pill" onclick="setAdSpendFilter('Yes',this)">🎁 Promo Eligible</button>
+          <button class="filter-pill" onclick="setAdSpendFilter('Yes',this)"><span class="icon" data-icon="gift" data-icon-size="13"></span> Promo Eligible</button>
           <button class="filter-pill" onclick="setAdSpendFilter('No',this)">Not Eligible</button>
           <button class="filter-pill" onclick="setAdSpendFilter('Already Using',this)">Already Using</button>
         </div>
@@ -3498,7 +3498,7 @@ tr.hidden-row { display: none; }
   <!-- AD SPEND: COLUMN MAPPING MODAL (step 1 of import) -->
   <div class="modal-overlay" id="adSpendMappingModal">
     <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="adSpendMappingModalTitle">
-      <h3 id="adSpendMappingModalTitle">🧩 <span data-i18n="map_title">Map Your Columns</span></h3>
+      <h3 id="adSpendMappingModalTitle"><span class="icon" data-icon="puzzle" data-icon-size="14"></span> <span data-i18n="map_title">Map Your Columns</span></h3>
       <p id="asMappingFileLabel" data-i18n="map_auto_detected">We auto-detected these columns from your file. Fix anything that looks wrong, then continue.</p>
       <div class="modal-scroll">
         <table class="map-table">
@@ -3517,7 +3517,7 @@ tr.hidden-row { display: none; }
   <!-- AD SPEND: REVIEW & DUPLICATES MODAL (step 2 of import) -->
   <div class="modal-overlay" id="adSpendDuplicatesModal">
     <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="adSpendDuplicatesModalTitle">
-      <h3 id="adSpendDuplicatesModalTitle">🔎 <span data-i18n="dup_review_title">Review Import</span></h3>
+      <h3 id="adSpendDuplicatesModalTitle"><span class="icon" data-icon="search" data-icon-size="14"></span> <span data-i18n="dup_review_title">Review Import</span></h3>
       <p id="asDupSummaryText"><span data-i18n="dup_summary">Here's what we found before saving.</span></p>
       <div class="import-summary" id="asImportSummaryStats"></div>
       <div id="asDupSection">
@@ -3538,13 +3538,13 @@ tr.hidden-row { display: none; }
     <div class="card" style="margin-bottom:var(--space-5);padding:var(--space-3) var(--space-4)">
       <div style="font-size:var(--font-xs);color:var(--text3);margin-bottom:var(--space-2);letter-spacing:.5px;text-transform:uppercase;font-weight:700" data-i18n="collections_viewing">Viewing</div>
       <div style="display:flex;gap:var(--space-2);flex-wrap:wrap">
-        <button class="pm-tab active" data-pk="outstanding" onclick="switchCollectionsType('outstanding')">💵 <span data-i18n="collections_outstanding_tab">Outstanding Balances</span></button>
-        <button class="pm-tab" data-pk="cardfail" onclick="switchCollectionsType('cardfail')">💳 <span data-i18n="collections_cardfail_tab">Card Fails</span></button>
+        <button class="pm-tab active" data-pk="outstanding" onclick="switchCollectionsType('outstanding')"><span class="icon" data-icon="dollar" data-icon-size="13"></span> <span data-i18n="collections_outstanding_tab">Outstanding Balances</span></button>
+        <button class="pm-tab" data-pk="cardfail" onclick="switchCollectionsType('cardfail')"><span class="icon" data-icon="dollar" data-icon-size="13"></span> <span data-i18n="collections_cardfail_tab">Card Fails</span></button>
       </div>
     </div>
 
     <div class="kpi-row">
-      <div class="kpi"><div class="kpi-icon">🧾</div><div class="kpi-val orange" id="col-total">0</div><div class="kpi-lbl" id="col-total-lbl">Accounts</div></div>
+      <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="receipt" data-icon-size="14"></span></div><div class="kpi-val orange" id="col-total">0</div><div class="kpi-lbl" id="col-total-lbl">Accounts</div></div>
       <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="dollar" data-icon-size="16"></span></div><div class="kpi-val" id="col-amount">$0</div><div class="kpi-lbl" id="col-amount-lbl">Total Owed</div></div>
       <div class="kpi kpi-glow-green"><div class="kpi-icon"><span class="icon" data-icon="check" data-icon-size="16"></span></div><div class="kpi-val green" id="col-collected">$0</div><div class="kpi-lbl" data-i18n="collections_amount_collected">Amount Collected</div><div class="kpi-sub" id="col-collected-sub">Payment Plan &amp; Resolved · this tab only</div></div>
       <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="alert" data-icon-size="16"></span></div><div class="kpi-val red" id="col-needs">0</div><div class="kpi-lbl" data-i18n="collections_needs_attention">Needs Attention</div><div class="kpi-sub">Pending, In Review, or Escalated</div></div>
@@ -3556,7 +3556,7 @@ tr.hidden-row { display: none; }
       <div class="card">
         <div class="card-header">
           <div><div class="card-title" data-i18n="collections_by_status_chart">Accounts by Status</div><div class="card-sub" id="colStatusDonutSub">Breakdown of this tab's accounts</div></div>
-          <span class="card-badge" id="badge-collections-count">🧾 0 Accounts</span>
+          <span class="card-badge" id="badge-collections-count"><span class="icon" data-icon="receipt" data-icon-size="14"></span> 0 Accounts</span>
         </div>
         <div class="chart-wrap h300" style="position:relative">
           <canvas id="collectionsStatusDonut"></canvas>
@@ -3664,7 +3664,7 @@ tr.hidden-row { display: none; }
   <!-- COLLECTIONS: COLUMN MAPPING MODAL (step 1 of import) -->
   <div class="modal-overlay" id="collectionsMappingModal">
     <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="collectionsMappingModalTitle">
-      <h3 id="collectionsMappingModalTitle">🧩 <span data-i18n="map_title">Map Your Columns</span></h3>
+      <h3 id="collectionsMappingModalTitle"><span class="icon" data-icon="puzzle" data-icon-size="14"></span> <span data-i18n="map_title">Map Your Columns</span></h3>
       <p id="colMappingFileLabel" data-i18n="map_auto_detected">We auto-detected these columns from your file. Fix anything that looks wrong, then continue.</p>
       <div class="modal-scroll">
         <table class="map-table">
@@ -3683,7 +3683,7 @@ tr.hidden-row { display: none; }
   <!-- COLLECTIONS: REVIEW & DUPLICATES MODAL (step 2 of import) -->
   <div class="modal-overlay" id="collectionsDuplicatesModal">
     <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="collectionsDuplicatesModalTitle">
-      <h3 id="collectionsDuplicatesModalTitle">🔎 <span data-i18n="dup_review_title">Review Import</span></h3>
+      <h3 id="collectionsDuplicatesModalTitle"><span class="icon" data-icon="search" data-icon-size="14"></span> <span data-i18n="dup_review_title">Review Import</span></h3>
       <p id="colDupSummaryText"><span data-i18n="dup_summary">Here's what we found before saving.</span></p>
       <div class="import-summary" id="colImportSummaryStats"></div>
       <div id="colDupSection">
@@ -3702,9 +3702,9 @@ tr.hidden-row { display: none; }
   ════════════════════════════════════════════════════════════════════════ -->
   <div class="page" id="page-settings">
     <div style="display:flex;gap:18px;margin-bottom:20px;flex-wrap:wrap">
-      <button class="pm-tab active" id="settingsIntegrationsTabBtn" onclick="switchSettingsTab('integrations')">🔌 <span data-i18n="settings_integrations_tab">Integrations</span></button>
-      <button class="pm-tab" id="settingsTeamTabBtn" onclick="switchSettingsTab('team')" style="display:none">🔐 <span data-i18n="settings_team_tab">Team &amp; Permissions</span></button>
-      <button class="pm-tab" id="settingsCleanupTabBtn" onclick="switchSettingsTab('cleanup')" style="display:none">🧹 <span data-i18n="settings_cleanup_tab">Data Cleanup</span></button>
+      <button class="pm-tab active" id="settingsIntegrationsTabBtn" onclick="switchSettingsTab('integrations')"><span class="icon" data-icon="plug" data-icon-size="14"></span> <span data-i18n="settings_integrations_tab">Integrations</span></button>
+      <button class="pm-tab" id="settingsTeamTabBtn" onclick="switchSettingsTab('team')" style="display:none"><span class="icon" data-icon="lock" data-icon-size="13"></span> <span data-i18n="settings_team_tab">Team &amp; Permissions</span></button>
+      <button class="pm-tab" id="settingsCleanupTabBtn" onclick="switchSettingsTab('cleanup')" style="display:none"><span class="icon" data-icon="broom" data-icon-size="14"></span> <span data-i18n="settings_cleanup_tab">Data Cleanup</span></button>
     </div>
 
     <div id="settingsTab-integrations">
@@ -3766,7 +3766,7 @@ tr.hidden-row { display: none; }
       <div class="card" style="margin-bottom:var(--space-5)">
         <div class="card-header">
           <div><div class="card-title" data-i18n="settings_duplicates_title">Duplicate Clients</div><div class="card-sub">Same client name appearing more than once within the same portfolio — usually from a spreadsheet re-uploaded without de-duplicating against existing clients</div></div>
-          <button class="btn btn-primary btn-sm" onclick="scanForDuplicateClients()">🔍 <span data-i18n="settings_scan_btn">Scan for Duplicates</span></button>
+          <button class="btn btn-primary btn-sm" onclick="scanForDuplicateClients()"><span class="icon" data-icon="search" data-icon-size="14"></span> <span data-i18n="settings_scan_btn">Scan for Duplicates</span></button>
         </div>
         <div id="duplicateClientsList">
           <div style="color:var(--text3);font-size:var(--font-sm);text-align:center;padding:var(--space-5) 0">Click "Scan for Duplicates" to check.</div>
@@ -3781,7 +3781,7 @@ tr.hidden-row { display: none; }
       <div><div class="card-title" data-i18n="onboarding_pipeline_title">Onboarding Pipeline</div><div class="card-sub" id="onboardingCountSub">0 in progress</div></div>
       <div style="display:flex;gap:var(--space-2);align-items:center">
         <select id="onboardingPipelineSelect" class="field-input" style="height:36px;margin-bottom:0;width:auto" onchange="switchOnboardingPipeline(this.value)"></select>
-        <button class="btn btn-sm" onclick="openManagePipelinesModal()" title="Create or edit pipelines">⚙️ <span data-i18n="onboarding_pipelines_btn">Pipelines</span></button>
+        <button class="btn btn-sm" onclick="openManagePipelinesModal()" title="Create or edit pipelines"><span class="icon" data-icon="settings" data-icon-size="14"></span> <span data-i18n="onboarding_pipelines_btn">Pipelines</span></button>
         <button class="btn btn-primary btn-sm" onclick="openAddOnboardingModal()">＋ <span data-i18n="onboarding_new_btn">New Onboarding</span></button>
       </div>
     </div>
@@ -3824,7 +3824,7 @@ tr.hidden-row { display: none; }
 <!-- WORKFLOW MODAL -->
 <div class="modal-overlay" id="workflowModal">
   <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="workflowModalTitle">
-    <h3 id="workflowModalTitle">🔁 <span data-i18n="owf_title">New Workflow</span></h3>
+    <h3 id="workflowModalTitle"><span class="icon" data-icon="repeat" data-icon-size="14"></span> <span data-i18n="owf_title">New Workflow</span></h3>
     <p data-i18n="owf_desc">Automate a repetitive check so nobody has to remember to do it manually.</p>
 
     <label for="wfName" class="field-label"><span data-i18n="owf_name">Workflow Name</span> <span style="color:var(--orange)">*</span></label>
@@ -3832,12 +3832,12 @@ tr.hidden-row { display: none; }
 
     <label class="field-label"><span data-i18n="owf_when_trigger">When should it trigger?</span> <span style="color:var(--orange)">*</span></label>
     <div style="display:flex;gap:18px;margin-bottom:14px;flex-wrap:wrap">
-      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfTriggerType" value="inactivity" checked onchange="renderWorkflowTriggerFields()"> 😴 Client inactivity</label>
-      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfTriggerType" value="schedule" onchange="renderWorkflowTriggerFields()"> 📅 On a schedule</label>
-      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfTriggerType" value="client_added" onchange="renderWorkflowTriggerFields()"> ✨ New client added</label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfTriggerType" value="inactivity" checked onchange="renderWorkflowTriggerFields()"> <span class="icon" data-icon="clock" data-icon-size="13"></span> Client inactivity</label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfTriggerType" value="schedule" onchange="renderWorkflowTriggerFields()"> <span class="icon" data-icon="calendar" data-icon-size="13"></span> On a schedule</label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfTriggerType" value="client_added" onchange="renderWorkflowTriggerFields()"> <span class="icon" data-icon="sparkle" data-icon-size="13"></span> New client added</label>
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfTriggerType" value="task_due_soon" onchange="renderWorkflowTriggerFields()"> ⏰ Task due soon</label>
-      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfTriggerType" value="kpi_drop" onchange="renderWorkflowTriggerFields()"> ⭐ KPI score drops</label>
-      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfTriggerType" value="collections_status" onchange="renderWorkflowTriggerFields()"> 💳 Collections status</label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfTriggerType" value="kpi_drop" onchange="renderWorkflowTriggerFields()"> <span class="icon" data-icon="star" data-icon-size="13"></span> KPI score drops</label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfTriggerType" value="collections_status" onchange="renderWorkflowTriggerFields()"> <span class="icon" data-icon="card" data-icon-size="13"></span> Collections status</label>
     </div>
 
     <div id="workflowTriggerFields"></div>
@@ -3846,10 +3846,10 @@ tr.hidden-row { display: none; }
 
     <div style="font-size:11px;color:var(--text3);margin-bottom:12px" data-i18n="owf_action_section">Action — what should happen when it triggers</div>
     <div style="display:flex;gap:18px;margin-bottom:12px;flex-wrap:wrap">
-      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfActionType" value="create_task" checked onchange="toggleWorkflowActionType()"> ✅ <span data-i18n="owf_create_task">Create a task</span></label>
-      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfActionType" value="notify_only" onchange="toggleWorkflowActionType()"> 🔔 <span data-i18n="owf_notify_only">Just notify (no task)</span></label>
-      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfActionType" value="log_note" onchange="toggleWorkflowActionType()"> 📝 <span data-i18n="owf_log_note">Log a note (no task)</span></label>
-      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfActionType" value="draft_with_nirvana" onchange="toggleWorkflowActionType()"> ✨ <span data-i18n="owf_draft_nirvana">Draft with Nirvana</span></label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfActionType" value="create_task" checked onchange="toggleWorkflowActionType()"> <span class="icon" data-icon="check" data-icon-size="13"></span> <span data-i18n="owf_create_task">Create a task</span></label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfActionType" value="notify_only" onchange="toggleWorkflowActionType()"> <span class="icon" data-icon="bell" data-icon-size="13"></span> <span data-i18n="owf_notify_only">Just notify (no task)</span></label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfActionType" value="log_note" onchange="toggleWorkflowActionType()"> <span class="icon" data-icon="note" data-icon-size="13"></span> <span data-i18n="owf_log_note">Log a note (no task)</span></label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="radio" name="wfActionType" value="draft_with_nirvana" onchange="toggleWorkflowActionType()"> <span class="icon" data-icon="sparkle" data-icon-size="13"></span> <span data-i18n="owf_draft_nirvana">Draft with Nirvana</span></label>
     </div>
     <div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:4px">
       <div><label for="wfActionTitle" class="field-label" id="wfActionTitleLabel" data-i18n="owf_create_task_titled">Create a task titled</label><input type="text" id="wfActionTitle" class="field-input" style="height:38px" placeholder="e.g. Check in — no recent contact"></div>
@@ -3893,7 +3893,7 @@ tr.hidden-row { display: none; }
 <!-- NEW ONBOARDING MODAL (Onboarding Block 1) -->
 <div class="modal-overlay" id="addOnboardingModal">
   <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="addOnboardingModalTitle">
-    <h3 id="addOnboardingModalTitle">🧭 <span data-i18n="ob_new_title">New Onboarding</span></h3>
+    <h3 id="addOnboardingModalTitle"><span class="icon" data-icon="compass" data-icon-size="14"></span> <span data-i18n="ob_new_title">New Onboarding</span></h3>
     <p data-i18n="ob_desc">Start tracking a new client from contract signature through go-live — this doesn't create a real client record yet.</p>
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
@@ -3914,7 +3914,7 @@ tr.hidden-row { display: none; }
 
     <div class="modal-btns" style="margin-top:16px">
       <button class="btn btn-ghost" onclick="closeAddOnboardingModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveNewOnboardingRecord()">🧭 Start Onboarding</button>
+      <button class="btn btn-primary" onclick="saveNewOnboardingRecord()"><span class="icon" data-icon="compass" data-icon-size="14"></span> Start Onboarding</button>
     </div>
   </div>
 </div>
@@ -3922,7 +3922,7 @@ tr.hidden-row { display: none; }
 <!-- VIEW ONBOARDING MODAL (Onboarding Block 1 — read-only; stage/checklist actions come in Block 2) -->
 <div class="modal-overlay" id="viewOnboardingModal">
   <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="viewOnboardingModalTitle">
-    <h3 id="viewOnboardingModalTitle">🧭 Onboarding Details</h3>
+    <h3 id="viewOnboardingModalTitle"><span class="icon" data-icon="compass" data-icon-size="14"></span> Onboarding Details</h3>
     <div id="viewOnboardingBody"></div>
     <div class="modal-btns">
       <button class="btn btn-ghost" onclick="closeViewOnboardingModal()">Close</button>
@@ -3936,7 +3936,7 @@ tr.hidden-row { display: none; }
 <!-- CREATE CUSTOM NODE TYPE MODAL -->
 <div class="modal-overlay" id="createCustomNodeTypeModal">
   <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="cnModalTitle">
-    <h3 id="cnModalTitle">🧩 Create Custom Node Type</h3>
+    <h3 id="cnModalTitle"><span class="icon" data-icon="puzzle" data-icon-size="14"></span> Create Custom Node Type</h3>
     <label for="cnCategorySelect" class="field-label">Category</label>
     <select id="cnCategorySelect" class="field-input">
       <option value="trigger">Trigger</option>
@@ -3965,15 +3965,15 @@ tr.hidden-row { display: none; }
     <p style="font-size:var(--font-sm);color:var(--text2);line-height:1.5">Your edits are already saved as you make them. This decides whether this workflow is actually running yet.</p>
     <div class="modal-btns">
       <button class="btn btn-ghost" onclick="closeWfbSaveModal()">Cancel</button>
-      <button class="btn btn-ghost" onclick="commitWorkflowSave('draft')">📝 Save as Draft</button>
-      <button class="btn btn-primary" onclick="commitWorkflowSave('published')">🚀 Make Live</button>
+      <button class="btn btn-ghost" onclick="commitWorkflowSave('draft')"><span class="icon" data-icon="note" data-icon-size="14"></span> Save as Draft</button>
+      <button class="btn btn-primary" onclick="commitWorkflowSave('published')"><span class="icon" data-icon="rocket" data-icon-size="14"></span> Make Live</button>
     </div>
   </div>
 </div>
 
 <div class="modal-overlay" id="wfbBranchModal">
   <div class="modal" style="max-width:320px" role="dialog" aria-modal="true" aria-labelledby="wfbBranchModalTitle">
-    <h3 id="wfbBranchModalTitle">🔀 Branch Label</h3>
+    <h3 id="wfbBranchModalTitle"><span class="icon" data-icon="shuffle" data-icon-size="13"></span> Branch Label</h3>
     <p style="font-size:var(--font-sm);color:var(--text2)">This connects from a Condition node — which branch is this?</p>
     <div class="modal-btns">
       <button class="btn btn-ghost" onclick="resolveWfbBranchModal(null)">Cancel</button>
@@ -3985,7 +3985,7 @@ tr.hidden-row { display: none; }
 
 <div class="modal-overlay" id="managePipelinesModal">
   <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="managePipelinesModalTitle">
-    <h3 id="managePipelinesModalTitle">⚙️ Onboarding Pipelines</h3>
+    <h3 id="managePipelinesModalTitle"><span class="icon" data-icon="settings" data-icon-size="14"></span> Onboarding Pipelines</h3>
     <div style="font-size:var(--font-sm);font-weight:700;color:var(--text2);margin-bottom:var(--space-2)">Existing Pipelines</div>
     <div id="pipelinesList" style="margin-bottom:var(--space-4)"></div>
 
@@ -4005,16 +4005,16 @@ tr.hidden-row { display: none; }
 <!-- KNOWLEDGE BASE MODAL -->
 <div class="modal-overlay" id="knowledgeModal">
   <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="knowledgeModalTitle">
-    <h3 id="knowledgeModalTitle">📚 <span data-i18n="kb_add_title">Add Knowledge</span></h3>
+    <h3 id="knowledgeModalTitle"><span class="icon" data-icon="book" data-icon-size="14"></span> <span data-i18n="kb_add_title">Add Knowledge</span></h3>
     <p data-i18n="kb_modal_desc">Feed Nirvana something to learn — upload a file, fetch a webpage, or paste text directly.</p>
 
     <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:14px;margin-bottom:14px">
       <div><label for="kbTitle" class="field-label">Title <span style="color:var(--orange)">*</span></label><input type="text" id="kbTitle" class="field-input" style="height:38px" placeholder="e.g. New Client Onboarding SOP"></div>
       <div><label for="kbCategory" class="field-label" data-i18n="pref_settings">Category</label><select id="kbCategory" class="field-select" style="height:38px">
         <option value="sop"><span class="icon" data-icon="clipboard" data-icon-size="16"></span> SOP</option>
-        <option value="docs">📄 Docs</option>
-        <option value="website">🌐 Website</option>
-        <option value="other">📎 Other</option>
+        <option value="docs"><span class="icon" data-icon="note" data-icon-size="14"></span> Docs</option>
+        <option value="website"><span class="icon" data-icon="globe" data-icon-size="14"></span> Website</option>
+        <option value="other"><span class="icon" data-icon="paperclip" data-icon-size="13"></span> Other</option>
       </select></div>
       <div><label for="kbLanguage" class="field-label" data-i18n="pref_language">Language</label><span id="kbLanguageDetected" style="color:var(--text3);font-weight:400"></span><select id="kbLanguage" class="field-select" style="height:38px">
         <option value="" data-i18n="kb_auto_detect">Auto-detect</option>
@@ -4026,12 +4026,12 @@ tr.hidden-row { display: none; }
     <label for="kbSourceUrl" class="field-label"><span data-i18n="kb_source_url">Source URL</span> <span style="color:var(--text3);font-weight:400" data-i18n="kb_source_url_hint">(optional — needed only if you want to auto-fetch a page's text)</span></label>
     <div style="display:flex;gap:8px;margin-bottom:16px">
       <input type="text" id="kbSourceUrl" class="field-input" style="height:38px" placeholder="https://example.com/page">
-      <button class="btn btn-ghost btn-sm" id="kbFetchBtn" onclick="fetchKnowledgeFromUrl()" style="white-space:nowrap">🌐 <span data-i18n="kb_fetch_btn">Fetch Page Text</span></button>
+      <button class="btn btn-ghost btn-sm" id="kbFetchBtn" onclick="fetchKnowledgeFromUrl()" style="white-space:nowrap"><span class="icon" data-icon="globe" data-icon-size="14"></span> <span data-i18n="kb_fetch_btn">Fetch Page Text</span></button>
     </div>
 
     <div id="kbDropZone" class="kb-dropzone" ondragover="event.preventDefault(); this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="handleKnowledgeFileDrop(event)" onclick="document.getElementById('kbFileInput').click()">
       <input type="file" id="kbFileInput" accept=".txt,.md,.pdf,.docx,.xlsx,.xls,.csv" style="display:none" onchange="handleKnowledgeFileSelect(event)">
-      <div style="font-size:22px;margin-bottom:4px">📁</div>
+      <div style="font-size:22px;margin-bottom:4px"><span class="icon" data-icon="folder" data-icon-size="14"></span></div>
       <div style="font-size:12px;color:var(--text2)" data-i18n="kb_drop_file">Drag a file here, or click to upload</div>
       <div style="font-size:10.5px;color:var(--text3);margin-top:2px">.txt · .md · .pdf · .docx · .xlsx · .csv</div>
     </div>
@@ -4060,9 +4060,9 @@ tr.hidden-row { display: none; }
 
     <label class="field-label"><span data-i18n="fld_portfolios_req">Portfolio(s)</span> <span style="color:var(--orange)">*</span></label>
     <div style="display:flex;gap:18px;margin-bottom:16px">
-      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="checkbox" id="acPortfolioSmb" onchange="renderAddClientProductGroups()"> 📊 SMB</label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="checkbox" id="acPortfolioSmb" onchange="renderAddClientProductGroups()"> <span class="icon" data-icon="chart" data-icon-size="13"></span> SMB</label>
       <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="checkbox" id="acPortfolioWhitelabel" onchange="renderAddClientProductGroups()"> 🏷️ <span data-i18n="cl_wl_partners_short">White Label</span></label>
-      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="checkbox" id="acPortfolioSupport" onchange="renderAddClientProductGroups()"> 🎫 <span data-i18n="cl_support_clients_short">Support</span></label>
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;color:var(--text)"><input type="checkbox" id="acPortfolioSupport" onchange="renderAddClientProductGroups()"> <span class="icon" data-icon="ticket" data-icon-size="13"></span> <span data-i18n="cl_support_clients_short">Support</span></label>
     </div>
 
     <div id="addClientProductGroups"></div>
@@ -4104,11 +4104,11 @@ tr.hidden-row { display: none; }
 <!-- GOOGLE SHEETS MODAL -->
 <div class="modal-overlay" id="sheetsModal">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="sheetsModalTitle">
-    <h3 id="sheetsModalTitle">🔗 Connect Google Sheets</h3>
+    <h3 id="sheetsModalTitle"><span class="icon" data-icon="link" data-icon-size="13"></span> Connect Google Sheets</h3>
     <p>Publish your sheet to the web as CSV, then paste that link below. The hub will fetch live data and rebuild every chart, KPI, and table automatically.</p>
     <input type="text" id="sheetsUrl" placeholder="https://docs.google.com/spreadsheets/d/.../pub?output=csv">
     <div style="font-size:11px;color:var(--text3);margin-bottom:14px;background:var(--bg3);padding:10px 12px;border-radius:8px;border:1px solid var(--border)">
-      <strong style="color:var(--orange)">📌 How to get the link:</strong><br>
+      <strong style="color:var(--orange)"><span class="icon" data-icon="pin" data-icon-size="13"></span> How to get the link:</strong><br>
       1. In Google Sheets: <strong>File → Share → Publish to web</strong><br>
       2. Select the <strong>SMBs</strong> sheet/tab specifically (not "Entire Document")<br>
       3. Choose format: <strong>Comma-separated values (.csv)</strong><br>
@@ -4129,7 +4129,7 @@ tr.hidden-row { display: none; }
 <!-- COLUMN MAPPING MODAL (step 1 of import) -->
 <div class="modal-overlay" id="mappingModal">
   <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="mappingModalTitle">
-    <h3 id="mappingModalTitle">🧩 <span data-i18n="map_title">Map Your Columns</span></h3>
+    <h3 id="mappingModalTitle"><span class="icon" data-icon="puzzle" data-icon-size="14"></span> <span data-i18n="map_title">Map Your Columns</span></h3>
     <p id="mappingFileLabel" data-i18n="map_auto_detected">We auto-detected these columns from your file. Fix anything that looks wrong, then continue.</p>
     <div class="modal-scroll">
       <table class="map-table">
@@ -4148,7 +4148,7 @@ tr.hidden-row { display: none; }
 <!-- REVIEW & DUPLICATES MODAL (step 2 of import) -->
 <div class="modal-overlay" id="duplicatesModal">
   <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="duplicatesModalTitle">
-    <h3 id="duplicatesModalTitle">🔎 <span data-i18n="dup_review_title">Review Import</span></h3>
+    <h3 id="duplicatesModalTitle"><span class="icon" data-icon="search" data-icon-size="14"></span> <span data-i18n="dup_review_title">Review Import</span></h3>
     <p id="dupSummaryText"><span data-i18n="dup_summary">Here's what we found before saving.</span></p>
     <div class="import-summary" id="importSummaryStats"></div>
     <div id="dupSection">
@@ -4244,7 +4244,81 @@ const HUB_ICONS = {
   user: '<circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0116 0v1"/>',
   calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/>',
   building: '<rect x="4" y="3" width="16" height="18" rx="1"/><path d="M9 8h1M14 8h1M9 12h1M14 12h1M9 16h1M14 16h1"/>',
+  note: '<path d="M4 4h13l3 3v13H4z"/><path d="M8 9h8M8 13h8M8 17h5"/>',
+  sparkle: '<path d="M12 2l1.5 6.5L20 10l-6.5 1.5L12 18l-1.5-6.5L4 10l6.5-1.5z"/>',
+  star: '<path d="M12 2l2.9 6.3 6.9.7-5.2 4.7 1.5 6.8L12 17l-6.1 3.5 1.5-6.8-5.2-4.7 6.9-.7z"/>',
+  pin: '<path d="M12 21s7-6.6 7-12a7 7 0 10-14 0c0 5.4 7 12 7 12z"/><circle cx="12" cy="9" r="2.3"/>',
+  trending: '<path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
+  lightbulb: '<path d="M9 18h6M10 21h4M12 3a6 6 0 00-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0012 3z"/>',
+  broom: '<path d="M4 20l6-6M14 4l6 6-9 9-4-4z"/><path d="M13.5 6.5l2 2"/>',
+  puzzle: '<path d="M9 3h4v2.5a1.5 1.5 0 003 0V3h4v4h-2.5a1.5 1.5 0 000 3H20v4h-4v2.5a1.5 1.5 0 01-3 0V16H9v-4H6.5a1.5 1.5 0 010-3H9z"/>',
+  refresh: '<path d="M21 12a9 9 0 11-3-6.7M21 4v5h-5"/>',
+  gift: '<rect x="3" y="8" width="18" height="13" rx="1"/><path d="M12 8v13M3 12h18M12 8c-2-3-6-3-6 0s4 1 6 0c2 1 6 3 6 0s-4-3-6 0z"/>',
+  link: '<path d="M9 15l6-6M8 12l-3 3a3 3 0 004 4l3-3M16 12l3-3a3 3 0 00-4-4l-3 3"/>',
+  ticket: '<path d="M3 8a2 2 0 012-2h14a2 2 0 012 2v2a2 2 0 000 4v2a2 2 0 01-2 2H5a2 2 0 01-2-2v-2a2 2 0 000-4V8z"/><path d="M10 6v12" stroke-dasharray="2 3"/>',
+  receipt: '<path d="M6 3h12v18l-2-1.5-2 1.5-2-1.5-2 1.5-2-1.5L6 21z"/><path d="M9 8h6M9 12h6"/>',
+  eye: '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>',
+  eyeOff: '<path d="M3 3l18 18"/><path d="M10.6 5.1A10.4 10.4 0 0112 5c6.5 0 10 7 10 7a17.7 17.7 0 01-3.4 4.3M6.5 6.5C4 8.2 2 12 2 12s3.5 7 10 7c1.3 0 2.4-.3 3.5-.7"/><path d="M9.9 9.9a3 3 0 004.2 4.2"/>',
+  folder: '<path d="M3 6a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V6z"/>',
+  lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 018 0v4"/>',
+  graduation: '<path d="M2 9l10-5 10 5-10 5-10-5z"/><path d="M6 11.5V16c0 1.5 3 3 6 3s6-1.5 6-3v-4.5"/>',
+  shield: '<path d="M12 2l8 3.5v6c0 5-3.4 8.5-8 10.5-4.6-2-8-5.5-8-10.5v-6z"/>',
+  hammer: '<path d="M15 5l4 4-2 2-4-4z"/><path d="M13 7L3 17l3 3L16 10"/>',
+  plug: '<path d="M9 2v6M15 2v6M6 8h12v4a6 6 0 01-6 6 6 6 0 01-6-6V8z"/><path d="M12 18v4"/>',
+  mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+  phone: '<path d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z"/>',
+  paperclip: '<path d="M8 12l7-7a3.5 3.5 0 015 5l-9 9a2.5 2.5 0 01-3.5-3.5l8-8"/>',
+  menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
+  store: '<path d="M3 9l1.5-5h15L21 9M4 9h16v11H4z"/><path d="M9 20v-6h6v6"/>',
+  expand: '<path d="M9 3H3v6M15 3h6v6M15 21h6v-6M9 21H3v-6"/>',
+  shuffle: '<path d="M17 3h4v4M21 3l-7 7M3 7l4-4M7 21l14-14M3 17l4 4h4"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v5h1"/>',
+  clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
+  card: '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/>',
 };
+// Maps each emoji this pass has replaced back to its icon name, so shared
+// functions that receive a caller-supplied string with a leading emoji
+// (showToast, showConfirmDialog, etc.) can retrofit it without needing
+// every individual call site across the app updated by hand -- fixing the
+// one shared function here fixes all its callers at once.
+const EMOJI_TO_ICON_NAME = {
+  '✅':'check','⚠️':'alert','⚠':'alert','🗑️':'trash','🗑':'trash','📝':'note','➕':'plus','✏️':'edit','✏':'edit','💾':'save',
+  '🔍':'search','🔎':'search','✕':'close','⬇':'download','📋':'clipboard','🎯':'target',
+  '👤':'user','👥':'users','🏷️':'tag','🏷':'tag','💰':'dollar','📅':'calendar','📦':'package','🏢':'building',
+  '🔁':'repeat','✨':'sparkle','⭐':'star','★':'star','💬':'chat','⚙️':'settings','⚙':'settings','🧭':'compass','🔗':'link',
+  '📈':'trending','🔥':'trending','📌':'pin','💡':'lightbulb','📚':'book','🌐':'globe','🧹':'broom',
+  '🧩':'puzzle','🔄':'refresh','🎁':'gift','🎫':'ticket','🧾':'receipt','👁️':'eye','👁':'eye','📁':'folder',
+  '🔒':'lock','🔐':'lock','🎓':'graduation','🛡️':'shield','🛡':'shield','🔨':'hammer','🔌':'plug','✉️':'mail','✉':'mail',
+  '📞':'phone','📎':'paperclip','🚀':'rocket','🏆':'star','🤖':'bot','🎉':'sparkle','🏥':'building','💳':'dollar','💵':'dollar',
+};
+function iconizeLeading(str, size) {
+  if (!str) return '';
+  for (const [emoji, iconName] of Object.entries(EMOJI_TO_ICON_NAME)) {
+    if (str.startsWith(emoji)) {
+      return hubIcon(iconName, size || 14) + '<span style="margin-left:6px">' + escAttr(str.slice(emoji.length).trim()) + '</span>';
+    }
+  }
+  return escAttr(str);
+}
+function iconizeAll(str, size) {
+  if (!str) return '';
+  let result = escAttr(str);
+  for (const [emoji, iconName] of Object.entries(EMOJI_TO_ICON_NAME)) {
+    if (result.includes(emoji)) result = result.split(emoji).join(hubIcon(iconName, size || 13) + ' ');
+  }
+  return result;
+}
+// Like iconizeLeading, but for strings that already contain trusted,
+// intentional HTML (e.g. describeAiAction's <b>client name</b> formatting)
+// -- only swaps the leading emoji character for its icon, and does NOT
+// escape or otherwise touch the rest of the string.
+function prependIcon(str, size) {
+  if (!str) return '';
+  for (const emoji of Object.keys(EMOJI_TO_ICON_NAME)) {
+    if (str.startsWith(emoji)) return hubIcon(EMOJI_TO_ICON_NAME[emoji], size || 14) + ' ' + str.slice(emoji.length).trim();
+  }
+  return str;
+}
 function hubIcon(name, size) {
   const s = size || 15;
   return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0">${HUB_ICONS[name] || ''}</svg>`;
@@ -5271,7 +5345,7 @@ async function renderClientSpotlight(pk) {
   if (!el) return;
   const entry = await ensureSpotlightForToday(pk);
   if (!entry) {
-    el.innerHTML = `<div class="card">${emptyStateHTML({ icon: '🔦', title: 'No clients yet', sub: `Upload ${PORTFOLIOS[pk].name} clients to see a daily spotlight here.`, compact: true })}</div>`;
+    el.innerHTML = `<div class="card">${emptyStateHTML({ icon: hubIcon('search', 28), title: 'No clients yet', sub: `Upload ${PORTFOLIOS[pk].name} clients to see a daily spotlight here.`, compact: true })}</div>`;
     return;
   }
   const client = getClients(pk).find(c => c.name === entry.client_name);
@@ -5303,14 +5377,14 @@ async function renderClientSpotlight(pk) {
 
   const contactHtml = contact && (contact.contact_name || contact.email || contact.phone)
     ? `${contact.contact_name ? `<div class="spotlight-note-line"><b>${escAttr(contact.contact_name)}</b>${contact.title ? ' — ' + escAttr(contact.title) : ''}</div>` : ''}
-       ${contact.email ? `<div class="spotlight-note-line">✉️ ${escAttr(contact.email)}</div>` : ''}
-       ${contact.phone ? `<div class="spotlight-note-line">📞 ${escAttr(contact.phone)}</div>` : ''}`
+       ${contact.email ? `<div class="spotlight-note-line"><span class="icon" data-icon="mail" data-icon-size="13"></span> ${escAttr(contact.email)}</div>` : ''}
+       ${contact.phone ? `<div class="spotlight-note-line"><span class="icon" data-icon="phone" data-icon-size="13"></span> ${escAttr(contact.phone)}</div>` : ''}`
     : `<div class="spotlight-empty-line">No contact info on file yet</div>`;
 
   const flagLines = [];
   if (collectionsEntry) {
     const meta = statusMeta(collectionsEntry.status);
-    flagLines.push(`<div class="spotlight-flag-line">🧾 ${collectionsEntry.type === 'outstanding' ? 'Outstanding balance' : 'Card fail'}: ${fmtMoney(collectionsEntry.amount)} · <span style="color:${meta.color}">${meta.label}</span></div>`);
+    flagLines.push(`<div class="spotlight-flag-line"><span class="icon" data-icon="receipt" data-icon-size="14"></span> ${collectionsEntry.type === 'outstanding' ? 'Outstanding balance' : 'Card fail'}: ${fmtMoney(collectionsEntry.amount)} · <span style="color:${meta.color}">${meta.label}</span></div>`);
   }
   if (adSpendEntry) {
     flagLines.push(`<div class="spotlight-flag-line"><span class="icon" data-icon="dollar" data-icon-size="16"></span> Ad spend: ${fmtMoney(adSpendEntry.budget)}/mo · <span class="promo-pill ${promoPillClass(adSpendEntry.promo)}" style="font-size:9px">${adSpendEntry.promo}</span></div>`);
@@ -5332,7 +5406,7 @@ async function renderClientSpotlight(pk) {
   el.innerHTML = `
     <div class="spotlight-card ${riskClass}">
       <div class="spotlight-hd">
-        <div class="spotlight-title">🔦 Today's Client Spotlight</div>
+        <div class="spotlight-title"><span class="icon" data-icon="search" data-icon-size="13"></span> Today's Client Spotlight</div>
         <div class="spotlight-actions">
           <button class="btn btn-ghost btn-sm" onclick="shuffleSpotlightClient('${pk}')">⇄ Show a Different Client</button>
           <button class="btn btn-primary btn-sm" onclick="openClientNotesTasksModal('${safe}')"><span class="icon" data-icon="user" data-icon-size="14"></span> Open Full Profile</button>
@@ -5348,7 +5422,7 @@ async function renderClientSpotlight(pk) {
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
           <span class="spotlight-worked-badge ${workedToday ? 'spotlight-worked-yes' : 'spotlight-worked-no'}">${workedToday ? '✅ Worked today' : '⏳ Not touched yet today'}</span>
-          <span class="spotlight-health-badge spotlight-health-${riskClass}">🏥 ${health.score}/100 — ${health.category}</span>
+          <span class="spotlight-health-badge spotlight-health-${riskClass}"><span class="icon" data-icon="building" data-icon-size="13"></span> ${health.score}/100 — ${health.category}</span>
         </div>
       </div>
 
@@ -5360,16 +5434,16 @@ async function renderClientSpotlight(pk) {
         <div class="spotlight-block"><div class="spotlight-block-label"><span class="icon" data-icon="user" data-icon-size="14"></span> Contact</div>${contactHtml}</div>
       </div>
       <div class="spotlight-grid">
-        <div class="spotlight-block"><div class="spotlight-block-label">📝 Recent Notes</div>${notesHtml}</div>
+        <div class="spotlight-block"><div class="spotlight-block-label"><span class="icon" data-icon="note" data-icon-size="14"></span> Recent Notes</div>${notesHtml}</div>
         <div class="spotlight-block"><div class="spotlight-block-label"><span class="icon" data-icon="check" data-icon-size="16"></span> Open Tasks</div>${tasksHtml}</div>
         <div class="spotlight-block"><div class="spotlight-block-label"><span class="icon" data-icon="alert" data-icon-size="16"></span> Billing &amp; Ad Spend</div>${flagsHtml}</div>
       </div>
 
       <div class="spotlight-quick-actions">
-        <button class="btn btn-ghost btn-sm" onclick="toggleSpotlightQuickForm('${pk}','note')">📝 Quick Note</button>
+        <button class="btn btn-ghost btn-sm" onclick="toggleSpotlightQuickForm('${pk}','note')"><span class="icon" data-icon="note" data-icon-size="14"></span> Quick Note</button>
         <button class="btn btn-ghost btn-sm" onclick="toggleSpotlightQuickForm('${pk}','task')"><span class="icon" data-icon="check" data-icon-size="16"></span> Quick Task</button>
         <button class="btn btn-ghost btn-sm" onclick="askNirvanaAboutSpotlight('${pk}')"><img class="nirvana-inline-icon" src="data:image/jpeg;base64,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" alt="Nirvana"> Ask Nirvana</button>
-        <button class="btn btn-ghost btn-sm" id="spotlightSuggestBtn-${pk}" onclick="getSpotlightAiSuggestion('${pk}', this)">💡 Get a Suggestion</button>
+        <button class="btn btn-ghost btn-sm" id="spotlightSuggestBtn-${pk}" onclick="getSpotlightAiSuggestion('${pk}', this)"><span class="icon" data-icon="lightbulb" data-icon-size="14"></span> Get a Suggestion</button>
       </div>
 
       <div class="spotlight-quick-form" id="spotlightNoteForm-${pk}">
@@ -5478,8 +5552,8 @@ async function getSpotlightAiSuggestion(pk, btn) {
   const box = document.getElementById(`spotlightSuggestion-${pk}`);
   const health = getClientHealthForOne(spotlightEntry.client_name);
   const notes = getClientNotes(spotlightEntry.client_name).slice(0, 2);
-  const originalLabel = btn.textContent;
-  btn.textContent = '💡 Thinking…';
+  const originalLabel = btn.innerHTML;
+  btn.innerHTML = `${hubIcon('lightbulb',13)} Thinking…`;
   btn.disabled = true;
   try {
     const suggestion = await quickAiCompletion(
@@ -5493,7 +5567,7 @@ async function getSpotlightAiSuggestion(pk, btn) {
   } catch(e) {
     showToast('Could not get a suggestion: ' + e.message, 'warning');
   } finally {
-    btn.textContent = originalLabel;
+    btn.innerHTML = originalLabel;
     btn.disabled = false;
   }
 }
@@ -5660,7 +5734,7 @@ function buildHomeVitalsGrid() {
         <div class="vital-block-hd">
           <h3><span class="vital-dot" style="background:${def.dot};color:${def.dot}"></span>${escAttr(label)}</h3>
           <div class="vital-block-actions">
-            <button class="vital-ask" onclick="event.stopPropagation();askNirvanaAboutVital('${key}')" title="Ask Nirvana about this" aria-label="Ask Nirvana about ${escAttr(label)}">✨</button>
+            <button class="vital-ask" onclick="event.stopPropagation();askNirvanaAboutVital('${key}')" title="Ask Nirvana about this" aria-label="Ask Nirvana about ${escAttr(label)}"><span class="icon" data-icon="sparkle" data-icon-size="14"></span></button>
             <button class="vital-ask" onclick="event.stopPropagation();openVitalSwapMenu(${i})" title="Swap this block" aria-label="Swap this block for another">⇄</button>
           </div>
           <div class="vital-swap-menu" id="vitalSwapMenu-${i}" style="display:none">${swapOptions}</div>
@@ -5970,11 +6044,11 @@ function renderHomeQuickLinks() {
   const colFlag = COLLECTIONS_ACCOUNTS.filter(a => ['pending', 'inreview', 'escalated'].includes(a.status)).length;
 
   const cards = [
-    { id: 'smb', icon: '📊', label: 'SMB Dashboard', count: smbCt, sub: `${smbCt} client${smbCt === 1 ? '' : 's'}`, flag: 0 },
-    { id: 'whitelabel', icon: '🏷️', label: 'White Label', count: wlCt, sub: `${wlCt} client${wlCt === 1 ? '' : 's'}`, flag: 0 },
-    { id: 'support', icon: '📊', label: 'Support Dashboard', count: supCt, sub: `${supCt} client${supCt === 1 ? '' : 's'}`, flag: 0 },
-    { id: 'adspend', icon: '💰', label: 'Ad Spend Management', count: adCt, sub: `${adCt} business${adCt === 1 ? '' : 'es'}`, flag: adFlag },
-    { id: 'collections', icon: '📋', label: 'Collections', count: colCt, sub: `${colCt} account${colCt === 1 ? '' : 's'}`, flag: colFlag },
+    { id: 'smb', icon: hubIcon('chart',20), label: 'SMB Dashboard', count: smbCt, sub: `${smbCt} client${smbCt === 1 ? '' : 's'}`, flag: 0 },
+    { id: 'whitelabel', icon: hubIcon('tag',20), label: 'White Label', count: wlCt, sub: `${wlCt} client${wlCt === 1 ? '' : 's'}`, flag: 0 },
+    { id: 'support', icon: hubIcon('chart',20), label: 'Support Dashboard', count: supCt, sub: `${supCt} client${supCt === 1 ? '' : 's'}`, flag: 0 },
+    { id: 'adspend', icon: hubIcon('dollar',20), label: 'Ad Spend Management', count: adCt, sub: `${adCt} business${adCt === 1 ? '' : 'es'}`, flag: adFlag },
+    { id: 'collections', icon: hubIcon('clipboard',20), label: 'Collections', count: colCt, sub: `${colCt} account${colCt === 1 ? '' : 's'}`, flag: colFlag },
   ];
 
   wrap.innerHTML = cards.map(c => `
@@ -5995,7 +6069,7 @@ function renderHomeAttentionList() {
     .sort((a, b) => (b.amount || 0) - (a.amount || 0))
     .slice(0, 8);
   if (items.length === 0) {
-    wrap.innerHTML = emptyStateHTML({ icon: '✅', title: 'All caught up', sub: 'Nothing in Collections needs attention right now.' });
+    wrap.innerHTML = emptyStateHTML({ icon: hubIcon('check', 28), title: 'All caught up', sub: 'Nothing in Collections needs attention right now.' });
     return;
   }
   wrap.innerHTML = items.map(a => {
@@ -6094,7 +6168,7 @@ function rebuildVoiceAgentFlagged() {
 
   if (flagged.length === 0) {
     wrap.innerHTML = emptyStateHTML({
-      icon: '📝',
+      icon: hubIcon('note', 28),
       title: 'No flagged clients',
       sub: 'Clients show up here automatically when a comment is attached to their Voice Agent column during an Excel upload (e.g. a cell note).',
     });
@@ -6272,7 +6346,7 @@ function rebuildTextAgentStale() {
 
   if (stale.length === 0) {
     wrap.innerHTML = emptyStateHTML({
-      icon: '✅',
+      icon: hubIcon('check', 28),
       title: 'No stale leads flagged',
       sub: 'Businesses show up here when a comment on Yelp, Google LSA, or Thumbtack mentions the last lead was handled 7 days to 6 months ago.',
     });
@@ -6333,7 +6407,7 @@ function rebuildTextAgentNotes() {
 
   if (entries.length === 0) {
     wrap.innerHTML = emptyStateHTML({
-      icon: '💬',
+      icon: hubIcon('chat', 28),
       title: 'No notes yet',
       sub: 'Clients show up here automatically when a comment is attached to their Yelp, Google LSA, or Thumbtack column during an Excel upload, in any of the three portfolios.',
     });
@@ -6379,7 +6453,7 @@ function renderHomeActivityList() {
   if (!wrap) return;
   const top = [...CLIENT_NOTES].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 8);
   if (top.length === 0) {
-    wrap.innerHTML = emptyStateHTML({ icon: '🕒', title: 'No recent activity', sub: 'Notes and status changes on any client will show up here.' });
+    wrap.innerHTML = emptyStateHTML({ icon: hubIcon('clock', 28), title: 'No recent activity', sub: 'Notes and status changes on any client will show up here.' });
     return;
   }
   wrap.innerHTML = top.map(n => `
@@ -6621,7 +6695,7 @@ function rebuildGapBar(pk) {
 
   const badgeEl = document.getElementById('badge-' + pk + '-opps');
   const totalGap = gaps.reduce((a,b) => a+b, 0);
-  if (badgeEl) badgeEl.textContent = `🎯 ${totalGap} Total Opportunities`;
+  if (badgeEl) badgeEl.innerHTML = `${hubIcon('target',13)} ${totalGap} Total Opportunities`;
 
   const chartKey = 'gap-' + pk;
   destroyChart(chartKey);
@@ -6778,7 +6852,7 @@ function showInitialSkeletons() {
 // ════════════════════════════════════════════════════════════════════════
 // TOAST NOTIFICATIONS & CONFIRM DIALOG — replaces native alert()/confirm()
 // ════════════════════════════════════════════════════════════════════════
-const TOAST_ICONS = { success: '✅', error: '⚠️', warning: '⚠️', info: 'ℹ️' };
+const TOAST_ICONS = { success: 'check', error: 'alert', warning: 'alert', info: 'info' };
 
 function showToast(message, type = 'info', duration = 5000) {
   const container = document.getElementById('toastContainer');
@@ -6787,13 +6861,13 @@ function showToast(message, type = 'info', duration = 5000) {
   el.className = `toast ${type}`;
   const icon = document.createElement('span');
   icon.className = 'toast-icon';
-  icon.textContent = TOAST_ICONS[type] || TOAST_ICONS.info;
+  icon.innerHTML = hubIcon(TOAST_ICONS[type] || TOAST_ICONS.info, 16);
   const msg = document.createElement('span');
   msg.className = 'toast-msg';
   msg.textContent = message;
   const close = document.createElement('span');
   close.className = 'toast-close';
-  close.textContent = '✕';
+  close.innerHTML = hubIcon('close', 11);
   el.appendChild(icon); el.appendChild(msg); el.appendChild(close);
 
   const remove = () => { el.classList.add('toast-out'); setTimeout(() => el.remove(), 180); };
@@ -6811,7 +6885,7 @@ function showConfirmDialog(message, opts = {}) {
     const msgEl = document.getElementById('confirmDialogMessage');
     const confirmBtn = document.getElementById('confirmDialogConfirmBtn');
     const cancelBtn = document.getElementById('confirmDialogCancelBtn');
-    titleEl.textContent = opts.title || (opts.danger ? '⚠️ Confirm removal' : '⚠️ Are you sure?');
+    titleEl.innerHTML = iconizeLeading(opts.title || (opts.danger ? '⚠️ Confirm removal' : '⚠️ Are you sure?'), 16);
     msgEl.textContent = message;
     confirmBtn.textContent = opts.confirmLabel || (opts.danger ? 'Remove' : 'Confirm');
     confirmBtn.className = 'btn ' + (opts.danger ? 'btn-danger' : 'btn-primary');
@@ -7186,7 +7260,7 @@ function rebuildClientTable(pk, resortOnly = false) {
     const cellByIdx = cols.map(col => {
       if (col.key === 'name') {
         const nameNote = c.cellNotes && c.cellNotes.name;
-        return `<td>${escAttr(c.name) || '—'}${nameNote ? ` <span class="cell-note" data-tooltip="${escAttr(nameNote)}">💬</span>` : ''}</td>`;
+        return `<td>${escAttr(c.name) || '—'}${nameNote ? ` <span class="cell-note" data-tooltip="${escAttr(nameNote)}"><span class="icon" data-icon="chat" data-icon-size="14"></span></span>` : ''}</td>`;
       }
       if (col.key === 'org') {
         return `<td>${c.org ? `<span class="portfolio-chip chip-addon"><span class="icon" data-icon="building" data-icon-size="14"></span> ${escAttr(c.org)}</span>` : '<span style="color:var(--text3)">—</span>'}</td>`;
@@ -7199,14 +7273,14 @@ function rebuildClientTable(pk, resortOnly = false) {
       const dotIcon = c[k]
         ? `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`
         : `<svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="9"/></svg>`;
-      return `<td><span class="dot-wrap"><span class="dot ${c[k] ? 'dot-yes' : 'dot-no'}">${dotIcon}</span>${note ? `<span class="cell-note" data-tooltip="${escAttr(note)}">💬</span>` : ''}</span></td>`;
+      return `<td><span class="dot-wrap"><span class="dot ${c[k] ? 'dot-yes' : 'dot-no'}">${dotIcon}</span>${note ? `<span class="cell-note" data-tooltip="${escAttr(note)}"><span class="icon" data-icon="chat" data-icon-size="14"></span></span>` : ''}</span></td>`;
     });
 
     const orderedCells = order.map(i => cellByIdx[i]).join('');
     return `<tr data-name="${escAttr((c.name||'').toLowerCase())}" data-count="${pc}" ${orgAttr} ${attrs}>${checkboxTd}${orderedCells}</tr>`;
   });
   tbody.innerHTML = rowsHtml.length > 0 ? rowsHtml.join('') : emptyStateRow(cols.length + 1, {
-    icon: '📋',
+    icon: hubIcon('clipboard', 28),
     title: `No clients in ${PORTFOLIOS[pk].name} yet`,
     sub: canEdit() ? 'Upload a spreadsheet or connect a Google Sheet using the buttons in the top right to get started.' : 'Ask an Admin or Super user to upload client data for this dashboard.',
   });
@@ -7335,7 +7409,7 @@ function rebuildUpsellCards() {
   const pkMeta = { smb: { label: 'SMB', chip: 'chip-smb' }, whitelabel: { label: 'White Label', chip: 'chip-whitelabel' }, support: { label: 'Support', chip: 'chip-support' } };
 
   if (cat.length === 0) {
-    ug.innerHTML = emptyStateHTML({ icon: '🎯', title: 'No products in the catalog yet', sub: 'Add products in Manage Products to see upsell opportunities here.' });
+    ug.innerHTML = emptyStateHTML({ icon: hubIcon('target', 28), title: 'No products in the catalog yet', sub: 'Add products in Manage Products to see upsell opportunities here.' });
     const set0 = (id) => { const el = document.getElementById(id); if (el) el.textContent = 0; };
     ['upsell-total-opps', 'upsell-high-count', 'upsell-med-count', 'upsell-low-count'].forEach(set0);
     return;
@@ -7389,7 +7463,7 @@ function rebuildUpsellCards() {
 const KPI_KEYS = ['anticipating', 'preempting', 'solving'];
 const KPI_META = {
   anticipating: {
-    label: 'Anticipating Client Needs', short: 'Anticipating Needs', icon: '🔮', color: '#3b82f6',
+    label: 'Anticipating Client Needs', short: 'Anticipating Needs', icon: hubIcon('sparkle', 20), color: '#3b82f6',
     definition: 'Proactively identifying what a client will need next — more capacity, a new product, a process change — based on usage patterns, seasonal trends, and account signals, rather than only reacting once they ask.',
     why: 'Clients who feel "read" by their CSM are dramatically less likely to churn, and they expand the fastest. Waiting for the client to ask is the same as telling them we weren\'t paying attention.',
     sop: [
@@ -7409,7 +7483,7 @@ const KPI_META = {
     escalation: 'If proactive outreach about a usage-trigger or seasonal check-in goes unanswered after 2 attempts within 5 business days, loop in the Team Lead and carry the account into the next Weekly Health Scan (see Preempting Risks SOP) so it isn\'t dropped.',
   },
   preempting: {
-    label: 'Preempting Risks', short: 'Preempting Risks', icon: '🛡️', color: '#ef4444',
+    label: 'Preempting Risks', short: 'Preempting Risks', icon: hubIcon('shield', 20), color: '#ef4444',
     definition: 'Spotting and neutralizing account risk — churn, non-payment, dissatisfaction, technical failure — before it becomes a crisis. Treating early warning signals as action triggers, not just data points.',
     why: 'Almost every "surprise" churn or escalation had visible warning signs weeks earlier. Preempting risk is the difference between a calm QBR conversation and a last-minute save call.',
     sop: [
@@ -7427,7 +7501,7 @@ const KPI_META = {
     ],
   },
   solving: {
-    label: 'Growth Opportunities', short: 'Growth Opportunities', icon: '🚀', color: '#22c55e',
+    label: 'Growth Opportunities', short: 'Growth Opportunities', icon: hubIcon('rocket', 20), color: '#22c55e',
     definition: 'Proactively identifying and presenting the next right product, upgrade, or expansion for a client — based on their results, usage trends, and unused capacity in the catalog — and putting it in front of them before they ever have to ask what else is available.',
     why: 'Clients almost never ask "what else could I be doing?" on their own. If we wait for them to ask, we\'ve already given up months of expansion revenue — and given them time to go looking somewhere else. Growth conversations that come from us, backed by their own results, land as expertise, not a sales pitch.',
     sop: [
@@ -7455,7 +7529,7 @@ const KPI_META = {
 // toggle.
 const KPI_META_ES = {
   anticipating: {
-    label: 'Anticipar las Necesidades del Cliente', short: 'Anticipar Necesidades', icon: '🔮', color: '#3b82f6',
+    label: 'Anticipar las Necesidades del Cliente', short: 'Anticipar Necesidades', icon: hubIcon('sparkle', 20), color: '#3b82f6',
     definition: 'Identificar de forma proactiva lo que un cliente necesitará después — más capacidad, un nuevo producto, un cambio de proceso — basándose en patrones de uso, tendencias estacionales y señales de la cuenta, en lugar de solo reaccionar una vez que lo pidan.',
     why: 'Los clientes que sienten que su CSM los "entiende" tienen muchas menos probabilidades de cancelar, y son los que más rápido se expanden. Esperar a que el cliente pregunte es lo mismo que decirles que no estábamos prestando atención.',
     sop: [
@@ -7475,7 +7549,7 @@ const KPI_META_ES = {
     escalation: 'Si el contacto proactivo sobre un disparador de uso o un check-in estacional no obtiene respuesta después de 2 intentos en 5 días hábiles, involucra al Líder de Equipo y lleva la cuenta al próximo Escaneo Semanal de Salud (ver SOP de Prevención de Riesgos) para que no se pierda.',
   },
   preempting: {
-    label: 'Prevención de Riesgos', short: 'Prevención de Riesgos', icon: '🛡️', color: '#ef4444',
+    label: 'Prevención de Riesgos', short: 'Prevención de Riesgos', icon: hubIcon('shield', 20), color: '#ef4444',
     definition: 'Detectar y neutralizar el riesgo de cuenta — cancelación, falta de pago, insatisfacción, falla técnica — antes de que se convierta en una crisis. Tratar las señales de alerta temprana como disparadores de acción, no solo como datos.',
     why: 'Casi toda cancelación o escalación "sorpresa" tuvo señales de alerta visibles semanas antes. Prevenir el riesgo es la diferencia entre una conversación tranquila en una QBR y una llamada de rescate de último momento.',
     sop: [
@@ -7493,7 +7567,7 @@ const KPI_META_ES = {
     ],
   },
   solving: {
-    label: 'Oportunidades de Crecimiento', short: 'Oportunidades de Crecimiento', icon: '🚀', color: '#22c55e',
+    label: 'Oportunidades de Crecimiento', short: 'Oportunidades de Crecimiento', icon: hubIcon('rocket', 20), color: '#22c55e',
     definition: 'Identificar y presentar de forma proactiva el próximo producto, mejora o expansión adecuado para un cliente — basándose en sus resultados, tendencias de uso y capacidad sin usar en el catálogo — y ponerlo frente a ellos antes de que tengan que preguntar qué más hay disponible.',
     why: 'Los clientes casi nunca preguntan "¿qué más podría estar haciendo?" por su cuenta. Si esperamos a que pregunten, ya perdimos meses de ingresos de expansión — y les dimos tiempo para buscar en otro lugar. Las conversaciones de crecimiento que vienen de nosotros, respaldadas por sus propios resultados, se sienten como experiencia, no como una venta.',
     sop: [
@@ -7561,14 +7635,14 @@ function getKpiTrend(key) {
 
 function starsHtml(score, size) {
   let h = '';
-  for (let i = 1; i <= 5; i++) h += `<span style="font-size:${size}px;color:${i <= score ? 'var(--yellow)' : 'var(--border)'}">★</span>`;
+  for (let i = 1; i <= 5; i++) h += `<span style="font-size:${size}px;color:${i <= score ? 'var(--yellow)' : 'var(--border)'}"><span class="icon" data-icon="star" data-icon-size="14"></span></span>`;
   return h;
 }
 function starPickerHtml(key, score) {
   const editable = canEdit();
   let h = `<div class="kpi-star-picker${editable ? ' editable' : ''}" data-kpi="${key}">`;
   for (let i = 1; i <= 5; i++) {
-    h += `<span class="star${i <= score ? ' filled' : ''}" data-val="${i}" ${editable ? `onclick="logKpiScore('${key}', ${i})" tabindex="0" role="button" aria-label="Rate ${i} out of 5 stars"` : ''}>★</span>`;
+    h += `<span class="star${i <= score ? ' filled' : ''}" data-val="${i}" ${editable ? `onclick="logKpiScore('${key}', ${i})" tabindex="0" role="button" aria-label="Rate ${i} out of 5 stars"` : ''}><span class="icon" data-icon="star" data-icon-size="14"></span></span>`;
   }
   h += `</div>`;
   return h;
@@ -7601,10 +7675,10 @@ function rebuildKpiSummary() {
   const totalEntries = KPI_SCORE_HISTORY.length;
   const lastEntry = [...KPI_SCORE_HISTORY].sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
   row.innerHTML = `
-    <div class="kpi"><div class="kpi-icon">⭐</div><div class="kpi-val orange">${avg.toFixed(1)} / 5</div><div class="kpi-lbl" data-i18n="kpi_overall_score">Overall Client Success Score</div><div class="kpi-sub" data-i18n="kpi_avg_across">Average across all 3 KPIs</div></div>
+    <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="star" data-icon-size="14"></span></div><div class="kpi-val orange">${avg.toFixed(1)} / 5</div><div class="kpi-lbl" data-i18n="kpi_overall_score">Overall Client Success Score</div><div class="kpi-sub" data-i18n="kpi_avg_across">Average across all 3 KPIs</div></div>
     <div class="kpi"><div class="kpi-icon">${getKpiMeta()[weakestKey].icon}</div><div class="kpi-val red">${getKpiMeta()[weakestKey].short}</div><div class="kpi-lbl" data-i18n="kpi_lowest_scoring">Lowest Scoring KPI</div><div class="kpi-sub" data-i18n="kpi_focus_area">Focus area right now</div></div>
-    <div class="kpi"><div class="kpi-icon">📈</div><div class="kpi-val">${totalEntries}</div><div class="kpi-lbl" data-i18n="kpi_updates_logged">Score Updates Logged</div><div class="kpi-sub" data-i18n="kpi_alltime_history">All-time history</div></div>
-    <div class="kpi"><div class="kpi-icon">🕒</div><div class="kpi-val" style="font-size:15px">${lastEntry ? fmtNoteTime(lastEntry.created_at) : '—'}</div><div class="kpi-lbl" data-i18n="kpi_last_updated">Last Updated</div><div class="kpi-sub">${lastEntry ? escAttr(lastEntry.author_name) : ''}</div></div>
+    <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="trending" data-icon-size="14"></span></div><div class="kpi-val">${totalEntries}</div><div class="kpi-lbl" data-i18n="kpi_updates_logged">Score Updates Logged</div><div class="kpi-sub" data-i18n="kpi_alltime_history">All-time history</div></div>
+    <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="clock" data-icon-size="13"></span></div><div class="kpi-val" style="font-size:15px">${lastEntry ? fmtNoteTime(lastEntry.created_at) : '—'}</div><div class="kpi-lbl" data-i18n="kpi_last_updated">Last Updated</div><div class="kpi-sub">${lastEntry ? escAttr(lastEntry.author_name) : ''}</div></div>
   `;
 }
 
@@ -7733,7 +7807,7 @@ function rebuildCoachingCorner() {
     <div class="card" style="--kpi-accent:${meta.color};border-left:3px solid ${meta.color}">
       <div class="card-header">
         <div>
-          <div class="card-title">🎓 Coaching Corner</div>
+          <div class="card-title"><span class="icon" data-icon="graduation" data-icon-size="14"></span> Coaching Corner</div>
           <div class="card-sub">Today's focus, based on your lowest-scoring KPI</div>
         </div>
         <a href="#kpi-${weakestKey}" class="kpi-jump-link">Full SOP &amp; playbook ↓</a>
@@ -7743,7 +7817,7 @@ function rebuildCoachingCorner() {
         Here's one thing to work on today:
       </div>
       <div class="action-step" style="margin-top:var(--space-3)">
-        <div class="step-num" style="background:${meta.color}">🎓</div>
+        <div class="step-num" style="background:${meta.color}"><span class="icon" data-icon="graduation" data-icon-size="14"></span></div>
         <div class="step-body"><strong>${tip.title}</strong>${tip.body}</div>
       </div>
     </div>`;
@@ -7751,21 +7825,21 @@ function rebuildCoachingCorner() {
 
 // ─── ACTION PLAN ──────────────────────────────────────────────────────────────
 const phases = [
-  { tag:'PHASE 1', title:'Audit & Prioritize', time:'📅 Weeks 1–2 · Immediate',
+  { tag:'PHASE 1', title:'Audit & Prioritize', time: hubIcon('calendar',13) + ' Weeks 1–2 · Immediate',
     steps:[
       { n:1, title:'Fix Voice Agent Zero-Usage Accounts', body:'CSM team contacts all clients with Voice Agent and no calls logged. Confirm setup, provide re-onboarding, and set usage KPI expectations.' },
       { n:2, title:'Segment Client Book by Industry', body:'Categorize all clients by trade (HVAC, plumbing, roofing, restoration, etc.) to match to the right upsell products.' },
       { n:3, title:'Score Upsell Readiness', body:'Score each client by: current product count, engagement level, and vertical fit. Create a prioritized hit list of top 20 accounts.' },
       { n:4, title:'Build Product Case Studies', body:'Document ROI for each active product using data from current users. Prioritize Google LSA, Voice Agent, and GHL for compelling stories.' },
     ]},
-  { tag:'PHASE 2', title:'Outreach & Pipeline Build', time:'📅 Weeks 3–6 · 30–45 Days',
+  { tag:'PHASE 2', title:'Outreach & Pipeline Build', time: hubIcon('calendar',13) + ' Weeks 3–6 · 30–45 Days',
     steps:[
       { n:5, title:'Launch Google LSA Campaign', body:'Personalized outreach to the non-LSA clients. Goal: 15 demos scheduled in 30 days.' },
       { n:6, title:'Chat Widget + Contact Form + Thumbtack Bundle', body:'Email + call sequence to existing Yelp clients. Frame as a "full web lead system."' },
       { n:7, title:'Vertical-Targeted Outreach for Acculynx & Builder Prime', body:'Dedicated outreach to roofing and remodeling clients. Personalized decks by trade. Set 10+ demos.' },
       { n:8, title:'Host "Platform Stack" Webinar', body:'Invite all clients for a live session showing how the products connect. Drive adoption through education.' },
     ]},
-  { tag:'PHASE 3', title:'Close, Onboard & Expand', time:'📅 Weeks 7–12 · 60–90 Days',
+  { tag:'PHASE 3', title:'Close, Onboard & Expand', time: hubIcon('calendar',13) + ' Weeks 7–12 · 60–90 Days',
     steps:[
       { n:9, title:'Convert Top 20 Priority Accounts', body:'Follow up on all demos from Phase 2. Offer time-limited onboarding incentives. Target 12+ new product activations.' },
       { n:10, title:'Housecall Pro Field Service Push', body:'Launch targeted campaign for plumbing, HVAC, pest control clients with co-sell motion.' },
@@ -7797,7 +7871,7 @@ function rebuildActionPlan() {
     snap.innerHTML = `
       <div class="card" style="background:rgba(226,84,31,.06);border-color:rgba(226,84,31,.2)">
         <div class="card-header">
-          <div><div class="card-title">📌 This Week's Top Priorities</div><div class="card-sub">Live, computed from your current SMB, White Label, and Support data — use these to focus Phase 1</div></div>
+          <div><div class="card-title"><span class="icon" data-icon="pin" data-icon-size="13"></span> This Week's Top Priorities</div><div class="card-sub">Live, computed from your current SMB, White Label, and Support data — use these to focus Phase 1</div></div>
         </div>
         <div style="display:flex;gap:var(--space-3);flex-wrap:wrap">
           ${rows.map((r, i) => `
@@ -8409,7 +8483,7 @@ function renderGoogleCalendarStatus() {
   if (!el) return;
   if (!isGoogleCalendarConfigured()) { el.innerHTML = '<div style="font-size:var(--font-sm);color:var(--text3)">Not configured for this Hub yet — an Admin needs to add a Google OAuth Client ID.</div>'; return; }
   if (isGoogleCalendarConnected()) {
-    const label = googleConnectedAccountEmail ? `📅 Connected: ${escAttr(googleConnectedAccountEmail)}` : '📅 Google Calendar connected';
+    const label = hubIcon('calendar',13) + (googleConnectedAccountEmail ? ` Connected: ${escAttr(googleConnectedAccountEmail)}` : ' Google Calendar connected');
     el.innerHTML = `<div style="display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap">
       <span class="portfolio-chip chip-addon" title="Tasks assigned to you sync to this calendar">${label}</span>
       <button class="btn btn-ghost btn-sm" onclick="pollGoogleCalendarChanges(true)" title="Check Calendar for anything changed or deleted there">↻ Sync Now</button>
@@ -8473,7 +8547,7 @@ async function scanForDuplicateClients() {
   }
 
   if (duplicateClientScanResults.length === 0) {
-    wrap.innerHTML = emptyStateHTML({ icon: '✅', title: 'No duplicates found', sub: 'Every client name appears exactly once within its own portfolio.' });
+    wrap.innerHTML = emptyStateHTML({ icon: hubIcon('check', 28), title: 'No duplicates found', sub: 'Every client name appears exactly once within its own portfolio.' });
     return;
   }
 
@@ -8491,7 +8565,7 @@ function renderDuplicateGroupRow(i, expanded) {
         appears ${group.length} times
       </div>
     </div>
-    <button class="row-action-btn" onclick="toggleDuplicateGroupReview(${i})">${expanded ? '✕ Close' : '👁️ Review & Merge'}</button>
+    <button class="row-action-btn" onclick="toggleDuplicateGroupReview(${i})">${expanded ? hubIcon('close',13) + ' Close' : hubIcon('eye',13) + ' Review &amp; Merge'}</button>
   </div>`;
 
   if (!expanded) return summary;
@@ -8514,7 +8588,7 @@ function renderDuplicateGroupRow(i, expanded) {
         Merging combines every product marked "in use" across all ${group.length} rows onto the survivor (${productKeys.length ? escAttr(productKeys.join(', ')) : 'none marked yet'}) — nothing gets silently lost. Notes, tasks, and contacts aren't affected either way, since they're linked by client name, not by these specific rows.
       </div>
       <div style="display:flex;gap:var(--space-2)">
-        <button class="btn btn-primary btn-sm" onclick="confirmMergeDuplicateGroup(${i})">🧹 Merge ${group.length} → 1</button>
+        <button class="btn btn-primary btn-sm" onclick="confirmMergeDuplicateGroup(${i})"><span class="icon" data-icon="broom" data-icon-size="14"></span> Merge ${group.length} → 1</button>
         ${hasNext ? `<button class="btn btn-ghost btn-sm" onclick="reviewNextDuplicateGroup(${i})">Next →</button>` : ''}
       </div>
     </div>
@@ -8607,7 +8681,7 @@ async function mergeDuplicateClientGroup(i) {
   // rather than leaving stale onclick handlers pointing at the wrong index.
   const wrap = document.getElementById('duplicateClientsList');
   wrap.innerHTML = duplicateClientScanResults.length === 0
-    ? emptyStateHTML({ icon: '✅', title: 'No duplicates found', sub: 'Every client name appears exactly once within its own portfolio.' })
+    ? emptyStateHTML({ icon: hubIcon('check', 28), title: 'No duplicates found', sub: 'Every client name appears exactly once within its own portfolio.' })
     : duplicateClientScanResults.map((g, idx) => renderDuplicateGroupRow(idx, false)).join('');
 }
 
@@ -8865,7 +8939,7 @@ function renderTeamUI() {
   if (countSub) countSub.textContent = `${TEAM_MEMBERS.length} ${TEAM_MEMBERS.length === 1 ? 'person' : 'people'}`;
   if (list) {
     list.innerHTML = TEAM_MEMBERS.length === 0
-      ? emptyStateHTML({ icon: '🧑‍🤝‍🧑', title: 'No one authorized yet', sub: "Add a teammate's email above — they'll be able to sign in with Google or by creating a password." })
+      ? emptyStateHTML({ icon: hubIcon('users',28), title: 'No one authorized yet', sub: "Add a teammate's email above — they'll be able to sign in with Google or by creating a password." })
       : TEAM_MEMBERS.map(m => `
         <div class="team-row">
           <span class="user-avatar">${m.avatar ? `<img src="${m.avatar}" alt="">` : initials(m.name)}</span>
@@ -8887,7 +8961,7 @@ function togglePasswordVisibility() {
   if (!input || !btn) return;
   const showing = input.type === 'text';
   input.type = showing ? 'password' : 'text';
-  btn.textContent = showing ? '👁️' : '🙈';
+  btn.innerHTML = showing ? hubIcon('eye',15) : hubIcon('eyeOff',15);
   btn.title = showing ? 'Show password' : 'Hide password';
   btn.setAttribute('aria-label', btn.title);
 }
@@ -9349,12 +9423,12 @@ function rebuildAdSpendTable() {
   if (rows.length === 0) {
     tbody.innerHTML = AD_SPEND_BUSINESSES.length === 0
       ? emptyStateRow(AD_SPEND_COLUMNS.length, {
-          icon: '💰',
+          icon: hubIcon('dollar', 28),
           title: 'No businesses tracked yet',
           sub: canEdit() ? 'Add a business above, or upload a spreadsheet to bring in a whole list at once.' : 'Ask an Admin or Super user to add businesses here.',
         })
       : emptyStateRow(AD_SPEND_COLUMNS.length, {
-          icon: '🔍',
+          icon: hubIcon('search', 28),
           title: 'No matches',
           sub: 'Try a different search term or filter.',
         });
@@ -9457,8 +9531,8 @@ function renderAdSpendMappingModal() {
     <option value="watermark" ${selected === 'watermark' ? 'selected' : ''}><span class="icon" data-icon="target" data-icon-size="16"></span> Watermark ($)</option>
     <option value="addons" ${selected === 'addons' ? 'selected' : ''}><span class="icon" data-icon="plus" data-icon-size="12"></span> Add-Ons</option>
     <option value="startDate" ${selected === 'startDate' ? 'selected' : ''}><span class="icon" data-icon="calendar" data-icon-size="14"></span> Start Date</option>
-    <option value="promo" ${selected === 'promo' ? 'selected' : ''}>🎁 Promo Eligible</option>
-    <option value="recs" ${selected === 'recs' ? 'selected' : ''}>📝 Recommendations</option>`;
+    <option value="promo" ${selected === 'promo' ? 'selected' : ''}><span class="icon" data-icon="gift" data-icon-size="13"></span> Promo Eligible</option>
+    <option value="recs" ${selected === 'recs' ? 'selected' : ''}><span class="icon" data-icon="note" data-icon-size="14"></span> Recommendations</option>`;
   const body = document.getElementById('asMappingTableBody');
   body.innerHTML = headers.map((h,i) => {
     const sample = String(rows[0][h] ?? '').slice(0,40) || '—';
@@ -9553,7 +9627,7 @@ function renderAdSpendDuplicatesReview() {
       <div class="dup-row">
         <div class="dup-name">${escAttr(d.name)}<span class="dup-sub">Already in Ad Spend Management — choose what to do</span></div>
         <select onchange="setAdSpendDupAction(${i}, this.value)" style="width:220px">
-          <option value="replace" ${d.action === 'replace' ? 'selected' : ''}>🔄 Replace existing record</option>
+          <option value="replace" ${d.action === 'replace' ? 'selected' : ''}><span class="icon" data-icon="refresh" data-icon-size="13"></span> Replace existing record</option>
           <option value="skip" ${d.action === 'skip' ? 'selected' : ''}>⏭️ Skip — keep existing as-is</option>
           <option value="both" ${d.action === 'both' ? 'selected' : ''}><span class="icon" data-icon="plus" data-icon-size="12"></span> Keep both (add as new)</option>
         </select>
@@ -9831,7 +9905,7 @@ function rebuildCollectionsCharts() {
   const subEl2 = document.getElementById('colAmountBarSub');
   if (subEl2) subEl2.textContent = `Dollar total per status — ${typeLabel.toLowerCase()}`;
   const countBadge = document.getElementById('badge-collections-count');
-  if (countBadge) countBadge.textContent = `🧾 ${list.length} Account${list.length === 1 ? '' : 's'}`;
+  if (countBadge) countBadge.innerHTML = `${hubIcon('receipt',13)} ${list.length} Account${list.length === 1 ? '' : 's'}`;
   const amountBadge = document.getElementById('badge-collections-amount');
   if (amountBadge) amountBadge.textContent = `💰 ${fmtMoney(totalAmount)} Total`;
 
@@ -9949,12 +10023,12 @@ function rebuildCollectionsTable() {
     const typeLabel = activeCollectionsType === 'outstanding' ? 'outstanding balances' : 'card fails';
     tbody.innerHTML = totalForType === 0
       ? emptyStateRow(cols.length, {
-          icon: '📋',
+          icon: hubIcon('clipboard', 28),
           title: `No ${typeLabel} yet`,
           sub: canEdit() ? 'Add an account above, or upload a list to bring in several at once.' : 'Ask an Admin or Super user to add accounts here.',
         })
       : emptyStateRow(cols.length, {
-          icon: '🔍',
+          icon: hubIcon('search', 28),
           title: 'No matches',
           sub: 'Try a different search term or status filter.',
         });
@@ -9982,7 +10056,7 @@ function rebuildCollectionsTable() {
       `<td>${statusCell}</td>`,
       `<td title="${escAttr(latestNote)}" style="color:var(--text2)">${noteShort}</td>`,
       `<td style="white-space:nowrap">
-        <button class="row-action-btn" onclick="openClientNotesTasksModal('${safeName}')">📝 ${accountNotes.length}</button>
+        <button class="row-action-btn" onclick="openClientNotesTasksModal('${safeName}')"><span class="icon" data-icon="note" data-icon-size="14"></span> ${accountNotes.length}</button>
         ${editable ? `<button class="row-action-btn" onclick="openEditCollectionsModal('${a.id}')" aria-label="Edit account"><span class="icon" data-icon="edit" data-icon-size="13"></span></button>` : ''}
         ${editable ? `<button class="row-action-btn danger" onclick="removeCollectionsAccount('${a.id}')" aria-label="Remove account"><span class="icon" data-icon="trash" data-icon-size="13"></span></button>` : ''}
       </td>`,
@@ -10172,7 +10246,7 @@ function renderCollectionsDuplicatesReview() {
       <div class="dup-row">
         <div class="dup-name">${escAttr(d.name)}<span class="dup-sub">Already in ${typeLabel} — choose what to do</span></div>
         <select onchange="setCollectionsDupAction(${i}, this.value)" style="width:220px">
-          <option value="replace" ${d.action === 'replace' ? 'selected' : ''}>🔄 Replace existing record</option>
+          <option value="replace" ${d.action === 'replace' ? 'selected' : ''}><span class="icon" data-icon="refresh" data-icon-size="13"></span> Replace existing record</option>
           <option value="skip" ${d.action === 'skip' ? 'selected' : ''}>⏭️ Skip — keep existing as-is</option>
           <option value="both" ${d.action === 'both' ? 'selected' : ''}><span class="icon" data-icon="plus" data-icon-size="12"></span> Keep both (add as new)</option>
         </select>
@@ -10738,7 +10812,7 @@ async function rebuildOnboardingPage() {
   if (!wrap) return;
   const stages = getPipelineStages(currentOnboardingPipelineId);
   if (stages.length === 0) {
-    wrap.innerHTML = `<div style="width:100%">${emptyStateHTML({ icon: '⚙️', title: 'No pipeline set up yet', sub: 'Click "⚙️ Pipelines" to create your first onboarding pipeline and define its stages.' })}</div>`;
+    wrap.innerHTML = `<div style="width:100%">${emptyStateHTML({ icon: hubIcon('settings', 28), title: 'No pipeline set up yet', sub: 'Click "⚙️ Pipelines" to create your first onboarding pipeline and define its stages.' })}</div>`;
     return;
   }
   if (pipelineRecords.length === 0) {
@@ -10747,7 +10821,7 @@ async function rebuildOnboardingPage() {
     // size and sits at the start of the row instead of spanning/centering
     // across it, even though .empty-state itself already centers its own
     // content correctly once it actually has the full width to do it in.
-    wrap.innerHTML = `<div style="width:100%">${emptyStateHTML({ icon: '🧭', title: 'No onboarding in progress', sub: 'Click "New Onboarding" to start tracking a client from contract signature through go-live.' })}</div>`;
+    wrap.innerHTML = `<div style="width:100%">${emptyStateHTML({ icon: hubIcon('compass', 28), title: 'No onboarding in progress', sub: 'Click "New Onboarding" to start tracking a client from contract signature through go-live.' })}</div>`;
     return;
   }
   wrap.innerHTML = stages.map(({ stage_key, label, icon, color }) => {
@@ -11051,7 +11125,7 @@ function renderOnboardingDetail(r, products) {
 
   const isAtLastStage = stages.length > 0 && r.stage === stages[stages.length - 1].stage_key;
   const activateButton = isAtLastStage && r.status !== 'completed'
-    ? `<button class="btn btn-primary" style="width:100%;margin-top:var(--space-3)" onclick="activateOnboardingAsClient('${r.id}')">🎉 Activate as Client</button>`
+    ? `<button class="btn btn-primary" style="width:100%;margin-top:var(--space-3)" onclick="activateOnboardingAsClient('${r.id}')"><span class="icon" data-icon="gift" data-icon-size="14"></span> Activate as Client</button>`
     : '';
 
   const notesThread = currentOnboardingNotes.length === 0
@@ -11318,7 +11392,7 @@ function renderMyRemindersWidget() {
   const wrap = document.getElementById('homeMyRemindersList');
   if (!wrap) return;
   if (REMINDERS.length === 0) {
-    wrap.innerHTML = emptyStateHTML({ icon: '⏰', title: 'No reminders set', sub: 'Click "Remind Me" to set a personal reminder — only you\'ll see it.', compact: true });
+    wrap.innerHTML = emptyStateHTML({ icon: hubIcon('clock', 28), title: 'No reminders set', sub: 'Click "Remind Me" to set a personal reminder — only you\'ll see it.', compact: true });
     return;
   }
   wrap.innerHTML = REMINDERS.map(r => `
@@ -11350,12 +11424,12 @@ function renderNotificationList() {
   const wrap = document.getElementById('notificationList');
   if (!wrap) return;
   if (NOTIFICATIONS.length === 0) {
-    wrap.innerHTML = emptyStateHTML({ icon: '🔔', title: 'No notifications', sub: "You'll see it here when someone tags you in a note or assigns you a task." });
+    wrap.innerHTML = emptyStateHTML({ icon: hubIcon('bell', 28), title: 'No notifications', sub: "You'll see it here when someone tags you in a note or assigns you a task." });
     return;
   }
   wrap.innerHTML = NOTIFICATIONS.map(n => `
     <div class="notif-item ${n.read ? '' : 'unread'}" onclick="handleNotificationClick('${n.id}')">
-      ${n.client_name ? `<div class="notif-client">📁 ${escAttr(n.client_name)}</div>` : ''}
+      ${n.client_name ? `<div class="notif-client"><span class="icon" data-icon="folder" data-icon-size="14"></span> ${escAttr(n.client_name)}</div>` : ''}
       <div class="notif-msg">${escAttr(n.message)}</div>
       <div class="notif-time">${fmtNoteTime(n.created_at)}</div>
     </div>`).join('');
@@ -11444,7 +11518,7 @@ function showDesktopNotification(title, body) {
 // ─── Client Notes & Tasks modal ────────────────────────────────────────────
 function openClientNotesTasksModal(clientName) {
   cntActiveClientName = clientName;
-  document.getElementById('cntTitle').textContent = `👤 ${clientName}`;
+  document.getElementById('cntTitle').innerHTML = `${hubIcon('user',18)} ${escAttr(clientName)}`;
   cntTaggedEmails = [];
   const noteText = document.getElementById('cntNewNoteText');
   if (noteText) noteText.value = '';
@@ -11839,7 +11913,7 @@ function showPolishButton(targetId) {
   btn.id = 'notePolishBtn';
   btn.className = 'note-fmt-btn';
   btn.title = 'Fix spelling, grammar, and capitalization with AI';
-  btn.textContent = '✨ Polish';
+  btn.innerHTML = `${hubIcon('sparkle',13)} Polish`;
   btn.onclick = () => polishTextWithAI('cntNewNoteText', btn);
   toolbar.appendChild(btn);
 }
@@ -11888,7 +11962,7 @@ async function polishTextWithAI(targetId, btn) {
   const text = input.value.trim();
   if (!text) return;
   const originalLabel = btn.textContent;
-  btn.textContent = '✨ Polishing…';
+  btn.innerHTML = `${hubIcon('sparkle',13)} Polishing…`;
   btn.disabled = true;
   try {
     const cleaned = await quickAiCompletion(
@@ -12031,7 +12105,7 @@ function renderClientNotesThread() {
   if (!wrap) return;
   const notes = CLIENT_NOTES.filter(n => n.client_name === cntActiveClientName);
   if (notes.length === 0) {
-    wrap.innerHTML = emptyStateHTML({ icon: '📝', title: 'No notes yet', sub: 'Add the first note about this client below.', compact: true });
+    wrap.innerHTML = emptyStateHTML({ icon: hubIcon('note', 28), title: 'No notes yet', sub: 'Add the first note about this client below.', compact: true });
     return;
   }
   const u = getCurrentUser();
@@ -12227,7 +12301,7 @@ function renderClientTasksList() {
   if (!wrap) return;
   const tasks = CLIENT_TASKS.filter(t => t.client_name === cntActiveClientName);
   if (tasks.length === 0) {
-    wrap.innerHTML = emptyStateHTML({ icon: '✅', title: 'No tasks yet', sub: 'Create a task below and assign it to yourself or a teammate.', compact: true });
+    wrap.innerHTML = emptyStateHTML({ icon: hubIcon('check', 28), title: 'No tasks yet', sub: 'Create a task below and assign it to yourself or a teammate.', compact: true });
     return;
   }
   wrap.innerHTML = tasks.map(t => `
@@ -12326,7 +12400,7 @@ function renderHomeMyTasks() {
   const countEl = document.getElementById('home-my-tasks-count');
   if (countEl) countEl.textContent = tasks.length;
   if (tasks.length === 0) {
-    wrap.innerHTML = emptyStateHTML({ icon: '✅', title: 'Nothing on your plate', sub: 'Tasks assigned to you, on any client, will show up here.' });
+    wrap.innerHTML = emptyStateHTML({ icon: hubIcon('check', 28), title: 'Nothing on your plate', sub: 'Tasks assigned to you, on any client, will show up here.' });
     return;
   }
   const today = new Date().toISOString().slice(0, 10);
@@ -12714,7 +12788,7 @@ function startImportWizard(rows, fileName, pk, inputEl, rowComments) {
 
 function renderMappingModal() {
   const { pk, rows, headers, mapping, fileName, rowComments } = pendingImport;
-  const commentNote = rowComments ? ` · <span style="color:var(--orange)">💬 cell comments detected — they'll carry over automatically</span>` : '';
+  const commentNote = rowComments ? ` · <span style="color:var(--orange)"><span class="icon" data-icon="chat" data-icon-size="14"></span> cell comments detected — they'll carry over automatically</span>` : '';
   document.getElementById('mappingFileLabel').innerHTML =
     `<strong style="color:var(--text)">${fileName}</strong> → ${PORTFOLIOS[pk].name} · ${rows.length} row${rows.length === 1 ? '' : 's'} detected. We auto-matched columns where we could — fix anything that looks wrong, then continue.${commentNote}`;
   const catalog = getCatalog(pk);
@@ -12821,7 +12895,7 @@ function renderDuplicatesReview() {
   const { incoming, brandNew, dups, intraDuplicateNames, discardSample } = pendingImport.result;
   document.getElementById('dupSummaryText').innerHTML =
     `<strong style="color:var(--text)">${fileName}</strong> → ${PORTFOLIOS[pk].name}. Review below, then save.` +
-    (discardSample ? `<br><span style="color:var(--orange)">🧹 This dashboard is still showing sample data — it'll be cleared and replaced with your upload.</span>` : '');
+    (discardSample ? `<br><span style="color:var(--orange)"><span class="icon" data-icon="broom" data-icon-size="14"></span> This dashboard is still showing sample data — it'll be cleared and replaced with your upload.</span>` : '');
   document.getElementById('importSummaryStats').innerHTML = `
     <div class="stat"><b>${incoming.length}</b><span>Rows Mapped</span></div>
     <div class="stat"><b>${brandNew.length}</b><span>New Clients</span></div>
@@ -12838,7 +12912,7 @@ function renderDuplicatesReview() {
       <div class="dup-row">
         <div class="dup-name">${escAttr(d.name)}<span class="dup-sub">Already exists in ${PORTFOLIOS[pk].name} — choose what to do</span></div>
         <select onchange="setDupAction(${i}, this.value)" style="width:220px">
-          <option value="replace" ${d.action === 'replace' ? 'selected' : ''}>🔄 Replace existing with new data</option>
+          <option value="replace" ${d.action === 'replace' ? 'selected' : ''}><span class="icon" data-icon="refresh" data-icon-size="13"></span> Replace existing with new data</option>
           <option value="skip" ${d.action === 'skip' ? 'selected' : ''}>⏭️ Skip — keep existing as-is</option>
           <option value="both" ${d.action === 'both' ? 'selected' : ''}><span class="icon" data-icon="plus" data-icon-size="12"></span> Keep both (add as new)</option>
         </select>
@@ -13103,7 +13177,7 @@ function rebuildProductCatalogPage() {
   if (lowEl) lowEl.textContent = counts.low || 0;
 
   if (cat.length === 0) {
-    list.innerHTML = emptyStateHTML({ icon: '📦', title: 'No products in this catalog yet', sub: 'Add one above to start tracking adoption across clients.', compact: true });
+    list.innerHTML = emptyStateHTML({ icon: hubIcon('package', 28), title: 'No products in this catalog yet', sub: 'Add one above to start tracking adoption across clients.', compact: true });
     return;
   }
 
@@ -13119,7 +13193,7 @@ function rebuildProductCatalogPage() {
           <div class="support-detail">${using} / ${cl.length} clients (${pct}%) &nbsp;·&nbsp; <span style="color:var(--text3)">key: ${p.key}</span></div>
         </div>
         <select onchange="setProductPriority('${pk}','${p.key}', this.value)" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:var(--font-xs);font-weight:700;padding:var(--space-1) var(--space-2);border-radius:var(--radius-pill);outline:none;cursor:pointer">
-          <option value="high" ${p.priority==='high'?'selected':''}>🔥 High</option>
+          <option value="high" ${p.priority==='high'?'selected':''}><span class="icon" data-icon="trending" data-icon-size="14"></span> High</option>
           <option value="medium" ${p.priority==='medium'?'selected':''}>Medium</option>
           <option value="low" ${p.priority==='low'?'selected':''}>Targeted</option>
         </select>
@@ -13133,7 +13207,7 @@ function rebuildProductCatalogPage() {
 // ALL CLIENTS DIRECTORY — merge-by-name across all portfolios
 // ════════════════════════════════════════════════════════════════════════
 const PORTFOLIO_LABELS = { smb: 'SMB', whitelabel: 'White Label', support: 'Support' };
-const PORTFOLIO_ICONS  = { smb: '📊', whitelabel: '🏷️', support: '🎫' };
+const PORTFOLIO_ICONS  = { smb: hubIcon('chart',13), whitelabel: hubIcon('tag',13), support: hubIcon('ticket',13) };
 let activeClientsFilter = 'all';
 let activeProductFilter = 'all';
 
@@ -13248,9 +13322,9 @@ function openBulkActionModal(mode, scope = 'directory') {
   if (selectedSet.size === 0) { showToast('Select at least one client first.', 'warning'); return; }
   bulkActionMode = mode;
   const names = Array.from(selectedSet);
-  document.getElementById('bulkActionModalTitle').textContent = mode === 'task'
-    ? `➕ ${t('bulk_add_task_to')} ${names.length} ${names.length === 1 ? t('bulk_client_singular') : t('bulk_client_plural')}`
-    : `📝 ${t('bulk_add_note_to')} ${names.length} ${names.length === 1 ? t('bulk_client_singular') : t('bulk_client_plural')}`;
+  document.getElementById('bulkActionModalTitle').innerHTML = mode === 'task'
+    ? `${hubIcon('plus',16)} ${escAttr(t('bulk_add_task_to'))} ${names.length} ${names.length === 1 ? t('bulk_client_singular') : t('bulk_client_plural')}`
+    : `${hubIcon('note',16)} ${escAttr(t('bulk_add_note_to'))} ${names.length} ${names.length === 1 ? t('bulk_client_singular') : t('bulk_client_plural')}`;
   document.getElementById('bulkActionModalSub').textContent = mode === 'task' ? t('bulk_task_sub') : t('bulk_note_sub');
   document.getElementById('bulkActionModalClientList').textContent = names.join(', ');
   document.getElementById('bulkActionTaskFields').style.display = mode === 'task' ? '' : 'none';
@@ -13402,7 +13476,7 @@ function rebuildClientsDirectory() {
       </td></tr>`;
   });
   tbody.innerHTML = rowsHtml.length > 0 ? rowsHtml.join('') : emptyStateRow(5, {
-    icon: '👥',
+    icon: hubIcon('users', 28),
     title: 'No clients yet',
     sub: 'Once clients are uploaded to any portfolio, they\'ll show up here in one unified directory.',
   });
@@ -14787,7 +14861,7 @@ function appendWfbChatMsg(role, text) {
   div.id = id;
   div.innerHTML = role === 'user'
     ? `<div class="bubble">${escAttr(text).replace(/\n/g, '<br>')}</div>`
-    : `<div class="who">✨ Nirvana</div><div class="bubble">${renderAiMarkdown(text)}</div>`;
+    : `<div class="who"><span class="icon" data-icon="sparkle" data-icon-size="14"></span> Nirvana</div><div class="bubble">${renderAiMarkdown(text)}</div>`;
   thread.appendChild(div);
   thread.scrollTop = thread.scrollHeight;
   return id;
@@ -14838,7 +14912,7 @@ function rebuildWorkflowsPageOLD() {
   const list = document.getElementById('workflowsList');
   if (!list) return;
   if (WORKFLOWS.length === 0) {
-    list.innerHTML = emptyStateHTML({ icon: '🔁', title: 'No workflows yet', sub: 'Create one below, or ask Nirvana to set one up for you.', compact: true });
+    list.innerHTML = emptyStateHTML({ icon: hubIcon('repeat', 28), title: 'No workflows yet', sub: 'Create one below, or ask Nirvana to set one up for you.', compact: true });
     return;
   }
   list.innerHTML = WORKFLOWS.map(wf => `
@@ -15018,7 +15092,7 @@ function toggleWorkflowActionType() {
 function openAddWorkflowModal() {
   if (!requirePermission('edit')) return;
   editingWorkflowId = null;
-  document.getElementById('workflowModalTitle').textContent = '🔁 New Workflow';
+  document.getElementById('workflowModalTitle').innerHTML = `${hubIcon('repeat',18)} New Workflow`;
   document.getElementById('wfName').value = '';
   document.getElementById('wfActionTitle').value = '';
   document.getElementById('wfActionDueOffset').value = '';
@@ -15036,7 +15110,7 @@ function openEditWorkflowModal(id) {
   const wf = WORKFLOWS.find(w => w.id === id);
   if (!wf) return;
   editingWorkflowId = id;
-  document.getElementById('workflowModalTitle').textContent = '✏️ Edit Workflow';
+  document.getElementById('workflowModalTitle').innerHTML = `${hubIcon('edit',18)} Edit Workflow`;
   document.getElementById('wfName').value = wf.name;
   document.getElementById('wfActionTitle').value = wf.action_title;
   document.getElementById('wfActionDueOffset').value = wf.action_due_offset_days != null ? wf.action_due_offset_days : '';
@@ -16405,7 +16479,7 @@ function rebuildKnowledgePage() {
   const q = (document.getElementById('kbSearchBox') || {}).value || '';
   const entries = q.trim() ? searchKnowledgeBase(q, 50) : KNOWLEDGE_BASE;
   if (entries.length === 0) {
-    list.innerHTML = emptyStateHTML({ icon: '📚', title: KNOWLEDGE_BASE.length ? 'No matches' : 'No knowledge yet', sub: KNOWLEDGE_BASE.length ? 'Try a different search term.' : 'Add an SOP, doc, or website page below, or ask Nirvana to help.', compact: true });
+    list.innerHTML = emptyStateHTML({ icon: hubIcon('book', 28), title: KNOWLEDGE_BASE.length ? 'No matches' : 'No knowledge yet', sub: KNOWLEDGE_BASE.length ? 'Try a different search term.' : 'Add an SOP, doc, or website page below, or ask Nirvana to help.', compact: true });
     return;
   }
   list.innerHTML = entries.map(k => {
@@ -16419,7 +16493,7 @@ function rebuildKnowledgePage() {
           <span style="font-weight:700;color:var(--text);font-size:var(--font-base)">${escAttr(k.title)}</span>
         </div>
         <div style="font-size:var(--font-xs);color:var(--text2);line-height:1.5">${escAttr(excerpt)}${(k.content || '').length > 160 ? '…' : ''}</div>
-        ${k.source_url ? `<div style="font-size:var(--font-2xs);color:var(--text3);margin-top:4px">🔗 <a href="${escAttr(k.source_url)}" target="_blank" rel="noopener noreferrer" style="color:var(--text3)">${escAttr(k.source_url)}</a></div>` : ''}
+        ${k.source_url ? `<div style="font-size:var(--font-2xs);color:var(--text3);margin-top:4px"><span class="icon" data-icon="link" data-icon-size="13"></span> <a href="${escAttr(k.source_url)}" target="_blank" rel="noopener noreferrer" style="color:var(--text3)">${escAttr(k.source_url)}</a></div>` : ''}
       </div>
       ${canEdit() ? `
       <button class="row-action-btn" onclick="openEditKnowledgeModal('${k.id}')"><span class="icon" data-icon="edit" data-icon-size="13"></span> Edit</button>
@@ -16439,7 +16513,7 @@ async function confirmDeleteKnowledge(id) {
 function openAddKnowledgeModal() {
   if (!requirePermission('edit')) return;
   editingKnowledgeId = null;
-  document.getElementById('knowledgeModalTitle').textContent = `📚 ${t('kb_add_title')}`;
+  document.getElementById('knowledgeModalTitle').innerHTML = `${hubIcon('book',18)} ${escAttr(t('kb_add_title'))}`;
   document.getElementById('kbTitle').value = '';
   document.getElementById('kbCategory').value = 'sop';
   document.getElementById('kbLanguage').value = '';
@@ -16455,7 +16529,7 @@ function openEditKnowledgeModal(id) {
   const entry = KNOWLEDGE_BASE.find(k => k.id === id);
   if (!entry) return;
   editingKnowledgeId = id;
-  document.getElementById('knowledgeModalTitle').textContent = `✏️ ${t('kb_edit_title')}`;
+  document.getElementById('knowledgeModalTitle').innerHTML = `${hubIcon('edit',18)} ${escAttr(t('kb_edit_title'))}`;
   document.getElementById('kbTitle').value = entry.title;
   document.getElementById('kbCategory').value = entry.category || 'other';
   document.getElementById('kbLanguage').value = entry.language || '';
@@ -16476,8 +16550,8 @@ async function fetchKnowledgeFromUrl() {
   const url = urlEl.value.trim();
   if (!url) { showToast('Paste a URL first.', 'warning'); urlEl.focus(); return; }
   const btn = document.getElementById('kbFetchBtn');
-  const originalLabel = btn.textContent;
-  btn.textContent = '🌐 Fetching…';
+  const originalLabel = btn.innerHTML;
+  btn.innerHTML = `${hubIcon('globe',13)} Fetching…`;
   btn.disabled = true;
   try {
     const res = await fetch('/.netlify/functions/fetch-url', {
@@ -16498,7 +16572,7 @@ async function fetchKnowledgeFromUrl() {
   } catch(e) {
     showToast('Could not fetch that page: ' + e.message, 'warning');
   } finally {
-    btn.textContent = originalLabel;
+    btn.innerHTML = originalLabel;
     btn.disabled = false;
   }
 }
@@ -17944,7 +18018,7 @@ function confirmAiAgentAction(tool) {
   return new Promise(resolve => {
     const box = document.getElementById('aiAgentConfirm');
     box.innerHTML = `
-      <div class="ai-confirm-text">${describeAiAction(tool)}</div>
+      <div class="ai-confirm-text">${prependIcon(describeAiAction(tool), 15)}</div>
       <div class="ai-confirm-btns">
         <button class="btn btn-ghost btn-sm" id="aiConfirmNo">Cancel</button>
         <button class="btn btn-primary btn-sm" id="aiConfirmYes">Confirm</button>
@@ -18050,10 +18124,10 @@ function renderStoredNirvanaHistory() {
 }
 
 const AI_QUICK_SUGGESTIONS = [
-  { label: '🏥 Who\'s at risk?', msg: 'Which accounts are at risk right now?' },
-  { label: '☀️ Today\'s briefing', msg: 'Give me a rundown of what needs attention today' },
-  { label: '🔍 Find a client', msg: 'Help me find a client' },
-  { label: '🔁 Set up a workflow', msg: 'Help me set up a workflow to automate something' },
+  { label: hubIcon('building',13) + ' Who\'s at risk?', msg: 'Which accounts are at risk right now?' },
+  { label: hubIcon('sun',13) + ' Today\'s briefing', msg: 'Give me a rundown of what needs attention today' },
+  { label: hubIcon('search',13) + ' Find a client', msg: 'Help me find a client' },
+  { label: hubIcon('repeat',13) + ' Set up a workflow', msg: 'Help me set up a workflow to automate something' },
 ];
 
 const AI_TOOL_LABELS = {
@@ -18445,7 +18519,7 @@ function appendAiAgentMessage(role, text, toolTag, atTimestamp) {
   if (toolTag) {
     const tag = document.createElement('div');
     tag.style.cssText = 'font-size:10px;color:var(--text3);margin-bottom:4px;padding:0 2px';
-    tag.textContent = toolTag;
+    tag.innerHTML = iconizeAll(toolTag, 12);
     row.appendChild(tag);
   }
   const bubble = document.createElement('div');
@@ -18499,7 +18573,7 @@ function createStreamingBubble(toolTag) {
   if (toolTag) {
     const tag = document.createElement('div');
     tag.style.cssText = 'font-size:10px;color:var(--text3);margin-bottom:4px;padding:0 2px';
-    tag.textContent = toolTag;
+    tag.innerHTML = iconizeAll(toolTag, 12);
     row.appendChild(tag);
   }
   const bubble = document.createElement('div');
