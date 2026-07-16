@@ -406,7 +406,7 @@ body.ai-panel-open .main {
 .home-vitals-grid { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(4, minmax(160px, 1fr)); gap: var(--space-4); margin-bottom: 24px; }
 .vital-block {
   position: relative; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm);
-  padding: var(--space-4); display: flex; flex-direction: column;
+  padding: var(--space-4); display: flex; flex-direction: column; min-width: 0;
 }
 .vital-block::before, .vital-block::after { content: ''; position: absolute; width: 14px; height: 14px; border-color: var(--orange); border-style: solid; opacity: .75; }
 .vital-block::before { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
@@ -447,7 +447,7 @@ body.ai-panel-open .main {
 .vital-list-item .title { color: var(--text); font-weight: 600; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .vital-list-item .meta { color: var(--text3); flex-shrink: 0; }
 .vital-list-empty { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--text3); font-size: var(--font-2xs); text-align: center; }
-@media (max-width: 900px) {
+@media (max-width: 1200px) {
   .home-vitals-grid { grid-template-columns: 1fr; grid-template-rows: none; }
   #page-home.active { height: auto; overflow: visible; }
   #page-home .vital-block { overflow: visible; min-height: 220px; }
