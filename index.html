@@ -4098,6 +4098,13 @@ tr.hidden-row { display: none; }
 </div>
 
 <script>
+// Set true only once bootApp() actually starts (post-login, post real data
+// load) -- exists specifically so early code that runs before login (theme,
+// language) can safely tell "is it actually safe to touch live app data
+// yet" rather than just checking the Home page's .active class, which is
+// present in the raw HTML by default regardless of login state and so
+// doesn't actually distinguish "logged in" from "not yet".
+let hubHasBooted = false;
 // ════════════════════════════════════════════════════════════════════════
 // NAVIGATION
 // ════════════════════════════════════════════════════════════════════════
@@ -4864,9 +4871,9 @@ function applyLanguage(lang) {
 function applyTranslations() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
   document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = t(el.dataset.i18nPlaceholder); });
-  if (typeof renderHomeGreeting === 'function' && document.getElementById('homeGreeting')) renderHomeGreeting();
-  if (typeof rebuildOnboardingPage === 'function' && document.getElementById('page-onboarding')?.classList.contains('active')) rebuildOnboardingPage();
-  if (document.getElementById('page-action')?.classList.contains('active')) {
+  if (typeof renderHomeGreeting === 'function' && hubHasBooted && document.getElementById('page-home')?.classList.contains('active')) renderHomeGreeting();
+  if (typeof rebuildOnboardingPage === 'function' && hubHasBooted && document.getElementById('page-onboarding')?.classList.contains('active')) rebuildOnboardingPage();
+  if (hubHasBooted && document.getElementById('page-action')?.classList.contains('active')) {
     if (typeof rebuildKpiSummary === 'function') rebuildKpiSummary();
     if (typeof rebuildKpiHeroRow === 'function') rebuildKpiHeroRow();
     if (typeof rebuildKpiPlaybooks === 'function') rebuildKpiPlaybooks();
@@ -4876,7 +4883,7 @@ function applyTranslations() {
   // rebuilding it re-runs that template, which now reads labels through
   // t() (wired at its call site) so it actually reflects the new language
   // instead of re-rendering the same English strings.
-  if (typeof buildHomeVitalsGrid === 'function' && document.getElementById('homeVitalsGrid')) buildHomeVitalsGrid();
+  if (typeof buildHomeVitalsGrid === 'function' && hubHasBooted && document.getElementById('page-home')?.classList.contains('active')) buildHomeVitalsGrid();
 }
 applyLanguage(getSavedLanguage());
 
@@ -17967,6 +17974,7 @@ async function handleAiAgentResponse(data, toolTag, skipTextRender) {
 // BOOT — Supabase first, localStorage cache fallback, then sample data
 // ════════════════════════════════════════════════════════════════════════
 async function bootApp() {
+  hubHasBooted = true;
   // Apply saved theme before anything renders, so charts draw with correct colors from the start
   applyTheme(getSavedTheme(), false);
   updateMoneyToggleIcon();
