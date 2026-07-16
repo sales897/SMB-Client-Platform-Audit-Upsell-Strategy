@@ -14578,7 +14578,7 @@ function updateWfbEdgesForLiveNodePosition(nodeId, liveX, liveY) {
 async function onWfbNodeDragEnd(e) {
   document.removeEventListener('mousemove', onWfbNodeDragMove);
   if (!wfbDragState) return;
-  const { nodeId, startMouseX, startMouseY, liveX, liveY } = wfbDragState;
+  const { nodeId, startMouseX, startMouseY, startPosX, startPosY } = wfbDragState;
   const totalMove = Math.hypot(e.clientX - startMouseX, e.clientY - startMouseY);
   const node = workflowNodesCache.find(n => n.id === nodeId);
   wfbDragState = null;
@@ -14589,7 +14589,18 @@ async function onWfbNodeDragEnd(e) {
   // no-op reposition -- this is what makes a plain click on a node open
   // modify/delete, rather than requiring the small ⋮ menu or a double-click.
   if (totalMove < 4) { openWorkflowNodeEditor(nodeId); return; }
-  if (liveX != null) { node.pos_x = Math.max(0, Math.round(liveX)); node.pos_y = Math.max(0, Math.round(liveY)); }
+  // Compute the FINAL position directly from this mouseup event's own
+  // coordinates, rather than trusting wfbDragState.liveX/liveY -- those
+  // are only updated once per animation frame, and mouseup can fire in
+  // between two frames, so the last cached value can be a few pixels
+  // behind where the cursor actually was at release. That's what caused
+  // the node to visually snap backward the instant it was let go: it had
+  // been tracking the cursor smoothly via transform, then jumped to a
+  // slightly stale committed position once the transform was cleared.
+  const finalDx = (e.clientX - startMouseX) / workflowZoomLevel;
+  const finalDy = (e.clientY - startMouseY) / workflowZoomLevel;
+  node.pos_x = Math.max(0, Math.round(startPosX + finalDx));
+  node.pos_y = Math.max(0, Math.round(startPosY + finalDy));
   renderWorkflowCanvas(); // one full resync now that the drag is done (canvas bounds, traveling-light timing, etc.)
   try { await sbPatch('workflow_nodes', `id=eq.${node.id}`, { pos_x: node.pos_x, pos_y: node.pos_y }); }
   catch(e) { console.warn('Could not save node position:', e.message); }
