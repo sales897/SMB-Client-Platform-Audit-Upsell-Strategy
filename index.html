@@ -1940,6 +1940,8 @@ tr.hidden-row { display: none; }
 .cw-flow-step-remove:hover { color: var(--red); }
 .cw-add-step-btn { width: 100%; background: none; border: 1px dashed var(--border); border-radius: var(--radius-sm); color: var(--text3); font-size: var(--font-xs); font-weight: 700; padding: 8px; cursor: pointer; }
 .cw-add-step-btn:hover { border-color: var(--orange); color: var(--orange); }
+.cw-smart-paste-box { background: var(--bg2); border: 1px dashed rgba(226,84,31,.4); border-radius: var(--radius-sm); padding: var(--space-2); margin-bottom: var(--space-3); }
+.cw-smart-paste-box .field-label { color: var(--orange); }
 .cw-data-pills { display: flex; flex-wrap: wrap; gap: 6px; }
 .cw-data-pill { display: flex; align-items: center; gap: 6px; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-pill); padding: 5px 6px 5px 10px; font-size: var(--font-2xs); color: var(--text2); }
 .cw-data-pill-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
@@ -3459,9 +3461,18 @@ tr.hidden-row { display: none; }
         <div class="cw-builder-grid">
           <div class="cw-builder-main">
             <div class="cw-builder-card">
+              <label for="cwWelcomePrompt" class="field-label" style="margin-top:0">Welcome Message</label>
+              <textarea id="cwWelcomePrompt" class="field-input" rows="2" style="resize:vertical;font-family:inherit" oninput="liveUpdateCwPreview()"></textarea>
+            </div>
+            <div class="cw-builder-card">
               <div class="cw-builder-card-hd"><span class="cw-builder-card-title"><span id="cwFlowIcon"></span> Conversation Flow</span></div>
               <label for="cwOpeningLine" class="field-label">Opening Line <span style="color:var(--text3);font-weight:400">(optional)</span></label>
               <textarea id="cwOpeningLine" class="field-input" rows="2" style="resize:vertical;font-family:inherit;margin-bottom:var(--space-2)" oninput="liveUpdateCwPreview()"></textarea>
+              <div class="cw-smart-paste-box">
+                <label class="field-label" style="display:flex;align-items:center;gap:6px"><span id="cwSmartPasteIcon"></span> Paste anything — a script, notes, bullet points — and Nirvana will turn it into steps</label>
+                <textarea id="cwSmartPasteInput" class="field-input" rows="3" placeholder="Paste raw text here..." style="resize:vertical;font-family:inherit"></textarea>
+                <button class="btn btn-ghost btn-sm" id="cwSmartPasteBtn" style="width:100%;margin-top:6px" onclick="organizeCwFlowWithNirvana()"><span id="cwSmartPasteBtnIcon"></span> Organize with Nirvana</button>
+              </div>
               <div id="cwFlowStepsList"></div>
               <button class="cw-add-step-btn" onclick="addCwFlowStep()"><span id="cwAddStepIcon"></span> Add Step</button>
             </div>
@@ -3516,8 +3527,6 @@ tr.hidden-row { display: none; }
           <textarea id="cwEmbedCode" class="field-input" rows="2" readonly style="font-family:monospace;font-size:11px;resize:none"></textarea>
           <button class="btn btn-ghost btn-sm" style="margin-top:8px;width:100%" onclick="copyEmbedCode()"><span id="cwCopyIcon"></span> Copy Embed Code</button>
         </div>
-        <label for="cwWelcomePrompt" class="field-label" style="margin-top:var(--space-3)">Welcome Message</label>
-        <textarea id="cwWelcomePrompt" class="field-input" rows="2" style="resize:vertical;font-family:inherit" oninput="liveUpdateCwPreview()"></textarea>
         <button class="cw-glow-btn cw-save-btn" onclick="saveChatWidgetSettings()"><span id="cwSaveBtnIcon"></span> Save &amp; Publish</button>
       </div>
       <div id="cwDrawerPane-nirvana" style="display:none">
@@ -4541,6 +4550,7 @@ const HUB_ICONS = {
   info: '<circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v5h1"/>',
   clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
   card: '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/>',
+  bot: '<rect x="4" y="8" width="16" height="12" rx="3"/><path d="M12 8V4M9 4h6"/><circle cx="9" cy="14" r="1.3"/><circle cx="15" cy="14" r="1.3"/>',
 };
 // Maps each emoji this pass has replaced back to its icon name, so shared
 // functions that receive a caller-supplied string with a leading emoji
@@ -5221,6 +5231,27 @@ const I18N = {
     kb_content_placeholder: 'Paste the SOP, doc content, or webpage text here…', kb_auto_detect: 'Auto-detect',
     rp_title: 'Remove Product', rp_confirm: 'Are you sure you want to remove this product?', rp_what_happens: 'What should happen to existing client adoption data for this product?',
     rp_keep_hidden: 'Remove from catalog, keep historical data hidden', rp_delete_data: 'Remove permanently and delete client data', connect_sheet_btn: 'Connect Sheet', mark_all_read: 'Mark all read', search_accounts: 'Search accounts...', search_businesses: 'Search businesses...',
+    es_no_clients_spotlight: 'No clients yet', es_collections_caught_up: 'All caught up', es_collections_caught_up_sub: 'Nothing in Collections needs attention right now.',
+    es_no_flagged: 'No flagged clients', es_no_flagged_sub: 'Clients show up here automatically when a comment is attached to their Voice Agent column during an Excel upload (e.g. a cell note).',
+    es_no_stale_leads: 'No stale leads flagged', es_no_stale_leads_sub: 'Businesses show up here when a comment on Yelp, Google LSA, or Thumbtack mentions the last lead was handled 7 days to 6 months ago.',
+    es_no_notes_chat: 'No notes yet', es_no_notes_chat_sub: 'Clients show up here automatically when a comment is attached to their Yelp, Google LSA, or Thumbtack column during an Excel upload, in any of the three portfolios.',
+    es_no_recent_activity: 'No recent activity', es_no_recent_activity_sub: 'Notes and status changes on any client will show up here.',
+    es_no_catalog_products: 'No products in the catalog yet', es_no_catalog_products_sub: 'Add products in Manage Products to see upsell opportunities here.',
+    es_no_duplicates: 'No duplicates found', es_no_duplicates_sub: 'Every client name appears exactly once within its own portfolio.',
+    es_no_one_authorized: 'No one authorized yet', es_no_one_authorized_sub: "Add a teammate's email above — they'll be able to sign in with Google or by creating a password.",
+    es_no_pipeline: 'No pipeline set up yet', es_no_pipeline_sub: 'Click "Pipelines" to create your first onboarding pipeline and define its stages.',
+    es_no_onboarding_progress: 'No onboarding in progress', es_no_onboarding_progress_sub: 'Click "New Onboarding" to start tracking a client from contract signature through go-live.',
+    es_no_reminders: 'No reminders set', es_no_reminders_sub: 'Click "Remind Me" to set a personal reminder — only you\'ll see it.',
+    es_no_notifications: 'No notifications', es_no_notifications_sub: "You'll see it here when someone tags you in a note or assigns you a task.",
+    es_no_notes: 'No notes yet', es_no_notes_sub: 'Add the first note about this client below.',
+    es_no_tasks: 'No tasks yet', es_no_tasks_sub: 'Create a task below and assign it to yourself or a teammate.',
+    es_nothing_on_plate: 'Nothing on your plate', es_nothing_on_plate_sub: 'Tasks assigned to you, on any client, will show up here.',
+    es_no_catalog_this: 'No products in this catalog yet', es_no_catalog_this_sub: 'Add one above to start tracking adoption across clients.',
+    es_no_workflows: 'No workflows yet', es_no_workflows_sub: 'Create one below, or ask Nirvana to set one up for you.',
+    es_no_widget_activity: 'No activity yet',
+    es_nothing_to_analyze: 'Nothing to analyze yet', es_nothing_to_analyze_sub: 'Insights appear once leads start coming through.',
+    es_no_conversations: 'No conversations yet', es_no_conversations_sub: 'Leads will show up here the moment someone chats with your embedded widget.',
+    es_no_matches: 'No matches', es_no_knowledge: 'No knowledge yet', es_try_different_search: 'Try a different search term.', es_add_sop_help: 'Add an SOP, doc, or website page below, or ask Nirvana to help.',
   },
   es: {
     nav_home: 'Inicio', nav_portfolios: 'Portafolios', nav_onboarding: 'Incorporación', nav_performance: 'Rendimiento',
@@ -5357,6 +5388,27 @@ const I18N = {
     kb_content_placeholder: 'Pega el SOP, contenido del documento, o texto de la página web aquí…', kb_auto_detect: 'Detección automática',
     rp_title: 'Eliminar Producto', rp_confirm: '¿Estás seguro de que quieres eliminar este producto?', rp_what_happens: '¿Qué debería pasar con los datos de adopción existentes de los clientes para este producto?',
     rp_keep_hidden: 'Eliminar del catálogo, mantener ocultos los datos históricos', rp_delete_data: 'Eliminar permanentemente y borrar los datos de clientes', connect_sheet_btn: 'Conectar Hoja', mark_all_read: 'Marcar todo como leído', search_accounts: 'Buscar cuentas...', search_businesses: 'Buscar negocios...',
+    es_no_clients_spotlight: 'Aún no hay clientes', es_collections_caught_up: 'Todo al día', es_collections_caught_up_sub: 'Nada en Cobranza necesita atención en este momento.',
+    es_no_flagged: 'No hay clientes marcados', es_no_flagged_sub: 'Los clientes aparecen aquí automáticamente cuando se adjunta un comentario a su columna de Agente de Voz durante una carga de Excel (por ejemplo, una nota de celda).',
+    es_no_stale_leads: 'No hay leads inactivos marcados', es_no_stale_leads_sub: 'Los negocios aparecen aquí cuando un comentario en Yelp, Google LSA o Thumbtack menciona que el último lead se manejó entre 7 días y 6 meses atrás.',
+    es_no_notes_chat: 'Aún no hay notas', es_no_notes_chat_sub: 'Los clientes aparecen aquí automáticamente cuando se adjunta un comentario a su columna de Yelp, Google LSA o Thumbtack durante una carga de Excel, en cualquiera de los tres portafolios.',
+    es_no_recent_activity: 'Sin actividad reciente', es_no_recent_activity_sub: 'Las notas y cambios de estado de cualquier cliente aparecerán aquí.',
+    es_no_catalog_products: 'Aún no hay productos en el catálogo', es_no_catalog_products_sub: 'Agrega productos en Administrar Productos para ver oportunidades de venta adicional aquí.',
+    es_no_duplicates: 'No se encontraron duplicados', es_no_duplicates_sub: 'Cada nombre de cliente aparece exactamente una vez dentro de su propio portafolio.',
+    es_no_one_authorized: 'Aún nadie está autorizado', es_no_one_authorized_sub: 'Agrega el correo de un compañero de equipo arriba — podrá iniciar sesión con Google o creando una contraseña.',
+    es_no_pipeline: 'Aún no hay pipeline configurado', es_no_pipeline_sub: 'Haz clic en "Pipelines" para crear tu primer pipeline de incorporación y definir sus etapas.',
+    es_no_onboarding_progress: 'Sin incorporaciones en progreso', es_no_onboarding_progress_sub: 'Haz clic en "Nueva Incorporación" para comenzar a seguir a un cliente desde la firma del contrato hasta el lanzamiento.',
+    es_no_reminders: 'No hay recordatorios configurados', es_no_reminders_sub: 'Haz clic en "Recuérdame" para configurar un recordatorio personal — solo tú lo verás.',
+    es_no_notifications: 'Sin notificaciones', es_no_notifications_sub: 'Lo verás aquí cuando alguien te mencione en una nota o te asigne una tarea.',
+    es_no_notes: 'Aún no hay notas', es_no_notes_sub: 'Agrega la primera nota sobre este cliente abajo.',
+    es_no_tasks: 'Aún no hay tareas', es_no_tasks_sub: 'Crea una tarea abajo y asígnala a ti mismo o a un compañero de equipo.',
+    es_nothing_on_plate: 'Nada pendiente', es_nothing_on_plate_sub: 'Las tareas asignadas a ti, en cualquier cliente, aparecerán aquí.',
+    es_no_catalog_this: 'Aún no hay productos en este catálogo', es_no_catalog_this_sub: 'Agrega uno arriba para comenzar a rastrear la adopción entre clientes.',
+    es_no_workflows: 'Aún no hay workflows', es_no_workflows_sub: 'Crea uno abajo, o pídele a Nirvana que configure uno para ti.',
+    es_no_widget_activity: 'Aún no hay actividad',
+    es_nothing_to_analyze: 'Aún no hay nada que analizar', es_nothing_to_analyze_sub: 'Los insights aparecen en cuanto empiecen a llegar leads.',
+    es_no_conversations: 'Aún no hay conversaciones', es_no_conversations_sub: 'Los leads aparecerán aquí en cuanto alguien chatee con tu widget incorporado.',
+    es_no_matches: 'Sin coincidencias', es_no_knowledge: 'Aún no hay conocimiento', es_try_different_search: 'Intenta un término de búsqueda diferente.', es_add_sop_help: 'Agrega un SOP, documento, o página web abajo, o pídele ayuda a Nirvana.',
   },
 };
 function t(key) {
@@ -5611,7 +5663,7 @@ async function renderClientSpotlight(pk) {
   if (!el) return;
   const entry = await ensureSpotlightForToday(pk);
   if (!entry) {
-    el.innerHTML = `<div class="card">${emptyStateHTML({ icon: hubIcon('search', 28), title: 'No clients yet', sub: `Upload ${PORTFOLIOS[pk].name} clients to see a daily spotlight here.`, compact: true })}</div>`;
+    el.innerHTML = `<div class="card">${emptyStateHTML({ icon: hubIcon('search', 28), title: t('es_no_clients_spotlight'), sub: `Upload ${PORTFOLIOS[pk].name} clients to see a daily spotlight here.`, compact: true })}</div>`;
     return;
   }
   const client = getClients(pk).find(c => c.name === entry.client_name);
@@ -6335,14 +6387,14 @@ function renderHomeAttentionList() {
     .sort((a, b) => (b.amount || 0) - (a.amount || 0))
     .slice(0, 8);
   if (items.length === 0) {
-    wrap.innerHTML = emptyStateHTML({ icon: hubIcon('check', 28), title: 'All caught up', sub: 'Nothing in Collections needs attention right now.' });
+    wrap.innerHTML = emptyStateHTML({ icon: hubIcon('check', 28), title: t('es_collections_caught_up'), sub: t('es_collections_caught_up_sub') });
     return;
   }
   wrap.innerHTML = items.map(a => {
     const meta = statusMeta(a.status);
     const typeLabel = a.type === 'outstanding' ? 'Outstanding' : 'Card Fail';
     return `<div class="support-item" style="cursor:pointer" onclick="showPage('collections')" tabindex="0" role="button" aria-label="View ${escAttr(a.name)} in Collections">
-      <div class="support-avatar" style="background:${meta.bg};color:${meta.color}">${a.type === 'outstanding' ? '💵' : '💳'}</div>
+      <div class="support-avatar" style="background:${meta.bg};color:${meta.color}">${a.type === 'outstanding' ? hubIcon('dollar',15) : hubIcon('card',15)}</div>
       <div class="support-info">
         <div class="support-name">${escAttr(a.name)}</div>
         <div class="support-detail">${typeLabel} · ${fmtMoney(a.amount)}</div>
@@ -6435,8 +6487,8 @@ function rebuildVoiceAgentFlagged() {
   if (flagged.length === 0) {
     wrap.innerHTML = emptyStateHTML({
       icon: hubIcon('note', 28),
-      title: 'No flagged clients',
-      sub: 'Clients show up here automatically when a comment is attached to their Voice Agent column during an Excel upload (e.g. a cell note).',
+      title: t('es_no_flagged'),
+      sub: t('es_no_flagged_sub'),
     });
     return;
   }
@@ -6613,8 +6665,8 @@ function rebuildTextAgentStale() {
   if (stale.length === 0) {
     wrap.innerHTML = emptyStateHTML({
       icon: hubIcon('check', 28),
-      title: 'No stale leads flagged',
-      sub: 'Businesses show up here when a comment on Yelp, Google LSA, or Thumbtack mentions the last lead was handled 7 days to 6 months ago.',
+      title: t('es_no_stale_leads'),
+      sub: t('es_no_stale_leads_sub'),
     });
     return;
   }
@@ -6674,8 +6726,8 @@ function rebuildTextAgentNotes() {
   if (entries.length === 0) {
     wrap.innerHTML = emptyStateHTML({
       icon: hubIcon('chat', 28),
-      title: 'No notes yet',
-      sub: 'Clients show up here automatically when a comment is attached to their Yelp, Google LSA, or Thumbtack column during an Excel upload, in any of the three portfolios.',
+      title: t('es_no_notes_chat'),
+      sub: t('es_no_notes_chat_sub'),
     });
     return;
   }
@@ -6719,7 +6771,7 @@ function renderHomeActivityList() {
   if (!wrap) return;
   const top = [...CLIENT_NOTES].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 8);
   if (top.length === 0) {
-    wrap.innerHTML = emptyStateHTML({ icon: hubIcon('clock', 28), title: 'No recent activity', sub: 'Notes and status changes on any client will show up here.' });
+    wrap.innerHTML = emptyStateHTML({ icon: hubIcon('clock', 28), title: t('es_no_recent_activity'), sub: t('es_no_recent_activity_sub') });
     return;
   }
   wrap.innerHTML = top.map(n => `
@@ -7130,7 +7182,7 @@ function showToast(message, type = 'info', duration = 5000) {
   icon.innerHTML = hubIcon(TOAST_ICONS[type] || TOAST_ICONS.info, 16);
   const msg = document.createElement('span');
   msg.className = 'toast-msg';
-  msg.textContent = message;
+  msg.innerHTML = iconizeLeading(message, 13);
   const close = document.createElement('span');
   close.className = 'toast-close';
   close.innerHTML = hubIcon('close', 11);
@@ -7675,7 +7727,7 @@ function rebuildUpsellCards() {
   const pkMeta = { smb: { label: 'SMB', chip: 'chip-smb' }, whitelabel: { label: 'White Label', chip: 'chip-whitelabel' }, support: { label: 'Support', chip: 'chip-support' } };
 
   if (cat.length === 0) {
-    ug.innerHTML = emptyStateHTML({ icon: hubIcon('target', 28), title: 'No products in the catalog yet', sub: 'Add products in Manage Products to see upsell opportunities here.' });
+    ug.innerHTML = emptyStateHTML({ icon: hubIcon('target', 28), title: t('es_no_catalog_products'), sub: t('es_no_catalog_products_sub') });
     const set0 = (id) => { const el = document.getElementById(id); if (el) el.textContent = 0; };
     ['upsell-total-opps', 'upsell-high-count', 'upsell-med-count', 'upsell-low-count'].forEach(set0);
     return;
@@ -7778,7 +7830,7 @@ const KPI_META = {
       { title: 'Track the Pitch, Not Just the Close', body: 'Log every proactive growth pitch as a note — even the ones that get declined — so we can see how many real opportunities we\'re surfacing, not just how many convert.' },
     ],
     signalsLabel: 'Growth Signals to Watch For',
-    signalIcon: '💡',
+    signalIcon: hubIcon('lightbulb', 13),
     signals: [
       'A client fully adopted on one product with strong results but nothing else — a "single-product plateau" is the clearest sign they\'re ready for a second product, if we ask.',
       'Usage or volume trending up on an existing product — hitting a ceiling usually means they\'re ready for the next one.',
@@ -7844,7 +7896,7 @@ const KPI_META_ES = {
       { title: 'Registra la Propuesta, No Solo el Cierre', body: 'Registra cada propuesta de crecimiento proactiva como una nota — incluso las que son rechazadas — para poder ver cuántas oportunidades reales estamos presentando, no solo cuántas se cierran.' },
     ],
     signalsLabel: 'Señales de Crecimiento a Observar',
-    signalIcon: '💡',
+    signalIcon: hubIcon('lightbulb', 13),
     signals: [
       'Un cliente completamente adoptado en un producto con buenos resultados pero nada más — una "meseta de un solo producto" es la señal más clara de que está listo para un segundo producto, si se lo ofrecemos.',
       'Uso o volumen en aumento en un producto existente — llegar a un límite generalmente significa que están listos para el siguiente.',
@@ -7977,7 +8029,7 @@ function rebuildKpiPlaybooks() {
         <div class="step-num" style="background:${meta.color}">${i + 1}</div>
         <div class="step-body"><strong>${s.title}</strong>${s.body}</div>
       </div>`).join('');
-    const signalIcon = meta.signalIcon || '⚠️';
+    const signalIcon = meta.signalIcon || hubIcon('alert', 13);
     const signalsLabel = meta.signalsLabel || t('kpi_default_signals_label');
     const chipClass = meta.signalIcon ? 'opportunity-chip' : 'warning-chip';
     const signals = meta.signals.map(s => `<div class="${chipClass}">${signalIcon} ${s}</div>`).join('');
@@ -8874,7 +8926,7 @@ async function scanForDuplicateClients() {
   }
 
   if (duplicateClientScanResults.length === 0) {
-    wrap.innerHTML = emptyStateHTML({ icon: hubIcon('check', 28), title: 'No duplicates found', sub: 'Every client name appears exactly once within its own portfolio.' });
+    wrap.innerHTML = emptyStateHTML({ icon: hubIcon('check', 28), title: t('es_no_duplicates'), sub: t('es_no_duplicates_sub') });
     return;
   }
 
@@ -9008,7 +9060,7 @@ async function mergeDuplicateClientGroup(i) {
   // rather than leaving stale onclick handlers pointing at the wrong index.
   const wrap = document.getElementById('duplicateClientsList');
   wrap.innerHTML = duplicateClientScanResults.length === 0
-    ? emptyStateHTML({ icon: hubIcon('check', 28), title: 'No duplicates found', sub: 'Every client name appears exactly once within its own portfolio.' })
+    ? emptyStateHTML({ icon: hubIcon('check', 28), title: t('es_no_duplicates'), sub: t('es_no_duplicates_sub') })
     : duplicateClientScanResults.map((g, idx) => renderDuplicateGroupRow(idx, false)).join('');
 }
 
@@ -9266,7 +9318,7 @@ function renderTeamUI() {
   if (countSub) countSub.textContent = `${TEAM_MEMBERS.length} ${TEAM_MEMBERS.length === 1 ? 'person' : 'people'}`;
   if (list) {
     list.innerHTML = TEAM_MEMBERS.length === 0
-      ? emptyStateHTML({ icon: hubIcon('users',28), title: 'No one authorized yet', sub: "Add a teammate's email above — they'll be able to sign in with Google or by creating a password." })
+      ? emptyStateHTML({ icon: hubIcon('users',28), title: t('es_no_one_authorized'), sub: t('es_no_one_authorized_sub') })
       : TEAM_MEMBERS.map(m => `
         <div class="team-row">
           <span class="user-avatar">${m.avatar ? `<img src="${m.avatar}" alt="">` : initials(m.name)}</span>
@@ -9637,7 +9689,7 @@ function rebuildAdSpendCharts() {
   const totalBudget = businesses.reduce((s, b) => s + (b.budget || 0), 0);
 
   const budgetBadge = document.getElementById('badge-adspend-budget');
-  if (budgetBadge) budgetBadge.textContent = `💰 ${fmtMoney(totalBudget)} Total`;
+  if (budgetBadge) budgetBadge.innerHTML = `${hubIcon('dollar',13)} ${fmtMoney(totalBudget)} Total`;
   const countBadge = document.getElementById('badge-adspend-count');
   if (countBadge) countBadge.textContent = `🏢 ${businesses.length} Business${businesses.length === 1 ? '' : 'es'}`;
 
@@ -10234,7 +10286,7 @@ function rebuildCollectionsCharts() {
   const countBadge = document.getElementById('badge-collections-count');
   if (countBadge) countBadge.innerHTML = `${hubIcon('receipt',13)} ${list.length} Account${list.length === 1 ? '' : 's'}`;
   const amountBadge = document.getElementById('badge-collections-amount');
-  if (amountBadge) amountBadge.textContent = `💰 ${fmtMoney(totalAmount)} Total`;
+  if (amountBadge) amountBadge.innerHTML = `${hubIcon('dollar',13)} ${fmtMoney(totalAmount)} Total`;
 
   const statusCounts = COLLECTIONS_STATUSES.map(s => list.filter(a => a.status === s.key).length);
   const statusAmounts = COLLECTIONS_STATUSES.map(s => list.filter(a => a.status === s.key).reduce((sum, a) => sum + (a.amount || 0), 0));
@@ -11144,7 +11196,7 @@ async function rebuildOnboardingPage() {
   if (!wrap) return;
   const stages = getPipelineStages(currentOnboardingPipelineId);
   if (stages.length === 0) {
-    wrap.innerHTML = `<div style="width:100%">${emptyStateHTML({ icon: hubIcon('settings', 28), title: 'No pipeline set up yet', sub: 'Click "⚙️ Pipelines" to create your first onboarding pipeline and define its stages.' })}</div>`;
+    wrap.innerHTML = `<div style="width:100%">${emptyStateHTML({ icon: hubIcon('settings', 28), title: t('es_no_pipeline'), sub: t('es_no_pipeline_sub') })}</div>`;
     return;
   }
   if (pipelineRecords.length === 0) {
@@ -11153,7 +11205,7 @@ async function rebuildOnboardingPage() {
     // size and sits at the start of the row instead of spanning/centering
     // across it, even though .empty-state itself already centers its own
     // content correctly once it actually has the full width to do it in.
-    wrap.innerHTML = `<div style="width:100%">${emptyStateHTML({ icon: hubIcon('compass', 28), title: 'No onboarding in progress', sub: 'Click "New Onboarding" to start tracking a client from contract signature through go-live.' })}</div>`;
+    wrap.innerHTML = `<div style="width:100%">${emptyStateHTML({ icon: hubIcon('compass', 28), title: t('es_no_onboarding_progress'), sub: t('es_no_onboarding_progress_sub') })}</div>`;
     return;
   }
   wrap.innerHTML = stages.map(({ stage_key, label, icon, color }) => {
@@ -11724,7 +11776,7 @@ function renderMyRemindersWidget() {
   const wrap = document.getElementById('homeMyRemindersList');
   if (!wrap) return;
   if (REMINDERS.length === 0) {
-    wrap.innerHTML = emptyStateHTML({ icon: hubIcon('clock', 28), title: 'No reminders set', sub: 'Click "Remind Me" to set a personal reminder — only you\'ll see it.', compact: true });
+    wrap.innerHTML = emptyStateHTML({ icon: hubIcon('clock', 28), title: t('es_no_reminders'), sub: t('es_no_reminders_sub'), compact: true });
     return;
   }
   wrap.innerHTML = REMINDERS.map(r => `
@@ -11756,7 +11808,7 @@ function renderNotificationList() {
   const wrap = document.getElementById('notificationList');
   if (!wrap) return;
   if (NOTIFICATIONS.length === 0) {
-    wrap.innerHTML = emptyStateHTML({ icon: hubIcon('bell', 28), title: 'No notifications', sub: "You'll see it here when someone tags you in a note or assigns you a task." });
+    wrap.innerHTML = emptyStateHTML({ icon: hubIcon('bell', 28), title: t('es_no_notifications'), sub: t('es_no_notifications_sub') });
     return;
   }
   wrap.innerHTML = NOTIFICATIONS.map(n => `
@@ -12437,7 +12489,7 @@ function renderClientNotesThread() {
   if (!wrap) return;
   const notes = CLIENT_NOTES.filter(n => n.client_name === cntActiveClientName);
   if (notes.length === 0) {
-    wrap.innerHTML = emptyStateHTML({ icon: hubIcon('note', 28), title: 'No notes yet', sub: 'Add the first note about this client below.', compact: true });
+    wrap.innerHTML = emptyStateHTML({ icon: hubIcon('note', 28), title: t('es_no_notes'), sub: t('es_no_notes_sub'), compact: true });
     return;
   }
   const u = getCurrentUser();
@@ -12633,7 +12685,7 @@ function renderClientTasksList() {
   if (!wrap) return;
   const tasks = CLIENT_TASKS.filter(t => t.client_name === cntActiveClientName);
   if (tasks.length === 0) {
-    wrap.innerHTML = emptyStateHTML({ icon: hubIcon('check', 28), title: 'No tasks yet', sub: 'Create a task below and assign it to yourself or a teammate.', compact: true });
+    wrap.innerHTML = emptyStateHTML({ icon: hubIcon('check', 28), title: t('es_no_tasks'), sub: t('es_no_tasks_sub'), compact: true });
     return;
   }
   wrap.innerHTML = tasks.map(t => `
@@ -12641,7 +12693,7 @@ function renderClientTasksList() {
       <input type="checkbox" ${t.status === 'done' ? 'checked' : ''} onchange="toggleClientTaskStatus('${t.id}')">
       <div class="task-info">
         <div class="task-title">${escAttr(t.title)}</div>
-        <div class="task-meta">Assigned to ${escAttr(t.assigned_to_name || '—')}${t.due_date ? ' · Due ' + fmtDateTime(t.due_date) : ''}${t.recurrence ? ' · 🔁 ' + recurrenceLabel(t) : ''}${t.workflow_id ? ' · 🤖 Automated' : ''}</div>
+        <div class="task-meta">Assigned to ${escAttr(t.assigned_to_name || '—')}${t.due_date ? ' · Due ' + fmtDateTime(t.due_date) : ''}${t.recurrence ? ' · ' + hubIcon('repeat',11) + ' ' + recurrenceLabel(t) : ''}${t.workflow_id ? ' · ' + hubIcon('bot',11) + ' Automated' : ''}</div>
       </div>
       ${t.due_date ? `<a href="${gcalQuickAddUrl(t)}" target="_blank" rel="noopener" class="row-action-btn" title="Add to Google Calendar"><span class="icon" data-icon="calendar" data-icon-size="14"></span></a>` : ''}
       ${canModifyTask(t) ? `<button class="row-action-btn danger" onclick="deleteClientTask('${t.id}')" aria-label="Delete task"><span class="icon" data-icon="trash" data-icon-size="13"></span></button>` : ''}
@@ -12732,7 +12784,7 @@ function renderHomeMyTasks() {
   const countEl = document.getElementById('home-my-tasks-count');
   if (countEl) countEl.textContent = tasks.length;
   if (tasks.length === 0) {
-    wrap.innerHTML = emptyStateHTML({ icon: hubIcon('check', 28), title: 'Nothing on your plate', sub: 'Tasks assigned to you, on any client, will show up here.' });
+    wrap.innerHTML = emptyStateHTML({ icon: hubIcon('check', 28), title: t('es_nothing_on_plate'), sub: t('es_nothing_on_plate_sub') });
     return;
   }
   const today = new Date().toISOString().slice(0, 10);
@@ -13509,7 +13561,7 @@ function rebuildProductCatalogPage() {
   if (lowEl) lowEl.textContent = counts.low || 0;
 
   if (cat.length === 0) {
-    list.innerHTML = emptyStateHTML({ icon: hubIcon('package', 28), title: 'No products in this catalog yet', sub: 'Add one above to start tracking adoption across clients.', compact: true });
+    list.innerHTML = emptyStateHTML({ icon: hubIcon('package', 28), title: t('es_no_catalog_this'), sub: t('es_no_catalog_this_sub'), compact: true });
     return;
   }
 
@@ -15253,7 +15305,7 @@ function rebuildWorkflowsPageOLD() {
   const list = document.getElementById('workflowsList');
   if (!list) return;
   if (WORKFLOWS.length === 0) {
-    list.innerHTML = emptyStateHTML({ icon: hubIcon('repeat', 28), title: 'No workflows yet', sub: 'Create one below, or ask Nirvana to set one up for you.', compact: true });
+    list.innerHTML = emptyStateHTML({ icon: hubIcon('repeat', 28), title: t('es_no_workflows'), sub: t('es_no_workflows_sub'), compact: true });
     return;
   }
   list.innerHTML = WORKFLOWS.map(wf => `
@@ -16174,6 +16226,7 @@ function renderCwStaticIcons() {
     cwFunnelIcon: ['target', 14], cwApptPerfIcon: ['calendar', 14], cwInsightIcon: ['sparkle', 14],
     cwFlowIcon: ['chat', 15], cwAddStepIcon: ['plus', 12], cwDataToCollectIcon: ['tag', 15],
     cwAddFieldIcon: ['plus', 12], cwPersonalityIcon: ['user', 15], cwToolsIcon: ['settings', 15], cwKbIcon: ['book', 15],
+    cwSmartPasteIcon: ['sparkle', 13], cwSmartPasteBtnIcon: ['sparkle', 13],
   };
   Object.entries(map).forEach(([id, [icon, size]]) => {
     const el = document.getElementById(id);
@@ -16362,7 +16415,7 @@ function renderCwRecentActivity(convos) {
   if (!wrap) return;
   const recent = [...convos].sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at)).slice(0, 8);
   if (recent.length === 0) {
-    wrap.innerHTML = emptyStateHTML({ icon: cwIcon('chat', 28), title: 'No activity yet', compact: true });
+    wrap.innerHTML = emptyStateHTML({ icon: cwIcon('chat', 28), title: t('es_no_widget_activity'), compact: true });
     return;
   }
   const tagFor = (c) => {
@@ -16450,7 +16503,7 @@ function renderCwAiInsight(totalLeads, contactRate, apptRate, minutesSaved) {
   const wrap = document.getElementById('cwAiInsightBody');
   if (!wrap) return;
   if (totalLeads === 0) {
-    wrap.innerHTML = emptyStateHTML({ icon: cwIcon('sparkle', 28), title: 'Nothing to analyze yet', sub: 'Insights appear once leads start coming through.', compact: true });
+    wrap.innerHTML = emptyStateHTML({ icon: cwIcon('sparkle', 28), title: t('es_nothing_to_analyze'), sub: t('es_nothing_to_analyze_sub'), compact: true });
     return;
   }
   const insights = [];
@@ -16548,7 +16601,7 @@ function rebuildChatWidgetInbox() {
   let convos = CW_CONVERSATIONS.filter(c => cwFilterTab === 'all' || c.resolution === cwFilterTab);
   if (q.trim()) convos = convos.filter(c => (c.lead_name || '').toLowerCase().includes(q) || (c.lead_email || '').toLowerCase().includes(q));
   if (convos.length === 0) {
-    list.innerHTML = emptyStateHTML({ icon: cwIcon('chat', 32), title: 'No conversations yet', sub: 'Leads will show up here the moment someone chats with your embedded widget.', compact: true });
+    list.innerHTML = emptyStateHTML({ icon: cwIcon('chat', 32), title: t('es_no_conversations'), sub: t('es_no_conversations_sub'), compact: true });
     return;
   }
   list.innerHTML = convos.map(c => `
@@ -17109,6 +17162,43 @@ function addCwFlowStep() {
   toggleCwFlowStep(steps.length - 1);
 }
 
+// Lets someone paste any raw text -- a script, meeting notes, bullet
+// points, even something messy -- and have Nirvana read it, improve the
+// wording, and turn it into a clean, ordered set of conversation steps,
+// rather than manually retyping everything into the step editor by hand.
+async function organizeCwFlowWithNirvana() {
+  const input = document.getElementById('cwSmartPasteInput');
+  const text = input.value.trim();
+  if (!text) { showToast('Paste some text first.', 'warning'); return; }
+  const existingSteps = getCwWidgetSteps();
+  if (existingSteps.length > 0) {
+    const proceed = await showConfirmDialog('This will replace your current conversation steps with Nirvana\'s reorganized version. Continue?', { title: 'Replace Conversation Flow?' });
+    if (!proceed) return;
+  }
+  const btn = document.getElementById('cwSmartPasteBtn');
+  const originalHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = `${hubIcon('sparkle',13)} Nirvana is organizing…`;
+  const systemPrompt = `You are Nirvana, helping organize a chat widget's conversation flow. The person pasted raw text -- a script, notes, bullet points, possibly messy or unstructured. Read it, improve the wording where it helps clarity, and break it into a clean ordered sequence of conversation steps a chat AI agent should follow. Respond with ONLY a JSON array, no markdown fences, no other text. Each item: {"title": "short step name", "description": "1-2 sentence instruction, in your own improved wording, for what the agent should do in this step"}. Use as many steps as the content naturally calls for (typically 3-6).`;
+  try {
+    const raw = await quickAiCompletion(systemPrompt, text);
+    const cleaned = raw.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(cleaned);
+    if (!Array.isArray(parsed) || parsed.length === 0) throw new Error('Nirvana didn\'t return any steps — try rephrasing or adding more detail.');
+    const formatted = parsed.map((s, i) => ({ id: 'step_' + Date.now() + '_' + i, title: s.title || `Step ${i + 1}`, description: s.description || '' }));
+    const widget = CHAT_WIDGETS.find(w => w.id === cwActiveWidgetId);
+    if (widget) widget.conversation_steps = formatted;
+    renderCwFlowSteps(formatted);
+    input.value = '';
+    showToast(`Nirvana organized this into ${formatted.length} steps. Review below, then Save &amp; Publish.`, 'success');
+  } catch(e) {
+    showToast('Could not organize that text: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalHtml;
+  }
+}
+
 // ─── Data to Collect (pill style, matches Agent Builder reference) ──────
 function renderCwDataPills(fields) {
   const wrap = document.getElementById('cwDataPillsList');
@@ -17478,7 +17568,7 @@ function rebuildKnowledgePage() {
   const q = (document.getElementById('kbSearchBox') || {}).value || '';
   const entries = q.trim() ? searchKnowledgeBase(q, 50) : KNOWLEDGE_BASE;
   if (entries.length === 0) {
-    list.innerHTML = emptyStateHTML({ icon: hubIcon('book', 28), title: KNOWLEDGE_BASE.length ? 'No matches' : 'No knowledge yet', sub: KNOWLEDGE_BASE.length ? 'Try a different search term.' : 'Add an SOP, doc, or website page below, or ask Nirvana to help.', compact: true });
+    list.innerHTML = emptyStateHTML({ icon: hubIcon('book', 28), title: KNOWLEDGE_BASE.length ? t('es_no_matches') : t('es_no_knowledge'), sub: KNOWLEDGE_BASE.length ? t('es_try_different_search') : t('es_add_sop_help'), compact: true });
     return;
   }
   list.innerHTML = entries.map(k => {
