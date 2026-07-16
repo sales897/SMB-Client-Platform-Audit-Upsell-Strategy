@@ -2160,7 +2160,7 @@ tr.hidden-row { display: none; }
   border-radius: var(--radius-sm); padding: 8px 10px; box-shadow: 0 0 0 1px rgba(0,0,0,.15), 0 2px 10px rgba(0,0,0,.25);
   cursor: grab; user-select: none;
 }
-.wfb-node.dragging { cursor: grabbing; opacity: .85; z-index: 5; }
+.wfb-node.dragging { cursor: grabbing; opacity: .85; z-index: 5; will-change: transform; }
 .wfb-node-port {
   position: absolute; right: -7px; top: 50%; transform: translateY(-50%); width: 12px; height: 12px; border-radius: 50%;
   background: var(--node-color, var(--orange)); border: 2px solid var(--bg2); cursor: crosshair; box-shadow: 0 0 6px var(--node-color, var(--orange));
@@ -2175,11 +2175,20 @@ tr.hidden-row { display: none; }
 .wfb-node-menu-item.danger { color: var(--red); }
 .wfb-node-menu-item.danger:hover { background: rgba(239,68,68,.12); }
 
-/* Inline expand-in-place node editing (Option B, 2026-07-15) -- replaces
-   the old modal entirely. Clicking a node expands it right where it sits;
-   only one node is ever expanded at a time (enforced by wfbExpandedNodeId
-   being a single value, not a set). */
-.wfb-node-expanded { width: 260px !important; z-index: 10; cursor: default; }
+/* Node editing moved to the sidebar (2026-07-16) -- canvas nodes are now
+   purely visual/positional (compact, draggable, connectable) with no
+   editing surface of their own; clicking one selects it (highlighted
+   border below) and populates the sidebar panel instead. This matches how
+   real workflow builders separate "the graph" from "the properties
+   panel", and removes the whole class of bugs that came from overlaying
+   a full edit form -- inputs, buttons, focus states -- directly inside a
+   draggable/pannable canvas element. */
+.wfb-node.selected { border-color: var(--node-color, var(--orange)); box-shadow: 0 0 0 1px var(--node-color, var(--orange)), 0 0 14px rgba(226,84,31,.35); }
+.wfb-editor-hd { display: flex; align-items: center; gap: 8px; padding-bottom: 10px; margin-bottom: 12px; border-bottom: 2px solid var(--border); }
+.wfb-editor-hd .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.wfb-editor-type-label { flex: 1; font-size: var(--font-xs); font-weight: 800; color: var(--text); text-transform: uppercase; letter-spacing: .03em; }
+.wfb-node-close { background: var(--bg3); border: 1px solid var(--border); border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; color: var(--text3); cursor: pointer; flex-shrink: 0; }
+.wfb-node-close:hover { color: var(--text); background: var(--bg4); }
 .wfb-field-label { display: block; font-size: 9px; color: var(--text3); margin: 8px 0 3px; }
 .wfb-field-input {
   width: 100%; box-sizing: border-box; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-xs);
@@ -2193,7 +2202,7 @@ select.wfb-field-input { padding-right: 26px; }
   background: var(--bg3); color: var(--text2); cursor: pointer;
 }
 .wfb-mini-btn.primary { background: linear-gradient(90deg, var(--orange), var(--orange2)); color: #fff; border: none; margin-left: auto; }
-.wfb-mini-btn.danger { color: var(--red); margin-right: auto; }
+.wfb-mini-btn.danger { color: var(--red); margin-right: auto; display: flex; align-items: center; gap: 5px; }
 .wfb-merge-dropdown {
   position: fixed; z-index: 300; background: var(--bg3); border: 1px solid var(--orange); border-radius: var(--radius-sm);
   box-shadow: 0 0 14px rgba(226,84,31,.3); max-height: 160px; overflow-y: auto;
@@ -3282,7 +3291,8 @@ select.wfb-field-input { padding-right: 26px; }
 
     <div class="wfb-body">
       <div class="wfb-sidebar">
-        <input type="text" class="field-input" style="height:34px;margin-bottom:var(--space-3)" placeholder="Search nodes... ⌘K">
+        <div id="wfbSidebarPalette">
+        <input type="text" class="field-input" style="height:34px;margin-bottom:var(--space-3)" placeholder="Search nodes... ⌘K" id="wfbNodeSearch" oninput="filterWfbPalette(this.value)">
         <div class="wfb-node-group">
           <div class="wfb-node-group-hd" data-i18n="wfb_group_triggers">TRIGGERS</div>
           <div class="wfb-node-item" onclick="addWorkflowNodeFromPalette('trigger','form_submitted', t('wfb_pal_form_submitted'))"><span class="wfb-node-dot" style="background:var(--green);color:var(--green)"></span><span data-i18n="wfb_pal_form_submitted">Form Submitted</span></div>
@@ -3323,6 +3333,8 @@ select.wfb-field-input { padding-right: 26px; }
           <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:4px" onclick="openCreateCustomNodeTypeModal()">＋ Custom Node Type</button>
         </div>
         <div class="wfb-sidebar-tip"><span class="icon" data-icon="lightbulb" data-icon-size="14"></span> Tip: Click any node in the canvas to edit or delete it.<br>Drag from a node's dot to connect it to another.</div>
+        </div>
+        <div id="wfbSidebarEditor" style="display:none"></div>
       </div>
 
       <div class="wfb-canvas-wrap">
@@ -14291,23 +14303,10 @@ function renderWorkflowCanvas() {
     const customType = WORKFLOW_CUSTOM_NODE_TYPES.find(ct => ct.subtype_key === n.subtype);
     const icon = customType ? customType.icon : (WORKFLOW_NODE_ICONS[n.node_type] || '📋');
     const typeLabel = WORKFLOW_NODE_TYPE_LABELS[n.node_type] || n.node_type;
-    if (n.id === wfbExpandedNodeId) {
-      const schema = getNodeFieldSchema(n);
-      return `<div class="wfb-node wfb-node-expanded" style="left:${n.pos_x}px;top:${n.pos_y}px;--node-color:${color}" data-node-id="${n.id}">
-        <div class="wfb-node-hd"><span class="dot"></span>${icon} ${escAttr(typeLabel)}<span class="wfb-node-close" data-action="close-node" title="Close"><span class="icon" data-icon="close" data-icon-size="12"></span></span></div>
-        <label class="wfb-field-label">Label</label>
-        <input type="text" class="wfb-field-input" id="wfb-field-${n.id}-label" value="${escAttr(n.label)}">
-        ${schema.map(f => renderWfbField(n, f)).join('')}
-        <div class="wfb-expanded-btns">
-          <button class="wfb-mini-btn danger" data-action="delete-node"><span class="icon" data-icon="trash" data-icon-size="13"></span></button>
-          <button class="wfb-mini-btn" data-action="close-node">Cancel</button>
-          <button class="wfb-mini-btn primary" data-action="save-node">Save</button>
-        </div>
-      </div>`;
-    }
-    return `<div class="wfb-node" style="left:${n.pos_x}px;top:${n.pos_y}px;--node-color:${color}" data-node-id="${n.id}">
+    const selected = n.id === wfbSelectedNodeId ? ' selected' : '';
+    return `<div class="wfb-node${selected}" style="left:${n.pos_x}px;top:${n.pos_y}px;--node-color:${color}" data-node-id="${n.id}">
       <div class="wfb-node-hd"><span class="dot"></span>${icon} ${escAttr(typeLabel)}<span class="menu">⋮</span></div>
-      <div class="wfb-node-label" contenteditable="true" spellcheck="false" onmousedown="event.stopPropagation()" onclick="event.stopPropagation()" onkeydown="handleWfbInlineLabelKey(event, '${n.id}')" onblur="saveWfbInlineLabel(this, '${n.id}')">${escAttr(n.label)}</div>
+      <div class="wfb-node-label">${escAttr(n.label)}</div>
       ${n.sublabel ? `<div class="wfb-node-sublabel">${escAttr(n.sublabel)}</div>` : ''}
       ${n.node_type !== 'end' ? '<div class="wfb-node-port" title="Drag to another node to connect"></div>' : ''}
     </div>`;
@@ -14393,27 +14392,32 @@ let wfbPanState = null;
 let wfbConnectState = null;
 let wfbBranchModalResolve = null;
 
-let wfbInlineLabelOriginal = null;
-function handleWfbInlineLabelKey(e, nodeId) {
-  if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); }
-  else if (e.key === 'Escape') {
-    e.preventDefault();
-    const node = workflowNodesCache.find(n => n.id === nodeId);
-    if (node) e.target.textContent = node.label;
-    e.target.blur();
-  }
-}
-async function saveWfbInlineLabel(el, nodeId) {
-  const node = workflowNodesCache.find(n => n.id === nodeId);
-  if (!node) return;
-  const newLabel = el.textContent.trim();
-  if (!newLabel || newLabel === node.label) { el.textContent = node.label; return; }
-  node.label = newLabel;
-  try { await sbPatch('workflow_nodes', `id=eq.${nodeId}`, { label: newLabel }); }
-  catch(e) { showToast('Could not save the rename: ' + e.message, 'error'); }
+function filterWfbPalette(query) {
+  const q = query.trim().toLowerCase();
+  document.querySelectorAll('#wfbSidebarPalette .wfb-node-group').forEach(group => {
+    let anyVisible = false;
+    group.querySelectorAll('.wfb-node-item').forEach(item => {
+      const match = !q || item.textContent.toLowerCase().includes(q);
+      item.style.display = match ? '' : 'none';
+      if (match) anyVisible = true;
+    });
+    group.style.display = anyVisible ? '' : 'none';
+  });
 }
 
 function initWorkflowCanvasInteractions() {
+  const sidebarEditor = document.getElementById('wfbSidebarEditor');
+  if (sidebarEditor && !sidebarEditor.dataset.wfbInit) {
+    sidebarEditor.dataset.wfbInit = '1';
+    sidebarEditor.addEventListener('click', (e) => {
+      const actionEl = e.target.closest('[data-action]');
+      if (!actionEl) return;
+      const action = actionEl.dataset.action;
+      if (action === 'close-node') closeWfbExpandedNode();
+      else if (action === 'delete-node') deleteWorkflowNode(wfbSelectedNodeId);
+      else if (action === 'save-node') saveExpandedWfbNode(wfbSelectedNodeId);
+    });
+  }
   const nodesLayer = document.getElementById('wfbNodesLayer');
   if (!nodesLayer || nodesLayer.dataset.wfbInit) return;
   nodesLayer.dataset.wfbInit = '1';
@@ -14429,7 +14433,6 @@ function initWorkflowCanvasInteractions() {
       return;
     }
     if (nodeEl && !e.target.closest('.menu')) {
-      if (nodeEl.classList.contains('wfb-node-expanded')) return;
       e.stopPropagation();
       const node = workflowNodesCache.find(n => n.id === nodeEl.dataset.nodeId);
       if (!node) return;
@@ -14441,23 +14444,10 @@ function initWorkflowCanvasInteractions() {
   });
 
   nodesLayer.addEventListener('click', (e) => {
-    // Expanded-node controls (close/cancel/delete/save) are handled
-    // exclusively here via data-action, with NO inline onclick on the
-    // buttons themselves (2026-07-15 rewrite) -- having both an inline
-    // handler AND this delegated one touching the same element was the
-    // actual risk the earlier "takes several clicks" bug came from, even
-    // after stopImmediatePropagation() was added. One handler, one place,
-    // no race.
-    const actionEl = e.target.closest('[data-action]');
-    if (actionEl) {
-      e.stopPropagation();
-      const nodeId = actionEl.closest('.wfb-node').dataset.nodeId;
-      const action = actionEl.dataset.action;
-      if (action === 'close-node') closeWfbExpandedNode();
-      else if (action === 'delete-node') deleteWorkflowNode(nodeId);
-      else if (action === 'save-node') saveExpandedWfbNode(nodeId);
-      return;
-    }
+    // Node editing controls (close/delete/save) now live in the sidebar
+    // panel, not on the canvas node itself -- see the sidebarEditor
+    // listener above. This listener only needs to handle the node's own
+    // "⋮" menu trigger.
     const menuBtn = e.target.closest('.menu');
     if (!menuBtn) return;
     e.stopPropagation();
@@ -14513,29 +14503,45 @@ function onWfbPanEnd() {
 
 function onWfbNodeDragMove(e) {
   if (!wfbDragState) return;
+  wfbDragState.pendingEvent = e;
+  if (wfbDragState.rafScheduled) return;
+  wfbDragState.rafScheduled = true;
+  requestAnimationFrame(applyWfbDragFrame);
+}
+
+// The actual per-frame work, split out of the raw mousemove handler and
+// run at most once per paint via requestAnimationFrame -- a mouse can fire
+// far more move events than the screen can ever draw, so doing this work
+// synchronously on every single one (as before) was wasted effort at best
+// and visibly janky at worst. Positioning via `transform` during the drag
+// (rather than `left`/`top`) is the other half of the fix: transform is
+// GPU-composited and never triggers layout, where left/top forces the
+// browser to recompute layout on every change -- that's what made the
+// drag feel like it was lagging behind the cursor instead of tracking it
+// 1:1. The committed pos_x/pos_y (and the left/top that reflects them)
+// only get updated once, at drag-end.
+function applyWfbDragFrame() {
+  if (!wfbDragState) return;
+  wfbDragState.rafScheduled = false;
+  const e = wfbDragState.pendingEvent;
+  if (!e) return;
   const dx = (e.clientX - wfbDragState.startMouseX) / workflowZoomLevel;
   const dy = (e.clientY - wfbDragState.startMouseY) / workflowZoomLevel;
   const node = workflowNodesCache.find(n => n.id === wfbDragState.nodeId);
   if (!node) return;
-  node.pos_x = Math.max(0, Math.round(wfbDragState.startPosX + dx));
-  node.pos_y = Math.max(0, Math.round(wfbDragState.startPosY + dy));
-  updateWfbNodePositionLive(node.id);
+  const liveX = Math.max(0, wfbDragState.startPosX + dx);
+  const liveY = Math.max(0, wfbDragState.startPosY + dy);
+  wfbDragState.liveX = liveX;
+  wfbDragState.liveY = liveY;
+  const nodeEl = document.querySelector(`.wfb-node[data-node-id="${node.id}"]`);
+  if (nodeEl) nodeEl.style.transform = `translate(${Math.round(liveX - node.pos_x)}px, ${Math.round(liveY - node.pos_y)}px)`;
+  updateWfbEdgesForLiveNodePosition(node.id, liveX, liveY);
 }
 
-// Rebuilding the entire node layer + edges SVG (including restarting every
-// traveling-light animation) on every single mousemove was the source of
-// the drag jank -- the browser can't keep up with a full DOM/SVG rebuild
-// at mouse-move frequency. This instead directly repositions just the
-// dragged node's own element and recalculates only the edges actually
-// touching it, leaving everything else in the DOM completely untouched
-// during the drag. A full renderWorkflowCanvas() still happens once at
-// drag-end to fully resync (canvas bounds, traveling-light timing, etc.)
-// -- cheap since it only runs once per drag, not once per pixel.
-function updateWfbNodePositionLive(nodeId) {
-  const node = workflowNodesCache.find(n => n.id === nodeId);
-  if (!node) return;
-  const nodeEl = document.querySelector(`.wfb-node[data-node-id="${nodeId}"]`);
-  if (nodeEl) { nodeEl.style.left = node.pos_x + 'px'; nodeEl.style.top = node.pos_y + 'px'; }
+// Recalculates just the edges touching this node using its LIVE (not yet
+// committed) drag position, so connections visually track the node in
+# real time without waiting for pos_x/pos_y to actually update.
+function updateWfbEdgesForLiveNodePosition(nodeId, liveX, liveY) {
   const svg = document.getElementById('wfbEdgesSvg');
   if (!svg) return;
   const nodeById = Object.fromEntries(workflowNodesCache.map(n => [n.id, n]));
@@ -14543,22 +14549,20 @@ function updateWfbNodePositionLive(nodeId) {
     if (e.source_node_id !== nodeId && e.target_node_id !== nodeId) return;
     const s = nodeById[e.source_node_id], t = nodeById[e.target_node_id];
     if (!s || !t) return;
-    const x1 = s.pos_x + WFB_NODE_W, y1 = s.pos_y + WFB_NODE_H / 2;
-    const x2 = t.pos_x, y2 = t.pos_y + WFB_NODE_H / 2;
+    const sx = e.source_node_id === nodeId ? liveX : s.pos_x;
+    const sy = e.source_node_id === nodeId ? liveY : s.pos_y;
+    const tx = e.target_node_id === nodeId ? liveX : t.pos_x;
+    const ty = e.target_node_id === nodeId ? liveY : t.pos_y;
+    const x1 = sx + WFB_NODE_W, y1 = sy + WFB_NODE_H / 2;
+    const x2 = tx, y2 = ty + WFB_NODE_H / 2;
     const midX = (x1 + x2) / 2;
     const pathD = `M ${x1} ${y1} C ${midX} ${y1}, ${midX} ${y2}, ${x2} ${y2}`;
     const group = svg.querySelector(`g[data-edge-id="${e.id}"]`);
     if (group) {
-      const paths = group.querySelectorAll('path');
-      paths.forEach(p => p.setAttribute('d', pathD));
+      group.querySelectorAll('path').forEach(p => p.setAttribute('d', pathD));
       const circles = group.querySelectorAll('circle[cx]');
       if (circles[0]) { circles[0].setAttribute('cx', x1); circles[0].setAttribute('cy', y1); }
       if (circles[1]) { circles[1].setAttribute('cx', x2); circles[1].setAttribute('cy', y2); }
-      // The traveling-light circle's animateMotion path is deliberately
-      // left as-is here -- SMIL doesn't resync smoothly mid-animation when
-      // you rewrite its path attribute, so it'll look slightly stale
-      // until the drag-end render fixes it, which is a fine trade for a
-      // smooth drag.
     }
     const label = document.querySelector(`.wfb-branch-label[data-edge-id="${e.id}"]`);
     if (label && e.branch_label) {
@@ -14573,15 +14577,18 @@ function updateWfbNodePositionLive(nodeId) {
 async function onWfbNodeDragEnd(e) {
   document.removeEventListener('mousemove', onWfbNodeDragMove);
   if (!wfbDragState) return;
-  const { nodeId, startMouseX, startMouseY } = wfbDragState;
+  const { nodeId, startMouseX, startMouseY, liveX, liveY } = wfbDragState;
   const totalMove = Math.hypot(e.clientX - startMouseX, e.clientY - startMouseY);
   const node = workflowNodesCache.find(n => n.id === nodeId);
   wfbDragState = null;
   if (!node) return;
+  const nodeEl = document.querySelector(`.wfb-node[data-node-id="${nodeId}"]`);
+  if (nodeEl) nodeEl.style.transform = ''; // clear the drag-only visual offset now that pos_x/pos_y are about to become the source of truth again
   // A click with no real movement opens the editor instead of "saving" a
   // no-op reposition -- this is what makes a plain click on a node open
   // modify/delete, rather than requiring the small ⋮ menu or a double-click.
   if (totalMove < 4) { openWorkflowNodeEditor(nodeId); return; }
+  if (liveX != null) { node.pos_x = Math.max(0, Math.round(liveX)); node.pos_y = Math.max(0, Math.round(liveY)); }
   renderWorkflowCanvas(); // one full resync now that the drag is done (canvas bounds, traveling-light timing, etc.)
   try { await sbPatch('workflow_nodes', `id=eq.${node.id}`, { pos_x: node.pos_x, pos_y: node.pos_y }); }
   catch(e) { console.warn('Could not save node position:', e.message); }
@@ -14684,7 +14691,7 @@ async function deleteWorkflowNode(nodeId) {
   catch(e) { showToast('Could not delete: ' + e.message, 'error'); return; }
   workflowNodesCache = workflowNodesCache.filter(n => n.id !== nodeId);
   workflowEdgesCache = workflowEdgesCache.filter(e => e.source_node_id !== nodeId && e.target_node_id !== nodeId);
-  if (wfbExpandedNodeId === nodeId) wfbExpandedNodeId = null;
+  if (wfbSelectedNodeId === nodeId) wfbSelectedNodeId = null;
   renderWorkflowCanvas();
   showToast('Node deleted.', 'success');
 }
@@ -14706,10 +14713,10 @@ async function addWorkflowNodeFromPalette(nodeType, subtype, defaultLabel) {
 
 // Tailored per-node-type field schemas + merge-field tokens (2026-07-15).
 // Option B: clicking a node expands it in place on the canvas -- no modal.
-// Only one node is ever expanded at a time since wfbExpandedNodeId is a
+// Only one node is ever expanded at a time since wfbSelectedNodeId is a
 // single value; opening a second node naturally collapses the first
-// because the render check (n.id === wfbExpandedNodeId) can only match one.
-let wfbExpandedNodeId = null;
+// because the render check (n.id === wfbSelectedNodeId) can only match one.
+let wfbSelectedNodeId = null;
 
 const WORKFLOW_MERGE_FIELDS = [
   { token: 'first_name', desc: "Contact's first name" },
@@ -14866,13 +14873,50 @@ function renderWfbField(n, f) {
 
 function openWorkflowNodeEditor(nodeId) {
   closeAllWfbNodeMenus();
-  wfbExpandedNodeId = nodeId;
+  wfbSelectedNodeId = nodeId;
+  renderWfbSidebarEditor(nodeId);
+  document.getElementById('wfbSidebarPalette').style.display = 'none';
+  document.getElementById('wfbSidebarEditor').style.display = '';
   renderWorkflowCanvas();
 }
 function closeWfbExpandedNode() {
-  wfbExpandedNodeId = null;
+  wfbSelectedNodeId = null;
   removeWfbMergeDropdown();
+  document.getElementById('wfbSidebarPalette').style.display = '';
+  document.getElementById('wfbSidebarEditor').style.display = 'none';
   renderWorkflowCanvas();
+}
+// Builds the node's editor form INTO THE SIDEBAR rather than expanding
+// the node itself on the canvas -- canvas nodes stay compact and purely
+// visual/positional now (matching how real workflow builders like n8n or
+// Zapier separate "the graph" from "the properties panel"), which also
+// removes a whole class of interaction bugs that came from overlaying a
+// full edit form, with its own inputs and buttons, directly inside a
+// draggable/pannable canvas element.
+function renderWfbSidebarEditor(nodeId) {
+  const wrap = document.getElementById('wfbSidebarEditor');
+  const node = workflowNodesCache.find(n => n.id === nodeId);
+  if (!wrap || !node) return;
+  const color = WORKFLOW_NODE_COLORS[node.node_type] || 'var(--text3)';
+  const customType = WORKFLOW_CUSTOM_NODE_TYPES.find(ct => ct.subtype_key === node.subtype);
+  const icon = customType ? customType.icon : (WORKFLOW_NODE_ICONS[node.node_type] || '📋');
+  const typeLabel = WORKFLOW_NODE_TYPE_LABELS[node.node_type] || node.node_type;
+  const schema = getNodeFieldSchema(node);
+  wrap.style.setProperty('--node-color', color);
+  wrap.innerHTML = `
+    <div class="wfb-editor-hd" style="border-color:${color}">
+      <span class="dot" style="background:${color};box-shadow:0 0 6px ${color}"></span>
+      <span class="wfb-editor-type-label">${icon} ${escAttr(typeLabel)}</span>
+      <button class="wfb-node-close" data-action="close-node" title="Back to node list"><span class="icon" data-icon="close" data-icon-size="12"></span></button>
+    </div>
+    <label class="wfb-field-label">Label</label>
+    <input type="text" class="wfb-field-input" id="wfb-field-${node.id}-label" value="${escAttr(node.label)}">
+    ${schema.map(f => renderWfbField(node, f)).join('')}
+    <div class="wfb-expanded-btns">
+      <button class="wfb-mini-btn danger" data-action="delete-node"><span class="icon" data-icon="trash" data-icon-size="13"></span> Delete</button>
+      <button class="wfb-mini-btn" data-action="close-node">Cancel</button>
+      <button class="wfb-mini-btn primary" data-action="save-node">Save</button>
+    </div>`;
 }
 async function saveExpandedWfbNode(nodeId) {
   const node = workflowNodesCache.find(n => n.id === nodeId);
@@ -14893,8 +14937,10 @@ async function saveExpandedWfbNode(nodeId) {
   try {
     await sbPatch('workflow_nodes', `id=eq.${nodeId}`, { label: node.label, sublabel: node.sublabel || null, config: node.config });
   } catch(e) { showToast('Could not save: ' + e.message, 'error'); return; }
-  wfbExpandedNodeId = null;
+  wfbSelectedNodeId = null;
   removeWfbMergeDropdown();
+  document.getElementById('wfbSidebarPalette').style.display = '';
+  document.getElementById('wfbSidebarEditor').style.display = 'none';
   renderWorkflowCanvas();
   showToast('Node updated.', 'success');
 }
