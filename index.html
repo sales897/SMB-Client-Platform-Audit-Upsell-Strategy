@@ -1969,8 +1969,37 @@ tr.hidden-row { display: none; }
 .cw-settings-card-hd .cw-icon { color: var(--orange); }
 .cw-settings-card-title { font-weight: 700; color: var(--text); font-size: var(--font-sm); flex: 1; }
 .cw-settings-card-hd .cw-icon:last-child { color: var(--text3); cursor: grab; margin-left: auto; }
-.cw-widget-preview { position: relative; height: 90px; background: var(--bg); border-radius: var(--radius-sm); display: flex; align-items: flex-end; justify-content: flex-end; padding: var(--space-3); margin-bottom: var(--space-2); }
-.cw-preview-orb { width: 44px; height: 44px; border-radius: 50%; }
+.cw-avatar-upload-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.cw-avatar-upload-preview { width: 44px; height: 44px; border-radius: 50%; background: var(--bg4); background-size: cover; background-position: center; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 20px; border: 1px solid var(--border); }
+.cw-site-mockup-chrome { display: flex; align-items: center; gap: 6px; background: #e4e4e7; padding: 8px 12px; }
+.cw-site-mockup-chrome span { width: 9px; height: 9px; border-radius: 50%; background: #c4c4cc; }
+.cw-site-mockup-url { margin-left: 10px; background: #fff; border-radius: var(--radius-pill); padding: 3px 12px; font-size: 10px; color: #888; flex: 1; }
+.cw-site-mockup-body { position: relative; background: #fafafa; height: 340px; overflow: hidden; }
+.cw-site-mockup-nav { display: flex; align-items: center; gap: 20px; padding: 14px 20px; border-bottom: 1px solid #ececec; }
+.cw-site-mockup-logo { width: 28px; height: 28px; border-radius: 6px; background: linear-gradient(135deg, #ccc, #ddd); }
+.cw-site-mockup-navlinks { display: flex; gap: 16px; margin-left: auto; }
+.cw-site-mockup-navlinks span { width: 44px; height: 8px; border-radius: 4px; background: #e2e2e2; display: block; }
+.cw-site-mockup-hero { padding: 40px 30px; }
+.cw-site-mockup-hero-title { width: 60%; height: 20px; border-radius: 5px; background: #dcdcdc; margin-bottom: 12px; }
+.cw-site-mockup-hero-sub { width: 40%; height: 10px; border-radius: 4px; background: #e6e6e6; margin-bottom: 18px; }
+.cw-site-mockup-hero-btn { width: 110px; height: 30px; border-radius: var(--radius-pill); background: linear-gradient(135deg, #d8d8d8, #e2e2e2); }
+.cw-widget-preview { position: absolute; bottom: 18px; right: 18px; display: flex; flex-direction: column; align-items: flex-end; gap: 12px; }
+.cw-preview-orb {
+  width: 52px; height: 52px; border-radius: 50%; cursor: pointer; flex-shrink: 0;
+  background: var(--cw-avatar-img, radial-gradient(circle at 35% 30%, #fff, var(--cw-color) 45%, var(--cw-color)));
+  background-size: cover; background-position: center;
+  box-shadow: 0 0 calc(10px + var(--cw-glow, 14) * 1px) var(--cw-color), 0 0 calc(20px + var(--cw-glow, 14) * 1.6px) color-mix(in srgb, var(--cw-color) 55%, transparent);
+  transition: transform .15s ease;
+}
+.cw-preview-orb:hover { transform: scale(1.08); }
+.cw-preview-panel {
+  width: 260px; max-height: 0; opacity: 0; overflow: hidden; background: #171310; border-radius: 14px;
+  box-shadow: 0 10px 34px rgba(0,0,0,.35); transition: max-height .25s ease, opacity .2s ease;
+}
+.cw-preview-panel.open { max-height: 320px; opacity: 1; }
+.cw-preview-panel-hd { padding: 12px 14px; background: linear-gradient(135deg, var(--cw-color), var(--cw-color)); color: #fff; font-size: 12px; font-weight: 700; }
+.cw-preview-panel-thread { padding: 12px; display: flex; flex-direction: column; gap: 8px; font-size: 11px; }
+.cw-preview-msg { max-width: 85%; padding: 6px 10px; border-radius: 10px; line-height: 1.4; align-self: flex-start; background: #241c15; color: #ece5dd; }
 .cw-color-swatches { display: flex; gap: 8px; margin-bottom: var(--space-3); }
 .cw-color-swatch { width: 26px; height: 26px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform var(--transition-fast); }
 .cw-color-swatch:hover { transform: scale(1.15); }
@@ -2047,7 +2076,7 @@ tr.hidden-row { display: none; }
 .cw-funnel-stage-row { display: flex; align-items: center; gap: 10px; font-size: var(--font-xs); }
 .cw-funnel-stage-label { display: flex; align-items: center; gap: 6px; width: 130px; flex-shrink: 0; color: var(--text2); }
 .cw-funnel-bar-track { flex: 1; height: 8px; background: var(--bg4); border-radius: 4px; overflow: hidden; }
-.cw-funnel-bar-fill { height: 100%; background: linear-gradient(90deg, var(--orange), var(--orange2)); box-shadow: 0 0 8px rgba(226,84,31,.5); }
+.cw-funnel-bar-fill { height: 100%; background: linear-gradient(90deg, #3ee0ff, #7c6cff, var(--orange)); box-shadow: 0 0 10px rgba(124,108,255,.5); }
 .cw-funnel-stage-val { width: 80px; text-align: right; flex-shrink: 0; color: var(--text); font-weight: 700; }
 .cw-appt-stat-big { font-size: 30px; font-weight: 800; color: var(--text); line-height: 1; }
 .cw-appt-stat-lbl { font-size: var(--font-2xs); color: var(--text3); margin: 2px 0 var(--space-3); }
@@ -3432,7 +3461,7 @@ tr.hidden-row { display: none; }
             <div class="cw-builder-card">
               <div class="cw-builder-card-hd"><span class="cw-builder-card-title"><span id="cwFlowIcon"></span> Conversation Flow</span></div>
               <label for="cwOpeningLine" class="field-label">Opening Line <span style="color:var(--text3);font-weight:400">(optional)</span></label>
-              <textarea id="cwOpeningLine" class="field-input" rows="2" style="resize:vertical;font-family:inherit;margin-bottom:var(--space-2)"></textarea>
+              <textarea id="cwOpeningLine" class="field-input" rows="2" style="resize:vertical;font-family:inherit;margin-bottom:var(--space-2)" oninput="liveUpdateCwPreview()"></textarea>
               <div id="cwFlowStepsList"></div>
               <button class="cw-add-step-btn" onclick="addCwFlowStep()"><span id="cwAddStepIcon"></span> Add Step</button>
             </div>
@@ -3465,9 +3494,20 @@ tr.hidden-row { display: none; }
           </div>
         </div>
         <div class="cw-settings-card" style="cursor:default;margin-top:var(--space-3)">
-          <div class="cw-settings-card-hd"><span id="cwPreviewIcon"></span><span class="cw-settings-card-title">Preview</span></div>
-          <div class="cw-widget-preview" id="cwWidgetPreview">
-            <div class="cw-preview-orb" id="cwPreviewOrb" style="background:radial-gradient(circle at 35% 30%,#fff,var(--cw-color) 45%,var(--cw-color));box-shadow:0 0 24px var(--cw-color)"></div>
+          <div class="cw-settings-card-hd"><span id="cwPreviewIcon"></span><span class="cw-settings-card-title">Website Preview</span><span style="font-size:var(--font-2xs);color:var(--text3);margin-left:auto">How it looks live on a client's site</span></div>
+          <div class="cw-site-mockup">
+            <div class="cw-site-mockup-chrome"><span></span><span></span><span></span><div class="cw-site-mockup-url">yourclientsite.com</div></div>
+            <div class="cw-site-mockup-body">
+              <div class="cw-site-mockup-nav"><div class="cw-site-mockup-logo"></div><div class="cw-site-mockup-navlinks"><span></span><span></span><span></span></div></div>
+              <div class="cw-site-mockup-hero"><div class="cw-site-mockup-hero-title"></div><div class="cw-site-mockup-hero-sub"></div><div class="cw-site-mockup-hero-btn"></div></div>
+              <div class="cw-widget-preview" id="cwWidgetPreview">
+                <div class="cw-preview-panel" id="cwPreviewPanel">
+                  <div class="cw-preview-panel-hd" id="cwPreviewPanelHd"></div>
+                  <div class="cw-preview-panel-thread" id="cwPreviewPanelThread"></div>
+                </div>
+                <div class="cw-preview-orb" id="cwPreviewOrb" onclick="toggleCwPreviewPanel()"></div>
+              </div>
+            </div>
           </div>
         </div>
         <div class="cw-settings-card" style="cursor:default">
@@ -3477,7 +3517,7 @@ tr.hidden-row { display: none; }
           <button class="btn btn-ghost btn-sm" style="margin-top:8px;width:100%" onclick="copyEmbedCode()"><span id="cwCopyIcon"></span> Copy Embed Code</button>
         </div>
         <label for="cwWelcomePrompt" class="field-label" style="margin-top:var(--space-3)">Welcome Message</label>
-        <textarea id="cwWelcomePrompt" class="field-input" rows="2" style="resize:vertical;font-family:inherit"></textarea>
+        <textarea id="cwWelcomePrompt" class="field-input" rows="2" style="resize:vertical;font-family:inherit" oninput="liveUpdateCwPreview()"></textarea>
         <button class="cw-glow-btn cw-save-btn" onclick="saveChatWidgetSettings()"><span id="cwSaveBtnIcon"></span> Save &amp; Publish</button>
       </div>
       <div id="cwDrawerPane-nirvana" style="display:none">
@@ -16353,20 +16393,37 @@ function renderCwLeadFunnel(leadsReceived, engaged, contactsCaptured, appointmen
     { icon: 'calendar', label: 'Appointments', val: appointments },
   ];
   const max = leadsReceived || 1;
-  const svgH = 140, svgW = 90, n = stages.length;
+  const svgH = 160, svgW = 100, n = stages.length;
   const segH = svgH / n;
+  const ringColors = ['#3ee0ff', '#7c6cff', '#e2541f', '#ffd23e'];
   let svgSegs = '';
+  let svgRings = '';
   for (let i = 0; i < n; i++) {
-    const topW = svgW * (1 - i / n) * 0.9 + svgW * 0.1;
-    const botW = svgW * (1 - (i + 1) / n) * 0.9 + svgW * 0.1;
+    const topW = svgW * (1 - i / n) * 0.92 + svgW * 0.08;
+    const botW = svgW * (1 - (i + 1) / n) * 0.92 + svgW * 0.08;
     const y1 = i * segH, y2 = (i + 1) * segH;
     const x1a = (svgW - topW) / 2, x1b = svgW - x1a;
     const x2a = (svgW - botW) / 2, x2b = svgW - x2a;
-    const opacity = 0.35 + (i / n) * 0.65;
-    svgSegs += `<polygon points="${x1a},${y1} ${x1b},${y1} ${x2b},${y2} ${x2a},${y2}" fill="var(--orange)" opacity="${opacity.toFixed(2)}" />`;
+    svgSegs += `<polygon points="${x1a},${y1} ${x1b},${y1} ${x2b},${y2} ${x2a},${y2}" fill="url(#cwFunnelGrad)" opacity="${(0.22 + (i / n) * 0.35).toFixed(2)}" stroke="${ringColors[i]}" stroke-width="1" />`;
+    // Glowing containment ring at each stage boundary, pulsing at a
+    // slightly different pace per ring so the whole funnel feels alive
+    // rather than a static shape.
+    svgRings += `<ellipse cx="${svgW/2}" cy="${y1}" rx="${topW/2}" ry="3" fill="none" stroke="${ringColors[i]}" stroke-width="1.4" opacity="0.9">
+      <animate attributeName="opacity" values="0.4;1;0.4" dur="${(2.2 + i * 0.4).toFixed(1)}s" repeatCount="indefinite" />
+    </ellipse>`;
   }
+  svgRings += `<ellipse cx="${svgW/2}" cy="${svgH}" rx="${svgW*0.08/2}" ry="2.5" fill="${ringColors[n-1]}" opacity="0.95"><animate attributeName="opacity" values="0.5;1;0.5" dur="1.6s" repeatCount="indefinite" /></ellipse>`;
   wrap.innerHTML = `
-    <div class="cw-funnel-svg-wrap"><svg viewBox="0 0 ${svgW} ${svgH}" width="100%" style="filter:drop-shadow(0 0 8px rgba(226,84,31,.4))">${svgSegs}</svg></div>
+    <div class="cw-funnel-svg-wrap"><svg viewBox="0 0 ${svgW} ${svgH}" width="100%" style="filter:drop-shadow(0 0 10px rgba(62,224,255,.35)) drop-shadow(0 0 16px rgba(226,84,31,.3))">
+      <defs>
+        <linearGradient id="cwFunnelGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#3ee0ff" />
+          <stop offset="45%" stop-color="#7c6cff" />
+          <stop offset="100%" stop-color="#e2541f" />
+        </linearGradient>
+      </defs>
+      ${svgSegs}${svgRings}
+    </svg></div>
     <div class="cw-funnel-stages">
       ${stages.map(s => {
         const pct = max ? Math.round((s.val / max) * 1000) / 10 : 0;
@@ -16762,21 +16819,31 @@ function saveCwSettingsLayout(layout) {
 const CW_SETTINGS_CARD_DEFS = {
   identity: { icon: 'user', title: 'Agent Identity', body: `
     <label for="cwAgentName" class="field-label">Agent Name</label>
-    <input type="text" id="cwAgentName" class="field-input" placeholder="Nirvana">
+    <input type="text" id="cwAgentName" class="field-input" placeholder="Nirvana" oninput="liveUpdateCwPreview()">
     <label class="field-label">Avatar</label>
+    <div class="cw-avatar-upload-row">
+      <div class="cw-avatar-upload-preview" id="cwAvatarUploadPreview"></div>
+      <div style="flex:1">
+        <input type="file" id="cwAvatarFileInput" accept="image/*" style="display:none" onchange="handleCwAvatarUpload(event)">
+        <button type="button" class="btn btn-ghost btn-sm" onclick="document.getElementById('cwAvatarFileInput').click()">${cwIcon('user',12)} Upload Photo</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="cwRemovePhotoBtn" style="display:none" onclick="removeCwAvatarImage()">Remove</button>
+      </div>
+    </div>
     <div class="cw-avatar-picker" id="cwAvatarPicker"></div>` },
   style: { icon: 'palette', title: 'Orb / Dock Style', body: `
     <label class="field-label">Dock Position</label>
     <div class="cw-toggle-pair" id="cwDockPositionToggle">
-      <button type="button" class="cw-toggle-btn" data-val="left" onclick="selectCwToggle('cwDockPositionToggle', 'left')">Left</button>
-      <button type="button" class="cw-toggle-btn active" data-val="right" onclick="selectCwToggle('cwDockPositionToggle', 'right')">Right</button>
+      <button type="button" class="cw-toggle-btn" data-val="left" onclick="selectCwToggle('cwDockPositionToggle', 'left');liveUpdateCwPreview()">Left</button>
+      <button type="button" class="cw-toggle-btn active" data-val="right" onclick="selectCwToggle('cwDockPositionToggle', 'right');liveUpdateCwPreview()">Right</button>
     </div>
     <label class="field-label">Theme Color</label>
     <div class="cw-color-swatches" id="cwColorSwatches"></div>
+    <label class="field-label">Glow Intensity <span id="cwGlowIntensityVal" style="color:var(--text3);font-weight:400"></span></label>
+    <input type="range" id="cwGlowIntensity" min="0" max="30" value="14" style="width:100%" oninput="liveUpdateCwGlow(this.value)">
     <label class="field-label">Dock Size</label>
     <div class="cw-toggle-pair" id="cwDockSizeToggle">
-      <button type="button" class="cw-toggle-btn" data-val="compact" onclick="selectCwToggle('cwDockSizeToggle', 'compact')">Compact</button>
-      <button type="button" class="cw-toggle-btn active" data-val="expanded" onclick="selectCwToggle('cwDockSizeToggle', 'expanded')">Expanded</button>
+      <button type="button" class="cw-toggle-btn" data-val="compact" onclick="selectCwToggle('cwDockSizeToggle', 'compact');liveUpdateCwPreview()">Compact</button>
+      <button type="button" class="cw-toggle-btn active" data-val="expanded" onclick="selectCwToggle('cwDockSizeToggle', 'expanded');liveUpdateCwPreview()">Expanded</button>
     </div>` },
   hours: { icon: 'clock', title: 'Business Hours', body: `
     <label for="cwTimezone" class="field-label">Timezone</label>
@@ -16855,11 +16922,26 @@ function populateCwSettingsFields() {
   document.getElementById('cwMinNotice').value = widget.min_notice_hours ?? 2;
 
   const avatarWrap = document.getElementById('cwAvatarPicker');
-  avatarWrap.innerHTML = CW_AVATARS.map(a => `<div class="cw-avatar-option${a === widget.avatar ? ' active' : ''}" onclick="selectCwAvatar('${a}')">${a}</div>`).join('');
+  avatarWrap.innerHTML = CW_AVATARS.map(a => `<div class="cw-avatar-option${!widget.avatar_image_url && a === widget.avatar ? ' active' : ''}" onclick="selectCwAvatar('${a}')">${a}</div>`).join('');
+
+  const avatarPreviewEl = document.getElementById('cwAvatarUploadPreview');
+  const removePhotoBtn = document.getElementById('cwRemovePhotoBtn');
+  if (widget.avatar_image_url) {
+    avatarPreviewEl.style.backgroundImage = `url(${widget.avatar_image_url})`;
+    avatarPreviewEl.textContent = '';
+    removePhotoBtn.style.display = '';
+  } else {
+    avatarPreviewEl.style.backgroundImage = '';
+    avatarPreviewEl.textContent = widget.avatar || '🤖';
+    removePhotoBtn.style.display = 'none';
+  }
 
   const swatchWrap = document.getElementById('cwColorSwatches');
-  swatchWrap.innerHTML = CHAT_WIDGET_COLORS.map(c => `<div class="cw-color-swatch${c === widget.orb_color ? ' active' : ''}" style="background:${c}" onclick="selectCwColor('${c}')"></div>`).join('');
+  swatchWrap.innerHTML = CHAT_WIDGET_COLORS.map(c => `<div class="cw-color-swatch${c === widget.orb_color ? ' active' : ''}" style="background:${c}" onclick="selectCwColor('${c}');liveUpdateCwPreview()"></div>`).join('');
   document.getElementById('cwWidgetPreview').style.setProperty('--cw-color', widget.orb_color || '#e2541f');
+  const glowSlider = document.getElementById('cwGlowIntensity');
+  glowSlider.value = widget.orb_glow_intensity ?? 14;
+  document.getElementById('cwGlowIntensityVal').textContent = glowSlider.value;
 
   document.querySelectorAll('#cwDockPositionToggle .cw-toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.val === (widget.dock_position || 'right')));
   document.querySelectorAll('#cwDockSizeToggle .cw-toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.val === (widget.dock_size || 'expanded')));
@@ -16887,6 +16969,97 @@ function populateCwSettingsFields() {
     : `<span style="color:var(--text3)">Not connected</span> <button class="cw-glow-btn" style="margin-left:auto;padding:6px 14px;font-size:var(--font-xs)" onclick="connectWidgetCalendar('${widget.id}')">Connect Calendar</button>`;
 
   document.getElementById('cwEmbedCode').value = `<script src="https://niche-client-hub.netlify.app/widget.js" data-widget-id="${widget.id}"><\/script>`;
+  renderCwPreview(widget);
+}
+
+// ─── Live website-mockup preview ────────────────────────────────────────
+// Renders the orb + panel using the widget's REAL current config so this
+// always matches what actually ships -- not a simplified stand-in.
+function renderCwPreview(widget) {
+  const holder = document.getElementById('cwWidgetPreview');
+  const orb = document.getElementById('cwPreviewOrb');
+  if (!holder || !orb) return;
+  const color = widget.orb_color || '#e2541f';
+  holder.style.setProperty('--cw-color', color);
+  holder.style.setProperty('--cw-glow', widget.orb_glow_intensity ?? 14);
+  holder.style.justifyContent = (widget.dock_position === 'left') ? 'flex-start' : 'flex-end';
+  const mockupBody = holder.closest('.cw-site-mockup-body');
+  if (mockupBody) mockupBody.style.direction = 'ltr'; // orb position is handled via holder alignment, not mockup direction
+
+  if (widget.avatar_image_url) {
+    orb.style.setProperty('--cw-avatar-img', `url(${widget.avatar_image_url})`);
+    orb.textContent = '';
+  } else {
+    orb.style.removeProperty('--cw-avatar-img');
+    orb.textContent = widget.avatar || '🤖';
+    orb.style.display = 'flex'; orb.style.alignItems = 'center'; orb.style.justifyContent = 'center'; orb.style.fontSize = '22px';
+  }
+
+  const hd = document.getElementById('cwPreviewPanelHd');
+  if (hd) hd.textContent = widget.agent_name || 'Assistant';
+  const thread = document.getElementById('cwPreviewPanelThread');
+  if (thread) thread.innerHTML = `<div class="cw-preview-msg">${escAttr(widget.welcome_prompt || widget.opening_line || `Hi! I'm ${widget.agent_name || 'your AI assistant'}. How can I help?`)}</div>`;
+}
+function toggleCwPreviewPanel() {
+  const panel = document.getElementById('cwPreviewPanel');
+  if (panel) panel.classList.toggle('open');
+}
+// Called on every relevant input change so the preview reflects edits
+// immediately, before the person ever clicks Save & Publish.
+function liveUpdateCwPreview() {
+  const widget = CHAT_WIDGETS.find(w => w.id === cwActiveWidgetId);
+  if (!widget) return;
+  const nameEl = document.getElementById('cwAgentName');
+  const welcomeEl = document.getElementById('cwWelcomePrompt');
+  const openingEl = document.getElementById('cwOpeningLine');
+  const previewWidget = { ...widget };
+  if (nameEl) previewWidget.agent_name = nameEl.value;
+  if (welcomeEl) previewWidget.welcome_prompt = welcomeEl.value;
+  if (openingEl) previewWidget.opening_line = openingEl.value;
+  const dockPosBtn = document.querySelector('#cwDockPositionToggle .cw-toggle-btn.active');
+  if (dockPosBtn) previewWidget.dock_position = dockPosBtn.dataset.val;
+  renderCwPreview(previewWidget);
+}
+function liveUpdateCwGlow(value) {
+  const widget = CHAT_WIDGETS.find(w => w.id === cwActiveWidgetId);
+  if (widget) widget.orb_glow_intensity = parseInt(value);
+  document.getElementById('cwGlowIntensityVal').textContent = value;
+  document.getElementById('cwWidgetPreview').style.setProperty('--cw-glow', value);
+}
+
+// ─── Avatar photo upload ─────────────────────────────────────────────────
+// Stored as a data URL directly on the widget row -- simplest path that
+// needs no separate file storage/bucket setup, and avatar images are
+// small enough (resized client-side below) that this stays reasonable.
+function handleCwAvatarUpload(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) { showToast('Please choose an image file.', 'warning'); return; }
+  const reader = new FileReader();
+  reader.onload = () => {
+    const img = new Image();
+    img.onload = () => {
+      // Resize down to a small square so this stays a lightweight data URL.
+      const size = 128;
+      const canvas = document.createElement('canvas');
+      canvas.width = size; canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      const scale = Math.max(size / img.width, size / img.height);
+      const sw = img.width * scale, sh = img.height * scale;
+      ctx.drawImage(img, (size - sw) / 2, (size - sh) / 2, sw, sh);
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      const widget = CHAT_WIDGETS.find(w => w.id === cwActiveWidgetId);
+      if (widget) widget.avatar_image_url = dataUrl;
+      populateCwSettingsFields();
+    };
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(file);
+}
+function removeCwAvatarImage() {
+  const widget = CHAT_WIDGETS.find(w => w.id === cwActiveWidgetId);
+  if (widget) widget.avatar_image_url = null;
+  populateCwSettingsFields();
 }
 
 // ─── Conversation Flow steps ────────────────────────────────────────────
@@ -17051,7 +17224,9 @@ function updateCwHours(day, field, value) {
 }
 
 function selectCwAvatar(avatar) {
-  document.querySelectorAll('.cw-avatar-option').forEach(el => el.classList.toggle('active', el.textContent === avatar));
+  const widget = CHAT_WIDGETS.find(w => w.id === cwActiveWidgetId);
+  if (widget) { widget.avatar = avatar; widget.avatar_image_url = null; }
+  populateCwSettingsFields();
 }
 function selectCwToggle(groupId, value) {
   document.querySelectorAll(`#${groupId} .cw-toggle-btn`).forEach(b => b.classList.toggle('active', b.dataset.val === value));
