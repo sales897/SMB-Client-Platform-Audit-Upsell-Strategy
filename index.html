@@ -417,7 +417,7 @@ body.ai-panel-open .main {
 .vital-block.dragging { opacity: .4; }
 .vital-block-actions { display: flex; gap: 2px; flex-shrink: 0; }
 .vital-swap-menu {
-  position: absolute; top: 30px; right: -6px; z-index: 200;
+  position: fixed; z-index: 500;
   background: var(--bg4); border: 1px solid var(--orange); border-radius: var(--radius-sm);
   box-shadow: 0 10px 32px rgba(0,0,0,.7), 0 0 20px rgba(226,84,31,.35); padding: 4px; min-width: 175px;
 }
@@ -6074,18 +6074,15 @@ function buildHomeVitalsGrid() {
     const def = HOME_WIDGET_DEFS[key] || HOME_WIDGET_DEFS[HOME_LAYOUT_DEFAULT[i]];
     const label = t(def.labelKey);
     const sub = t(def.subKey);
-    const swapOptions = Object.entries(HOME_WIDGET_DEFS).map(([k, d]) =>
-      `<div class="vital-swap-item${k === key ? ' active' : ''}" onclick="swapVitalWidget(${i}, '${k}')">${escAttr(t(d.labelKey))}</div>`).join('');
     return `
-      <div class="vital-block" draggable="true" data-slot="${i}"
+      <div class="vital-block" draggable="true" data-slot="${i}" data-current-key="${key}"
            ondragstart="vitalDragStart(event)" ondragover="vitalDragOver(event)" ondrop="vitalDrop(event)" ondragend="vitalDragEnd(event)">
         <div class="vital-block-hd">
           <h3><span class="vital-dot" style="background:${def.dot};color:${def.dot}"></span>${escAttr(label)}</h3>
           <div class="vital-block-actions">
             <button class="vital-ask" onclick="event.stopPropagation();askNirvanaAboutVital('${key}')" title="Ask Nirvana about this" aria-label="Ask Nirvana about ${escAttr(label)}"><span class="icon" data-icon="sparkle" data-icon-size="14"></span></button>
-            <button class="vital-ask" onclick="event.stopPropagation();openVitalSwapMenu(${i})" title="Swap this block" aria-label="Swap this block for another">⇄</button>
+            <button class="vital-ask" onclick="event.stopPropagation();openVitalSwapMenu(${i}, this)" title="Swap this block" aria-label="Swap this block for another">⇄</button>
           </div>
-          <div class="vital-swap-menu" id="vitalSwapMenu-${i}" style="display:none">${swapOptions}</div>
         </div>
         <div class="vital-sub">${escAttr(sub)}</div>
         ${def.body}
@@ -6119,10 +6116,36 @@ function vitalDragEnd(e) {
   e.currentTarget.classList.remove('dragging');
 }
 
-function openVitalSwapMenu(slot) {
-  document.querySelectorAll('.vital-swap-menu').forEach(m => { if (m.id !== 'vitalSwapMenu-' + slot) m.style.display = 'none'; });
-  const menu = document.getElementById('vitalSwapMenu-' + slot);
-  if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+// Built dynamically and appended to document.body (same pattern as the
+// workflow builder's node menu) rather than pre-rendered inside each card
+// and merely shown/hidden -- a menu positioned relative to its own card
+// is still visually "attached" to that card no matter how strong the
+// shadow is; appending it to body and placing it from the trigger
+// button's own real screen position is what makes it read as a genuine
+// floating dropdown instead of something cut into the card's surface.
+function openVitalSwapMenu(slot, anchorEl) {
+  closeAllVitalSwapMenus();
+  const block = anchorEl.closest('.vital-block');
+  const currentKey = block ? block.dataset.currentKey : null;
+  const rect = anchorEl.getBoundingClientRect();
+  const menu = document.createElement('div');
+  menu.className = 'vital-swap-menu';
+  menu.id = 'vitalSwapMenuActive';
+  menu.innerHTML = Object.entries(HOME_WIDGET_DEFS).map(([k, d]) =>
+    `<div class="vital-swap-item${k === currentKey ? ' active' : ''}" onclick="swapVitalWidget(${slot}, '${k}')">${escAttr(t(d.labelKey))}</div>`).join('');
+  document.body.appendChild(menu);
+  const menuRect = menu.getBoundingClientRect();
+  let left = rect.right - menuRect.width;
+  if (left < 8) left = 8;
+  let top = rect.bottom + 6;
+  if (top + menuRect.height > window.innerHeight - 8) top = rect.top - menuRect.height - 6;
+  menu.style.left = left + 'px';
+  menu.style.top = top + 'px';
+  setTimeout(() => document.addEventListener('click', closeAllVitalSwapMenus, { once: true }), 0);
+}
+function closeAllVitalSwapMenus() {
+  const m = document.getElementById('vitalSwapMenuActive');
+  if (m) m.remove();
 }
 function swapVitalWidget(slot, key) {
   const layout = getHomeLayout();
@@ -6130,11 +6153,6 @@ function swapVitalWidget(slot, key) {
   saveHomeLayout(layout);
   buildHomeVitalsGrid();
 }
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('.vital-swap-menu') && !e.target.closest('[onclick*="openVitalSwapMenu"]')) {
-    document.querySelectorAll('.vital-swap-menu').forEach(m => m.style.display = 'none');
-  }
-});
 
 // Home vitals grid (2026-07-14) -- six chart-driven blocks replacing the old
 // KPI row + Quick Access + Today's Focus stack. Every block pulls real data
