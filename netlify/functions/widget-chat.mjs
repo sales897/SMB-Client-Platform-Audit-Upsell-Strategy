@@ -31,6 +31,7 @@
 // for anything requiring real security guarantees.
 
 const SUPABASE_URL = "https://banmahudemvjkygwihsd.supabase.co";
+const GOOGLE_CALENDAR_CLIENT_ID = "512550241298-me0g34krgime9v61pij5ir9610h7iqlo.apps.googleusercontent.com";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -40,6 +41,57 @@ const CORS_HEADERS = {
 
 function genId(prefix) {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+}
+
+// Mints a fresh access token from this widget's stored refresh token.
+// Widgets never see or hold an access token themselves -- this happens
+// fresh, server-side, on every booking attempt.
+async function refreshWidgetGoogleToken(refreshToken, clientSecret) {
+  const res = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      refresh_token: refreshToken,
+      client_id: GOOGLE_CALENDAR_CLIENT_ID,
+      client_secret: clientSecret,
+      grant_type: "refresh_token",
+    }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error_description || data.error || "Google token refresh failed");
+  return data.access_token;
+}
+
+// Checks the requested slot against the connected calendar's real
+// freebusy data, and only creates the event if it's actually free --
+// never trusts the AI's own sense of availability, since it has no live
+// visibility into the calendar otherwise.
+async function bookOnWidgetCalendar(accessToken, { summary, description, startISO, endISO, attendeeEmail }) {
+  const fbRes = await fetch("https://www.googleapis.com/calendar/v3/freeBusy", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ timeMin: startISO, timeMax: endISO, items: [{ id: "primary" }] }),
+  });
+  const fbData = await fbRes.json();
+  if (!fbRes.ok) throw new Error("Could not check calendar availability.");
+  const busy = (fbData.calendars && fbData.calendars.primary && fbData.calendars.primary.busy) || [];
+  if (busy.length > 0) {
+    return { booked: false, reason: "That time slot is no longer available -- it was just booked or blocked." };
+  }
+  const evRes = await fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      summary,
+      description,
+      start: { dateTime: startISO },
+      end: { dateTime: endISO },
+      attendees: attendeeEmail ? [{ email: attendeeEmail }] : undefined,
+    }),
+  });
+  const evData = await evRes.json();
+  if (!evRes.ok) throw new Error((evData.error && evData.error.message) || "Could not create the calendar event.");
+  return { booked: true, eventId: evData.id, htmlLink: evData.htmlLink };
 }
 
 export default async (req) => {
@@ -129,7 +181,15 @@ export default async (req) => {
     body: JSON.stringify({ id: genId("msg"), conversation_id: convId, role: "lead", content: message, created_at: new Date().toISOString() }),
   });
 
-  // 5. Build the sandboxed system prompt from this widget's own config --
+  // 5. Check whether this widget has a calendar connected -- only offer
+  //    real booking if it does, so the AI never promises something it
+  //    can't actually do.
+  const calRes = await fetch(`${SUPABASE_URL}/rest/v1/widget_calendar_tokens?widget_id=eq.${encodeURIComponent(widget_id)}&select=refresh_token`, { headers: sbHeaders });
+  const calRows = await calRes.json();
+  const calendarToken = Array.isArray(calRows) && calRows[0] ? calRows[0].refresh_token : null;
+  const canBook = !!calendarToken;
+
+  // 6. Build the sandboxed system prompt from this widget's own config --
   //    deliberately has NO access to any Hub-internal tool, data, or
   //    client record. This agent only ever talks about this one business
   //    and only ever writes to this one conversation.
@@ -140,65 +200,142 @@ export default async (req) => {
   if (widget.collect_service_requested !== false) dataToCollect.push("what service or product they're interested in");
   if (widget.collect_company) dataToCollect.push("company name");
 
+  const nowStr = new Date().toLocaleString("en-US", { timeZone: widget.timezone || "America/Los_Angeles", weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit", timeZoneName: "short" });
+  const hours = widget.business_hours || {};
+  const hoursLines = Object.entries(hours).map(([day, h]) => `${day}: ${h.enabled ? `${h.open}-${h.close}` : "closed"}`).join(", ");
+
+  const bookingInstructions = canBook
+    ? `You CAN book real appointments on this business's calendar. Business hours (in ${widget.timezone || "America/Los_Angeles"}): ${hoursLines || "not configured"}. Appointments are ${widget.service_duration_minutes || 60} minutes with a ${widget.buffer_time_minutes || 0}-minute buffer, and need at least ${widget.min_notice_hours || 0} hours' notice from right now. The current date/time is ${nowStr} -- compute any relative time the visitor mentions ("tomorrow", "Friday afternoon") from this. Once the visitor agrees on a specific date and time within business hours, call book_appointment with the exact start time. If it comes back unavailable, apologize and ask for another time -- never claim something is booked unless the tool confirms it.`
+    : `You do NOT have calendar booking available for this widget yet -- if the visitor wants to schedule something, say a team member will follow up to find a time, and set resolution to "transfer".`;
+
   const systemPrompt = `You are ${widget.agent_name || "an AI assistant"}, a friendly, conversational chat widget embedded directly on a business's website. ${widget.instructions || ""}
 
 Your goals, in order: (1) understand what the visitor actually needs, (2) naturally collect ${dataToCollect.length ? dataToCollect.join(", ") : "their contact information"} through the conversation -- never as a rigid form, ask for one or two things at a time, in your own words, (3) once you have enough to work with, offer to book a call or hand off to a real person if that's what fits.
+
+${bookingInstructions}
 
 Keep every reply SHORT -- one to three sentences, like a text message, never a wall of text or a script.
 
 After each reply, call update_lead_status with your current read on this lead: any new details you just learned (name/email/phone/service), an "intent" (one short phrase), a "confidence" (High/Medium/Low -- how real and qualified this lead seems), a "resolution" ("exploring" = still gathering info, "booked" = a call/appointment was just scheduled, "transfer" = they want a human or you're stuck, "handled_ai" = you fully answered them and the conversation has a natural close), and a short "next_step" note for whoever on the team picks this up.`;
 
-  const tools = [{
-    name: "update_lead_status",
-    description: "Call this after every reply to record what you currently know about this lead and where the conversation stands.",
-    input_schema: {
-      type: "object",
-      properties: {
-        name: { type: "string" }, email: { type: "string" }, phone: { type: "string" }, service_requested: { type: "string" },
-        intent: { type: "string" }, confidence: { type: "string", enum: ["High", "Medium", "Low"] },
-        resolution: { type: "string", enum: ["exploring", "booked", "transfer", "handled_ai"] },
-        next_step: { type: "string" },
+  const tools = [
+    {
+      name: "update_lead_status",
+      description: "Call this after every reply to record what you currently know about this lead and where the conversation stands.",
+      input_schema: {
+        type: "object",
+        properties: {
+          name: { type: "string" }, email: { type: "string" }, phone: { type: "string" }, service_requested: { type: "string" },
+          intent: { type: "string" }, confidence: { type: "string", enum: ["High", "Medium", "Low"] },
+          resolution: { type: "string", enum: ["exploring", "booked", "transfer", "handled_ai"] },
+          next_step: { type: "string" },
+        },
+        required: ["intent", "confidence", "resolution", "next_step"],
       },
-      required: ["intent", "confidence", "resolution", "next_step"],
     },
-  }];
+  ];
+  if (canBook) {
+    tools.push({
+      name: "book_appointment",
+      description: "Book a real appointment on the business's calendar at a specific date/time the visitor has agreed to. Only call this once you have an exact time, not a vague preference.",
+      input_schema: {
+        type: "object",
+        properties: {
+          start_iso: { type: "string", description: "Exact start time in ISO 8601 format WITH timezone offset, e.g. 2026-07-20T14:00:00-07:00" },
+          service: { type: "string", description: "What this appointment is for, in a few words" },
+        },
+        required: ["start_iso", "service"],
+      },
+    });
+  }
 
-  const anthropicMessages = [
+  let workingMessages = [
     ...priorMessages.map((m) => ({ role: m.role === "lead" ? "user" : "assistant", content: m.content })),
     { role: "user", content: message },
   ];
 
-  let anthropicRes;
-  try {
-    anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "x-api-key": anthropicKey, "anthropic-version": "2023-06-01" },
-      body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 500, system: systemPrompt, messages: anthropicMessages, tools }),
-    });
-  } catch (e) {
-    return new Response(JSON.stringify({ error: "Could not reach the AI service: " + e.message }), {
-      status: 502, headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
-    });
-  }
-  if (!anthropicRes.ok) {
-    const errText = await anthropicRes.text();
-    return new Response(JSON.stringify({ error: "AI service error: " + errText }), {
-      status: 502, headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
-    });
-  }
-  const data = await anthropicRes.json();
-  const textBlock = (data.content || []).find((b) => b.type === "text");
-  const toolBlock = (data.content || []).find((b) => b.type === "tool_use" && b.name === "update_lead_status");
-  const replyText = textBlock ? textBlock.text : "Sorry, could you say that again?";
-  const statusUpdate = toolBlock ? toolBlock.input : {};
+  let replyText = "";
+  let statusUpdate = {};
+  let bookingResult = null;
+  let bookedStartISO = null;
+  let bookedService = null;
 
-  // 6. Save the assistant's reply.
+  // Up to 3 rounds: lets the model call update_lead_status and, if it also
+  // tries to book_appointment, actually see whether that succeeded before
+  // writing its final reply -- otherwise it would have to describe a
+  // booking outcome it hasn't actually seen yet.
+  for (let round = 0; round < 3; round++) {
+    let anthropicRes;
+    try {
+      anthropicRes = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-api-key": anthropicKey, "anthropic-version": "2023-06-01" },
+        body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 500, system: systemPrompt, messages: workingMessages, tools }),
+      });
+    } catch (e) {
+      return new Response(JSON.stringify({ error: "Could not reach the AI service: " + e.message }), {
+        status: 502, headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+      });
+    }
+    if (!anthropicRes.ok) {
+      const errText = await anthropicRes.text();
+      return new Response(JSON.stringify({ error: "AI service error: " + errText }), {
+        status: 502, headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+      });
+    }
+    const data = await anthropicRes.json();
+    const content = data.content || [];
+    const textBlock = content.find((b) => b.type === "text");
+    const statusBlock = content.find((b) => b.type === "tool_use" && b.name === "update_lead_status");
+    const bookBlock = content.find((b) => b.type === "tool_use" && b.name === "book_appointment");
+    if (statusBlock) statusUpdate = statusBlock.input;
+    replyText = textBlock ? textBlock.text : replyText;
+
+    if (!bookBlock) break; // no booking attempted this round -- done
+
+    // Execute the real booking against Google Calendar.
+    const clientSecret = Netlify.env.get("GOOGLE_OAUTH_CLIENT_SECRET");
+    try {
+      const accessToken = await refreshWidgetGoogleToken(calendarToken, clientSecret);
+      const startISO = bookBlock.input.start_iso;
+      const durationMs = (widget.service_duration_minutes || 60) * 60000;
+      const endISO = new Date(new Date(startISO).getTime() + durationMs).toISOString();
+      bookedStartISO = startISO;
+      bookedService = bookBlock.input.service || null;
+      bookingResult = await bookOnWidgetCalendar(accessToken, {
+        summary: `${bookBlock.input.service || "Appointment"} — ${conversation.lead_name || "New lead"}`,
+        description: `Booked via chat widget. Lead: ${conversation.lead_name || "unknown"}, ${conversation.lead_email || ""} ${conversation.lead_phone || ""}`.trim(),
+        startISO,
+        endISO,
+        attendeeEmail: conversation.lead_email || (statusUpdate && statusUpdate.email) || undefined,
+      });
+    } catch (e) {
+      bookingResult = { booked: false, reason: e.message };
+    }
+
+    // Feed the real outcome back so the model's NEXT reply is accurate.
+    workingMessages.push({ role: "assistant", content });
+    workingMessages.push({
+      role: "user",
+      content: [{ type: "tool_result", tool_use_id: bookBlock.id, content: JSON.stringify(bookingResult) }],
+    });
+    if (statusBlock) {
+      // Anthropic requires a tool_result for every tool_use in the same turn.
+      workingMessages[workingMessages.length - 1].content.push({ type: "tool_result", tool_use_id: statusBlock.id, content: "Recorded." });
+    }
+    // Loop again so the model can write its real final reply based on bookingResult.
+  }
+
+  if (!replyText) replyText = "Thanks for reaching out! Let me get someone from our team to follow up with you.";
+
+  // 7. Save the assistant's reply.
   await fetch(`${SUPABASE_URL}/rest/v1/widget_messages`, {
     method: "POST", headers: sbWriteHeaders,
     body: JSON.stringify({ id: genId("msg"), conversation_id: convId, role: "assistant", content: replyText, created_at: new Date().toISOString() }),
   });
 
-  // 7. Update the conversation record with whatever the AI now knows.
+  // 8. Update the conversation record with whatever the AI now knows,
+  //    plus the real appointment details if a booking actually succeeded.
   const convPatch = { updated_at: new Date().toISOString() };
   if (statusUpdate.name) convPatch.lead_name = statusUpdate.name;
   if (statusUpdate.email) convPatch.lead_email = statusUpdate.email;
@@ -208,12 +345,17 @@ After each reply, call update_lead_status with your current read on this lead: a
   if (statusUpdate.confidence) convPatch.confidence = statusUpdate.confidence;
   if (statusUpdate.resolution) convPatch.resolution = statusUpdate.resolution;
   if (statusUpdate.next_step) convPatch.next_step = statusUpdate.next_step;
+  if (bookingResult && bookingResult.booked) {
+    convPatch.resolution = "booked";
+    convPatch.appointment_at = bookedStartISO;
+    convPatch.appointment_service = bookedService;
+  }
   await fetch(`${SUPABASE_URL}/rest/v1/widget_conversations?id=eq.${encodeURIComponent(convId)}`, {
     method: "PATCH", headers: sbWriteHeaders, body: JSON.stringify(convPatch),
   });
 
   return new Response(
-    JSON.stringify({ conversation_id: convId, reply: replyText, resolution: statusUpdate.resolution || conversation.resolution }),
+    JSON.stringify({ conversation_id: convId, reply: replyText, resolution: convPatch.resolution || conversation.resolution }),
     { status: 200, headers: { ...CORS_HEADERS, "Content-Type": "application/json" } }
   );
 };

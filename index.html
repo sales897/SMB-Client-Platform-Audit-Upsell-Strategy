@@ -8260,6 +8260,67 @@ function initGoogleCalendarClient() {
 function isGoogleCalendarConfigured() { return !!GOOGLE_CALENDAR_CLIENT_ID; }
 function isGoogleCalendarConnected() { return !!googleAccessToken && googleTokenExpiresAt > Date.now(); }
 
+// Connects a Chat Widget's OWN calendar (for booking real appointments with
+// leads) -- a separate connection from a team member's own calendar used
+// for task sync above. Creates a fresh initCodeClient per call (rather than
+// reusing one global client) since the callback needs to know exactly
+// which widget it's connecting for.
+function connectWidgetCalendar(widgetId) {
+  if (!isGoogleCalendarConfigured()) {
+    showToast('Google Calendar isn\'t configured for this Hub yet — an Admin needs to add a Google OAuth Client ID.', 'warning');
+    return;
+  }
+  if (typeof google === 'undefined' || !google.accounts) {
+    showToast('Google sign-in is still loading — try again in a moment.', 'warning');
+    return;
+  }
+  const client = google.accounts.oauth2.initCodeClient({
+    client_id: GOOGLE_CALENDAR_CLIENT_ID,
+    scope: 'https://www.googleapis.com/auth/calendar.events',
+    ux_mode: 'popup',
+    access_type: 'offline',
+    prompt: 'consent',
+    callback: async (resp) => {
+      if (!resp || !resp.code) return;
+      try {
+        const res = await fetch('/.netlify/functions/widget-oauth-connect', {
+          method: 'POST',
+          headers: { 'Authorization': SB_HEADERS['Authorization'], 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: resp.code, widgetId }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.connected) {
+          showToast(data.error || 'Could not connect Google Calendar — please try again.', 'error');
+          return;
+        }
+        const widget = CHAT_WIDGETS.find(w => w.id === widgetId);
+        if (widget) { widget.calendar_connected = true; widget.calendar_email = data.connectedEmail; }
+        populateCwSettingsFields();
+        showToast(`Google Calendar connected${data.connectedEmail ? ' — ' + data.connectedEmail : ''}. Leads can now book real appointments.`, 'success');
+      } catch(e) {
+        showToast('Could not connect Google Calendar: ' + e.message, 'error');
+      }
+    },
+  });
+  client.requestCode();
+}
+
+async function disconnectWidgetCalendar(widgetId) {
+  if (!requirePermission('edit')) return;
+  try {
+    await fetch(`/.netlify/functions/widget-oauth-disconnect?widgetId=${encodeURIComponent(widgetId)}`, {
+      headers: { 'Authorization': SB_HEADERS['Authorization'] },
+    });
+  } catch(e) {
+    showToast('Could not disconnect: ' + e.message, 'error');
+    return;
+  }
+  const widget = CHAT_WIDGETS.find(w => w.id === widgetId);
+  if (widget) { widget.calendar_connected = false; widget.calendar_email = null; }
+  populateCwSettingsFields();
+  showToast('Calendar disconnected from this widget.', 'info');
+}
+
 function connectGoogleCalendar() {
   if (!isGoogleCalendarConfigured()) {
     showToast('Google Calendar isn\'t configured for this Hub yet — an Admin needs to add a Google OAuth Client ID.', 'warning');
@@ -16215,8 +16276,8 @@ function populateCwSettingsFields() {
 
   const calStatus = document.getElementById('cwCalendarStatus');
   calStatus.innerHTML = widget.calendar_connected
-    ? `<span style="color:var(--green);display:flex;align-items:center;gap:5px">${cwIcon('check',13)} Connected</span> <span style="color:var(--text3)">— ${escAttr(widget.calendar_email || '')}</span> <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="showToast('Disconnect flow is coming in a later block.','info')">Disconnect</button>`
-    : `<span style="color:var(--text3)">Not connected</span> <button class="cw-glow-btn" style="margin-left:auto;padding:6px 14px;font-size:var(--font-xs)" onclick="showToast('Real Google Calendar booking is coming in a later block — this will let leads book directly.','info')">Connect Calendar</button>`;
+    ? `<span style="color:var(--green);display:flex;align-items:center;gap:5px">${cwIcon('check',13)} Connected</span> <span style="color:var(--text3)">— ${escAttr(widget.calendar_email || '')}</span> <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="disconnectWidgetCalendar('${widget.id}')">Disconnect</button>`
+    : `<span style="color:var(--text3)">Not connected</span> <button class="cw-glow-btn" style="margin-left:auto;padding:6px 14px;font-size:var(--font-xs)" onclick="connectWidgetCalendar('${widget.id}')">Connect Calendar</button>`;
 
   document.getElementById('cwEmbedCode').value = `<script src="https://niche-client-hub.netlify.app/widget.js" data-widget-id="${widget.id}"><\/script>`;
 }
