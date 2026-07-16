@@ -1778,7 +1778,23 @@ tr.hidden-row { display: none; }
    The actual embeddable script that runs on an external website is a
    later block.
    ═══════════════════════════════════════════════════════════════════════ */
-.cw-inbox-layout { display: flex; gap: var(--space-3); height: calc(100vh - 200px); }
+.cw-inbox-layout { display: flex; gap: var(--space-3); height: calc(100vh - 220px); }
+.cw-filter-tabs { display: flex; gap: 4px; margin-bottom: 10px; background: var(--bg2); border-radius: var(--radius-sm); padding: 3px; }
+.cw-filter-tab { flex: 1; background: none; border: none; padding: 6px; font-size: var(--font-2xs); font-weight: 700; color: var(--text3); border-radius: var(--radius-xs); cursor: pointer; }
+.cw-filter-tab.active { background: linear-gradient(90deg, var(--orange), var(--orange2)); color: #fff; }
+.cw-info-card { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--space-3); margin-bottom: var(--space-3); }
+.cw-info-card-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.cw-info-card-title { font-size: 10px; font-weight: 800; color: var(--text3); text-transform: uppercase; letter-spacing: .05em; }
+.cw-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; font-size: var(--font-sm); }
+.cw-info-grid .lbl { color: var(--text3); font-size: var(--font-2xs); }
+.cw-info-grid .val { color: var(--text); }
+.cw-appt-card { background: rgba(34,197,94,.08); border: 1px solid rgba(34,197,94,.25); border-radius: var(--radius-sm); padding: var(--space-3); margin-bottom: var(--space-3); }
+.cw-lead-overview-row { display: flex; justify-content: space-between; font-size: var(--font-xs); padding: 5px 0; border-bottom: 1px solid var(--border); }
+.cw-lead-overview-row:last-child { border-bottom: none; }
+.cw-lead-score-bar { height: 6px; background: var(--bg4); border-radius: 3px; overflow: hidden; margin-top: 4px; }
+.cw-lead-score-fill { height: 100%; background: linear-gradient(90deg, var(--orange), var(--green)); }
+.cw-resolution-summary-row { display: flex; align-items: center; justify-content: space-between; font-size: var(--font-xs); padding: 4px 0; }
+.cw-header-actions { display: flex; gap: 6px; }
 .cw-conv-list-col { width: 340px; flex-shrink: 0; display: flex; flex-direction: column; }
 .cw-conv-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
 .cw-conv-item { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--space-3); cursor: pointer; transition: border-color var(--transition-base); }
@@ -1806,18 +1822,35 @@ tr.hidden-row { display: none; }
 .cw-summary-label:first-child { margin-top: 0; }
 .cw-summary-value { font-size: var(--font-sm); color: var(--text); line-height: 1.5; }
 
-.cw-settings-layout { display: flex; gap: var(--space-4); align-items: flex-start; }
-.cw-preview-col { width: 280px; flex-shrink: 0; }
-.cw-form-col { flex: 1; }
-.cw-widget-preview { position: relative; height: 140px; background: var(--bg); border-radius: var(--radius-sm); display: flex; align-items: flex-end; justify-content: flex-end; padding: var(--space-3); }
-.cw-preview-orb { width: 52px; height: 52px; border-radius: 50%; }
+.cw-settings-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); margin-bottom: var(--space-3); }
+.cw-settings-card { display: flex; flex-direction: column; }
+.cw-preview-card, .cw-embed-card { }
+.cw-widget-preview { position: relative; height: 100px; background: var(--bg); border-radius: var(--radius-sm); display: flex; align-items: flex-end; justify-content: flex-end; padding: var(--space-3); }
+.cw-preview-orb { width: 48px; height: 48px; border-radius: 50%; }
 .cw-color-swatches { display: flex; gap: 8px; margin-bottom: var(--space-3); }
-.cw-color-swatch { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform var(--transition-fast); }
+.cw-color-swatch { width: 26px; height: 26px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: transform var(--transition-fast); }
 .cw-color-swatch:hover { transform: scale(1.1); }
-.cw-color-swatch.active { border-color: var(--text); }
+.cw-color-swatch.active { border-color: var(--text); box-shadow: 0 0 0 1px var(--bg2), 0 0 0 3px var(--text); }
 .cw-checkbox-grid { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: var(--space-3); font-size: var(--font-sm); color: var(--text2); }
 .cw-checkbox-grid label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
 .cw-calendar-status { display: flex; align-items: center; gap: 8px; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--space-2) var(--space-3); margin-bottom: var(--space-3); font-size: var(--font-sm); }
+.cw-avatar-picker { display: flex; gap: 8px; margin-bottom: var(--space-3); flex-wrap: wrap; }
+.cw-avatar-option { width: 40px; height: 40px; border-radius: 50%; background: var(--bg3); border: 2px solid transparent; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; }
+.cw-avatar-option:hover { background: var(--bg4); }
+.cw-avatar-option.active { border-color: var(--orange); box-shadow: 0 0 8px rgba(226,84,31,.4); }
+.cw-toggle-pair { display: flex; gap: 6px; margin-bottom: var(--space-3); }
+.cw-toggle-btn { flex: 1; padding: 8px; border-radius: var(--radius-xs); border: 1px solid var(--border); background: var(--bg3); color: var(--text2); cursor: pointer; font-size: var(--font-xs); font-weight: 700; }
+.cw-toggle-btn.active { background: linear-gradient(90deg, var(--orange), var(--orange2)); color: #fff; border-color: transparent; }
+.cw-datafields-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: var(--space-2); }
+.cw-datafield-row { display: flex; align-items: center; gap: 8px; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-xs); padding: 6px 10px; }
+.cw-datafield-row input[type="text"] { flex: 1; background: none; border: none; color: var(--text); font-size: var(--font-sm); outline: none; }
+.cw-datafield-row .cw-req-toggle { font-size: 9px; font-weight: 800; padding: 2px 8px; border-radius: var(--radius-pill); cursor: pointer; white-space: nowrap; }
+.cw-datafield-row .cw-req-toggle.required { background: rgba(226,84,31,.15); color: var(--orange); }
+.cw-datafield-row .cw-req-toggle.optional { background: var(--bg4); color: var(--text3); }
+.cw-hours-list { display: flex; flex-direction: column; gap: 4px; margin-bottom: var(--space-2); }
+.cw-hours-row { display: grid; grid-template-columns: 40px 1fr 1fr auto; gap: 6px; align-items: center; font-size: var(--font-xs); }
+.cw-hours-row input[type="time"] { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-xs); color: var(--text); padding: 4px 6px; font-size: 11px; }
+.cw-hours-row input[type="time"]:disabled { opacity: .4; }
 
 /* ═══════════════════════════════════════════════════════════════════════
    WORKFLOW BUILDER (2026-07-15) -- visual node-graph canvas replacing the
@@ -3109,16 +3142,12 @@ tr.hidden-row { display: none; }
     <div id="cwTab-inbox">
       <div class="cw-inbox-layout">
         <div class="cw-conv-list-col">
-          <div style="display:flex;gap:8px;margin-bottom:10px">
-            <input type="text" class="field-input" id="cwConvSearch" style="height:34px;margin-bottom:0" placeholder="Search leads..." oninput="rebuildChatWidgetInbox()">
-            <select id="cwResolutionFilter" class="field-select" style="height:34px;width:auto" onchange="rebuildChatWidgetInbox()">
-              <option value="all">All Statuses</option>
-              <option value="exploring">Exploring</option>
-              <option value="booked">Booked</option>
-              <option value="transfer">Transfer</option>
-              <option value="handled_ai">Handled by AI</option>
-              <option value="handled_human">Handled by Human</option>
-            </select>
+          <input type="text" class="field-input" id="cwConvSearch" style="height:34px;margin-bottom:8px" placeholder="Search leads..." oninput="rebuildChatWidgetInbox()">
+          <div class="cw-filter-tabs" id="cwFilterTabs">
+            <button class="cw-filter-tab active" data-val="all" onclick="setCwFilterTab('all')">All</button>
+            <button class="cw-filter-tab" data-val="exploring" onclick="setCwFilterTab('exploring')">New</button>
+            <button class="cw-filter-tab" data-val="booked" onclick="setCwFilterTab('booked')">Booked</button>
+            <button class="cw-filter-tab" data-val="transfer" onclick="setCwFilterTab('transfer')">Transferred</button>
           </div>
           <div id="cwConvList" class="cw-conv-list"></div>
         </div>
@@ -3130,46 +3159,88 @@ tr.hidden-row { display: none; }
 
     <!-- SETTINGS TAB -->
     <div id="cwTab-settings" style="display:none">
-      <div class="cw-settings-layout">
-        <div class="cw-preview-col">
-          <div class="card">
-            <div class="card-header"><div class="card-title">Preview</div></div>
-            <div class="cw-widget-preview" id="cwWidgetPreview">
-              <div class="cw-preview-orb" id="cwPreviewOrb" style="background:radial-gradient(circle at 35% 30%,#fff,var(--cw-color) 45%,var(--cw-color));box-shadow:0 0 24px var(--cw-color)"></div>
-            </div>
-            <div style="font-size:var(--font-2xs);color:var(--text3);text-align:center;margin-top:var(--space-2)">Bottom-right position, matches your color choice below</div>
+      <div class="cw-settings-grid">
+        <div class="card cw-settings-card">
+          <div class="card-header"><div class="card-title">👤 Agent Identity</div></div>
+          <label for="cwAgentName" class="field-label">Agent Name</label>
+          <input type="text" id="cwAgentName" class="field-input" placeholder="Nirvana">
+          <label class="field-label">Avatar</label>
+          <div class="cw-avatar-picker" id="cwAvatarPicker"></div>
+        </div>
+        <div class="card cw-settings-card">
+          <div class="card-header"><div class="card-title">💬 Tone &amp; Instructions</div></div>
+          <label for="cwTone" class="field-label">Tone</label>
+          <select id="cwTone" class="field-select">
+            <option value="professional_friendly">Professional &amp; Friendly</option>
+            <option value="casual">Casual &amp; Warm</option>
+            <option value="formal">Formal &amp; Precise</option>
+            <option value="energetic">Energetic &amp; Upbeat</option>
+          </select>
+          <label for="cwInstructions" class="field-label">Instructions</label>
+          <textarea id="cwInstructions" class="field-input" rows="3" style="resize:vertical;font-family:inherit"></textarea>
+        </div>
+        <div class="card cw-settings-card">
+          <div class="card-header"><div class="card-title">🎨 Orb / Dock Style</div></div>
+          <label class="field-label">Dock Position</label>
+          <div class="cw-toggle-pair" id="cwDockPositionToggle">
+            <button type="button" class="cw-toggle-btn" data-val="left" onclick="selectCwToggle('cwDockPositionToggle', 'left')">Left</button>
+            <button type="button" class="cw-toggle-btn active" data-val="right" onclick="selectCwToggle('cwDockPositionToggle', 'right')">Right</button>
           </div>
-          <div class="card" style="margin-top:var(--space-3)">
-            <div class="card-header"><div class="card-title">Embed Code</div></div>
-            <p style="font-size:var(--font-xs);color:var(--text2);margin-bottom:var(--space-2)">Paste this right before the closing <code>&lt;/body&gt;</code> tag on your client's website.</p>
-            <textarea id="cwEmbedCode" class="field-input" rows="3" readonly style="font-family:monospace;font-size:11px;resize:none"></textarea>
-            <button class="btn btn-ghost btn-sm" style="margin-top:var(--space-2);width:100%" onclick="copyEmbedCode()">📋 Copy Embed Code</button>
+          <label class="field-label">Theme Color</label>
+          <div class="cw-color-swatches" id="cwColorSwatches"></div>
+          <label class="field-label">Dock Size</label>
+          <div class="cw-toggle-pair" id="cwDockSizeToggle">
+            <button type="button" class="cw-toggle-btn" data-val="compact" onclick="selectCwToggle('cwDockSizeToggle', 'compact')">Compact</button>
+            <button type="button" class="cw-toggle-btn active" data-val="expanded" onclick="selectCwToggle('cwDockSizeToggle', 'expanded')">Expanded</button>
           </div>
         </div>
-        <div class="cw-form-col">
-          <div class="card">
-            <label for="cwAgentName" class="field-label">Agent Name</label>
-            <input type="text" id="cwAgentName" class="field-input" placeholder="Nirvana">
-            <label for="cwInstructions" class="field-label">Instructions <span style="color:var(--text3);font-weight:400">— be friendly, concise, and qualifying tone</span></label>
-            <textarea id="cwInstructions" class="field-input" rows="3" style="resize:vertical;font-family:inherit"></textarea>
-            <label class="field-label">Orb Color</label>
-            <div class="cw-color-swatches" id="cwColorSwatches"></div>
-            <label for="cwDataToCollect" class="field-label">Data to Collect</label>
-            <div class="cw-checkbox-grid" id="cwDataToCollect">
-              <label><input type="checkbox" id="cwCollectName" checked> Name</label>
-              <label><input type="checkbox" id="cwCollectPhone" checked> Phone</label>
-              <label><input type="checkbox" id="cwCollectEmail" checked> Email</label>
-              <label><input type="checkbox" id="cwCollectService" checked> Service Requested</label>
-              <label><input type="checkbox" id="cwCollectCompany"> Company</label>
-            </div>
-            <label class="field-label">Calendar Connection</label>
-            <div id="cwCalendarStatus" class="cw-calendar-status"></div>
-            <label for="cwWelcomePrompt" class="field-label">Welcome Prompt</label>
-            <textarea id="cwWelcomePrompt" class="field-input" rows="2" style="resize:vertical;font-family:inherit"></textarea>
-            <button class="btn btn-primary" style="width:100%;margin-top:var(--space-3)" onclick="saveChatWidgetSettings()">💾 Save Changes</button>
+        <div class="card cw-settings-card">
+          <div class="card-header"><div class="card-title">📋 Data Collection Fields</div></div>
+          <div id="cwDataFieldsList" class="cw-datafields-list"></div>
+          <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:6px" onclick="addCwDataField()">＋ Add Field</button>
+        </div>
+        <div class="card cw-settings-card">
+          <div class="card-header"><div class="card-title">🕒 Business Hours</div></div>
+          <label for="cwTimezone" class="field-label">Timezone</label>
+          <select id="cwTimezone" class="field-select">
+            <option value="America/Los_Angeles">(GMT-08:00) Pacific Time</option>
+            <option value="America/Denver">(GMT-07:00) Mountain Time</option>
+            <option value="America/Chicago">(GMT-06:00) Central Time</option>
+            <option value="America/New_York">(GMT-05:00) Eastern Time</option>
+          </select>
+          <label class="field-label">Hours</label>
+          <div id="cwBusinessHoursList" class="cw-hours-list"></div>
+          <label style="display:flex;align-items:center;gap:8px;margin-top:var(--space-2);cursor:pointer;font-size:var(--font-sm);color:var(--text2)">
+            <input type="checkbox" id="cwAllowAfterHours"> Allow After Hours conversations
+          </label>
+        </div>
+        <div class="card cw-settings-card">
+          <div class="card-header"><div class="card-title">📅 Calendar &amp; Booking</div></div>
+          <label class="field-label">Calendar Sync</label>
+          <div id="cwCalendarStatus" class="cw-calendar-status"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div><label for="cwServiceDuration" class="field-label">Service Duration (min)</label><input type="number" id="cwServiceDuration" class="field-input" min="15" step="15"></div>
+            <div><label for="cwBufferTime" class="field-label">Buffer Time (min)</label><input type="number" id="cwBufferTime" class="field-input" min="0" step="5"></div>
           </div>
+          <label for="cwMinNotice" class="field-label">Minimum Notice (hours)</label>
+          <input type="number" id="cwMinNotice" class="field-input" min="0" step="1">
+        </div>
+        <div class="card cw-settings-card cw-preview-card">
+          <div class="card-header"><div class="card-title">Preview</div></div>
+          <div class="cw-widget-preview" id="cwWidgetPreview">
+            <div class="cw-preview-orb" id="cwPreviewOrb" style="background:radial-gradient(circle at 35% 30%,#fff,var(--cw-color) 45%,var(--cw-color));box-shadow:0 0 24px var(--cw-color)"></div>
+          </div>
+        </div>
+        <div class="card cw-settings-card cw-embed-card">
+          <div class="card-header"><div class="card-title">Embed Code</div></div>
+          <p style="font-size:var(--font-xs);color:var(--text2);margin-bottom:var(--space-2)">Paste this right before the closing <code>&lt;/body&gt;</code> tag on your client's website.</p>
+          <textarea id="cwEmbedCode" class="field-input" rows="2" readonly style="font-family:monospace;font-size:11px;resize:none"></textarea>
+          <button class="btn btn-ghost btn-sm" style="margin-top:var(--space-2);width:100%" onclick="copyEmbedCode()">📋 Copy Embed Code</button>
         </div>
       </div>
+      <label for="cwWelcomePrompt" class="field-label" style="margin-top:var(--space-3)">Welcome Message</label>
+      <textarea id="cwWelcomePrompt" class="field-input" rows="2" style="resize:vertical;font-family:inherit"></textarea>
+      <button class="btn btn-primary" style="width:100%;margin-top:var(--space-3)" onclick="saveChatWidgetSettings()">🚀 Save &amp; Publish</button>
     </div>
     <div class="page-footer">The HUB · Niche Inc. · Chat Widget</div>
   </div>
@@ -15544,12 +15615,18 @@ async function rebuildChatWidgetPage() {
 
 const CW_RESOLUTION_LABELS = { exploring: 'Exploring', booked: 'Booked', transfer: 'Transfer', handled_ai: 'Handled by AI', handled_human: 'Handled by Human' };
 
+let cwFilterTab = 'all';
+function setCwFilterTab(tab) {
+  cwFilterTab = tab;
+  document.querySelectorAll('#cwFilterTabs .cw-filter-tab').forEach(b => b.classList.toggle('active', b.dataset.val === tab));
+  rebuildChatWidgetInbox();
+}
+
 function rebuildChatWidgetInbox() {
   const list = document.getElementById('cwConvList');
   if (!list) return;
   const q = (document.getElementById('cwConvSearch') || {}).value?.toLowerCase() || '';
-  const statusFilter = (document.getElementById('cwResolutionFilter') || {}).value || 'all';
-  let convos = CW_CONVERSATIONS.filter(c => statusFilter === 'all' || c.resolution === statusFilter);
+  let convos = CW_CONVERSATIONS.filter(c => cwFilterTab === 'all' || c.resolution === cwFilterTab);
   if (q.trim()) convos = convos.filter(c => (c.lead_name || '').toLowerCase().includes(q) || (c.lead_email || '').toLowerCase().includes(q));
   if (convos.length === 0) {
     list.innerHTML = emptyStateHTML({ icon: '💬', title: 'No conversations yet', sub: 'Leads will show up here the moment someone chats with your embedded widget.', compact: true });
@@ -15566,6 +15643,12 @@ function rebuildChatWidgetInbox() {
     </div>`).join('');
 }
 
+function cwResolutionCounts() {
+  const counts = { exploring: 0, booked: 0, transfer: 0, handled_ai: 0, handled_human: 0 };
+  CW_CONVERSATIONS.forEach(c => { if (counts[c.resolution] !== undefined) counts[c.resolution]++; });
+  return counts;
+}
+
 async function openChatWidgetConversation(id) {
   cwActiveConversationId = id;
   rebuildChatWidgetInbox();
@@ -15578,30 +15661,90 @@ async function openChatWidgetConversation(id) {
     catch(e) { messages = []; }
     CW_MESSAGES_CACHE[id] = messages;
   }
+  const hasCollectedInfo = c.lead_name || c.lead_email || c.lead_phone || c.service_requested;
+  const counts = cwResolutionCounts();
   detail.innerHTML = `
     <div class="cw-detail-thread-col">
-      <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between">
         <div>
           <div style="font-weight:700;font-size:var(--font-lg);color:var(--text)">${escAttr(c.lead_name || 'Unknown Lead')} <span class="cw-resolution-badge cw-resolution-${c.resolution}" style="margin-left:6px">${CW_RESOLUTION_LABELS[c.resolution] || c.resolution}</span></div>
-          <div style="font-size:var(--font-xs);color:var(--text3);margin-top:2px">${c.lead_email ? escAttr(c.lead_email) + ' · ' : ''}${c.lead_phone ? escAttr(c.lead_phone) : ''}</div>
+          <div style="font-size:var(--font-xs);color:var(--text3);margin-top:2px">${escAttr(c.channel || 'Website')} · ${fmtNoteTime(c.created_at)}</div>
+        </div>
+        <div class="cw-header-actions">
+          <button class="btn btn-primary btn-sm" onclick="addChatWidgetLeadAsClient('${c.id}')">Add to Client</button>
+          <button class="btn btn-ghost btn-sm" onclick="assignChatWidgetToHuman('${c.id}')">Assign Human</button>
+          <button class="btn btn-ghost btn-sm" onclick="transferChatWidgetLead('${c.id}')">Transfer</button>
         </div>
       </div>
+      ${hasCollectedInfo ? `
+      <div class="cw-info-card">
+        <div class="cw-info-card-hd"><span class="cw-info-card-title">Collected Information</span></div>
+        <div class="cw-info-grid">
+          <div><div class="lbl">Name</div><div class="val">${escAttr(c.lead_name || '—')}</div></div>
+          <div><div class="lbl">Phone</div><div class="val">${escAttr(c.lead_phone || '—')}</div></div>
+          <div><div class="lbl">Email</div><div class="val">${escAttr(c.lead_email || '—')}</div></div>
+          <div><div class="lbl">Service Needed</div><div class="val">${escAttr(c.service_requested || '—')}</div></div>
+        </div>
+      </div>` : ''}
+      ${c.resolution === 'booked' && c.appointment_at ? `
+      <div class="cw-appt-card">
+        <div class="cw-info-card-hd"><span class="cw-info-card-title" style="color:var(--green)">✅ Appointment Booked</span></div>
+        <div style="font-size:var(--font-sm);color:var(--text)">${new Date(c.appointment_at).toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'})}, ${new Date(c.appointment_at).toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'})}</div>
+        <div style="font-size:var(--font-xs);color:var(--text3);margin-top:2px">${escAttr(c.appointment_service || 'Consultation')}</div>
+      </div>` : ''}
       <div class="cw-detail-thread">
         ${messages.map(m => `<div class="cw-msg cw-msg-${m.role}">${escAttr(m.content)}</div>`).join('') || '<div style="color:var(--text3);font-size:var(--font-sm)">No messages yet.</div>'}
       </div>
     </div>
     <div class="cw-summary-col">
+      <div class="cw-summary-label" style="margin-top:0">Lead Overview</div>
+      <div class="cw-lead-overview-row"><span style="color:var(--text3)">Source</span><span>${escAttr(c.source || 'Website')}</span></div>
+      <div class="cw-lead-overview-row"><span style="color:var(--text3)">Channel</span><span>${escAttr(c.channel || 'Concierge Dock')}</span></div>
+      <div class="cw-lead-overview-row"><span style="color:var(--text3)">Location</span><span>${escAttr(c.location || '—')}</span></div>
+      <div class="cw-lead-overview-row" style="border-bottom:none;flex-direction:column;align-items:stretch;gap:2px">
+        <div style="display:flex;justify-content:space-between"><span style="color:var(--text3)">Lead Score</span><span>${c.lead_score != null ? c.lead_score : '—'}</span></div>
+        ${c.lead_score != null ? `<div class="cw-lead-score-bar"><div class="cw-lead-score-fill" style="width:${c.lead_score}%"></div></div>` : ''}
+      </div>
       <div class="cw-summary-label">AI Summary</div>
       <div class="cw-summary-value">${escAttr(c.intent || '—')}</div>
       <div class="cw-summary-label">Confidence</div>
       <div class="cw-summary-value">${escAttr(c.confidence || '—')}</div>
       <div class="cw-summary-label">Next Step</div>
       <div class="cw-summary-value">${escAttr(c.next_step || '—')}</div>
-      <div class="cw-summary-label">Service Requested</div>
-      <div class="cw-summary-value">${escAttr(c.service_requested || '—')}</div>
-      <button class="btn btn-primary btn-sm" style="width:100%;margin-top:var(--space-4)" onclick="addChatWidgetLeadAsClient('${c.id}')">➕ Add as Client</button>
-      <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:6px" onclick="createTaskFromChatWidgetLead('${c.id}')">✅ Create Task</button>
+      <div class="cw-summary-label">Resolution Summary</div>
+      <div class="cw-resolution-summary-row"><span>🔵 Exploring</span><span>${counts.exploring}</span></div>
+      <div class="cw-resolution-summary-row"><span>🟢 Booked</span><span>${counts.booked}</span></div>
+      <div class="cw-resolution-summary-row"><span>🟠 Transferred</span><span>${counts.transfer}</span></div>
+      <div class="cw-resolution-summary-row"><span>🟣 Handled by AI</span><span>${counts.handled_ai}</span></div>
+      <div class="cw-resolution-summary-row"><span>🟤 Handled by Human</span><span>${counts.handled_human}</span></div>
     </div>`;
+}
+
+async function assignChatWidgetToHuman(convId) {
+  if (!requirePermission('edit')) return;
+  const c = CW_CONVERSATIONS.find(x => x.id === convId);
+  if (!c) return;
+  c.handled_by = 'human';
+  c.resolution = 'handled_human';
+  c.updated_at = new Date().toISOString();
+  try { await sbPatch('widget_conversations', `id=eq.${convId}`, { handled_by: 'human', resolution: 'handled_human', updated_at: c.updated_at }); }
+  catch(e) { showToast('Could not update: ' + e.message, 'error'); return; }
+  rebuildChatWidgetInbox();
+  openChatWidgetConversation(convId);
+  showToast(`"${c.lead_name || 'This lead'}" assigned to a human teammate.`, 'success');
+}
+
+async function transferChatWidgetLead(convId) {
+  if (!requirePermission('edit')) return;
+  const c = CW_CONVERSATIONS.find(x => x.id === convId);
+  if (!c) return;
+  c.resolution = 'transfer';
+  c.updated_at = new Date().toISOString();
+  try { await sbPatch('widget_conversations', `id=eq.${convId}`, { resolution: 'transfer', updated_at: c.updated_at }); }
+  catch(e) { showToast('Could not update: ' + e.message, 'error'); return; }
+  rebuildChatWidgetInbox();
+  openChatWidgetConversation(convId);
+  showToast(`"${c.lead_name || 'This lead'}" marked for transfer.`, 'success');
 }
 
 async function addChatWidgetLeadAsClient(convId) {
@@ -15627,21 +15770,45 @@ function createTaskFromChatWidgetLead(convId) {
   showToast(`Creating a task for "${c.lead_name}" — open a client profile to add it, or ask Nirvana.`, 'info');
 }
 
+const CW_AVATARS = ['🤖', '🦊', '✨', '👋', '🎯', '💬'];
+const CW_DAY_LABELS = { mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun' };
+
 function rebuildChatWidgetSettings() {
   const widget = CHAT_WIDGETS.find(w => w.id === cwActiveWidgetId);
   if (!widget) return;
   document.getElementById('cwAgentName').value = widget.agent_name || 'Nirvana';
   document.getElementById('cwInstructions').value = widget.instructions || '';
   document.getElementById('cwWelcomePrompt').value = widget.welcome_prompt || '';
-  document.getElementById('cwCollectName').checked = widget.collect_name !== false;
-  document.getElementById('cwCollectPhone').checked = widget.collect_phone !== false;
-  document.getElementById('cwCollectEmail').checked = widget.collect_email !== false;
-  document.getElementById('cwCollectService').checked = widget.collect_service_requested !== false;
-  document.getElementById('cwCollectCompany').checked = !!widget.collect_company;
+  document.getElementById('cwTone').value = widget.tone || 'professional_friendly';
+  document.getElementById('cwTimezone').value = widget.timezone || 'America/Los_Angeles';
+  document.getElementById('cwAllowAfterHours').checked = widget.allow_after_hours !== false;
+  document.getElementById('cwServiceDuration').value = widget.service_duration_minutes || 60;
+  document.getElementById('cwBufferTime').value = widget.buffer_time_minutes ?? 15;
+  document.getElementById('cwMinNotice').value = widget.min_notice_hours ?? 2;
+
+  const avatarWrap = document.getElementById('cwAvatarPicker');
+  avatarWrap.innerHTML = CW_AVATARS.map(a => `<div class="cw-avatar-option${a === widget.avatar ? ' active' : ''}" onclick="selectCwAvatar('${a}')">${a}</div>`).join('');
 
   const swatchWrap = document.getElementById('cwColorSwatches');
   swatchWrap.innerHTML = CHAT_WIDGET_COLORS.map(c => `<div class="cw-color-swatch${c === widget.orb_color ? ' active' : ''}" style="background:${c}" onclick="selectCwColor('${c}')"></div>`).join('');
   document.getElementById('cwWidgetPreview').style.setProperty('--cw-color', widget.orb_color || '#e2541f');
+
+  document.querySelectorAll('#cwDockPositionToggle .cw-toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.val === (widget.dock_position || 'right')));
+  document.querySelectorAll('#cwDockSizeToggle .cw-toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.val === (widget.dock_size || 'expanded')));
+
+  const fields = Array.isArray(widget.data_fields) ? widget.data_fields : [];
+  renderCwDataFields(fields);
+
+  const hours = widget.business_hours || {};
+  document.getElementById('cwBusinessHoursList').innerHTML = Object.keys(CW_DAY_LABELS).map(day => {
+    const d = hours[day] || { open: '09:00', close: '17:00', enabled: false };
+    return `<div class="cw-hours-row">
+      <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" ${d.enabled ? 'checked' : ''} onchange="toggleCwHoursDay('${day}', this.checked)"> ${CW_DAY_LABELS[day]}</label>
+      <input type="time" value="${d.open}" ${d.enabled ? '' : 'disabled'} onchange="updateCwHours('${day}','open',this.value)">
+      <input type="time" value="${d.close}" ${d.enabled ? '' : 'disabled'} onchange="updateCwHours('${day}','close',this.value)">
+      <span></span>
+    </div>`;
+  }).join('');
 
   const calStatus = document.getElementById('cwCalendarStatus');
   calStatus.innerHTML = widget.calendar_connected
@@ -15651,11 +15818,69 @@ function rebuildChatWidgetSettings() {
   document.getElementById('cwEmbedCode').value = `<script src="https://niche-client-hub.netlify.app/widget.js" data-widget-id="${widget.id}"><\/script>`;
 }
 
+function renderCwDataFields(fields) {
+  document.getElementById('cwDataFieldsList').innerHTML = fields.map((f, i) => `
+    <div class="cw-datafield-row">
+      <input type="checkbox" ${f.enabled ? 'checked' : ''} onchange="toggleCwFieldEnabled(${i}, this.checked)">
+      <input type="text" value="${escAttr(f.label)}" onchange="renameCwField(${i}, this.value)">
+      <span class="cw-req-toggle ${f.required ? 'required' : 'optional'}" onclick="toggleCwFieldRequired(${i})">${f.required ? 'Required' : 'Optional'}</span>
+      <button class="row-action-btn danger" onclick="removeCwDataField(${i})" aria-label="Remove field">×</button>
+    </div>`).join('');
+}
+
+function getCwWidgetFields() {
+  const widget = CHAT_WIDGETS.find(w => w.id === cwActiveWidgetId);
+  return widget && Array.isArray(widget.data_fields) ? widget.data_fields : [];
+}
+function toggleCwFieldEnabled(i, checked) {
+  const fields = getCwWidgetFields();
+  if (fields[i]) fields[i].enabled = checked;
+  renderCwDataFields(fields);
+}
+function renameCwField(i, value) {
+  const fields = getCwWidgetFields();
+  if (fields[i]) fields[i].label = value;
+}
+function toggleCwFieldRequired(i) {
+  const fields = getCwWidgetFields();
+  if (fields[i]) fields[i].required = !fields[i].required;
+  renderCwDataFields(fields);
+}
+function removeCwDataField(i) {
+  const fields = getCwWidgetFields();
+  fields.splice(i, 1);
+  renderCwDataFields(fields);
+}
+function addCwDataField() {
+  const fields = getCwWidgetFields();
+  fields.push({ key: 'field_' + Date.now(), label: 'New Field', enabled: true, required: false });
+  renderCwDataFields(fields);
+}
+
+function toggleCwHoursDay(day, enabled) {
+  const widget = CHAT_WIDGETS.find(w => w.id === cwActiveWidgetId);
+  if (!widget.business_hours) widget.business_hours = {};
+  if (!widget.business_hours[day]) widget.business_hours[day] = { open: '09:00', close: '17:00' };
+  widget.business_hours[day].enabled = enabled;
+  rebuildChatWidgetSettings();
+}
+function updateCwHours(day, field, value) {
+  const widget = CHAT_WIDGETS.find(w => w.id === cwActiveWidgetId);
+  if (!widget.business_hours) widget.business_hours = {};
+  if (!widget.business_hours[day]) widget.business_hours[day] = { enabled: true };
+  widget.business_hours[day][field] = value;
+}
+
+function selectCwAvatar(avatar) {
+  document.querySelectorAll('.cw-avatar-option').forEach(el => el.classList.toggle('active', el.textContent === avatar));
+}
+function selectCwToggle(groupId, value) {
+  document.querySelectorAll(`#${groupId} .cw-toggle-btn`).forEach(b => b.classList.toggle('active', b.dataset.val === value));
+}
 function selectCwColor(color) {
   document.querySelectorAll('.cw-color-swatch').forEach(el => el.classList.remove('active'));
   event.target.classList.add('active');
   document.getElementById('cwWidgetPreview').style.setProperty('--cw-color', color);
-  document.getElementById('cwWidgetPreview').dataset.selectedColor = color;
 }
 
 async function saveChatWidgetSettings() {
@@ -15665,18 +15890,26 @@ async function saveChatWidgetSettings() {
   widget.agent_name = document.getElementById('cwAgentName').value.trim() || 'Nirvana';
   widget.instructions = document.getElementById('cwInstructions').value.trim();
   widget.welcome_prompt = document.getElementById('cwWelcomePrompt').value.trim();
-  widget.collect_name = document.getElementById('cwCollectName').checked;
-  widget.collect_phone = document.getElementById('cwCollectPhone').checked;
-  widget.collect_email = document.getElementById('cwCollectEmail').checked;
-  widget.collect_service_requested = document.getElementById('cwCollectService').checked;
-  widget.collect_company = document.getElementById('cwCollectCompany').checked;
+  widget.tone = document.getElementById('cwTone').value;
+  widget.timezone = document.getElementById('cwTimezone').value;
+  widget.allow_after_hours = document.getElementById('cwAllowAfterHours').checked;
+  widget.service_duration_minutes = parseInt(document.getElementById('cwServiceDuration').value) || 60;
+  widget.buffer_time_minutes = parseInt(document.getElementById('cwBufferTime').value) || 0;
+  widget.min_notice_hours = parseInt(document.getElementById('cwMinNotice').value) || 0;
+  const activeAvatar = document.querySelector('.cw-avatar-option.active');
+  if (activeAvatar) widget.avatar = activeAvatar.textContent;
   const selectedSwatch = document.querySelector('.cw-color-swatch.active');
   if (selectedSwatch) widget.orb_color = selectedSwatch.style.backgroundColor ? rgbToHex(selectedSwatch.style.backgroundColor) : widget.orb_color;
+  const dockPosBtn = document.querySelector('#cwDockPositionToggle .cw-toggle-btn.active');
+  if (dockPosBtn) widget.dock_position = dockPosBtn.dataset.val;
+  const dockSizeBtn = document.querySelector('#cwDockSizeToggle .cw-toggle-btn.active');
+  if (dockSizeBtn) widget.dock_size = dockSizeBtn.dataset.val;
+  widget.data_fields = getCwWidgetFields();
   widget.updated_at = new Date().toISOString();
   try { await sbUpsert('chat_widgets', widget); }
   catch(e) { showToast('Could not save: ' + e.message, 'error'); return; }
   rebuildChatWidgetSettings();
-  showToast('Widget settings saved.', 'success');
+  showToast('Widget settings saved and published.', 'success');
 }
 
 function rgbToHex(rgb) {
