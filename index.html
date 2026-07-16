@@ -2160,33 +2160,33 @@ tr.hidden-row { display: none; }
 
   <div class="top-nav-items" id="topNavItems">
     <div class="nav-item active" onclick="showPage('home')" style="font-weight:700">
-      <span class="icon">🏠</span> <span data-i18n="nav_home">Home</span>
+      <span class="icon" data-icon="home"></span> <span data-i18n="nav_home">Home</span>
     </div>
 
     <div class="nav-dropdown">
       <div class="nav-item nav-dropdown-trigger"><span data-i18n="nav_portfolios">Portfolios</span> <span class="caret">▾</span></div>
       <div class="nav-dropdown-menu">
         <div class="nav-item" onclick="showPage('clients')">
-          <span class="icon">👥</span> All Clients
+          <span class="icon" data-icon="users"></span> All Clients
           <span class="badge" id="navClientsBadge">0</span>
         </div>
         <div class="nav-item" onclick="showPage('smb')">
-          <span class="icon">📊</span> SMB Dashboard
+          <span class="icon" data-icon="chart"></span> SMB Dashboard
           <span class="badge" id="navSmbBadge">63</span>
         </div>
         <div class="nav-item" onclick="showPage('whitelabel')">
-          <span class="icon">🏷️</span> White Label
+          <span class="icon" data-icon="tag"></span> White Label
           <span class="badge green" id="navWhitelabelBadge">12</span>
         </div>
         <div class="nav-item" onclick="showPage('support')">
-          <span class="icon">📊</span> Support Dashboard
+          <span class="icon" data-icon="chart"></span> Support Dashboard
           <span class="badge red" id="navSupportBadge">8</span>
         </div>
       </div>
     </div>
 
     <div class="nav-item" onclick="showPage('onboarding')">
-      <span class="icon">🧭</span> <span data-i18n="nav_onboarding">Onboarding</span>
+      <span class="icon" data-icon="compass"></span> <span data-i18n="nav_onboarding">Onboarding</span>
       <span class="badge" id="navOnboardingBadge">0</span>
     </div>
 
@@ -2194,11 +2194,11 @@ tr.hidden-row { display: none; }
       <div class="nav-item nav-dropdown-trigger"><span data-i18n="nav_performance">Performance</span> <span class="caret">▾</span></div>
       <div class="nav-dropdown-menu">
         <div class="nav-item" onclick="showPage('voice')">
-          <span class="icon">🎙️</span> Voice Agent
+          <span class="icon" data-icon="mic"></span> Voice Agent
           <span class="badge red" id="navVoiceBadge">0</span>
         </div>
         <div class="nav-item" onclick="showPage('textagent')">
-          <span class="icon">💬</span> Text Agent
+          <span class="icon" data-icon="chat"></span> Text Agent
         </div>
       </div>
     </div>
@@ -2207,22 +2207,22 @@ tr.hidden-row { display: none; }
       <div class="nav-item nav-dropdown-trigger"><span data-i18n="nav_growth_tools">Growth Tools</span> <span class="caret">▾</span></div>
       <div class="nav-dropdown-menu">
         <div class="nav-item" onclick="showPage('upsell')">
-          <span class="icon">🚀</span> Upsell Playbook
+          <span class="icon" data-icon="rocket"></span> Upsell Playbook
         </div>
         <div class="nav-item" onclick="showPage('action')">
-          <span class="icon">🎯</span> SuccessOS
+          <span class="icon" data-icon="target"></span> SuccessOS
         </div>
         <div class="nav-item" onclick="showPage('workflows')">
-          <span class="icon">🔁</span> Workflows
+          <span class="icon" data-icon="repeat"></span> Workflows
         </div>
         <div class="nav-item" onclick="showPage('chatwidget')">
-          <span class="icon">💬</span> Chat Widget <span class="badge" id="navChatWidgetBadge">0</span>
+          <span class="icon" data-icon="chat"></span> Chat Widget <span class="badge" id="navChatWidgetBadge">0</span>
         </div>
         <div class="nav-item" onclick="showPage('knowledge')">
-          <span class="icon">📚</span> Knowledge Base
+          <span class="icon" data-icon="book"></span> Knowledge Base
         </div>
         <div class="nav-item" id="navProductsItem" onclick="showPage('products')">
-          <span class="icon">📦</span> Manage Products
+          <span class="icon" data-icon="package"></span> Manage Products
         </div>
       </div>
     </div>
@@ -2231,11 +2231,11 @@ tr.hidden-row { display: none; }
       <div class="nav-item nav-dropdown-trigger"><span data-i18n="nav_finance">Finance</span> <span class="caret">▾</span></div>
       <div class="nav-dropdown-menu">
         <div class="nav-item" onclick="showPage('adspend')">
-          <span class="icon">💰</span> Ad Spend Management
+          <span class="icon" data-icon="dollar"></span> Ad Spend Management
           <span class="badge" id="navAdSpendBadge">0</span>
         </div>
         <div class="nav-item" onclick="showPage('collections')">
-          <span class="icon">📋</span> Collections
+          <span class="icon" data-icon="clipboard"></span> Collections
           <span class="badge red" id="navCollectionsBadge" style="display:none">0</span>
         </div>
       </div>
@@ -2267,7 +2267,7 @@ tr.hidden-row { display: none; }
         <span id="themeToggleIcon">🌙</span> <span style="flex:1" data-i18n="pref_theme">Theme</span>
       </div>
       <div class="profile-menu-item" id="languageToggle" onclick="toggleLanguage()" title="Switch between English and Spanish">
-        🌐 <span style="flex:1" data-i18n="pref_language">Language</span>
+        <span class="icon" data-icon="globe" data-icon-size="15"></span> <span style="flex:1" data-i18n="pref_language">Language</span>
         <span style="color:var(--text3);font-size:var(--font-2xs);font-weight:700" id="languageToggleLabel">EN</span>
       </div>
       <div class="profile-menu-item" onclick="toggleMoneyVisibility()">
@@ -2276,19 +2276,19 @@ tr.hidden-row { display: none; }
       </div>
       <div class="profile-menu-divider"></div>
       <div class="profile-menu-item" id="notifBellBtn" onclick="toggleProfileMenu();toggleNotificationPanel()">
-        🔔 <span style="flex:1" data-i18n="pref_notifications">Notifications</span>
+        <span class="icon" data-icon="bell" data-icon-size="15"></span> <span style="flex:1" data-i18n="pref_notifications">Notifications</span>
         <span class="notif-badge" id="notifBadge" style="display:none;position:static">0</span>
       </div>
       <div class="profile-menu-item nav-item" onclick="showPage('settings')">
-        ⚙️ <span data-i18n="pref_settings">Settings</span>
+        <span class="icon" data-icon="settings" data-icon-size="15"></span> <span data-i18n="pref_settings">Settings</span>
       </div>
       <div class="profile-menu-divider"></div>
       <label class="profile-menu-item" style="cursor:pointer">
-        📷 <span data-i18n="pref_change_picture">Change Profile Picture</span>
+        <span class="icon" data-icon="camera" data-icon-size="15"></span> <span data-i18n="pref_change_picture">Change Profile Picture</span>
         <input type="file" accept="image/*" style="display:none" onchange="handleAvatarUpload(event)">
       </label>
       <div class="profile-menu-divider"></div>
-      <div class="profile-menu-item danger" onclick="confirmSignOut()">🚪 <span data-i18n="pref_sign_out">Sign Out</span></div>
+      <div class="profile-menu-item danger" onclick="confirmSignOut()"><span class="icon" data-icon="logout" data-icon-size="15"></span> <span data-i18n="pref_sign_out">Sign Out</span></div>
     </div>
   </div>
 </nav>
@@ -2300,7 +2300,7 @@ tr.hidden-row { display: none; }
 <!-- GENERIC CONFIRM DIALOG -->
 <div class="modal-overlay" id="confirmDialogModal">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="confirmDialogTitle">
-    <h3 id="confirmDialogTitle">⚠️ Are you sure?</h3>
+    <h3 id="confirmDialogTitle"><span class="icon" data-icon="alert" data-icon-size="16"></span> Are you sure?</h3>
     <p id="confirmDialogMessage" style="white-space:pre-wrap"></p>
     <div class="modal-btns">
       <button class="btn btn-ghost" id="confirmDialogCancelBtn">Cancel</button>
@@ -2312,11 +2312,11 @@ tr.hidden-row { display: none; }
 <!-- CLIENT NOTES & TASKS MODAL -->
 <div class="modal-overlay" id="clientNotesTasksModal">
   <div class="modal xwide" role="dialog" aria-modal="true" aria-labelledby="cntTitle">
-    <h3 id="cntTitle">👤 <span data-i18n="cnt_client_profile">Client Profile</span></h3>
+    <h3 id="cntTitle"><span class="icon" data-icon="user" data-icon-size="14"></span> <span data-i18n="cnt_client_profile">Client Profile</span></h3>
 
     <div class="cnt-section" style="margin-top:10px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <div class="cnt-section-title" style="margin-bottom:0">👤 <span data-i18n="cnt_contact_info">Contact Info</span></div>
+        <div class="cnt-section-title" style="margin-bottom:0"><span class="icon" data-icon="user" data-icon-size="14"></span> <span data-i18n="cnt_contact_info">Contact Info</span></div>
         <div id="cntContactSavedNote" style="font-size:11px;color:var(--text3)"></div>
       </div>
       <div class="smart-paste-box" style="padding:8px 12px;margin-bottom:10px">
@@ -2327,7 +2327,7 @@ tr.hidden-row { display: none; }
         <div><label for="cntContactTitle" class="field-label" data-i18n="fld_title">Title</label><input type="text" id="cntContactTitle" class="field-input" style="height:36px" placeholder="e.g. Owner"></div>
         <div><label for="cntContactEmail" class="field-label" data-i18n="fld_email">Email</label><input type="email" id="cntContactEmail" class="field-input" style="height:36px" placeholder="e.g. jamie@business.com"></div>
         <div><label for="cntContactPhone" class="field-label" data-i18n="fld_phone">Phone</label><input type="tel" id="cntContactPhone" class="field-input" style="height:36px" placeholder="(555) 123-4567"></div>
-        <button class="btn btn-primary btn-sm" id="cntContactSubmitBtn" style="height:36px" onclick="saveClientContactInfo()">💾 <span data-i18n="btn_save">Save</span></button>
+        <button class="btn btn-primary btn-sm" id="cntContactSubmitBtn" style="height:36px" onclick="saveClientContactInfo()"><span class="icon" data-icon="save" data-icon-size="13"></span> <span data-i18n="btn_save">Save</span></button>
       </div>
     </div>
 
@@ -2356,7 +2356,7 @@ tr.hidden-row { display: none; }
       </div>
 
       <div class="cnt-section cnt-column-divider">
-        <div class="cnt-section-title" style="margin-bottom:8px">✅ <span data-i18n="cnt_tasks_section">Tasks</span></div>
+        <div class="cnt-section-title" style="margin-bottom:8px"><span class="icon" data-icon="check" data-icon-size="16"></span> <span data-i18n="cnt_tasks_section">Tasks</span></div>
         <div id="cntTasksList" class="cnt-column-scroll" style="margin-bottom:12px"></div>
         <label for="cntNewTaskTitle" class="field-label" data-i18n="cnt_add_a_task">Add a Task</label>
         <input type="text" id="cntNewTaskTitle" class="field-input" style="height:36px;margin-bottom:8px" placeholder="e.g. Follow up about renewal" data-i18n-placeholder="cnt_task_placeholder">
@@ -2414,15 +2414,15 @@ tr.hidden-row { display: none; }
     <div class="ai-agent-header-title"><img class="ai-agent-header-icon" src="data:image/jpeg;base64,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" alt="Nirvana"> Nirvana</div>
     <div class="ai-agent-header-actions">
       <button id="aiVoiceReplyBtn" onclick="toggleNirvanaVoiceReply()" title="Voice replies: Off (click to enable)" aria-label="Voice replies: Off (click to enable)">🔇</button>
-      <button onclick="clearAiAgentChat()" title="Clear conversation" aria-label="Clear conversation">🗑️</button>
-      <button onclick="toggleAiAgentPanel()" title="Close" aria-label="Close Nirvana">✕</button>
+      <button onclick="clearAiAgentChat()" title="Clear conversation" aria-label="Clear conversation"><span class="icon" data-icon="trash" data-icon-size="13"></span></button>
+      <button onclick="toggleAiAgentPanel()" title="Close" aria-label="Close Nirvana"><span class="icon" data-icon="close" data-icon-size="12"></span></button>
     </div>
   </div>
   <div class="ai-quick-actions">
-    <div class="ai-quick-action" onclick="sendAiAgentQuickMessage('Give me today\'s briefing.')"><span class="icon">📋</span> Daily briefing</div>
-    <div class="ai-quick-action" onclick="sendAiAgentQuickMessage('Which clients are at risk right now?')"><span class="icon">⚠️</span> At-risk clients</div>
-    <div class="ai-quick-action" onclick="sendAiAgentQuickMessage('I want to create a task.')"><span class="icon">✅</span> Create a task</div>
-    <div class="ai-quick-action" onclick="sendAiAgentQuickMessage('I want to add a note to a client.')"><span class="icon">📝</span> Add a note</div>
+    <div class="ai-quick-action" onclick="sendAiAgentQuickMessage('Give me today\'s briefing.')"><span class="icon" data-icon="clipboard"></span> Daily briefing</div>
+    <div class="ai-quick-action" onclick="sendAiAgentQuickMessage('Which clients are at risk right now?')"><span class="icon" data-icon="alert"></span> At-risk clients</div>
+    <div class="ai-quick-action" onclick="sendAiAgentQuickMessage('I want to create a task.')"><span class="icon" data-icon="check"></span> Create a task</div>
+    <div class="ai-quick-action" onclick="sendAiAgentQuickMessage('I want to add a note to a client.')"><span class="icon" data-icon="edit"></span> Add a note</div>
   </div>
   <div class="ai-agent-messages" id="aiAgentMessages"></div>
   <div class="ai-agent-confirm" id="aiAgentConfirm" style="display:none"></div>
@@ -2466,9 +2466,9 @@ tr.hidden-row { display: none; }
   ════════════════════════════════════════════════════════════════════════ -->
   <div class="page" id="page-clients">
     <div class="kpi-row">
-      <div class="kpi"><div class="kpi-icon">👥</div><div class="kpi-val orange" id="cl-total">0</div><div class="kpi-lbl" data-i18n="cl_unique_clients">Unique Clients</div><div class="kpi-sub" data-i18n="cl_across_portfolios">Across all portfolios</div></div>
-      <div class="kpi"><div class="kpi-icon">📊</div><div class="kpi-val" id="cl-smb-count">0</div><div class="kpi-lbl" data-i18n="cl_smb_clients">SMB Clients</div></div>
-      <div class="kpi"><div class="kpi-icon">🏷️</div><div class="kpi-val green" id="cl-wl-count">0</div><div class="kpi-lbl" data-i18n="cl_wl_partners">White Label Partners</div></div>
+      <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="users" data-icon-size="16"></span></div><div class="kpi-val orange" id="cl-total">0</div><div class="kpi-lbl" data-i18n="cl_unique_clients">Unique Clients</div><div class="kpi-sub" data-i18n="cl_across_portfolios">Across all portfolios</div></div>
+      <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="chart" data-icon-size="16"></span></div><div class="kpi-val" id="cl-smb-count">0</div><div class="kpi-lbl" data-i18n="cl_smb_clients">SMB Clients</div></div>
+      <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="tag" data-icon-size="14"></span></div><div class="kpi-val green" id="cl-wl-count">0</div><div class="kpi-lbl" data-i18n="cl_wl_partners">White Label Partners</div></div>
       <div class="kpi"><div class="kpi-icon">🎫</div><div class="kpi-val red" id="cl-support-count">0</div><div class="kpi-lbl" data-i18n="cl_support_clients">Support Clients</div></div>
       <div class="kpi"><div class="kpi-icon">🔗</div><div class="kpi-val" id="cl-multi-count" style="color:var(--purple)">0</div><div class="kpi-lbl" data-i18n="cl_multi_portfolio">In 2+ Portfolios</div><div class="kpi-sub" data-i18n="cl_cross_sold">Cross-sold accounts</div></div>
     </div>
@@ -2481,20 +2481,20 @@ tr.hidden-row { display: none; }
         <input type="text" class="search-box" id="clientsSearch" placeholder="Search all clients..." data-i18n-placeholder="cl_search_all" oninput="debouncedFilterClientsDirectory()">
         <div style="display:flex;gap:6px;flex-wrap:wrap" id="clientsFilterPills">
           <button class="filter-pill active" onclick="filterClientsByPortfolio('all',this)" data-i18n="cl_all_portfolios">All Portfolios</button>
-          <button class="filter-pill" onclick="filterClientsByPortfolio('smb',this)">📊 SMB</button>
-          <button class="filter-pill" onclick="filterClientsByPortfolio('whitelabel',this)">🏷️ <span data-i18n="cl_wl_partners_short">White Label</span></button>
+          <button class="filter-pill" onclick="filterClientsByPortfolio('smb',this)"><span class="icon" data-icon="chart" data-icon-size="16"></span> SMB</button>
+          <button class="filter-pill" onclick="filterClientsByPortfolio('whitelabel',this)"><span class="icon" data-icon="tag" data-icon-size="14"></span> <span data-i18n="cl_wl_partners_short">White Label</span></button>
           <button class="filter-pill" onclick="filterClientsByPortfolio('support',this)">🎫 <span data-i18n="cl_support_clients_short">Support</span></button>
           <button class="filter-pill" onclick="filterClientsByPortfolio('multi',this)">🔗 2+ Portfolios</button>
         </div>
         <select id="clientsProductFilter" onchange="filterClientsByProduct(this.value)" style="width:auto;max-width:200px">
-          <option value="all" data-i18n="cl_all_products">📦 All Products</option>
+          <option value="all" data-i18n="cl_all_products"><span class="icon" data-icon="package" data-icon-size="16"></span> All Products</option>
         </select>
         <span class="row-count" id="clientsRowCount">0 clients</span>
-        <button class="export-csv-btn" onclick="exportAllClientsTable()" title="Download the currently visible rows as a CSV file">⬇ <span data-i18n="export_csv">Export CSV</span></button>
+        <button class="export-csv-btn" onclick="exportAllClientsTable()" title="Download the currently visible rows as a CSV file"><span class="icon" data-icon="download" data-icon-size="12"></span> <span data-i18n="export_csv">Export CSV</span></button>
       </div>
       <div class="card" id="clDirBulkBar" style="display:none;margin-bottom:var(--space-3);padding:var(--space-2) var(--space-3);background:var(--orange-dim);border-color:rgba(226,84,31,.3);align-items:center;gap:var(--space-3)">
         <span style="font-weight:700;color:var(--text);font-size:var(--font-base)"><span id="clDirSelectedCount">0</span> selected</span>
-        <button class="btn btn-primary btn-sm" onclick="openBulkActionModal('task')">➕ <span data-i18n="add_task_selected">Add Task to Selected</span></button>
+        <button class="btn btn-primary btn-sm" onclick="openBulkActionModal('task')"><span class="icon" data-icon="plus" data-icon-size="12"></span> <span data-i18n="add_task_selected">Add Task to Selected</span></button>
         <button class="btn btn-ghost btn-sm" onclick="openBulkActionModal('note')">📝 <span data-i18n="add_note_selected">Add Note to Selected</span></button>
         <button class="btn btn-ghost btn-sm" onclick="clearDirectorySelection()" style="margin-left:auto" data-i18n="clear_selection">Clear Selection</button>
       </div>
@@ -2545,13 +2545,13 @@ tr.hidden-row { display: none; }
     <!-- KPIs -->
     <div class="kpi-row">
       <div class="kpi">
-        <div class="kpi-icon">👥</div>
+        <div class="kpi-icon"><span class="icon" data-icon="users" data-icon-size="16"></span></div>
         <div class="kpi-val" id="kpi-smb-total">63</div>
         <div class="kpi-lbl" data-i18n="kpi_total_clients">Total Clients</div>
         <div class="kpi-sub" data-i18n="kpi_active_platform">Active in platform</div>
       </div>
       <div class="kpi">
-        <div class="kpi-icon">📦</div>
+        <div class="kpi-icon"><span class="icon" data-icon="package" data-icon-size="16"></span></div>
         <div class="kpi-val orange" id="kpi-smb-products">0</div>
         <div class="kpi-lbl" data-i18n="kpi_products_tracked">Products Tracked</div>
         <div class="kpi-sub" data-i18n="kpi_across_clients">Across all clients</div>
@@ -2563,19 +2563,19 @@ tr.hidden-row { display: none; }
         <div class="kpi-sub" data-i18n="kpi_upside">Significant upside potential</div>
       </div>
       <div class="kpi">
-        <div class="kpi-icon">🎯</div>
+        <div class="kpi-icon"><span class="icon" data-icon="target" data-icon-size="16"></span></div>
         <div class="kpi-val orange" id="kpi-smb-opps">0</div>
         <div class="kpi-lbl" data-i18n="kpi_upsell_opps">Upsell Opportunities</div>
         <div class="kpi-sub" id="kpi-smb-opps-sub">Across all products</div>
       </div>
       <div class="kpi">
-        <div class="kpi-icon">⚠️</div>
+        <div class="kpi-icon"><span class="icon" data-icon="alert" data-icon-size="16"></span></div>
         <div class="kpi-val red" id="kpi-smb-untouched">0 / 0</div>
         <div class="kpi-lbl" id="kpi-smb-untouched-lbl">Products Untouched</div>
         <div class="kpi-sub" id="kpi-smb-untouched-sub">—</div>
       </div>
       <div class="kpi">
-        <div class="kpi-icon">✅</div>
+        <div class="kpi-icon"><span class="icon" data-icon="check" data-icon-size="16"></span></div>
         <div class="kpi-val green" id="kpi-smb-top">0%</div>
         <div class="kpi-lbl" id="kpi-smb-top-lbl" data-i18n="kpi_top_adoption">Top Adoption</div>
         <div class="kpi-sub">Highest adoption product</div>
@@ -2590,14 +2590,14 @@ tr.hidden-row { display: none; }
       <div class="card">
         <div class="card-header">
           <div><div class="card-title" data-i18n="chart_product_adoption">Product Adoption Rate</div><div class="card-sub" id="sub-smb-adoption" data-i18n="chart_pct_clients_using">% of clients using each product</div></div>
-          <span class="card-badge" id="badge-smb-products">📊 0 Products</span>
+          <span class="card-badge" id="badge-smb-products"><span class="icon" data-icon="chart" data-icon-size="16"></span> 0 Products</span>
         </div>
         <div class="chart-wrap h260"><canvas id="adoptionBar-smb"></canvas></div>
       </div>
       <div class="card">
         <div class="card-header">
           <div><div class="card-title" data-i18n="chart_products_per_client">Products Per Client</div><div class="card-sub" data-i18n="chart_distribution">Distribution of product count</div></div>
-          <span class="card-badge" id="badge-smb-clients">👥 0 Clients</span>
+          <span class="card-badge" id="badge-smb-clients"><span class="icon" data-icon="users" data-icon-size="16"></span> 0 Clients</span>
         </div>
         <div class="chart-wrap h260" style="position:relative">
           <canvas id="distPie-smb"></canvas>
@@ -2613,7 +2613,7 @@ tr.hidden-row { display: none; }
     <div class="card" style="margin-bottom:20px">
       <div class="card-header">
         <div><div class="card-title" data-i18n="chart_upsell_gap">Upsell Gap — Clients NOT Using Each Product</div><div class="card-sub" data-i18n="chart_upsell_gap_sub">Bigger bar = bigger revenue opportunity</div></div>
-        <span class="card-badge" id="badge-smb-opps">🎯 0 Total Opportunities</span>
+        <span class="card-badge" id="badge-smb-opps"><span class="icon" data-icon="target" data-icon-size="16"></span> 0 Total Opportunities</span>
       </div>
       <div class="chart-wrap h300"><canvas id="gapBar-smb"></canvas></div>
     </div>
@@ -2626,18 +2626,18 @@ tr.hidden-row { display: none; }
       <div class="table-controls">
         <input type="text" class="search-box" id="clientSearch-smb" placeholder="Search clients..." data-i18n-placeholder="search_clients" oninput="debouncedFilterTable('smb')">
         <select id="orgFilter-smb" onchange="filterByOrg('smb', this.value)" style="width:auto;max-width:240px">
-          <option value="" data-i18n="all_businesses">🏢 All Businesses</option>
+          <option value="" data-i18n="all_businesses"><span class="icon" data-icon="building" data-icon-size="14"></span> All Businesses</option>
         </select>
         <div style="display:flex;gap:6px;flex-wrap:wrap" id="filterPills-smb">
           <button class="filter-pill active" onclick="filterByProduct('smb','all',this)"><span data-i18n="filter_all">All</span></button>
         </div>
         <span class="row-count" id="rowCount-smb">0 clients</span>
         <button class="reset-columns-btn" onclick="resetColumnPrefs('client-smb'); rebuildPortfolio('smb')" title="Reset column order and widths back to default">↺ <span data-i18n="reset_columns">Columns</span></button>
-        <button class="export-csv-btn" onclick="exportClientTable('smb')" title="Download the currently visible rows as a CSV file">⬇ <span data-i18n="export_csv">Export CSV</span></button>
+        <button class="export-csv-btn" onclick="exportClientTable('smb')" title="Download the currently visible rows as a CSV file"><span class="icon" data-icon="download" data-icon-size="12"></span> <span data-i18n="export_csv">Export CSV</span></button>
       </div>
       <div class="card" id="smbBulkBar" style="display:none;margin-bottom:12px;padding:10px 14px;background:var(--orange-dim);border-color:rgba(226,84,31,.3);align-items:center;gap:12px">
         <span style="font-weight:700;color:var(--text);font-size:13px"><span id="smbSelectedCount">0</span> selected</span>
-        <button class="btn btn-primary btn-sm" onclick="openBulkActionModal('task','smb')">➕ <span data-i18n="add_task_selected">Add Task to Selected</span></button>
+        <button class="btn btn-primary btn-sm" onclick="openBulkActionModal('task','smb')"><span class="icon" data-icon="plus" data-icon-size="12"></span> <span data-i18n="add_task_selected">Add Task to Selected</span></button>
         <button class="btn btn-ghost btn-sm" onclick="openBulkActionModal('note','smb')">📝 <span data-i18n="add_note_selected">Add Note to Selected</span></button>
         <button class="btn btn-ghost btn-sm" onclick="clearClientSelection('smb')" style="margin-left:auto" data-i18n="clear_selection">Clear Selection</button>
       </div>
@@ -2662,7 +2662,7 @@ tr.hidden-row { display: none; }
     <!-- KPIs -->
     <div class="kpi-row">
       <div class="kpi">
-        <div class="kpi-icon">👥</div>
+        <div class="kpi-icon"><span class="icon" data-icon="users" data-icon-size="16"></span></div>
         <div class="kpi-val" id="kpi-whitelabel-total">12</div>
         <div class="kpi-lbl" data-i18n="kpi_total_clients">Total Clients</div>
         <div class="kpi-sub" data-i18n="kpi_active_platform">Active in platform</div>
@@ -2674,7 +2674,7 @@ tr.hidden-row { display: none; }
         <div class="kpi-sub" data-i18n="kpi_multiloc_sub">Businesses with 2+ locations</div>
       </div>
       <div class="kpi">
-        <div class="kpi-icon">📦</div>
+        <div class="kpi-icon"><span class="icon" data-icon="package" data-icon-size="16"></span></div>
         <div class="kpi-val orange" id="kpi-whitelabel-products">0</div>
         <div class="kpi-lbl" data-i18n="kpi_products_tracked">Products Tracked</div>
         <div class="kpi-sub" data-i18n="kpi_across_clients">Across all clients</div>
@@ -2686,19 +2686,19 @@ tr.hidden-row { display: none; }
         <div class="kpi-sub" data-i18n="kpi_upside">Significant upside potential</div>
       </div>
       <div class="kpi">
-        <div class="kpi-icon">🎯</div>
+        <div class="kpi-icon"><span class="icon" data-icon="target" data-icon-size="16"></span></div>
         <div class="kpi-val orange" id="kpi-whitelabel-opps">0</div>
         <div class="kpi-lbl" data-i18n="kpi_upsell_opps">Upsell Opportunities</div>
         <div class="kpi-sub" id="kpi-whitelabel-opps-sub">Across all products</div>
       </div>
       <div class="kpi">
-        <div class="kpi-icon">⚠️</div>
+        <div class="kpi-icon"><span class="icon" data-icon="alert" data-icon-size="16"></span></div>
         <div class="kpi-val red" id="kpi-whitelabel-untouched">0 / 0</div>
         <div class="kpi-lbl" id="kpi-whitelabel-untouched-lbl">Products Untouched</div>
         <div class="kpi-sub" id="kpi-whitelabel-untouched-sub">—</div>
       </div>
       <div class="kpi">
-        <div class="kpi-icon">✅</div>
+        <div class="kpi-icon"><span class="icon" data-icon="check" data-icon-size="16"></span></div>
         <div class="kpi-val green" id="kpi-whitelabel-top">0%</div>
         <div class="kpi-lbl" id="kpi-whitelabel-top-lbl" data-i18n="kpi_top_adoption">Top Adoption</div>
         <div class="kpi-sub">Highest adoption product</div>
@@ -2713,14 +2713,14 @@ tr.hidden-row { display: none; }
       <div class="card">
         <div class="card-header">
           <div><div class="card-title" data-i18n="chart_product_adoption">Product Adoption Rate</div><div class="card-sub" id="sub-whitelabel-adoption" data-i18n="chart_pct_clients_using">% of clients using each product</div></div>
-          <span class="card-badge" id="badge-whitelabel-products">📊 0 Products</span>
+          <span class="card-badge" id="badge-whitelabel-products"><span class="icon" data-icon="chart" data-icon-size="16"></span> 0 Products</span>
         </div>
         <div class="chart-wrap h260"><canvas id="adoptionBar-whitelabel"></canvas></div>
       </div>
       <div class="card">
         <div class="card-header">
           <div><div class="card-title" data-i18n="chart_products_per_client">Products Per Client</div><div class="card-sub" data-i18n="chart_distribution">Distribution of product count</div></div>
-          <span class="card-badge" id="badge-whitelabel-clients">👥 0 Clients</span>
+          <span class="card-badge" id="badge-whitelabel-clients"><span class="icon" data-icon="users" data-icon-size="16"></span> 0 Clients</span>
         </div>
         <div class="chart-wrap h260" style="position:relative">
           <canvas id="distPie-whitelabel"></canvas>
@@ -2736,7 +2736,7 @@ tr.hidden-row { display: none; }
     <div class="card" style="margin-bottom:20px">
       <div class="card-header">
         <div><div class="card-title" data-i18n="chart_upsell_gap">Upsell Gap — Clients NOT Using Each Product</div><div class="card-sub" data-i18n="chart_upsell_gap_sub">Bigger bar = bigger revenue opportunity</div></div>
-        <span class="card-badge" id="badge-whitelabel-opps">🎯 0 Total Opportunities</span>
+        <span class="card-badge" id="badge-whitelabel-opps"><span class="icon" data-icon="target" data-icon-size="16"></span> 0 Total Opportunities</span>
       </div>
       <div class="chart-wrap h300"><canvas id="gapBar-whitelabel"></canvas></div>
     </div>
@@ -2749,18 +2749,18 @@ tr.hidden-row { display: none; }
       <div class="table-controls">
         <input type="text" class="search-box" id="clientSearch-whitelabel" placeholder="Search clients..." data-i18n-placeholder="search_clients" oninput="debouncedFilterTable('whitelabel')">
         <select id="orgFilter-whitelabel" onchange="filterByOrg('whitelabel', this.value)" style="width:auto;max-width:240px">
-          <option value="" data-i18n="all_businesses">🏢 All Businesses</option>
+          <option value="" data-i18n="all_businesses"><span class="icon" data-icon="building" data-icon-size="14"></span> All Businesses</option>
         </select>
         <div style="display:flex;gap:6px;flex-wrap:wrap" id="filterPills-whitelabel">
           <button class="filter-pill active" onclick="filterByProduct('whitelabel','all',this)"><span data-i18n="filter_all">All</span></button>
         </div>
         <span class="row-count" id="rowCount-whitelabel">0 clients</span>
         <button class="reset-columns-btn" onclick="resetColumnPrefs('client-whitelabel'); rebuildPortfolio('whitelabel')" title="Reset column order and widths back to default">↺ <span data-i18n="reset_columns">Columns</span></button>
-        <button class="export-csv-btn" onclick="exportClientTable('whitelabel')" title="Download the currently visible rows as a CSV file">⬇ <span data-i18n="export_csv">Export CSV</span></button>
+        <button class="export-csv-btn" onclick="exportClientTable('whitelabel')" title="Download the currently visible rows as a CSV file"><span class="icon" data-icon="download" data-icon-size="12"></span> <span data-i18n="export_csv">Export CSV</span></button>
       </div>
       <div class="card" id="whitelabelBulkBar" style="display:none;margin-bottom:12px;padding:10px 14px;background:var(--orange-dim);border-color:rgba(226,84,31,.3);align-items:center;gap:12px">
         <span style="font-weight:700;color:var(--text);font-size:13px"><span id="whitelabelSelectedCount">0</span> selected</span>
-        <button class="btn btn-primary btn-sm" onclick="openBulkActionModal('task','whitelabel')">➕ <span data-i18n="add_task_selected">Add Task to Selected</span></button>
+        <button class="btn btn-primary btn-sm" onclick="openBulkActionModal('task','whitelabel')"><span class="icon" data-icon="plus" data-icon-size="12"></span> <span data-i18n="add_task_selected">Add Task to Selected</span></button>
         <button class="btn btn-ghost btn-sm" onclick="openBulkActionModal('note','whitelabel')">📝 <span data-i18n="add_note_selected">Add Note to Selected</span></button>
         <button class="btn btn-ghost btn-sm" onclick="clearClientSelection('whitelabel')" style="margin-left:auto" data-i18n="clear_selection">Clear Selection</button>
       </div>
@@ -2784,8 +2784,8 @@ tr.hidden-row { display: none; }
     <div class="kpi-row">
       <div class="kpi"><div class="kpi-icon">🎙️</div><div class="kpi-val green" id="va-using">0</div><div class="kpi-lbl" data-i18n="voice_using">Clients with Voice Agent</div><div class="kpi-sub" id="va-using-pct">0% of all clients</div></div>
       <div class="kpi"><div class="kpi-icon">📥</div><div class="kpi-val red" id="va-not-using">0</div><div class="kpi-lbl" data-i18n="voice_not_using">Clients NOT on Voice Agent</div><div class="kpi-sub" data-i18n="voice_upsell_targets">Upsell targets</div></div>
-      <div class="kpi"><div class="kpi-icon">📊</div><div class="kpi-val orange" id="va-adoption-pct">0%</div><div class="kpi-lbl" data-i18n="voice_adoption_rate">Adoption Rate</div><div class="kpi-sub" data-i18n="voice_across_portfolios">Across SMB, White Label, Support</div></div>
-      <div class="kpi"><div class="kpi-icon">⚠️</div><div class="kpi-val" style="color:var(--yellow)" id="va-flagged">0</div><div class="kpi-lbl" data-i18n="voice_flagged">Flagged for Review</div><div class="kpi-sub" data-i18n="voice_has_note">Have a note attached</div></div>
+      <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="chart" data-icon-size="16"></span></div><div class="kpi-val orange" id="va-adoption-pct">0%</div><div class="kpi-lbl" data-i18n="voice_adoption_rate">Adoption Rate</div><div class="kpi-sub" data-i18n="voice_across_portfolios">Across SMB, White Label, Support</div></div>
+      <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="alert" data-icon-size="16"></span></div><div class="kpi-val" style="color:var(--yellow)" id="va-flagged">0</div><div class="kpi-lbl" data-i18n="voice_flagged">Flagged for Review</div><div class="kpi-sub" data-i18n="voice_has_note">Have a note attached</div></div>
     </div>
 
     <div class="card" style="margin-bottom:var(--space-5)">
@@ -2805,9 +2805,9 @@ tr.hidden-row { display: none; }
         <input type="text" class="search-box" id="vaFlagSearch" placeholder="Search flagged clients..." data-i18n-placeholder="search_clients" oninput="listPaginationState.vaFlagged=1;debouncedRebuildVoiceAgentFlagged()">
         <div style="display:flex;gap:var(--space-2);flex-wrap:wrap" id="vaFlagPills">
           <button class="filter-pill active" onclick="setVoiceAgentPortfolioFilter('all',this)" data-i18n="cl_all_portfolios">All Portfolios</button>
-          <button class="filter-pill" onclick="setVoiceAgentPortfolioFilter('smb',this)">📊 SMB</button>
-          <button class="filter-pill" onclick="setVoiceAgentPortfolioFilter('whitelabel',this)">🏷️ <span data-i18n="cl_wl_partners_short">White Label</span></button>
-          <button class="filter-pill" onclick="setVoiceAgentPortfolioFilter('support',this)">📊 <span data-i18n="cl_support_clients_short">Support</span></button>
+          <button class="filter-pill" onclick="setVoiceAgentPortfolioFilter('smb',this)"><span class="icon" data-icon="chart" data-icon-size="16"></span> SMB</button>
+          <button class="filter-pill" onclick="setVoiceAgentPortfolioFilter('whitelabel',this)"><span class="icon" data-icon="tag" data-icon-size="14"></span> <span data-i18n="cl_wl_partners_short">White Label</span></button>
+          <button class="filter-pill" onclick="setVoiceAgentPortfolioFilter('support',this)"><span class="icon" data-icon="chart" data-icon-size="16"></span> <span data-i18n="cl_support_clients_short">Support</span></button>
         </div>
       </div>
       <div id="vaFlaggedList"></div>
@@ -2823,8 +2823,8 @@ tr.hidden-row { display: none; }
       <div class="kpi"><div class="kpi-icon" id="ta-yelp-icon">⭐</div><div class="kpi-val" id="ta-yelp">0</div><div class="kpi-lbl" data-i18n="ta_using_yelp">Using Yelp</div><div class="kpi-sub" data-i18n="cl_across_portfolios">Across all portfolios</div></div>
       <div class="kpi"><div class="kpi-icon" id="ta-lsa-icon">🔍</div><div class="kpi-val" id="ta-lsa">0</div><div class="kpi-lbl" data-i18n="ta_using_lsa">Using Google LSA</div><div class="kpi-sub" data-i18n="cl_across_portfolios">Across all portfolios</div></div>
       <div class="kpi"><div class="kpi-icon" id="ta-thumbtack-icon">📌</div><div class="kpi-val" id="ta-thumbtack">0</div><div class="kpi-lbl" data-i18n="ta_using_thumbtack">Using Thumbtack</div><div class="kpi-sub" data-i18n="cl_across_portfolios">Across all portfolios</div></div>
-      <div class="kpi"><div class="kpi-icon">📊</div><div class="kpi-val orange" id="ta-any">0</div><div class="kpi-lbl" data-i18n="ta_using_atleast_one">Using At Least One</div><div class="kpi-sub" data-i18n="ta_yelp_lsa_thumbtack">Yelp, Google LSA, or Thumbtack</div></div>
-      <div class="kpi"><div class="kpi-icon">⚠️</div><div class="kpi-val" style="color:var(--yellow)" id="ta-stale">0</div><div class="kpi-lbl" data-i18n="ta_flagged_review">Flagged for Review</div><div class="kpi-sub" data-i18n="ta_stale_leads_sub">Stale leads: 7 days–6 months</div></div>
+      <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="chart" data-icon-size="16"></span></div><div class="kpi-val orange" id="ta-any">0</div><div class="kpi-lbl" data-i18n="ta_using_atleast_one">Using At Least One</div><div class="kpi-sub" data-i18n="ta_yelp_lsa_thumbtack">Yelp, Google LSA, or Thumbtack</div></div>
+      <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="alert" data-icon-size="16"></span></div><div class="kpi-val" style="color:var(--yellow)" id="ta-stale">0</div><div class="kpi-lbl" data-i18n="ta_flagged_review">Flagged for Review</div><div class="kpi-sub" data-i18n="ta_stale_leads_sub">Stale leads: 7 days–6 months</div></div>
     </div>
 
     <div class="card" style="margin-bottom:var(--space-5)">
@@ -2842,9 +2842,9 @@ tr.hidden-row { display: none; }
         <table class="pill-rows">
           <thead><tr>
             <th style="text-align:left;padding-left:var(--space-3)" data-i18n="th_product">Product</th>
-            <th>📊 SMB</th>
-            <th>🏷️ <span data-i18n="cl_wl_partners_short">White Label</span></th>
-            <th>📊 <span data-i18n="cl_support_clients_short">Support</span></th>
+            <th><span class="icon" data-icon="chart" data-icon-size="16"></span> SMB</th>
+            <th><span class="icon" data-icon="tag" data-icon-size="14"></span> <span data-i18n="cl_wl_partners_short">White Label</span></th>
+            <th><span class="icon" data-icon="chart" data-icon-size="16"></span> <span data-i18n="cl_support_clients_short">Support</span></th>
             <th data-i18n="th_total">Total</th>
           </tr></thead>
           <tbody id="taBreakdownBody"></tbody>
@@ -2862,9 +2862,9 @@ tr.hidden-row { display: none; }
         <input type="text" class="search-box" id="taStaleSearch" placeholder="Search clients..." data-i18n-placeholder="search_clients" oninput="debouncedRebuildTextAgentStale()">
         <div style="display:flex;gap:var(--space-2);flex-wrap:wrap" id="taStalePortfolioPills">
           <button class="filter-pill active" onclick="setTextAgentStaleFilter('all',this)" data-i18n="cl_all_portfolios">All Portfolios</button>
-          <button class="filter-pill" onclick="setTextAgentStaleFilter('smb',this)">📊 SMB</button>
-          <button class="filter-pill" onclick="setTextAgentStaleFilter('whitelabel',this)">🏷️ <span data-i18n="cl_wl_partners_short">White Label</span></button>
-          <button class="filter-pill" onclick="setTextAgentStaleFilter('support',this)">📊 <span data-i18n="cl_support_clients_short">Support</span></button>
+          <button class="filter-pill" onclick="setTextAgentStaleFilter('smb',this)"><span class="icon" data-icon="chart" data-icon-size="16"></span> SMB</button>
+          <button class="filter-pill" onclick="setTextAgentStaleFilter('whitelabel',this)"><span class="icon" data-icon="tag" data-icon-size="14"></span> <span data-i18n="cl_wl_partners_short">White Label</span></button>
+          <button class="filter-pill" onclick="setTextAgentStaleFilter('support',this)"><span class="icon" data-icon="chart" data-icon-size="16"></span> <span data-i18n="cl_support_clients_short">Support</span></button>
         </div>
       </div>
       <div id="taStaleList"></div>
@@ -2886,9 +2886,9 @@ tr.hidden-row { display: none; }
         </div>
         <div style="display:flex;gap:var(--space-2);flex-wrap:wrap" id="taNotesPortfolioPills">
           <button class="filter-pill active" onclick="setTextAgentPortfolioFilter('all',this)" data-i18n="cl_all_portfolios">All Portfolios</button>
-          <button class="filter-pill" onclick="setTextAgentPortfolioFilter('smb',this)">📊 SMB</button>
-          <button class="filter-pill" onclick="setTextAgentPortfolioFilter('whitelabel',this)">🏷️ <span data-i18n="cl_wl_partners_short">White Label</span></button>
-          <button class="filter-pill" onclick="setTextAgentPortfolioFilter('support',this)">📊 <span data-i18n="cl_support_clients_short">Support</span></button>
+          <button class="filter-pill" onclick="setTextAgentPortfolioFilter('smb',this)"><span class="icon" data-icon="chart" data-icon-size="16"></span> SMB</button>
+          <button class="filter-pill" onclick="setTextAgentPortfolioFilter('whitelabel',this)"><span class="icon" data-icon="tag" data-icon-size="14"></span> <span data-i18n="cl_wl_partners_short">White Label</span></button>
+          <button class="filter-pill" onclick="setTextAgentPortfolioFilter('support',this)"><span class="icon" data-icon="chart" data-icon-size="16"></span> <span data-i18n="cl_support_clients_short">Support</span></button>
         </div>
       </div>
       <div id="taNotesList"></div>
@@ -2897,7 +2897,7 @@ tr.hidden-row { display: none; }
     <div class="card" style="margin-top:var(--space-5);display:none" id="taClientListCard">
       <div class="card-header">
         <div><div class="card-title" id="taClientListTitle">Clients</div><div class="card-sub" id="taClientListSub"></div></div>
-        <button class="btn btn-ghost btn-sm" onclick="closeTextAgentClientList()">✕ <span data-i18n="btn_close">Close</span></button>
+        <button class="btn btn-ghost btn-sm" onclick="closeTextAgentClientList()"><span class="icon" data-icon="close" data-icon-size="12"></span> <span data-i18n="btn_close">Close</span></button>
       </div>
       <div id="taClientList"></div>
     </div>
@@ -2912,13 +2912,13 @@ tr.hidden-row { display: none; }
     <!-- KPIs -->
     <div class="kpi-row">
       <div class="kpi">
-        <div class="kpi-icon">👥</div>
+        <div class="kpi-icon"><span class="icon" data-icon="users" data-icon-size="16"></span></div>
         <div class="kpi-val" id="kpi-support-total">28</div>
         <div class="kpi-lbl" data-i18n="kpi_total_clients">Total Clients</div>
         <div class="kpi-sub" data-i18n="kpi_active_platform">Active in platform</div>
       </div>
       <div class="kpi">
-        <div class="kpi-icon">📦</div>
+        <div class="kpi-icon"><span class="icon" data-icon="package" data-icon-size="16"></span></div>
         <div class="kpi-val orange" id="kpi-support-products">0</div>
         <div class="kpi-lbl" data-i18n="kpi_products_tracked">Products Tracked</div>
         <div class="kpi-sub" data-i18n="kpi_across_clients">Across all clients</div>
@@ -2930,19 +2930,19 @@ tr.hidden-row { display: none; }
         <div class="kpi-sub" data-i18n="kpi_upside">Significant upside potential</div>
       </div>
       <div class="kpi">
-        <div class="kpi-icon">🎯</div>
+        <div class="kpi-icon"><span class="icon" data-icon="target" data-icon-size="16"></span></div>
         <div class="kpi-val orange" id="kpi-support-opps">0</div>
         <div class="kpi-lbl" data-i18n="kpi_upsell_opps">Upsell Opportunities</div>
         <div class="kpi-sub" id="kpi-support-opps-sub">Across all products</div>
       </div>
       <div class="kpi">
-        <div class="kpi-icon">⚠️</div>
+        <div class="kpi-icon"><span class="icon" data-icon="alert" data-icon-size="16"></span></div>
         <div class="kpi-val red" id="kpi-support-untouched">0 / 0</div>
         <div class="kpi-lbl" id="kpi-support-untouched-lbl">Products Untouched</div>
         <div class="kpi-sub" id="kpi-support-untouched-sub">—</div>
       </div>
       <div class="kpi">
-        <div class="kpi-icon">✅</div>
+        <div class="kpi-icon"><span class="icon" data-icon="check" data-icon-size="16"></span></div>
         <div class="kpi-val green" id="kpi-support-top">0%</div>
         <div class="kpi-lbl" id="kpi-support-top-lbl" data-i18n="kpi_top_adoption">Top Adoption</div>
         <div class="kpi-sub">Highest adoption product</div>
@@ -2957,14 +2957,14 @@ tr.hidden-row { display: none; }
       <div class="card">
         <div class="card-header">
           <div><div class="card-title" data-i18n="chart_product_adoption">Product Adoption Rate</div><div class="card-sub" id="sub-support-adoption" data-i18n="chart_pct_clients_using">% of clients using each product</div></div>
-          <span class="card-badge" id="badge-support-products">📊 0 Products</span>
+          <span class="card-badge" id="badge-support-products"><span class="icon" data-icon="chart" data-icon-size="16"></span> 0 Products</span>
         </div>
         <div class="chart-wrap h260"><canvas id="adoptionBar-support"></canvas></div>
       </div>
       <div class="card">
         <div class="card-header">
           <div><div class="card-title" data-i18n="chart_products_per_client">Products Per Client</div><div class="card-sub" data-i18n="chart_distribution">Distribution of product count</div></div>
-          <span class="card-badge" id="badge-support-clients">👥 0 Clients</span>
+          <span class="card-badge" id="badge-support-clients"><span class="icon" data-icon="users" data-icon-size="16"></span> 0 Clients</span>
         </div>
         <div class="chart-wrap h260" style="position:relative">
           <canvas id="distPie-support"></canvas>
@@ -2980,7 +2980,7 @@ tr.hidden-row { display: none; }
     <div class="card" style="margin-bottom:20px">
       <div class="card-header">
         <div><div class="card-title" data-i18n="chart_upsell_gap">Upsell Gap — Clients NOT Using Each Product</div><div class="card-sub" data-i18n="chart_upsell_gap_sub">Bigger bar = bigger revenue opportunity</div></div>
-        <span class="card-badge" id="badge-support-opps">🎯 0 Total Opportunities</span>
+        <span class="card-badge" id="badge-support-opps"><span class="icon" data-icon="target" data-icon-size="16"></span> 0 Total Opportunities</span>
       </div>
       <div class="chart-wrap h300"><canvas id="gapBar-support"></canvas></div>
     </div>
@@ -2993,18 +2993,18 @@ tr.hidden-row { display: none; }
       <div class="table-controls">
         <input type="text" class="search-box" id="clientSearch-support" placeholder="Search clients..." data-i18n-placeholder="search_clients" oninput="debouncedFilterTable('support')">
         <select id="orgFilter-support" onchange="filterByOrg('support', this.value)" style="width:auto;max-width:240px">
-          <option value="" data-i18n="all_businesses">🏢 All Businesses</option>
+          <option value="" data-i18n="all_businesses"><span class="icon" data-icon="building" data-icon-size="14"></span> All Businesses</option>
         </select>
         <div style="display:flex;gap:6px;flex-wrap:wrap" id="filterPills-support">
           <button class="filter-pill active" onclick="filterByProduct('support','all',this)"><span data-i18n="filter_all">All</span></button>
         </div>
         <span class="row-count" id="rowCount-support">0 clients</span>
         <button class="reset-columns-btn" onclick="resetColumnPrefs('client-support'); rebuildPortfolio('support')" title="Reset column order and widths back to default">↺ <span data-i18n="reset_columns">Columns</span></button>
-        <button class="export-csv-btn" onclick="exportClientTable('support')" title="Download the currently visible rows as a CSV file">⬇ <span data-i18n="export_csv">Export CSV</span></button>
+        <button class="export-csv-btn" onclick="exportClientTable('support')" title="Download the currently visible rows as a CSV file"><span class="icon" data-icon="download" data-icon-size="12"></span> <span data-i18n="export_csv">Export CSV</span></button>
       </div>
       <div class="card" id="supportBulkBar" style="display:none;margin-bottom:12px;padding:10px 14px;background:var(--orange-dim);border-color:rgba(226,84,31,.3);align-items:center;gap:12px">
         <span style="font-weight:700;color:var(--text);font-size:13px"><span id="supportSelectedCount">0</span> selected</span>
-        <button class="btn btn-primary btn-sm" onclick="openBulkActionModal('task','support')">➕ <span data-i18n="add_task_selected">Add Task to Selected</span></button>
+        <button class="btn btn-primary btn-sm" onclick="openBulkActionModal('task','support')"><span class="icon" data-icon="plus" data-icon-size="12"></span> <span data-i18n="add_task_selected">Add Task to Selected</span></button>
         <button class="btn btn-ghost btn-sm" onclick="openBulkActionModal('note','support')">📝 <span data-i18n="add_note_selected">Add Note to Selected</span></button>
         <button class="btn btn-ghost btn-sm" onclick="clearClientSelection('support')" style="margin-left:auto" data-i18n="clear_selection">Clear Selection</button>
       </div>
@@ -3026,10 +3026,10 @@ tr.hidden-row { display: none; }
   ════════════════════════════════════════════════════════════════════════ -->
   <div class="page" id="page-upsell">
     <div class="kpi-row">
-      <div class="kpi"><div class="kpi-icon">🎯</div><div class="kpi-val orange" id="upsell-total-opps">0</div><div class="kpi-lbl" data-i18n="upsell_total_opps">Total Opportunities</div><div class="kpi-sub" data-i18n="upsell_across_portfolios">Across SMB, White Label, Support</div></div>
+      <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="target" data-icon-size="16"></span></div><div class="kpi-val orange" id="upsell-total-opps">0</div><div class="kpi-lbl" data-i18n="upsell_total_opps">Total Opportunities</div><div class="kpi-sub" data-i18n="upsell_across_portfolios">Across SMB, White Label, Support</div></div>
       <div class="kpi"><div class="kpi-icon">🔥</div><div class="kpi-val red" id="upsell-high-count">0</div><div class="kpi-lbl" data-i18n="upsell_high_priority">High Priority Products</div></div>
-      <div class="kpi"><div class="kpi-icon">📦</div><div class="kpi-val" style="color:var(--yellow)" id="upsell-med-count">0</div><div class="kpi-lbl" data-i18n="upsell_medium_priority">Medium Priority</div></div>
-      <div class="kpi"><div class="kpi-icon">✅</div><div class="kpi-val green" id="upsell-low-count">0</div><div class="kpi-lbl" data-i18n="upsell_targeted_priority">Targeted Priority</div></div>
+      <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="package" data-icon-size="16"></span></div><div class="kpi-val" style="color:var(--yellow)" id="upsell-med-count">0</div><div class="kpi-lbl" data-i18n="upsell_medium_priority">Medium Priority</div></div>
+      <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="check" data-icon-size="16"></span></div><div class="kpi-val green" id="upsell-low-count">0</div><div class="kpi-lbl" data-i18n="upsell_targeted_priority">Targeted Priority</div></div>
     </div>
     <div class="upsell-grid" id="upsellGrid"></div>
     <div class="page-footer">The HUB · Niche Inc. · Upsell Playbook</div>
@@ -3064,7 +3064,7 @@ tr.hidden-row { display: none; }
     <div class="section-div"></div>
     <div id="kpiPlaybooksContainer"></div>
 
-    <div class="section-hd" style="margin-top:var(--space-2)"><div class="section-num">📦</div><h2 data-i18n="kpi_roadmap_section">Product Adoption Roadmap</h2></div>
+    <div class="section-hd" style="margin-top:var(--space-2)"><div class="section-num"><span class="icon" data-icon="package" data-icon-size="16"></span></div><h2 data-i18n="kpi_roadmap_section">Product Adoption Roadmap</h2></div>
     <div class="section-div"></div>
     <div id="actionPlanSnapshot" style="margin-bottom:var(--space-5)"></div>
     <div id="actionPlanContainer"></div>
@@ -3082,7 +3082,7 @@ tr.hidden-row { display: none; }
       </div>
       <div class="wfb-header-actions">
         <button class="btn btn-ghost btn-sm" onclick="testWorkflowRun()">▸ <span data-i18n="wfb_test_btn">Test Workflow</span></button>
-        <button class="btn btn-primary btn-sm" onclick="openWfbSaveModal()">💾 <span data-i18n="wfb_save_btn">Save</span></button>
+        <button class="btn btn-primary btn-sm" onclick="openWfbSaveModal()"><span class="icon" data-icon="save" data-icon-size="13"></span> <span data-i18n="wfb_save_btn">Save</span></button>
       </div>
     </div>
 
@@ -3185,8 +3185,8 @@ tr.hidden-row { display: none; }
     <div class="wfb-statusbar">
       <span>● Workflow Status: <b id="wfbStatusText">Draft</b></span>
       <span>🕒 Last Updated: <span id="wfbLastUpdated">—</span></span>
-      <span>👤 Created by: <span id="wfbCreatedBy">—</span></span>
-      <button class="btn btn-ghost btn-sm" onclick="showToast('Run logs are coming in a later block.','info')">📋 Show Logs</button>
+      <span><span class="icon" data-icon="user" data-icon-size="14"></span> Created by: <span id="wfbCreatedBy">—</span></span>
+      <button class="btn btn-ghost btn-sm" onclick="showToast('Run logs are coming in a later block.','info')"><span class="icon" data-icon="clipboard" data-icon-size="16"></span> Show Logs</button>
     </div>
   </div>
 
@@ -3273,7 +3273,7 @@ tr.hidden-row { display: none; }
       <div class="kpi"><div class="kpi-icon">📚</div><div class="kpi-val" id="kb-total-count">0</div><div class="kpi-lbl" data-i18n="kb_entries">Knowledge Entries</div><div class="kpi-sub" data-i18n="kb_entries_sub">Available for Nirvana to search</div></div>
       <div class="kpi"><div class="kpi-icon">🌐</div><div class="kpi-val orange" id="kb-website-count">0</div><div class="kpi-lbl" data-i18n="kb_website">Website</div><div class="kpi-sub" data-i18n="kb_website_sub">Pulled from pages</div></div>
       <div class="kpi"><div class="kpi-icon">📄</div><div class="kpi-val" id="kb-docs-count">0</div><div class="kpi-lbl" data-i18n="kb_docs">Docs</div><div class="kpi-sub" data-i18n="kb_docs_sub">Reference material</div></div>
-      <div class="kpi"><div class="kpi-icon">📋</div><div class="kpi-val green" id="kb-sop-count">0</div><div class="kpi-lbl" data-i18n="kb_sops">SOPs</div><div class="kpi-sub" data-i18n="kb_sops_sub">Standard procedures</div></div>
+      <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="clipboard" data-icon-size="16"></span></div><div class="kpi-val green" id="kb-sop-count">0</div><div class="kpi-lbl" data-i18n="kb_sops">SOPs</div><div class="kpi-sub" data-i18n="kb_sops_sub">Standard procedures</div></div>
     </div>
 
     <div class="card" style="margin-bottom:var(--space-5)">
@@ -3295,17 +3295,17 @@ tr.hidden-row { display: none; }
     <div class="card" style="margin-bottom:var(--space-5);padding:var(--space-3) var(--space-4)">
       <div style="font-size:var(--font-xs);color:var(--text3);margin-bottom:var(--space-2);letter-spacing:.5px;text-transform:uppercase;font-weight:700" data-i18n="pm_editing_catalog_for">Editing Catalog For</div>
       <div style="display:flex;gap:var(--space-2);flex-wrap:wrap">
-        <button class="pm-tab active" data-pk="smb" onclick="switchManagePortfolio('smb')">📊 <span data-i18n="pm_smb_dash">SMB Dashboard</span></button>
-        <button class="pm-tab" data-pk="whitelabel" onclick="switchManagePortfolio('whitelabel')">🏷️ <span data-i18n="pm_wl_dash">White Label</span></button>
+        <button class="pm-tab active" data-pk="smb" onclick="switchManagePortfolio('smb')"><span class="icon" data-icon="chart" data-icon-size="16"></span> <span data-i18n="pm_smb_dash">SMB Dashboard</span></button>
+        <button class="pm-tab" data-pk="whitelabel" onclick="switchManagePortfolio('whitelabel')"><span class="icon" data-icon="tag" data-icon-size="14"></span> <span data-i18n="pm_wl_dash">White Label</span></button>
         <button class="pm-tab" data-pk="support" onclick="switchManagePortfolio('support')">🎫 <span data-i18n="pm_support_dash">Support Dashboard</span></button>
       </div>
     </div>
 
     <div class="kpi-row">
-      <div class="kpi"><div class="kpi-icon">📦</div><div class="kpi-val orange" id="pmTotalProducts">10</div><div class="kpi-lbl" data-i18n="pm_products_in_catalog">Products in Catalog</div><div class="kpi-sub" data-i18n="pm_tracked_across">Tracked across all clients</div></div>
+      <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="package" data-icon-size="16"></span></div><div class="kpi-val orange" id="pmTotalProducts">10</div><div class="kpi-lbl" data-i18n="pm_products_in_catalog">Products in Catalog</div><div class="kpi-sub" data-i18n="pm_tracked_across">Tracked across all clients</div></div>
       <div class="kpi"><div class="kpi-icon">🔥</div><div class="kpi-val red" id="pmHighCount">0</div><div class="kpi-lbl" data-i18n="pm_high_priority">High Priority</div></div>
-      <div class="kpi"><div class="kpi-icon">⚠️</div><div class="kpi-val" id="pmMedCount" style="color:var(--yellow)">0</div><div class="kpi-lbl" data-i18n="upsell_medium_priority">Medium Priority</div></div>
-      <div class="kpi"><div class="kpi-icon">✅</div><div class="kpi-val green" id="pmLowCount">0</div><div class="kpi-lbl" data-i18n="upsell_targeted_priority">Targeted Priority</div></div>
+      <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="alert" data-icon-size="16"></span></div><div class="kpi-val" id="pmMedCount" style="color:var(--yellow)">0</div><div class="kpi-lbl" data-i18n="upsell_medium_priority">Medium Priority</div></div>
+      <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="check" data-icon-size="16"></span></div><div class="kpi-val green" id="pmLowCount">0</div><div class="kpi-lbl" data-i18n="upsell_targeted_priority">Targeted Priority</div></div>
     </div>
 
     <div class="card" style="margin-bottom:var(--space-5)">
@@ -3352,10 +3352,10 @@ tr.hidden-row { display: none; }
   ════════════════════════════════════════════════════════════════════════ -->
   <div class="page" id="page-adspend">
     <div class="kpi-row">
-      <div class="kpi"><div class="kpi-icon">🏢</div><div class="kpi-val orange" id="as-total">0</div><div class="kpi-lbl" data-i18n="adspend_businesses">Businesses Tracked</div></div>
-      <div class="kpi"><div class="kpi-icon">💰</div><div class="kpi-val" id="as-budget">$0</div><div class="kpi-lbl" data-i18n="adspend_budget">Total Monthly Budget</div></div>
+      <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="building" data-icon-size="14"></span></div><div class="kpi-val orange" id="as-total">0</div><div class="kpi-lbl" data-i18n="adspend_businesses">Businesses Tracked</div></div>
+      <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="dollar" data-icon-size="16"></span></div><div class="kpi-val" id="as-budget">$0</div><div class="kpi-lbl" data-i18n="adspend_budget">Total Monthly Budget</div></div>
       <div class="kpi"><div class="kpi-icon">🎁</div><div class="kpi-val green" id="as-promo">0</div><div class="kpi-lbl" data-i18n="adspend_promo">Promo Eligible</div></div>
-      <div class="kpi"><div class="kpi-icon">✅</div><div class="kpi-val" style="color:var(--blue)" id="as-using">0</div><div class="kpi-lbl" data-i18n="adspend_using">Already Using</div></div>
+      <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="check" data-icon-size="16"></span></div><div class="kpi-val" style="color:var(--blue)" id="as-using">0</div><div class="kpi-lbl" data-i18n="adspend_using">Already Using</div></div>
     </div>
 
     <!-- Charts -->
@@ -3363,14 +3363,14 @@ tr.hidden-row { display: none; }
       <div class="card">
         <div class="card-header">
           <div><div class="card-title" data-i18n="adspend_budget_chart">Budget by Business</div><div class="card-sub" data-i18n="adspend_budget_chart_sub">Top businesses by monthly ad spend</div></div>
-          <span class="card-badge" id="badge-adspend-budget">💰 $0 Total</span>
+          <span class="card-badge" id="badge-adspend-budget"><span class="icon" data-icon="dollar" data-icon-size="16"></span> $0 Total</span>
         </div>
         <div class="chart-wrap h300"><canvas id="adSpendBudgetBar"></canvas></div>
       </div>
       <div class="card">
         <div class="card-header">
           <div><div class="card-title">Promo Eligibility</div><div class="card-sub">Breakdown across all businesses</div></div>
-          <span class="card-badge" id="badge-adspend-count">🏢 0 Businesses</span>
+          <span class="card-badge" id="badge-adspend-count"><span class="icon" data-icon="building" data-icon-size="14"></span> 0 Businesses</span>
         </div>
         <div class="chart-wrap h300" style="position:relative">
           <canvas id="adSpendPromoDonut"></canvas>
@@ -3442,7 +3442,7 @@ tr.hidden-row { display: none; }
           <button class="filter-pill" onclick="setAdSpendFilter('Already Using',this)">Already Using</button>
         </div>
         <button class="reset-columns-btn" onclick="resetColumnPrefs('adspend'); rebuildAdSpendPage()" title="Reset column order and widths back to default">↺ <span data-i18n="reset_columns">Columns</span></button>
-        <button class="export-csv-btn" onclick="exportAdSpendTable_()" title="Download the currently visible rows as a CSV file">⬇ <span data-i18n="export_csv">Export CSV</span></button>
+        <button class="export-csv-btn" onclick="exportAdSpendTable_()" title="Download the currently visible rows as a CSV file"><span class="icon" data-icon="download" data-icon-size="12"></span> <span data-i18n="export_csv">Export CSV</span></button>
       </div>
       <div style="overflow-x:auto">
         <table class="resizable-table pill-rows" id="adSpendTable">
@@ -3457,7 +3457,7 @@ tr.hidden-row { display: none; }
   <!-- EDIT AD SPEND BUSINESS MODAL -->
   <div class="modal-overlay" id="editAdSpendModal">
     <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="editAdSpendModalTitle">
-      <h3 id="editAdSpendModalTitle">✏️ <span data-i18n="as_edit_title">Edit Business</span></h3>
+      <h3 id="editAdSpendModalTitle"><span class="icon" data-icon="edit" data-icon-size="13"></span> <span data-i18n="as_edit_title">Edit Business</span></h3>
       <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr 1.2fr;gap:10px;align-items:end;margin-bottom:12px">
         <div>
           <label for="asEditName" class="field-label" data-i18n="as_business_name">Business Name</label>
@@ -3506,7 +3506,7 @@ tr.hidden-row { display: none; }
           <tbody id="asMappingTableBody"></tbody>
         </table>
       </div>
-      <div id="asMappingWarning" style="font-size:11px;color:var(--red);margin-bottom:10px;display:none">⚠️ <span data-i18n="map_pick_business_name">Pick a column for Business Name before continuing.</span></div>
+      <div id="asMappingWarning" style="font-size:11px;color:var(--red);margin-bottom:10px;display:none"><span class="icon" data-icon="alert" data-icon-size="16"></span> <span data-i18n="map_pick_business_name">Pick a column for Business Name before continuing.</span></div>
       <div class="modal-btns">
         <button class="btn btn-ghost" onclick="closeAdSpendMappingModal()">Cancel</button>
         <button class="btn btn-primary" onclick="confirmAdSpendMapping()"><span data-i18n="map_continue_btn">Continue →</span></button>
@@ -3545,10 +3545,10 @@ tr.hidden-row { display: none; }
 
     <div class="kpi-row">
       <div class="kpi"><div class="kpi-icon">🧾</div><div class="kpi-val orange" id="col-total">0</div><div class="kpi-lbl" id="col-total-lbl">Accounts</div></div>
-      <div class="kpi"><div class="kpi-icon">💰</div><div class="kpi-val" id="col-amount">$0</div><div class="kpi-lbl" id="col-amount-lbl">Total Owed</div></div>
-      <div class="kpi kpi-glow-green"><div class="kpi-icon">✅</div><div class="kpi-val green" id="col-collected">$0</div><div class="kpi-lbl" data-i18n="collections_amount_collected">Amount Collected</div><div class="kpi-sub" id="col-collected-sub">Payment Plan &amp; Resolved · this tab only</div></div>
-      <div class="kpi"><div class="kpi-icon">⚠️</div><div class="kpi-val red" id="col-needs">0</div><div class="kpi-lbl" data-i18n="collections_needs_attention">Needs Attention</div><div class="kpi-sub">Pending, In Review, or Escalated</div></div>
-      <div class="kpi"><div class="kpi-icon">✅</div><div class="kpi-val green" id="col-resolved">0</div><div class="kpi-lbl" data-i18n="collections_resolved">Resolved</div></div>
+      <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="dollar" data-icon-size="16"></span></div><div class="kpi-val" id="col-amount">$0</div><div class="kpi-lbl" id="col-amount-lbl">Total Owed</div></div>
+      <div class="kpi kpi-glow-green"><div class="kpi-icon"><span class="icon" data-icon="check" data-icon-size="16"></span></div><div class="kpi-val green" id="col-collected">$0</div><div class="kpi-lbl" data-i18n="collections_amount_collected">Amount Collected</div><div class="kpi-sub" id="col-collected-sub">Payment Plan &amp; Resolved · this tab only</div></div>
+      <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="alert" data-icon-size="16"></span></div><div class="kpi-val red" id="col-needs">0</div><div class="kpi-lbl" data-i18n="collections_needs_attention">Needs Attention</div><div class="kpi-sub">Pending, In Review, or Escalated</div></div>
+      <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="check" data-icon-size="16"></span></div><div class="kpi-val green" id="col-resolved">0</div><div class="kpi-lbl" data-i18n="collections_resolved">Resolved</div></div>
     </div>
 
     <!-- Charts -->
@@ -3569,7 +3569,7 @@ tr.hidden-row { display: none; }
       <div class="card">
         <div class="card-header">
           <div><div class="card-title">Amount by Status</div><div class="card-sub" id="colAmountBarSub">Dollar total per status</div></div>
-          <span class="card-badge" id="badge-collections-amount">💰 $0 Total</span>
+          <span class="card-badge" id="badge-collections-amount"><span class="icon" data-icon="dollar" data-icon-size="16"></span> $0 Total</span>
         </div>
         <div class="chart-wrap h300"><canvas id="collectionsAmountBar"></canvas></div>
       </div>
@@ -3616,7 +3616,7 @@ tr.hidden-row { display: none; }
         <input type="text" class="search-box" id="colSearch" placeholder="Search accounts..." data-i18n-placeholder="search_accounts" oninput="debouncedRebuildCollectionsTable()">
         <div style="display:flex;gap:6px;flex-wrap:wrap" id="colFilterPills"></div>
         <button class="reset-columns-btn" onclick="resetColumnPrefs('collections'); rebuildCollectionsPage()" title="Reset column order and widths back to default">↺ <span data-i18n="reset_columns">Columns</span></button>
-        <button class="export-csv-btn" onclick="exportCollectionsTable_()" title="Download the currently visible rows as a CSV file">⬇ <span data-i18n="export_csv">Export CSV</span></button>
+        <button class="export-csv-btn" onclick="exportCollectionsTable_()" title="Download the currently visible rows as a CSV file"><span class="icon" data-icon="download" data-icon-size="12"></span> <span data-i18n="export_csv">Export CSV</span></button>
       </div>
       <div style="overflow-x:auto">
         <table class="resizable-table pill-rows" id="collectionsTable">
@@ -3631,7 +3631,7 @@ tr.hidden-row { display: none; }
   <!-- COLLECTIONS: EDIT ACCOUNT MODAL -->
   <div class="modal-overlay" id="editCollectionsModal">
     <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="editCollectionsModalTitle">
-      <h3 id="editCollectionsModalTitle">✏️ <span data-i18n="col_edit_title">Edit Account</span></h3>
+      <h3 id="editCollectionsModalTitle"><span class="icon" data-icon="edit" data-icon-size="13"></span> <span data-i18n="col_edit_title">Edit Account</span></h3>
       <div style="display:grid;grid-template-columns:1.4fr 1fr 1fr 1fr 1.2fr;gap:10px;align-items:end;margin-bottom:12px">
         <div>
           <label for="colEditName" class="field-label" data-i18n="as_business_name">Business Name</label>
@@ -3672,7 +3672,7 @@ tr.hidden-row { display: none; }
           <tbody id="colMappingTableBody"></tbody>
         </table>
       </div>
-      <div id="colMappingWarning" style="font-size:11px;color:var(--red);margin-bottom:10px;display:none">⚠️ <span data-i18n="map_pick_business_name">Pick a column for Business Name before continuing.</span></div>
+      <div id="colMappingWarning" style="font-size:11px;color:var(--red);margin-bottom:10px;display:none"><span class="icon" data-icon="alert" data-icon-size="16"></span> <span data-i18n="map_pick_business_name">Pick a column for Business Name before continuing.</span></div>
       <div class="modal-btns">
         <button class="btn btn-ghost" onclick="closeCollectionsMappingModal()">Cancel</button>
         <button class="btn btn-primary" onclick="confirmCollectionsMapping()"><span data-i18n="map_continue_btn">Continue →</span></button>
@@ -3710,7 +3710,7 @@ tr.hidden-row { display: none; }
     <div id="settingsTab-integrations">
       <div class="card" style="margin-bottom:var(--space-5)">
         <div class="card-header">
-          <div><div class="card-title">📅 <span data-i18n="settings_gcal_title">Google Calendar</span></div><div class="card-sub">Connect your own calendar — tasks assigned to you sync automatically and stay connected until you disconnect</div></div>
+          <div><div class="card-title"><span class="icon" data-icon="calendar" data-icon-size="14"></span> <span data-i18n="settings_gcal_title">Google Calendar</span></div><div class="card-sub">Connect your own calendar — tasks assigned to you sync automatically and stay connected until you disconnect</div></div>
         </div>
         <div id="gcalStatusPillSettings" style="margin-top:var(--space-2)"></div>
       </div>
@@ -3794,7 +3794,7 @@ tr.hidden-row { display: none; }
 <!-- REMOVE PRODUCT CONFIRMATION MODAL -->
 <div class="modal-overlay" id="removeProductModal">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="removeProductModalTitle">
-    <h3 id="removeProductModalTitle">🗑️ <span data-i18n="rp_title">Remove Product</span></h3>
+    <h3 id="removeProductModalTitle"><span class="icon" data-icon="trash" data-icon-size="13"></span> <span data-i18n="rp_title">Remove Product</span></h3>
     <p id="removeProductText">Are you sure you want to remove this product?</p>
     <div style="font-size:12px;color:var(--text2);margin-bottom:18px;background:var(--bg3);padding:12px 14px;border-radius:8px;border:1px solid var(--border)" data-i18n="rp_what_happens">
       What should happen to existing client adoption data for this product?
@@ -3810,7 +3810,7 @@ tr.hidden-row { display: none; }
 <!-- EDIT CLIENT MODAL -->
 <div class="modal-overlay" id="editClientModal">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="editClientModalTitle" style="width:560px">
-    <h3 id="editClientModalTitle">✏️ <span data-i18n="ec_title">Edit Client</span></h3>
+    <h3 id="editClientModalTitle"><span class="icon" data-icon="edit" data-icon-size="13"></span> <span data-i18n="ec_title">Edit Client</span></h3>
     <p id="editClientName" style="font-weight:700;color:var(--text);font-size:15px;margin-bottom:4px"></p>
     <p style="margin-bottom:16px" data-i18n="ec_desc">Toggle which products this client has, per portfolio. Changes are saved automatically.</p>
     <div id="editClientGroups"></div>
@@ -3863,7 +3863,7 @@ tr.hidden-row { display: none; }
 
     <div class="modal-btns">
       <button class="btn btn-ghost" onclick="closeWorkflowModal()" data-i18n="btn_cancel">Cancel</button>
-      <button class="btn btn-primary" onclick="saveWorkflow()">💾 <span data-i18n="owf_save_btn">Save Workflow</span></button>
+      <button class="btn btn-primary" onclick="saveWorkflow()"><span class="icon" data-icon="save" data-icon-size="13"></span> <span data-i18n="owf_save_btn">Save Workflow</span></button>
     </div>
   </div>
 </div>
@@ -3904,9 +3904,9 @@ tr.hidden-row { display: none; }
     <label for="obPortfolio" class="field-label"><span data-i18n="ob_portfolio">Portfolio</span> <span style="color:var(--orange)">*</span></label>
     <select id="obPortfolio" class="field-input" style="height:38px;margin-bottom:16px" onchange="renderOnboardingProductPicker()">
       <option value="">Select a portfolio…</option>
-      <option value="smb">📊 SMB</option>
-      <option value="whitelabel">🏷️ White Label</option>
-      <option value="support">📊 Support</option>
+      <option value="smb"><span class="icon" data-icon="chart" data-icon-size="16"></span> SMB</option>
+      <option value="whitelabel"><span class="icon" data-icon="tag" data-icon-size="14"></span> White Label</option>
+      <option value="support"><span class="icon" data-icon="chart" data-icon-size="16"></span> Support</option>
     </select>
 
     <label class="field-label">Products &amp; Pricing</label>
@@ -3961,7 +3961,7 @@ tr.hidden-row { display: none; }
 
 <div class="modal-overlay" id="wfbSaveModal">
   <div class="modal" style="max-width:360px" role="dialog" aria-modal="true" aria-labelledby="wfbSaveModalTitle">
-    <h3 id="wfbSaveModalTitle">💾 Save Workflow</h3>
+    <h3 id="wfbSaveModalTitle"><span class="icon" data-icon="save" data-icon-size="13"></span> Save Workflow</h3>
     <p style="font-size:var(--font-sm);color:var(--text2);line-height:1.5">Your edits are already saved as you make them. This decides whether this workflow is actually running yet.</p>
     <div class="modal-btns">
       <button class="btn btn-ghost" onclick="closeWfbSaveModal()">Cancel</button>
@@ -4011,7 +4011,7 @@ tr.hidden-row { display: none; }
     <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:14px;margin-bottom:14px">
       <div><label for="kbTitle" class="field-label">Title <span style="color:var(--orange)">*</span></label><input type="text" id="kbTitle" class="field-input" style="height:38px" placeholder="e.g. New Client Onboarding SOP"></div>
       <div><label for="kbCategory" class="field-label" data-i18n="pref_settings">Category</label><select id="kbCategory" class="field-select" style="height:38px">
-        <option value="sop">📋 SOP</option>
+        <option value="sop"><span class="icon" data-icon="clipboard" data-icon-size="16"></span> SOP</option>
         <option value="docs">📄 Docs</option>
         <option value="website">🌐 Website</option>
         <option value="other">📎 Other</option>
@@ -4042,7 +4042,7 @@ tr.hidden-row { display: none; }
 
     <div class="modal-btns">
       <button class="btn btn-ghost" onclick="closeKnowledgeModal()" data-i18n="btn_cancel">Cancel</button>
-      <button class="btn btn-primary" onclick="saveKnowledgeEntry()">💾 <span data-i18n="btn_save">Save</span></button>
+      <button class="btn btn-primary" onclick="saveKnowledgeEntry()"><span class="icon" data-icon="save" data-icon-size="13"></span> <span data-i18n="btn_save">Save</span></button>
     </div>
   </div>
 </div>
@@ -4050,7 +4050,7 @@ tr.hidden-row { display: none; }
 <!-- ADD CLIENT MODAL -->
 <div class="modal-overlay" id="addClientModal">
   <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="addClientModalTitle">
-    <h3 id="addClientModalTitle">➕ <span data-i18n="ac_title">Add Client</span></h3>
+    <h3 id="addClientModalTitle"><span class="icon" data-icon="plus" data-icon-size="12"></span> <span data-i18n="ac_title">Add Client</span></h3>
     <p data-i18n="ac_desc">Create a new client manually — pick which portfolio(s) they belong to, toggle their products, and add contact info if you have it.</p>
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">
@@ -4071,7 +4071,7 @@ tr.hidden-row { display: none; }
 
     <div style="font-size:11px;color:var(--text3);margin-bottom:12px" data-i18n="fld_primary_contact">Primary contact (optional)</div>
     <div class="smart-paste-box">
-      <label for="acSmartPaste" class="field-label">📋 <span data-i18n="fld_smart_paste">Smart Paste</span> <span style="color:var(--text3);font-weight:400" data-i18n="fld_smart_paste_hint">— paste a signature, business card text, or a spreadsheet row and it'll auto-fill the fields below</span></label>
+      <label for="acSmartPaste" class="field-label"><span class="icon" data-icon="clipboard" data-icon-size="16"></span> <span data-i18n="fld_smart_paste">Smart Paste</span> <span style="color:var(--text3);font-weight:400" data-i18n="fld_smart_paste_hint">— paste a signature, business card text, or a spreadsheet row and it'll auto-fill the fields below</span></label>
       <input type="text" id="acSmartPaste" class="field-input" style="height:38px" placeholder="Paste here…" onpaste="setTimeout(() => handleSmartPaste('ac', this.value), 0)">
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
@@ -4091,7 +4091,7 @@ tr.hidden-row { display: none; }
 <!-- DELETE CLIENT CONFIRMATION MODAL -->
 <div class="modal-overlay" id="deleteClientModal">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="deleteClientModalTitle">
-    <h3 id="deleteClientModalTitle">🗑️ <span data-i18n="dc_title">Remove Client</span></h3>
+    <h3 id="deleteClientModalTitle"><span class="icon" data-icon="trash" data-icon-size="13"></span> <span data-i18n="dc_title">Remove Client</span></h3>
     <p id="deleteClientText">Are you sure?</p>
     <div style="font-size:12px;color:var(--text2);margin-bottom:18px;background:var(--bg3);padding:12px 14px;border-radius:8px;border:1px solid var(--border)" id="deleteClientPortfolioList"></div>
     <div class="modal-btns">
@@ -4116,7 +4116,7 @@ tr.hidden-row { display: none; }
       5. Paste it above and click Connect
     </div>
     <div style="font-size:11px;color:var(--text3);margin-bottom:16px;background:rgba(226,84,31,.08);padding:10px 12px;border-radius:8px;border:1px solid rgba(226,84,31,.25)">
-      <strong style="color:var(--orange)">📋 Required columns:</strong> Business Name, Yelp, Google LSA, Voice Agent, Thumbtack, Chat Widget, Contact Form, Acculynx, Builder Prime, Go High Level, Housecall Pro &nbsp;(use YES/NO or TRUE/FALSE)
+      <strong style="color:var(--orange)"><span class="icon" data-icon="clipboard" data-icon-size="16"></span> Required columns:</strong> Business Name, Yelp, Google LSA, Voice Agent, Thumbtack, Chat Widget, Contact Form, Acculynx, Builder Prime, Go High Level, Housecall Pro &nbsp;(use YES/NO or TRUE/FALSE)
     </div>
     <div id="sheetsStatus" style="font-size:12px;margin-bottom:12px;display:none"></div>
     <div class="modal-btns">
@@ -4137,7 +4137,7 @@ tr.hidden-row { display: none; }
         <tbody id="mappingTableBody"></tbody>
       </table>
     </div>
-    <div id="mappingWarning" style="font-size:11px;color:var(--red);margin-bottom:10px;display:none">⚠️ <span data-i18n="map_pick_client_name">Pick a column for Client Name before continuing.</span></div>
+    <div id="mappingWarning" style="font-size:11px;color:var(--red);margin-bottom:10px;display:none"><span class="icon" data-icon="alert" data-icon-size="16"></span> <span data-i18n="map_pick_client_name">Pick a column for Client Name before continuing.</span></div>
     <div class="modal-btns">
       <button class="btn btn-ghost" onclick="closeMappingModal()">Cancel</button>
       <button class="btn btn-primary" onclick="confirmMapping()"><span data-i18n="map_continue_btn">Continue →</span></button>
@@ -4165,7 +4165,7 @@ tr.hidden-row { display: none; }
 <!-- BULK ACTION MODAL (Clients Directory — add a task or note to multiple selected clients at once) -->
 <div class="modal-overlay" id="bulkActionModal">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="bulkActionModalTitle">
-    <h3 id="bulkActionModalTitle">➕ Add Task to Selected Clients</h3>
+    <h3 id="bulkActionModalTitle"><span class="icon" data-icon="plus" data-icon-size="12"></span> Add Task to Selected Clients</h3>
     <p id="bulkActionModalSub" style="margin-bottom:16px">This will be added to every client currently selected.</p>
     <div id="bulkActionModalClientList" style="font-size:11.5px;color:var(--text2);margin-bottom:14px;max-height:80px;overflow-y:auto"></div>
 
@@ -4198,6 +4198,84 @@ tr.hidden-row { display: none; }
 // present in the raw HTML by default regardless of login state and so
 // doesn't actually distinguish "logged in" from "not yet".
 let hubHasBooted = false;
+
+// Global SVG line-icon system (2026-07-15, Hub-wide icon pass). Extends the
+// Chat Widget's icon set (CW_ICONS, defined later, stays untouched) to
+// cover the rest of the Hub -- nav, profile menu, common actions -- via a
+// data-icon="name" attribute on static HTML, applied by renderHubIcons()
+// the same way data-i18n is applied by applyTranslations(). Scope note:
+// this pass covers the top nav, profile menu, and Home's AI quick-actions
+// in this initial round; extending to every page's own icons (KPI rows,
+// buttons, modals) is real additional work using this same pattern, not
+// done in one sweep.
+const HUB_ICONS = {
+  home: '<path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/><path d="M9 20v-6h6v6"/>',
+  users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20a6.5 6.5 0 0113 0"/><path d="M16 4.5a3.5 3.5 0 010 7"/><path d="M15.5 13.2a6.5 6.5 0 015 6.8"/>',
+  chart: '<path d="M4 20V10M11 20V4M18 20v-7"/>',
+  tag: '<path d="M20 12l-8 8-9-9V4h7l10 8z"/><circle cx="7.5" cy="7.5" r="1.2"/>',
+  compass: '<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',
+  mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/>',
+  chat: '<path d="M4 4h16v12H8l-4 4V4z"/>',
+  rocket: '<path d="M12 2c3 2 5 6 5 10 0 2-1 4-2 5l-3 3-3-3c-1-1-2-3-2-5 0-4 2-8 5-10z"/><circle cx="12" cy="10" r="2"/><path d="M8 16l-3 5M16 16l3 5"/>',
+  target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.3"/>',
+  repeat: '<path d="M4 7h13l-3-3M20 17H7l3 3"/>',
+  book: '<path d="M4 4h11a3 3 0 013 3v13H7a3 3 0 01-3-3V4z"/><path d="M4 18a3 3 0 013-3h11"/>',
+  package: '<path d="M21 8l-9-5-9 5v8l9 5 9-5V8z"/><path d="M3 8l9 5 9-5M12 13v8"/>',
+  dollar: '<path d="M12 2v20M17 6.5a4 4 0 00-4-2.5H10a3.5 3.5 0 000 7h4a3.5 3.5 0 010 7h-3a4 4 0 01-4-2.5"/>',
+  clipboard: '<rect x="6" y="4" width="12" height="17" rx="2"/><rect x="9" y="2.5" width="6" height="3" rx="1"/><path d="M9 11h6M9 15h6"/>',
+  alert: '<path d="M12 3l10 18H2z"/><path d="M12 10v4M12 17.5v.1"/>',
+  check: '<path d="M4 12l5 5L20 6"/>',
+  edit: '<path d="M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/>',
+  settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1-1.6 1.7 1.7 0 00-1.9.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1 1.7 1.7 0 00-.3-1.9l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.9.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.9-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.9V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/>',
+  sun: '<circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2 12h2.5M19.5 12H22M4.2 19.8L6 18M18 6l1.8-1.8"/>',
+  moon: '<path d="M20 14.5A8.5 8.5 0 019.5 4a8.5 8.5 0 1010.5 10.5z"/>',
+  moonStar: '<circle cx="12" cy="12" r="8" fill="currentColor" stroke="none"/>',
+  globe: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a13 13 0 010 18M12 3a13 13 0 000 18"/>',
+  bell: '<path d="M6 10a6 6 0 0112 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 20a2 2 0 004 0"/>',
+  camera: '<path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13.5" r="3.5"/>',
+  logout: '<path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/>',
+  trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13a2 2 0 002 2h6a2 2 0 002-2l1-13"/><path d="M10 11v6M14 11v6"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  save: '<path d="M5 4h11l3 3v13H5V4z"/><path d="M8 4v5h7V4M8 14h8v6H8z"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/>',
+  close: '<path d="M6 6l12 12M18 6L6 18"/>',
+  download: '<path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 19h16"/>',
+  arrowBack: '<path d="M19 12H5M11 18l-6-6 6-6"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0116 0v1"/>',
+  calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/>',
+  building: '<rect x="4" y="3" width="16" height="18" rx="1"/><path d="M9 8h1M14 8h1M9 12h1M14 12h1M9 16h1M14 16h1"/>',
+};
+function hubIcon(name, size) {
+  const s = size || 15;
+  return `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;flex-shrink:0">${HUB_ICONS[name] || ''}</svg>`;
+}
+function renderHubIcons(root) {
+  (root || document).querySelectorAll('[data-icon]').forEach(el => {
+    if (el.dataset.iconRendered) return; // avoid re-rendering ones already done, cheap enough not to matter but keeps this idempotent
+    el.innerHTML = hubIcon(el.dataset.icon, el.dataset.iconSize ? parseInt(el.dataset.iconSize) : undefined);
+    el.dataset.iconRendered = '1';
+  });
+}
+renderHubIcons();
+// A large amount of the Hub's UI is rendered dynamically via JS template
+// literals + innerHTML (table rows, dropdown options, suggestion lists,
+// etc.) rather than static markup -- rather than hunting down and adding a
+// renderHubIcons() call to every single rebuild function across the whole
+// file (high risk of missing some, and brittle against future additions),
+// a MutationObserver watches the whole document for newly-inserted nodes
+// and renders any icon spans they contain automatically. This is the
+// robust fix for "the icon never appears because nobody remembered to
+// call the render function after this specific rebuild."
+const hubIconObserver = new MutationObserver((mutations) => {
+  for (const mutation of mutations) {
+    for (const node of mutation.addedNodes) {
+      if (node.nodeType !== 1) continue; // only element nodes
+      if (node.hasAttribute && node.hasAttribute('data-icon')) renderHubIcons(node.parentElement || document);
+      else if (node.querySelector && node.querySelector('[data-icon]')) renderHubIcons(node);
+    }
+  }
+});
+hubIconObserver.observe(document.body || document.documentElement, { childList: true, subtree: true });
 // ════════════════════════════════════════════════════════════════════════
 // NAVIGATION
 // ════════════════════════════════════════════════════════════════════════
@@ -4613,9 +4691,9 @@ function refreshChartColors() {
 const THEME_KEY = 'csh_theme_v1';
 const THEME_CYCLE = ['light', 'dark', 'blackout'];
 const THEME_META = {
-  light:    { icon: '☀️', next: 'dark',     label: 'Switch to dark mode' },
-  dark:     { icon: '🌙', next: 'blackout', label: 'Switch to blackout mode' },
-  blackout: { icon: '⚫', next: 'light',    label: 'Switch to light mode' },
+  light:    { icon: 'sun',  next: 'dark',     label: 'Switch to dark mode' },
+  dark:     { icon: 'moon', next: 'blackout', label: 'Switch to blackout mode' },
+  blackout: { icon: 'moonStar', next: 'light', label: 'Switch to light mode' },
 };
 
 function getSavedTheme() {
@@ -4632,7 +4710,7 @@ function applyTheme(theme, redrawCharts) {
   const btn = document.getElementById('themeToggleIcon');
   const row = document.getElementById('themeToggle');
   const meta = THEME_META[theme];
-  if (btn) btn.textContent = meta.icon;
+  if (btn) btn.innerHTML = hubIcon(meta.icon, 15);
   if (row) { row.title = meta.label; row.setAttribute('aria-label', meta.label); }
   refreshChartColors();
   if (redrawCharts && typeof rebuildAll === 'function') rebuildAll();
@@ -5235,7 +5313,7 @@ async function renderClientSpotlight(pk) {
     flagLines.push(`<div class="spotlight-flag-line">🧾 ${collectionsEntry.type === 'outstanding' ? 'Outstanding balance' : 'Card fail'}: ${fmtMoney(collectionsEntry.amount)} · <span style="color:${meta.color}">${meta.label}</span></div>`);
   }
   if (adSpendEntry) {
-    flagLines.push(`<div class="spotlight-flag-line">💰 Ad spend: ${fmtMoney(adSpendEntry.budget)}/mo · <span class="promo-pill ${promoPillClass(adSpendEntry.promo)}" style="font-size:9px">${adSpendEntry.promo}</span></div>`);
+    flagLines.push(`<div class="spotlight-flag-line"><span class="icon" data-icon="dollar" data-icon-size="16"></span> Ad spend: ${fmtMoney(adSpendEntry.budget)}/mo · <span class="promo-pill ${promoPillClass(adSpendEntry.promo)}" style="font-size:9px">${adSpendEntry.promo}</span></div>`);
   }
   const flagsHtml = flagLines.length ? flagLines.join('') : `<div class="spotlight-empty-line">Nothing flagged in Collections or Ad Spend</div>`;
 
@@ -5248,8 +5326,8 @@ async function renderClientSpotlight(pk) {
     : `<div class="spotlight-empty-line">No open tasks</div>`;
 
   const whyHtml = health.reasons.length
-    ? `<div class="spotlight-why-box spotlight-why-${riskClass}">🎯 <b>Why this client:</b> ${health.reasons.join(' · ')}</div>`
-    : `<div class="spotlight-why-box spotlight-why-risk-low">🎯 <b>Why this client:</b> Randomly featured today — no red flags found, nothing urgent here right now.</div>`;
+    ? `<div class="spotlight-why-box spotlight-why-${riskClass}"><span class="icon" data-icon="target" data-icon-size="16"></span> <b>Why this client:</b> ${health.reasons.join(' · ')}</div>`
+    : `<div class="spotlight-why-box spotlight-why-risk-low"><span class="icon" data-icon="target" data-icon-size="16"></span> <b>Why this client:</b> Randomly featured today — no red flags found, nothing urgent here right now.</div>`;
 
   el.innerHTML = `
     <div class="spotlight-card ${riskClass}">
@@ -5257,7 +5335,7 @@ async function renderClientSpotlight(pk) {
         <div class="spotlight-title">🔦 Today's Client Spotlight</div>
         <div class="spotlight-actions">
           <button class="btn btn-ghost btn-sm" onclick="shuffleSpotlightClient('${pk}')">⇄ Show a Different Client</button>
-          <button class="btn btn-primary btn-sm" onclick="openClientNotesTasksModal('${safe}')">👤 Open Full Profile</button>
+          <button class="btn btn-primary btn-sm" onclick="openClientNotesTasksModal('${safe}')"><span class="icon" data-icon="user" data-icon-size="14"></span> Open Full Profile</button>
         </div>
       </div>
       <div class="spotlight-name-row">
@@ -5265,7 +5343,7 @@ async function renderClientSpotlight(pk) {
           <div class="spotlight-name">${escAttr(client.name)}</div>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px">
             ${portfolioChipsHtml}
-            ${client.org ? `<span class="spotlight-org">🏢 ${escAttr(client.org)}</span>` : ''}
+            ${client.org ? `<span class="spotlight-org"><span class="icon" data-icon="building" data-icon-size="14"></span> ${escAttr(client.org)}</span>` : ''}
           </div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
@@ -5277,19 +5355,19 @@ async function renderClientSpotlight(pk) {
       ${whyHtml}
 
       <div class="spotlight-grid">
-        <div class="spotlight-block"><div class="spotlight-block-label">✅ Using (${using.length})</div>${usingHtml}</div>
-        <div class="spotlight-block"><div class="spotlight-block-label">🎯 Upsell Opportunity (${notUsing.length})</div>${notUsingHtml}</div>
-        <div class="spotlight-block"><div class="spotlight-block-label">👤 Contact</div>${contactHtml}</div>
+        <div class="spotlight-block"><div class="spotlight-block-label"><span class="icon" data-icon="check" data-icon-size="16"></span> Using (${using.length})</div>${usingHtml}</div>
+        <div class="spotlight-block"><div class="spotlight-block-label"><span class="icon" data-icon="target" data-icon-size="16"></span> Upsell Opportunity (${notUsing.length})</div>${notUsingHtml}</div>
+        <div class="spotlight-block"><div class="spotlight-block-label"><span class="icon" data-icon="user" data-icon-size="14"></span> Contact</div>${contactHtml}</div>
       </div>
       <div class="spotlight-grid">
         <div class="spotlight-block"><div class="spotlight-block-label">📝 Recent Notes</div>${notesHtml}</div>
-        <div class="spotlight-block"><div class="spotlight-block-label">✅ Open Tasks</div>${tasksHtml}</div>
-        <div class="spotlight-block"><div class="spotlight-block-label">⚠️ Billing &amp; Ad Spend</div>${flagsHtml}</div>
+        <div class="spotlight-block"><div class="spotlight-block-label"><span class="icon" data-icon="check" data-icon-size="16"></span> Open Tasks</div>${tasksHtml}</div>
+        <div class="spotlight-block"><div class="spotlight-block-label"><span class="icon" data-icon="alert" data-icon-size="16"></span> Billing &amp; Ad Spend</div>${flagsHtml}</div>
       </div>
 
       <div class="spotlight-quick-actions">
         <button class="btn btn-ghost btn-sm" onclick="toggleSpotlightQuickForm('${pk}','note')">📝 Quick Note</button>
-        <button class="btn btn-ghost btn-sm" onclick="toggleSpotlightQuickForm('${pk}','task')">✅ Quick Task</button>
+        <button class="btn btn-ghost btn-sm" onclick="toggleSpotlightQuickForm('${pk}','task')"><span class="icon" data-icon="check" data-icon-size="16"></span> Quick Task</button>
         <button class="btn btn-ghost btn-sm" onclick="askNirvanaAboutSpotlight('${pk}')"><img class="nirvana-inline-icon" src="data:image/jpeg;base64,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" alt="Nirvana"> Ask Nirvana</button>
         <button class="btn btn-ghost btn-sm" id="spotlightSuggestBtn-${pk}" onclick="getSpotlightAiSuggestion('${pk}', this)">💡 Get a Suggestion</button>
       </div>
@@ -6026,7 +6104,7 @@ function rebuildVoiceAgentFlagged() {
   renderPaginatedList(wrap, flagged, 'vaFlagged', ({ client: c, pk }) => {
     const meta = portfolioMeta[pk];
     return `<div class="support-item">
-      <div class="support-avatar" style="background:var(--bg4);color:var(--yellow)">⚠️</div>
+      <div class="support-avatar" style="background:var(--bg4);color:var(--yellow)"><span class="icon" data-icon="alert" data-icon-size="16"></span></div>
       <div class="support-info">
         <div class="support-name">${escAttr(c.name)}</div>
         <div class="support-detail">${escAttr(c.cellNotes.voice_agent)}</div>
@@ -6206,7 +6284,7 @@ function rebuildTextAgentStale() {
     const product = TEXT_AGENT_PRODUCTS.find(p => p.key === e.productKey);
     const daysLabel = e.days >= 30 ? `${Math.round(e.days / 30)} mo ago` : `${e.days}d ago`;
     return `<div class="support-item">
-      <div class="support-avatar" style="background:var(--bg4);color:var(--yellow)">⚠️</div>
+      <div class="support-avatar" style="background:var(--bg4);color:var(--yellow)"><span class="icon" data-icon="alert" data-icon-size="16"></span></div>
       <div class="support-info">
         <div class="support-name">${escAttr(e.name)}</div>
         <div class="support-detail">${renderProductIcon(product.icon, 14)} ${product.label} · ${escAttr(e.note)}</div>
@@ -7111,7 +7189,7 @@ function rebuildClientTable(pk, resortOnly = false) {
         return `<td>${escAttr(c.name) || '—'}${nameNote ? ` <span class="cell-note" data-tooltip="${escAttr(nameNote)}">💬</span>` : ''}</td>`;
       }
       if (col.key === 'org') {
-        return `<td>${c.org ? `<span class="portfolio-chip chip-addon">🏢 ${escAttr(c.org)}</span>` : '<span style="color:var(--text3)">—</span>'}</td>`;
+        return `<td>${c.org ? `<span class="portfolio-chip chip-addon"><span class="icon" data-icon="building" data-icon-size="14"></span> ${escAttr(c.org)}</span>` : '<span style="color:var(--text3)">—</span>'}</td>`;
       }
       if (col.key === '__count') {
         return `<td><span class="pc-badge pc-${Math.min(pc,6)}">${pc}</span></td>`;
@@ -7166,7 +7244,7 @@ function rebuildOrgFilter(pk) {
   cl.forEach(c => { if (c.org) orgCounts[c.org] = (orgCounts[c.org] || 0) + 1; });
   const orgs = Object.keys(orgCounts).filter(o => orgCounts[o] >= 2).sort();
   const prevVal = activeOrgFilters[pk] || '';
-  sel.innerHTML = `<option value="" data-i18n="all_businesses">🏢 All Businesses</option>` +
+  sel.innerHTML = `<option value="" data-i18n="all_businesses"><span class="icon" data-icon="building" data-icon-size="14"></span> All Businesses</option>` +
     orgs.map(o => `<option value="${escAttr(o)}">${escAttr(o)} (${orgCounts[o]} locations)</option>`).join('');
   if (orgs.includes(prevVal)) sel.value = prevVal;
   else { activeOrgFilters[pk] = ''; sel.value = ''; }
@@ -7194,7 +7272,7 @@ function renderOrgRollup(pk) {
   wrap.style.display = '';
   wrap.innerHTML = `
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
-      <span style="font-size:15px;font-weight:700;color:var(--text)">🏢 ${escAttr(cl[0].org)}</span>
+      <span style="font-size:15px;font-weight:700;color:var(--text)"><span class="icon" data-icon="building" data-icon-size="14"></span> ${escAttr(cl[0].org)}</span>
       <span class="portfolio-chip chip-addon">${cl.length} locations</span>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -8339,7 +8417,7 @@ function renderGoogleCalendarStatus() {
     </div>`;
     if (!googleConnectedAccountEmail) fetchGoogleConnectedAccount(); // backfill once, then re-renders itself
   } else {
-    el.innerHTML = `<button class="btn btn-primary btn-sm" onclick="connectGoogleCalendar()">📅 Connect Google Calendar</button>`;
+    el.innerHTML = `<button class="btn btn-primary btn-sm" onclick="connectGoogleCalendar()"><span class="icon" data-icon="calendar" data-icon-size="14"></span> Connect Google Calendar</button>`;
   }
 }
 
@@ -8797,7 +8875,7 @@ function renderTeamUI() {
             <option value="superuser" ${m.role==='superuser'?'selected':''}>Super user</option>
             <option value="admin" ${m.role==='admin'?'selected':''}>Admin</option>
           </select>
-          <button class="row-action-btn danger" onclick="removeTeamMember('${m.id}')">🗑️ Remove</button>
+          <button class="row-action-btn danger" onclick="removeTeamMember('${m.id}')"><span class="icon" data-icon="trash" data-icon-size="13"></span> Remove</button>
         </div>`).join('');
   }
 }
@@ -9298,8 +9376,8 @@ function rebuildAdSpendTable() {
       `<td><span class="promo-pill ${promoPillClass(b.promo)}">${b.promo}</span></td>`,
       `<td title="${(b.recs || '').replace(/"/g, '&quot;')}" style="color:var(--text2)">${recsShort}</td>`,
       `<td>${canEdit() ? `
-        <button class="row-action-btn" onclick="openEditAdSpendModal('${safeId}')" aria-label="Edit business">✏️</button>
-        <button class="row-action-btn danger" onclick="removeAdSpendBusiness('${safeId}')" aria-label="Remove business">🗑️</button>` : `<span style="font-size:11px;color:var(--text3)">View only</span>`}</td>`,
+        <button class="row-action-btn" onclick="openEditAdSpendModal('${safeId}')" aria-label="Edit business"><span class="icon" data-icon="edit" data-icon-size="13"></span></button>
+        <button class="row-action-btn danger" onclick="removeAdSpendBusiness('${safeId}')" aria-label="Remove business"><span class="icon" data-icon="trash" data-icon-size="13"></span></button>` : `<span style="font-size:11px;color:var(--text3)">View only</span>`}</td>`,
     ];
     return `<tr>${order.map(i => cellByIdx[i]).join('')}</tr>`;
   }).join('');
@@ -9374,11 +9452,11 @@ function renderAdSpendMappingModal() {
     `<strong style="color:var(--text)">${fileName}</strong> → Ad Spend Management · ${rows.length} row${rows.length === 1 ? '' : 's'} detected. Fix anything that looks wrong, then continue.`;
   const options = (selected) => `
     <option value="">— Ignore this column —</option>
-    <option value="name" ${selected === 'name' ? 'selected' : ''}>👤 Business Name</option>
-    <option value="budget" ${selected === 'budget' ? 'selected' : ''}>💰 Budget ($/mo)</option>
-    <option value="watermark" ${selected === 'watermark' ? 'selected' : ''}>🎯 Watermark ($)</option>
-    <option value="addons" ${selected === 'addons' ? 'selected' : ''}>➕ Add-Ons</option>
-    <option value="startDate" ${selected === 'startDate' ? 'selected' : ''}>📅 Start Date</option>
+    <option value="name" ${selected === 'name' ? 'selected' : ''}><span class="icon" data-icon="user" data-icon-size="14"></span> Business Name</option>
+    <option value="budget" ${selected === 'budget' ? 'selected' : ''}><span class="icon" data-icon="dollar" data-icon-size="16"></span> Budget ($/mo)</option>
+    <option value="watermark" ${selected === 'watermark' ? 'selected' : ''}><span class="icon" data-icon="target" data-icon-size="16"></span> Watermark ($)</option>
+    <option value="addons" ${selected === 'addons' ? 'selected' : ''}><span class="icon" data-icon="plus" data-icon-size="12"></span> Add-Ons</option>
+    <option value="startDate" ${selected === 'startDate' ? 'selected' : ''}><span class="icon" data-icon="calendar" data-icon-size="14"></span> Start Date</option>
     <option value="promo" ${selected === 'promo' ? 'selected' : ''}>🎁 Promo Eligible</option>
     <option value="recs" ${selected === 'recs' ? 'selected' : ''}>📝 Recommendations</option>`;
   const body = document.getElementById('asMappingTableBody');
@@ -9477,7 +9555,7 @@ function renderAdSpendDuplicatesReview() {
         <select onchange="setAdSpendDupAction(${i}, this.value)" style="width:220px">
           <option value="replace" ${d.action === 'replace' ? 'selected' : ''}>🔄 Replace existing record</option>
           <option value="skip" ${d.action === 'skip' ? 'selected' : ''}>⏭️ Skip — keep existing as-is</option>
-          <option value="both" ${d.action === 'both' ? 'selected' : ''}>➕ Keep both (add as new)</option>
+          <option value="both" ${d.action === 'both' ? 'selected' : ''}><span class="icon" data-icon="plus" data-icon-size="12"></span> Keep both (add as new)</option>
         </select>
       </div>`).join('');
   }
@@ -9905,8 +9983,8 @@ function rebuildCollectionsTable() {
       `<td title="${escAttr(latestNote)}" style="color:var(--text2)">${noteShort}</td>`,
       `<td style="white-space:nowrap">
         <button class="row-action-btn" onclick="openClientNotesTasksModal('${safeName}')">📝 ${accountNotes.length}</button>
-        ${editable ? `<button class="row-action-btn" onclick="openEditCollectionsModal('${a.id}')" aria-label="Edit account">✏️</button>` : ''}
-        ${editable ? `<button class="row-action-btn danger" onclick="removeCollectionsAccount('${a.id}')" aria-label="Remove account">🗑️</button>` : ''}
+        ${editable ? `<button class="row-action-btn" onclick="openEditCollectionsModal('${a.id}')" aria-label="Edit account"><span class="icon" data-icon="edit" data-icon-size="13"></span></button>` : ''}
+        ${editable ? `<button class="row-action-btn danger" onclick="removeCollectionsAccount('${a.id}')" aria-label="Remove account"><span class="icon" data-icon="trash" data-icon-size="13"></span></button>` : ''}
       </td>`,
     ];
     return `<tr>${order.map(i => cellByIdx[i]).join('')}</tr>`;
@@ -9995,11 +10073,11 @@ function renderCollectionsMappingModal() {
     `<strong style="color:var(--text)">${fileName}</strong> → ${typeLabel} · ${rows.length} row${rows.length === 1 ? '' : 's'} detected. Fix anything that looks wrong, then continue.`;
   const options = (selected) => `
     <option value="">— Ignore this column —</option>
-    <option value="name" ${selected === 'name' ? 'selected' : ''}>👤 Business Name</option>
-    <option value="amount" ${selected === 'amount' ? 'selected' : ''}>💰 Amount</option>
-    <option value="date" ${selected === 'date' ? 'selected' : ''}>📅 ${type === 'outstanding' ? 'Due Date' : 'Last Attempt'}</option>
-    <option value="resolvedDate" ${selected === 'resolvedDate' ? 'selected' : ''}>✅ Resolved Date</option>
-    <option value="status" ${selected === 'status' ? 'selected' : ''}>🏷️ Status</option>`;
+    <option value="name" ${selected === 'name' ? 'selected' : ''}><span class="icon" data-icon="user" data-icon-size="14"></span> Business Name</option>
+    <option value="amount" ${selected === 'amount' ? 'selected' : ''}><span class="icon" data-icon="dollar" data-icon-size="16"></span> Amount</option>
+    <option value="date" ${selected === 'date' ? 'selected' : ''}><span class="icon" data-icon="calendar" data-icon-size="14"></span> ${type === 'outstanding' ? 'Due Date' : 'Last Attempt'}</option>
+    <option value="resolvedDate" ${selected === 'resolvedDate' ? 'selected' : ''}><span class="icon" data-icon="check" data-icon-size="16"></span> Resolved Date</option>
+    <option value="status" ${selected === 'status' ? 'selected' : ''}><span class="icon" data-icon="tag" data-icon-size="14"></span> Status</option>`;
   const body = document.getElementById('colMappingTableBody');
   body.innerHTML = headers.map((h,i) => {
     const sample = String(rows[0][h] ?? '').slice(0,40) || '—';
@@ -10096,7 +10174,7 @@ function renderCollectionsDuplicatesReview() {
         <select onchange="setCollectionsDupAction(${i}, this.value)" style="width:220px">
           <option value="replace" ${d.action === 'replace' ? 'selected' : ''}>🔄 Replace existing record</option>
           <option value="skip" ${d.action === 'skip' ? 'selected' : ''}>⏭️ Skip — keep existing as-is</option>
-          <option value="both" ${d.action === 'both' ? 'selected' : ''}>➕ Keep both (add as new)</option>
+          <option value="both" ${d.action === 'both' ? 'selected' : ''}><span class="icon" data-icon="plus" data-icon-size="12"></span> Keep both (add as new)</option>
         </select>
       </div>`).join('');
   }
@@ -10771,7 +10849,7 @@ function renderManagePipelinesList() {
         <div style="font-weight:700">${escAttr(p.name)}${p.is_default ? ' <span style="color:var(--text3);font-weight:400;font-size:var(--font-2xs)">(default)</span>' : ''}</div>
         <div style="font-size:var(--font-2xs);color:var(--text3)">${stages.map(s => s.icon + ' ' + escAttr(s.label)).join(' → ')} · ${recordCount} in progress</div>
       </div>
-      ${p.is_default ? '' : `<button class="row-action-btn danger" onclick="deleteOnboardingPipeline('${p.id}')" title="Delete this pipeline" aria-label="Delete ${escAttr(p.name)} pipeline">🗑️</button>`}
+      ${p.is_default ? '' : `<button class="row-action-btn danger" onclick="deleteOnboardingPipeline('${p.id}')" title="Delete this pipeline" aria-label="Delete ${escAttr(p.name)} pipeline"><span class="icon" data-icon="trash" data-icon-size="13"></span></button>`}
     </div>`;
   }).join('') || '<div style="color:var(--text3);font-size:var(--font-sm)">No pipelines yet.</div>';
 }
@@ -10991,7 +11069,7 @@ function renderOnboardingDetail(r, products) {
     <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:var(--space-2)">
       <span style="font-weight:700;font-size:var(--font-lg);font-family:var(--font-display)">${escAttr(r.business_name)}</span>
       <span class="portfolio-chip chip-${r.portfolio}">${escAttr(PORTFOLIO_LABELS[r.portfolio] || r.portfolio)}</span>
-      <button class="row-action-btn danger" style="margin-left:auto" onclick="deleteOnboardingRecord('${r.id}')" title="Delete from pipeline" aria-label="Delete ${escAttr(r.business_name)} from the onboarding pipeline">🗑️</button>
+      <button class="row-action-btn danger" style="margin-left:auto" onclick="deleteOnboardingRecord('${r.id}')" title="Delete from pipeline" aria-label="Delete ${escAttr(r.business_name)} from the onboarding pipeline"><span class="icon" data-icon="trash" data-icon-size="13"></span></button>
     </div>
     ${r.organization ? `<div style="color:var(--text3);font-size:var(--font-sm);margin-bottom:var(--space-3)">${escAttr(r.organization)}</div>` : ''}
 
@@ -11250,7 +11328,7 @@ function renderMyRemindersWidget() {
         <div class="support-name">${escAttr(r.title)}</div>
         <div class="support-detail">${fmtDateTime(r.remind_at)}${r.client_name ? ' · ' + escAttr(r.client_name) : ''}</div>
       </div>
-      <button class="row-action-btn danger" onclick="deleteReminder('${r.id}')" aria-label="Cancel this reminder">🗑️</button>
+      <button class="row-action-btn danger" onclick="deleteReminder('${r.id}')" aria-label="Cancel this reminder"><span class="icon" data-icon="trash" data-icon-size="13"></span></button>
     </div>`).join('');
 }
 
@@ -11430,7 +11508,7 @@ function handleObNoteMentionInput(e) {
   obMentionActiveIndex = 0;
   dd.innerHTML = obMentionMatches.map((m, i) =>
     `<div class="mention-item${i===0?' highlighted':''}" data-idx="${i}" onmousedown="event.preventDefault();selectObMention(${i})">
-      <span>👤 ${escAttr(m.name)}</span><span class="mention-email">${escAttr(m.email)}</span>
+      <span><span class="icon" data-icon="user" data-icon-size="14"></span> ${escAttr(m.name)}</span><span class="mention-email">${escAttr(m.email)}</span>
     </div>`
   ).join('');
   dd.style.display = '';
@@ -11483,7 +11561,7 @@ function handleNoteMentionInput(e) {
   mentionActiveIndex = 0;
   dd.innerHTML = mentionMatches.map((m, i) =>
     `<div class="mention-item${i===0?' highlighted':''}" data-idx="${i}" onmousedown="event.preventDefault();selectMention(${i})">
-      <span>👤 ${escAttr(m.name)}</span><span class="mention-email">${escAttr(m.email)}</span>
+      <span><span class="icon" data-icon="user" data-icon-size="14"></span> ${escAttr(m.name)}</span><span class="mention-email">${escAttr(m.email)}</span>
     </div>`
   ).join('');
   dd.style.display = '';
@@ -12159,8 +12237,8 @@ function renderClientTasksList() {
         <div class="task-title">${escAttr(t.title)}</div>
         <div class="task-meta">Assigned to ${escAttr(t.assigned_to_name || '—')}${t.due_date ? ' · Due ' + fmtDateTime(t.due_date) : ''}${t.recurrence ? ' · 🔁 ' + recurrenceLabel(t) : ''}${t.workflow_id ? ' · 🤖 Automated' : ''}</div>
       </div>
-      ${t.due_date ? `<a href="${gcalQuickAddUrl(t)}" target="_blank" rel="noopener" class="row-action-btn" title="Add to Google Calendar">📅</a>` : ''}
-      ${canModifyTask(t) ? `<button class="row-action-btn danger" onclick="deleteClientTask('${t.id}')" aria-label="Delete task">🗑️</button>` : ''}
+      ${t.due_date ? `<a href="${gcalQuickAddUrl(t)}" target="_blank" rel="noopener" class="row-action-btn" title="Add to Google Calendar"><span class="icon" data-icon="calendar" data-icon-size="14"></span></a>` : ''}
+      ${canModifyTask(t) ? `<button class="row-action-btn danger" onclick="deleteClientTask('${t.id}')" aria-label="Delete task"><span class="icon" data-icon="trash" data-icon-size="13"></span></button>` : ''}
     </div>`).join('');
 }
 
@@ -12256,7 +12334,7 @@ function renderHomeMyTasks() {
     const overdue = t.due_date && t.due_date < today;
     const safeClient = escOnclickArg(t.client_name);
     return `<div class="support-item" style="cursor:pointer" onclick="openClientNotesTasksModal('${safeClient}')" tabindex="0" role="button" aria-label="Open notes and tasks for ${escAttr(t.client_name)}">
-      <div class="support-avatar" style="background:var(--bg4);color:${overdue ? 'var(--red)' : 'var(--orange)'}">✅</div>
+      <div class="support-avatar" style="background:var(--bg4);color:${overdue ? 'var(--red)' : 'var(--orange)'}"><span class="icon" data-icon="check" data-icon-size="16"></span></div>
       <div class="support-info">
         <div class="support-name">${escAttr(t.title)}</div>
         <div class="support-detail">${escAttr(t.client_name)}${t.due_date ? ' · ' + (overdue ? 'Overdue ' : 'Due ') + fmtDate(t.due_date) : ''}</div>
@@ -12642,8 +12720,8 @@ function renderMappingModal() {
   const catalog = getCatalog(pk);
   const options = (selected) => {
     let opts = `<option value="">— Ignore this column —</option>`;
-    opts += `<option value="name" ${selected === 'name' ? 'selected' : ''}>👤 Client Name</option>`;
-    opts += `<option value="org" ${selected === 'org' ? 'selected' : ''}>🏢 Organization</option>`;
+    opts += `<option value="name" ${selected === 'name' ? 'selected' : ''}><span class="icon" data-icon="user" data-icon-size="14"></span> Client Name</option>`;
+    opts += `<option value="org" ${selected === 'org' ? 'selected' : ''}><span class="icon" data-icon="building" data-icon-size="14"></span> Organization</option>`;
     catalog.forEach(p => {
       const iconText = (typeof p.icon === 'string' && p.icon.startsWith('logo:')) ? '' : (p.icon || '');
       opts += `<option value="${p.key}" ${selected === p.key ? 'selected' : ''}>${iconText ? iconText + ' ' : ''}${p.label}</option>`;
@@ -12762,7 +12840,7 @@ function renderDuplicatesReview() {
         <select onchange="setDupAction(${i}, this.value)" style="width:220px">
           <option value="replace" ${d.action === 'replace' ? 'selected' : ''}>🔄 Replace existing with new data</option>
           <option value="skip" ${d.action === 'skip' ? 'selected' : ''}>⏭️ Skip — keep existing as-is</option>
-          <option value="both" ${d.action === 'both' ? 'selected' : ''}>➕ Keep both (add as new)</option>
+          <option value="both" ${d.action === 'both' ? 'selected' : ''}><span class="icon" data-icon="plus" data-icon-size="12"></span> Keep both (add as new)</option>
         </select>
       </div>`).join('');
   }
@@ -13045,7 +13123,7 @@ function rebuildProductCatalogPage() {
           <option value="medium" ${p.priority==='medium'?'selected':''}>Medium</option>
           <option value="low" ${p.priority==='low'?'selected':''}>Targeted</option>
         </select>
-        <button class="btn" style="background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.25);padding:var(--space-2) var(--space-4);font-size:var(--font-xs)" onclick="requestRemoveProduct('${pk}','${p.key}')">🗑️ Remove</button>
+        <button class="btn" style="background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.25);padding:var(--space-2) var(--space-4);font-size:var(--font-xs)" onclick="requestRemoveProduct('${pk}','${p.key}')"><span class="icon" data-icon="trash" data-icon-size="13"></span> Remove</button>
       </div>`;
   });
 }
@@ -13317,10 +13395,10 @@ function rebuildClientsDirectory() {
       <td>${chips}</td>
       <td><span class="pc-cell"><span class="pc-badge pc-${Math.min(total,6)}">${total}</span>${iconsHtml}</span></td>
       <td>
-        <button class="row-action-btn" onclick="openClientNotesTasksModal('${safe}')">👤 Open Client</button>
+        <button class="row-action-btn" onclick="openClientNotesTasksModal('${safe}')"><span class="icon" data-icon="user" data-icon-size="14"></span> Open Client</button>
         ${canEdit() ? `
-        <button class="row-action-btn" onclick="openEditClientModal('${safe}')">✏️ Edit</button>
-        <button class="row-action-btn danger" onclick="openDeleteClientModal('${safe}')">🗑️ Remove</button>` : ''}
+        <button class="row-action-btn" onclick="openEditClientModal('${safe}')"><span class="icon" data-icon="edit" data-icon-size="13"></span> Edit</button>
+        <button class="row-action-btn danger" onclick="openDeleteClientModal('${safe}')"><span class="icon" data-icon="trash" data-icon-size="13"></span> Remove</button>` : ''}
       </td></tr>`;
   });
   tbody.innerHTML = rowsHtml.length > 0 ? rowsHtml.join('') : emptyStateRow(5, {
@@ -13341,7 +13419,7 @@ function populateClientsProductFilter() {
   });
   const products = Object.values(seen);
   const prevVal = activeProductFilter;
-  sel.innerHTML = `<option value="all">📦 All Products</option>` +
+  sel.innerHTML = `<option value="all"><span class="icon" data-icon="package" data-icon-size="16"></span> All Products</option>` +
     products.map(p => `<option value="${escAttr(p.key)}">${escAttr(p.label)}</option>`).join('');
   if (prevVal === 'all' || products.some(p => p.key === prevVal)) sel.value = prevVal;
   else { activeProductFilter = 'all'; sel.value = 'all'; }
@@ -13741,12 +13819,12 @@ function renderWorkflowCanvas() {
     if (n.id === wfbExpandedNodeId) {
       const schema = getNodeFieldSchema(n);
       return `<div class="wfb-node wfb-node-expanded" style="left:${n.pos_x}px;top:${n.pos_y}px;--node-color:${color}" data-node-id="${n.id}">
-        <div class="wfb-node-hd"><span class="dot"></span>${icon} ${escAttr(typeLabel)}<span class="wfb-node-close" data-action="close-node" title="Close">✕</span></div>
+        <div class="wfb-node-hd"><span class="dot"></span>${icon} ${escAttr(typeLabel)}<span class="wfb-node-close" data-action="close-node" title="Close"><span class="icon" data-icon="close" data-icon-size="12"></span></span></div>
         <label class="wfb-field-label">Label</label>
         <input type="text" class="wfb-field-input" id="wfb-field-${n.id}-label" value="${escAttr(n.label)}">
         ${schema.map(f => renderWfbField(n, f)).join('')}
         <div class="wfb-expanded-btns">
-          <button class="wfb-mini-btn danger" data-action="delete-node">🗑️</button>
+          <button class="wfb-mini-btn danger" data-action="delete-node"><span class="icon" data-icon="trash" data-icon-size="13"></span></button>
           <button class="wfb-mini-btn" data-action="close-node">Cancel</button>
           <button class="wfb-mini-btn primary" data-action="save-node">Save</button>
         </div>
@@ -14012,8 +14090,8 @@ function toggleWfbNodeMenu(nodeId, anchorEl) {
   menu.style.left = rect.left + 'px';
   menu.style.top = rect.bottom + 'px';
   menu.innerHTML = `
-    <div class="wfb-node-menu-item" onclick="openWorkflowNodeEditor('${nodeId}')">✏️ Edit</div>
-    <div class="wfb-node-menu-item danger" onclick="deleteWorkflowNode('${nodeId}')">🗑️ Delete</div>`;
+    <div class="wfb-node-menu-item" onclick="openWorkflowNodeEditor('${nodeId}')"><span class="icon" data-icon="edit" data-icon-size="13"></span> Edit</div>
+    <div class="wfb-node-menu-item danger" onclick="deleteWorkflowNode('${nodeId}')"><span class="icon" data-icon="trash" data-icon-size="13"></span> Delete</div>`;
   document.body.appendChild(menu);
   setTimeout(() => document.addEventListener('click', closeAllWfbNodeMenus, { once: true }), 0);
 }
@@ -14359,10 +14437,10 @@ function renderWfbAiSuggestions() {
   const dot = document.getElementById('wfbAiLiveDot');
   if (dot) { dot.style.background = issues.some(i => i.severity === 'critical') ? resolveCssColor('var(--red)') : resolveCssColor('var(--green)'); dot.style.boxShadow = `0 0 6px ${dot.style.background}`; }
   if (issues.length === 0) {
-    wrap.innerHTML = `<div class="wfb-suggestion-hd">✅ HEALTH CHECK</div><div class="wfb-ai-placeholder" style="font-size:var(--font-xs)">No structural issues found — every path leads somewhere, every condition has both branches, and delays have a duration set.</div>`;
+    wrap.innerHTML = `<div class="wfb-suggestion-hd"><span class="icon" data-icon="check" data-icon-size="16"></span> HEALTH CHECK</div><div class="wfb-ai-placeholder" style="font-size:var(--font-xs)">No structural issues found — every path leads somewhere, every condition has both branches, and delays have a duration set.</div>`;
     return;
   }
-  wrap.innerHTML = `<div class="wfb-suggestion-hd">⚠️ ${issues.length} THING${issues.length === 1 ? '' : 'S'} TO FIX</div>` +
+  wrap.innerHTML = `<div class="wfb-suggestion-hd"><span class="icon" data-icon="alert" data-icon-size="16"></span> ${issues.length} THING${issues.length === 1 ? '' : 'S'} TO FIX</div>` +
     issues.map(iss => `<div class="wfb-suggestion" style="--sev-color:${sevColor[iss.severity]}" onclick="jumpToWfbNode('${iss.nodeId || ''}')">
       <span class="sev-badge">${sevLabel[iss.severity]}</span>
       <span class="txt">${escAttr(iss.message)}</span>
@@ -14778,8 +14856,8 @@ function rebuildWorkflowsPageOLD() {
         <input type="checkbox" ${wf.active ? 'checked' : ''} onchange="toggleWorkflowActive('${wf.id}')">
         <span style="font-size:var(--font-xs);color:var(--text3)">Active</span>
       </label>
-      <button class="row-action-btn" onclick="openEditWorkflowModal('${wf.id}')">✏️ Edit</button>
-      <button class="row-action-btn danger" onclick="confirmDeleteWorkflow('${wf.id}')" aria-label="Delete workflow">🗑️</button>` : ''}
+      <button class="row-action-btn" onclick="openEditWorkflowModal('${wf.id}')"><span class="icon" data-icon="edit" data-icon-size="13"></span> Edit</button>
+      <button class="row-action-btn danger" onclick="confirmDeleteWorkflow('${wf.id}')" aria-label="Delete workflow"><span class="icon" data-icon="trash" data-icon-size="13"></span></button>` : ''}
     </div>`).join('');
 }
 
@@ -16344,8 +16422,8 @@ function rebuildKnowledgePage() {
         ${k.source_url ? `<div style="font-size:var(--font-2xs);color:var(--text3);margin-top:4px">🔗 <a href="${escAttr(k.source_url)}" target="_blank" rel="noopener noreferrer" style="color:var(--text3)">${escAttr(k.source_url)}</a></div>` : ''}
       </div>
       ${canEdit() ? `
-      <button class="row-action-btn" onclick="openEditKnowledgeModal('${k.id}')">✏️ Edit</button>
-      <button class="row-action-btn danger" onclick="confirmDeleteKnowledge('${k.id}')" aria-label="Delete knowledge entry">🗑️</button>` : ''}
+      <button class="row-action-btn" onclick="openEditKnowledgeModal('${k.id}')"><span class="icon" data-icon="edit" data-icon-size="13"></span> Edit</button>
+      <button class="row-action-btn danger" onclick="confirmDeleteKnowledge('${k.id}')" aria-label="Delete knowledge entry"><span class="icon" data-icon="trash" data-icon-size="13"></span></button>` : ''}
     </div>`;
   }).join('');
 }
@@ -17791,7 +17869,7 @@ function describeAiAction(tool) {
   if (tool.name === 'bulk_create_tasks' || tool.name === 'bulk_add_note') {
     const targets = resolveBulkTargets(i);
     const overCap = targets.length > BULK_ACTION_MAX;
-    const capNote = overCap ? ` <span style="color:var(--red)">⚠️ Exceeds the ${BULK_ACTION_MAX}-client safety limit — this will be rejected. Narrow the filter first.</span>` : '';
+    const capNote = overCap ? ` <span style="color:var(--red)"><span class="icon" data-icon="alert" data-icon-size="16"></span> Exceeds the ${BULK_ACTION_MAX}-client safety limit — this will be rejected. Narrow the filter first.</span>` : '';
     const preview = targets.slice(0, 15).map(n => escAttr(n)).join(', ') + (targets.length > 15 ? ` … and ${targets.length - 15} more` : '');
     const previewLine = `<br><span style="color:var(--text3);font-size:11px">${preview || 'No matching clients found.'}</span>`;
     if (tool.name === 'bulk_create_tasks') {
