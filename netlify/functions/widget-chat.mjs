@@ -193,12 +193,23 @@ export default async (req) => {
   //    deliberately has NO access to any Hub-internal tool, data, or
   //    client record. This agent only ever talks about this one business
   //    and only ever writes to this one conversation.
-  const dataToCollect = [];
-  if (widget.collect_name !== false) dataToCollect.push("their name");
-  if (widget.collect_phone !== false) dataToCollect.push("phone number");
-  if (widget.collect_email !== false) dataToCollect.push("email address");
-  if (widget.collect_service_requested !== false) dataToCollect.push("what service or product they're interested in");
-  if (widget.collect_company) dataToCollect.push("company name");
+  //
+  // Data fields: prefers the new structured data_fields list (label +
+  // required, settable per-widget including custom fields added in the
+  // Hub's Agent Builder) -- falls back to the old boolean collect_* flags
+  // for any widget that hasn't been re-saved since that was added, so
+  // nothing breaks for existing widgets.
+  let dataToCollect;
+  if (Array.isArray(widget.data_fields) && widget.data_fields.length > 0) {
+    dataToCollect = widget.data_fields.filter((f) => f.enabled).map((f) => f.label + (f.required ? " (required)" : ""));
+  } else {
+    dataToCollect = [];
+    if (widget.collect_name !== false) dataToCollect.push("their name");
+    if (widget.collect_phone !== false) dataToCollect.push("phone number");
+    if (widget.collect_email !== false) dataToCollect.push("email address");
+    if (widget.collect_service_requested !== false) dataToCollect.push("what service or product they're interested in");
+    if (widget.collect_company) dataToCollect.push("company name");
+  }
 
   const nowStr = new Date().toLocaleString("en-US", { timeZone: widget.timezone || "America/Los_Angeles", weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit", timeZoneName: "short" });
   const hours = widget.business_hours || {};
@@ -208,13 +219,62 @@ export default async (req) => {
     ? `You CAN book real appointments on this business's calendar. Business hours (in ${widget.timezone || "America/Los_Angeles"}): ${hoursLines || "not configured"}. Appointments are ${widget.service_duration_minutes || 60} minutes with a ${widget.buffer_time_minutes || 0}-minute buffer, and need at least ${widget.min_notice_hours || 0} hours' notice from right now. The current date/time is ${nowStr} -- compute any relative time the visitor mentions ("tomorrow", "Friday afternoon") from this. Once the visitor agrees on a specific date and time within business hours, call book_appointment with the exact start time. If it comes back unavailable, apologize and ask for another time -- never claim something is booked unless the tool confirms it.`
     : `You do NOT have calendar booking available for this widget yet -- if the visitor wants to schedule something, say a team member will follow up to find a time, and set resolution to "transfer".`;
 
-  const systemPrompt = `You are ${widget.agent_name || "an AI assistant"}, a friendly, conversational chat widget embedded directly on a business's website. ${widget.instructions || ""}
+  const transferInstructions = widget.transfer_to_human_enabled === false
+    ? `Transfer-to-human is turned OFF for this widget -- never tell the visitor a person will follow up; instead do your best to fully resolve things yourself, and if you truly can't, say so honestly.`
+    : `If the visitor asks for a human, seems frustrated, or has a question genuinely outside what you can help with, say a team member will follow up and set resolution to "transfer".`;
 
-Your goals, in order: (1) understand what the visitor actually needs, (2) naturally collect ${dataToCollect.length ? dataToCollect.join(", ") : "their contact information"} through the conversation -- never as a rigid form, ask for one or two things at a time, in your own words, (3) once you have enough to work with, offer to book a call or hand off to a real person if that's what fits.
+  // Personality, built from the Hub's Agent Builder tag selections rather
+  // than one flat instructions blob -- falls back to a generic personality
+  // if none of this has been configured yet.
+  const toneTags = Array.isArray(widget.tone_tags) ? widget.tone_tags : [];
+  const styleTags = Array.isArray(widget.style_tags) ? widget.style_tags : [];
+  const traitTags = Array.isArray(widget.trait_tags) ? widget.trait_tags : [];
+  const personalityLine = [
+    widget.personality_summary || "",
+    toneTags.length ? `Tone: ${toneTags.join(", ")}.` : "",
+    styleTags.length ? `Style: ${styleTags.join(", ")}.` : "",
+    traitTags.length ? `Traits: ${traitTags.join(", ")}.` : "",
+  ].filter(Boolean).join(" ");
+
+  // Conversation flow steps, built in the Hub as a structured sequence
+  // rather than one freeform instructions paragraph -- each step is a
+  // phase of the conversation to guide toward, not a rigid script to
+  // recite verbatim.
+  const steps = Array.isArray(widget.conversation_steps) ? widget.conversation_steps : [];
+  const stepsBlock = steps.length
+    ? `Guide the conversation through these phases, in order, using your own natural words -- don't recite them verbatim, and don't rush past a phase before it's genuinely done:\n${steps.map((s, i) => `${i + 1}. ${s.title}: ${s.description}`).join("\n")}`
+    : "";
+
+  // Knowledge Base: any Hub Knowledge Base entries linked to this widget
+  // in Agent Builder get included as real reference material, so the
+  // widget can accurately answer questions about pricing, services, etc.
+  // using content the team actually wrote, not invented.
+  let kbBlock = "";
+  if (Array.isArray(widget.kb_entry_ids) && widget.kb_entry_ids.length > 0) {
+    try {
+      const idList = widget.kb_entry_ids.map((id) => `"${id}"`).join(",");
+      const kbRes = await fetch(`${SUPABASE_URL}/rest/v1/knowledge_base?id=in.(${idList})&select=title,content`, { headers: sbHeaders });
+      const kbRows = kbRes.ok ? await kbRes.json() : [];
+      if (kbRows.length > 0) {
+        kbBlock = `\nREFERENCE MATERIAL (use this to answer questions accurately -- don't invent details that aren't here):\n${kbRows.map((k) => `--- ${k.title} ---\n${(k.content || "").slice(0, 2000)}`).join("\n\n")}`;
+      }
+    } catch (e) {
+      // Non-fatal -- the widget still works without its knowledge base, just less informed.
+    }
+  }
+
+  const systemPrompt = `You are ${widget.agent_name || "an AI assistant"}, a friendly, conversational chat widget embedded directly on a business's website. ${personalityLine}
+
+${widget.opening_line ? `Your natural opening line (adapt the wording, don't recite it robotically): "${widget.opening_line}"\n\n` : ""}${stepsBlock}
+
+Naturally collect ${dataToCollect.length ? dataToCollect.join(", ") : "their contact information"} through the conversation -- never as a rigid form, ask for one or two things at a time, in your own words.
 
 ${bookingInstructions}
 
+${transferInstructions}
+
 Keep every reply SHORT -- one to three sentences, like a text message, never a wall of text or a script.
+${kbBlock}
 
 After each reply, call update_lead_status with your current read on this lead: any new details you just learned (name/email/phone/service), an "intent" (one short phrase), a "confidence" (High/Medium/Low -- how real and qualified this lead seems), a "resolution" ("exploring" = still gathering info, "booked" = a call/appointment was just scheduled, "transfer" = they want a human or you're stuck, "handled_ai" = you fully answered them and the conversation has a natural close), and a short "next_step" note for whoever on the team picks this up.`;
 

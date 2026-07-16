@@ -1901,7 +1901,7 @@ tr.hidden-row { display: none; }
 .cw-drawer-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 500; display: none; }
 .cw-drawer-overlay.open { display: block; }
 .cw-drawer {
-  position: fixed; top: 0; right: -480px; width: 460px; max-width: 92vw; height: 100vh; background: var(--bg2);
+  position: fixed; top: 0; right: -1040px; width: 1020px; max-width: 96vw; height: 100vh; background: var(--bg2);
   border-left: 1px solid var(--orange); box-shadow: -20px 0 60px rgba(0,0,0,.5), 0 0 40px rgba(226,84,31,.15);
   z-index: 501; transition: right var(--transition-slow); display: flex; flex-direction: column;
 }
@@ -1914,6 +1914,52 @@ tr.hidden-row { display: none; }
 .cw-drawer-tab { flex: 1; background: var(--bg3); border: 1px solid var(--border); padding: 8px; font-size: var(--font-xs); font-weight: 700; color: var(--text2); border-radius: var(--radius-sm) var(--radius-sm) 0 0; cursor: pointer; }
 .cw-drawer-tab.active { background: var(--bg2); color: var(--orange); border-bottom-color: var(--bg2); position: relative; z-index: 1; }
 .cw-drawer-body { flex: 1; overflow-y: auto; padding: var(--space-4); }
+
+/* Agent Builder layout (2026-07-16) -- replaces the single "Instructions"
+   field with a real structured conversation-flow builder, tag-based
+   personality, connected tools, and linked Knowledge Base entries. */
+.cw-builder-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: var(--space-4); align-items: start; }
+.cw-builder-main { display: flex; flex-direction: column; gap: var(--space-3); }
+.cw-builder-side { display: flex; flex-direction: column; gap: var(--space-3); }
+.cw-builder-card { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--space-3); }
+.cw-builder-card-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-2); }
+.cw-builder-card-title { display: flex; align-items: center; gap: 7px; font-weight: 700; font-size: var(--font-sm); color: var(--text); }
+.cw-builder-card-title .icon { color: var(--orange); }
+.cw-flow-step { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 8px; overflow: hidden; }
+.cw-flow-step-hd { display: flex; align-items: center; gap: 10px; padding: 10px 12px; cursor: pointer; }
+.cw-flow-step-num { width: 22px; height: 22px; border-radius: 50%; background: var(--orange-dim); color: var(--orange); font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.cw-flow-step-title { font-weight: 700; font-size: var(--font-sm); color: var(--text); flex: 1; }
+.cw-flow-step-desc-preview { font-size: var(--font-2xs); color: var(--text3); max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cw-flow-step-chevron { color: var(--text3); transition: transform var(--transition-base); flex-shrink: 0; }
+.cw-flow-step.expanded .cw-flow-step-chevron { transform: rotate(90deg); }
+.cw-flow-step-body { display: none; padding: 0 12px 12px; }
+.cw-flow-step.expanded .cw-flow-step-body { display: block; }
+.cw-flow-step-body input, .cw-flow-step-body textarea { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-xs); color: var(--text); font-size: var(--font-sm); padding: 7px 10px; font-family: inherit; margin-bottom: 6px; }
+.cw-flow-step-body textarea { resize: vertical; min-height: 50px; }
+.cw-flow-step-remove { background: none; border: none; color: var(--text3); cursor: pointer; padding: 4px; flex-shrink: 0; }
+.cw-flow-step-remove:hover { color: var(--red); }
+.cw-add-step-btn { width: 100%; background: none; border: 1px dashed var(--border); border-radius: var(--radius-sm); color: var(--text3); font-size: var(--font-xs); font-weight: 700; padding: 8px; cursor: pointer; }
+.cw-add-step-btn:hover { border-color: var(--orange); color: var(--orange); }
+.cw-data-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.cw-data-pill { display: flex; align-items: center; gap: 6px; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-pill); padding: 5px 6px 5px 10px; font-size: var(--font-2xs); color: var(--text2); }
+.cw-data-pill-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.cw-data-pill-remove { background: var(--bg4); border: none; border-radius: 50%; width: 16px; height: 16px; color: var(--text3); cursor: pointer; font-size: 10px; display: flex; align-items: center; justify-content: center; }
+.cw-add-field-row { display: flex; gap: 6px; margin-top: 8px; }
+.cw-add-field-row input { flex: 1; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-xs); color: var(--text); font-size: var(--font-xs); padding: 6px 10px; }
+.cw-personality-summary { font-size: var(--font-xs); color: var(--text2); line-height: 1.5; margin-bottom: var(--space-3); }
+.cw-tag-group { margin-bottom: var(--space-2); }
+.cw-tag-group-label { font-size: 9px; font-weight: 800; color: var(--text3); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
+.cw-tag-chip { display: inline-flex; align-items: center; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-pill); padding: 4px 11px; font-size: var(--font-2xs); color: var(--text3); cursor: pointer; margin: 0 5px 5px 0; }
+.cw-tag-chip.active { background: rgba(226,84,31,.15); border-color: var(--orange); color: var(--orange); }
+.cw-tool-card { display: flex; align-items: center; gap: 10px; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 8px; }
+.cw-tool-card.connected { border-color: rgba(34,197,94,.4); }
+.cw-tool-card-icon { width: 32px; height: 32px; border-radius: 8px; background: var(--bg4); display: flex; align-items: center; justify-content: center; color: var(--orange); flex-shrink: 0; }
+.cw-tool-card-info { flex: 1; min-width: 0; }
+.cw-tool-card-name { font-weight: 700; font-size: var(--font-xs); color: var(--text); }
+.cw-tool-card-detail { font-size: 10px; color: var(--text3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cw-kb-doc-row { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: var(--font-xs); }
+.cw-kb-doc-row:last-child { border-bottom: none; }
+.cw-kb-doc-name { flex: 1; color: var(--text2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .cw-settings-cards-grid { display: flex; flex-direction: column; gap: var(--space-3); margin-bottom: var(--space-3); }
 .cw-settings-card { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--space-3); cursor: grab; transition: border-color var(--transition-base), box-shadow var(--transition-base); }
@@ -3381,8 +3427,44 @@ tr.hidden-row { display: none; }
     </div>
     <div class="cw-drawer-body">
       <div id="cwDrawerPane-settings">
-        <div class="cw-settings-cards-grid" id="cwSettingsCardsGrid"></div>
-        <div class="cw-settings-card" style="cursor:default">
+        <div class="cw-builder-grid">
+          <div class="cw-builder-main">
+            <div class="cw-builder-card">
+              <div class="cw-builder-card-hd"><span class="cw-builder-card-title"><span id="cwFlowIcon"></span> Conversation Flow</span></div>
+              <label for="cwOpeningLine" class="field-label">Opening Line <span style="color:var(--text3);font-weight:400">(optional)</span></label>
+              <textarea id="cwOpeningLine" class="field-input" rows="2" style="resize:vertical;font-family:inherit;margin-bottom:var(--space-2)"></textarea>
+              <div id="cwFlowStepsList"></div>
+              <button class="cw-add-step-btn" onclick="addCwFlowStep()"><span id="cwAddStepIcon"></span> Add Step</button>
+            </div>
+            <div class="cw-builder-card">
+              <div class="cw-builder-card-hd"><span class="cw-builder-card-title"><span id="cwDataToCollectIcon"></span> Data to Collect</span></div>
+              <div class="cw-data-pills" id="cwDataPillsList"></div>
+              <div class="cw-add-field-row">
+                <input type="text" id="cwNewFieldName" placeholder="e.g. budget, timeline, urgency">
+                <button class="btn btn-ghost btn-sm" onclick="addCwDataField()"><span id="cwAddFieldIcon"></span> Add Field</button>
+              </div>
+            </div>
+            <div class="cw-settings-cards-grid" id="cwSettingsCardsGrid"></div>
+          </div>
+          <div class="cw-builder-side">
+            <div class="cw-builder-card">
+              <div class="cw-builder-card-hd"><span class="cw-builder-card-title"><span id="cwPersonalityIcon"></span> Personality</span></div>
+              <textarea id="cwPersonalitySummary" class="field-input cw-personality-summary" rows="3" style="resize:vertical;font-family:inherit;background:none;border:1px solid var(--border);padding:8px"></textarea>
+              <div class="cw-tag-group"><div class="cw-tag-group-label">Tone</div><div id="cwToneTags"></div></div>
+              <div class="cw-tag-group"><div class="cw-tag-group-label">Style</div><div id="cwStyleTags"></div></div>
+              <div class="cw-tag-group"><div class="cw-tag-group-label">Traits</div><div id="cwTraitTags"></div></div>
+            </div>
+            <div class="cw-builder-card">
+              <div class="cw-builder-card-hd"><span class="cw-builder-card-title"><span id="cwToolsIcon"></span> Tools</span></div>
+              <div id="cwToolsList"></div>
+            </div>
+            <div class="cw-builder-card">
+              <div class="cw-builder-card-hd"><span class="cw-builder-card-title"><span id="cwKbIcon"></span> Knowledge Base</span></div>
+              <div id="cwKbDocsList"></div>
+            </div>
+          </div>
+        </div>
+        <div class="cw-settings-card" style="cursor:default;margin-top:var(--space-3)">
           <div class="cw-settings-card-hd"><span id="cwPreviewIcon"></span><span class="cw-settings-card-title">Preview</span></div>
           <div class="cw-widget-preview" id="cwWidgetPreview">
             <div class="cw-preview-orb" id="cwPreviewOrb" style="background:radial-gradient(circle at 35% 30%,#fff,var(--cw-color) 45%,var(--cw-color));box-shadow:0 0 24px var(--cw-color)"></div>
@@ -15984,6 +16066,7 @@ function searchKnowledgeBase(query, limit) {
 // to this section for now per Oscar's explicit ask; a Hub-wide emoji audit
 // is a separate, much larger follow-up, not attempted here.
 const CW_ICONS = {
+  chevronRight: '<path d="M9 6l6 6-6 6"/>',
   chat: '<path d="M4 4h16v12H8l-4 4V4z"/>',
   inbox: '<path d="M3 8l2-4h14l2 4M3 8v10h18V8M3 8h6l1.5 3h3L15 8h6"/>',
   settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1-1.6 1.7 1.7 0 00-1.9.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1 1.7 1.7 0 00-.3-1.9l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.9.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.9-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.9V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/>',
@@ -16049,6 +16132,8 @@ function renderCwStaticIcons() {
     cwSaveBtnIcon: ['sparkle', 15], cwPreviewIcon: ['bot', 15], cwEmbedIcon: ['link', 15], cwCopyIcon: ['tag', 12],
     cwNewWidgetIcon: ['plus', 12], cwLeadsChartIcon: ['trending', 14], cwActivityIcon: ['clock', 14],
     cwFunnelIcon: ['target', 14], cwApptPerfIcon: ['calendar', 14], cwInsightIcon: ['sparkle', 14],
+    cwFlowIcon: ['chat', 15], cwAddStepIcon: ['plus', 12], cwDataToCollectIcon: ['tag', 15],
+    cwAddFieldIcon: ['plus', 12], cwPersonalityIcon: ['user', 15], cwToolsIcon: ['settings', 15], cwKbIcon: ['book', 15],
   };
   Object.entries(map).forEach(([id, [icon, size]]) => {
     const el = document.getElementById(id);
@@ -16661,7 +16746,7 @@ function createTaskFromChatWidgetLead(convId) {
 const CW_AVATARS = ['🤖', '🦊', '✨', '👋', '🎯', '💬'];
 const CW_DAY_LABELS = { mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun' };
 const CW_SETTINGS_LAYOUT_KEY = 'csh_cw_settings_layout_v1';
-const CW_SETTINGS_LAYOUT_DEFAULT = ['identity', 'tone', 'style', 'fields', 'hours', 'calendar'];
+const CW_SETTINGS_LAYOUT_DEFAULT = ['identity', 'style', 'hours', 'calendar'];
 
 function getCwSettingsLayout() {
   try {
@@ -16680,16 +16765,6 @@ const CW_SETTINGS_CARD_DEFS = {
     <input type="text" id="cwAgentName" class="field-input" placeholder="Nirvana">
     <label class="field-label">Avatar</label>
     <div class="cw-avatar-picker" id="cwAvatarPicker"></div>` },
-  tone: { icon: 'chat', title: 'Tone & Instructions', body: `
-    <label for="cwTone" class="field-label">Tone</label>
-    <select id="cwTone" class="field-select">
-      <option value="professional_friendly">Professional &amp; Friendly</option>
-      <option value="casual">Casual &amp; Warm</option>
-      <option value="formal">Formal &amp; Precise</option>
-      <option value="energetic">Energetic &amp; Upbeat</option>
-    </select>
-    <label for="cwInstructions" class="field-label">Instructions</label>
-    <textarea id="cwInstructions" class="field-input" rows="3" style="resize:vertical;font-family:inherit"></textarea>` },
   style: { icon: 'palette', title: 'Orb / Dock Style', body: `
     <label class="field-label">Dock Position</label>
     <div class="cw-toggle-pair" id="cwDockPositionToggle">
@@ -16703,9 +16778,6 @@ const CW_SETTINGS_CARD_DEFS = {
       <button type="button" class="cw-toggle-btn" data-val="compact" onclick="selectCwToggle('cwDockSizeToggle', 'compact')">Compact</button>
       <button type="button" class="cw-toggle-btn active" data-val="expanded" onclick="selectCwToggle('cwDockSizeToggle', 'expanded')">Expanded</button>
     </div>` },
-  fields: { icon: 'tag', title: 'Data Collection Fields', body: `
-    <div id="cwDataFieldsList" class="cw-datafields-list"></div>
-    <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:6px" onclick="addCwDataField()">${cwIcon('plus',12)} Add Field</button>` },
   hours: { icon: 'clock', title: 'Business Hours', body: `
     <label for="cwTimezone" class="field-label">Timezone</label>
     <select id="cwTimezone" class="field-select">
@@ -16773,9 +16845,9 @@ function populateCwSettingsFields() {
   const widget = CHAT_WIDGETS.find(w => w.id === cwActiveWidgetId);
   if (!widget) return;
   document.getElementById('cwAgentName').value = widget.agent_name || 'Nirvana';
-  document.getElementById('cwInstructions').value = widget.instructions || '';
   document.getElementById('cwWelcomePrompt').value = widget.welcome_prompt || '';
-  document.getElementById('cwTone').value = widget.tone || 'professional_friendly';
+  document.getElementById('cwOpeningLine').value = widget.opening_line || '';
+  document.getElementById('cwPersonalitySummary').value = widget.personality_summary || '';
   document.getElementById('cwTimezone').value = widget.timezone || 'America/Los_Angeles';
   document.getElementById('cwAllowAfterHours').checked = widget.allow_after_hours !== false;
   document.getElementById('cwServiceDuration').value = widget.service_duration_minutes || 60;
@@ -16792,8 +16864,11 @@ function populateCwSettingsFields() {
   document.querySelectorAll('#cwDockPositionToggle .cw-toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.val === (widget.dock_position || 'right')));
   document.querySelectorAll('#cwDockSizeToggle .cw-toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.val === (widget.dock_size || 'expanded')));
 
-  const fields = Array.isArray(widget.data_fields) ? widget.data_fields : [];
-  renderCwDataFields(fields);
+  renderCwFlowSteps(Array.isArray(widget.conversation_steps) ? widget.conversation_steps : []);
+  renderCwDataPills(Array.isArray(widget.data_fields) ? widget.data_fields : []);
+  renderCwPersonalityTags(widget);
+  renderCwToolsList(widget);
+  renderCwKbDocsList(widget);
 
   const hours = widget.business_hours || {};
   document.getElementById('cwBusinessHoursList').innerHTML = Object.keys(CW_DAY_LABELS).map(day => {
@@ -16814,43 +16889,151 @@ function populateCwSettingsFields() {
   document.getElementById('cwEmbedCode').value = `<script src="https://niche-client-hub.netlify.app/widget.js" data-widget-id="${widget.id}"><\/script>`;
 }
 
-function renderCwDataFields(fields) {
-  document.getElementById('cwDataFieldsList').innerHTML = fields.map((f, i) => `
-    <div class="cw-datafield-row">
-      <input type="checkbox" ${f.enabled ? 'checked' : ''} onchange="toggleCwFieldEnabled(${i}, this.checked)">
-      <input type="text" value="${escAttr(f.label)}" onchange="renameCwField(${i}, this.value)">
-      <span class="cw-req-toggle ${f.required ? 'required' : 'optional'}" onclick="toggleCwFieldRequired(${i})">${f.required ? 'Required' : 'Optional'}</span>
-      <button class="row-action-btn danger" onclick="removeCwDataField(${i})" aria-label="Remove field">×</button>
+// ─── Conversation Flow steps ────────────────────────────────────────────
+function renderCwFlowSteps(steps) {
+  const wrap = document.getElementById('cwFlowStepsList');
+  if (!wrap) return;
+  wrap.innerHTML = steps.map((s, i) => `
+    <div class="cw-flow-step" data-step-idx="${i}">
+      <div class="cw-flow-step-hd" onclick="toggleCwFlowStep(${i})">
+        <span class="cw-flow-step-num">${i + 1}</span>
+        <span class="cw-flow-step-title">${escAttr(s.title || 'Untitled step')}</span>
+        <span class="cw-flow-step-desc-preview">${escAttr(s.description || '')}</span>
+        <button class="cw-flow-step-remove" onclick="event.stopPropagation();removeCwFlowStep(${i})">${cwIcon('close',13)}</button>
+        <span class="cw-flow-step-chevron">${cwIcon('chevronRight',13)}</span>
+      </div>
+      <div class="cw-flow-step-body">
+        <input type="text" value="${escAttr(s.title || '')}" placeholder="Step title" onchange="updateCwFlowStepField(${i},'title',this.value)">
+        <textarea placeholder="What should Nirvana do in this step?" onchange="updateCwFlowStepField(${i},'description',this.value)">${escAttr(s.description || '')}</textarea>
+      </div>
     </div>`).join('');
+}
+function getCwWidgetSteps() {
+  const widget = CHAT_WIDGETS.find(w => w.id === cwActiveWidgetId);
+  return widget && Array.isArray(widget.conversation_steps) ? widget.conversation_steps : [];
+}
+function toggleCwFlowStep(i) {
+  const el = document.querySelector(`.cw-flow-step[data-step-idx="${i}"]`);
+  if (el) el.classList.toggle('expanded');
+}
+function updateCwFlowStepField(i, field, value) {
+  const steps = getCwWidgetSteps();
+  if (steps[i]) steps[i][field] = value;
+  const previewEl = document.querySelector(`.cw-flow-step[data-step-idx="${i}"] .cw-flow-step-title`);
+  const descEl = document.querySelector(`.cw-flow-step[data-step-idx="${i}"] .cw-flow-step-desc-preview`);
+  if (field === 'title' && previewEl) previewEl.textContent = value || 'Untitled step';
+  if (field === 'description' && descEl) descEl.textContent = value;
+}
+function removeCwFlowStep(i) {
+  const steps = getCwWidgetSteps();
+  steps.splice(i, 1);
+  renderCwFlowSteps(steps);
+}
+function addCwFlowStep() {
+  const steps = getCwWidgetSteps();
+  steps.push({ id: 'step_' + Date.now(), title: 'New Step', description: '' });
+  renderCwFlowSteps(steps);
+  toggleCwFlowStep(steps.length - 1);
+}
+
+// ─── Data to Collect (pill style, matches Agent Builder reference) ──────
+function renderCwDataPills(fields) {
+  const wrap = document.getElementById('cwDataPillsList');
+  if (!wrap) return;
+  const dotColors = ['var(--orange)', 'var(--blue)', 'var(--purple)', 'var(--green)', 'var(--yellow)', 'var(--red)'];
+  wrap.innerHTML = fields.map((f, i) => `
+    <span class="cw-data-pill"><span class="cw-data-pill-dot" style="background:${dotColors[i % dotColors.length]}"></span>${escAttr(f.label)}<button class="cw-data-pill-remove" onclick="removeCwDataField(${i})">${cwIcon('close',9)}</button></span>`).join('');
+}
+function addCwDataField() {
+  const nameInput = document.getElementById('cwNewFieldName');
+  const label = (nameInput && nameInput.value.trim()) || 'New Field';
+  const fields = getCwWidgetFields();
+  fields.push({ key: 'field_' + Date.now(), label, enabled: true, required: false });
+  renderCwDataPills(fields);
+  if (nameInput) nameInput.value = '';
+}
+function removeCwDataField(i) {
+  const fields = getCwWidgetFields();
+  fields.splice(i, 1);
+  renderCwDataPills(fields);
+}
+
+// ─── Personality: summary + toggleable tag chips ────────────────────────
+const CW_TONE_OPTIONS = ['Conversational', 'Enthusiastic', 'Energetic', 'Formal', 'Calm'];
+const CW_STYLE_OPTIONS = ['Direct', 'Professional', 'Casual', 'Warm'];
+const CW_TRAIT_OPTIONS = ['Empathy', 'Humor', 'Concise', 'Multilingual', 'Patient'];
+function renderCwPersonalityTags(widget) {
+  const toneWrap = document.getElementById('cwToneTags');
+  const styleWrap = document.getElementById('cwStyleTags');
+  const traitWrap = document.getElementById('cwTraitTags');
+  const tone = Array.isArray(widget.tone_tags) ? widget.tone_tags : [];
+  const style = Array.isArray(widget.style_tags) ? widget.style_tags : [];
+  const traits = Array.isArray(widget.trait_tags) ? widget.trait_tags : [];
+  if (toneWrap) toneWrap.innerHTML = CW_TONE_OPTIONS.map(t => `<span class="cw-tag-chip${tone.includes(t) ? ' active' : ''}" onclick="toggleCwPersonalityTag('tone_tags','${t}')">${t}</span>`).join('');
+  if (styleWrap) styleWrap.innerHTML = CW_STYLE_OPTIONS.map(t => `<span class="cw-tag-chip${style.includes(t) ? ' active' : ''}" onclick="toggleCwPersonalityTag('style_tags','${t}')">${t}</span>`).join('');
+  if (traitWrap) traitWrap.innerHTML = CW_TRAIT_OPTIONS.map(t => `<span class="cw-tag-chip${traits.includes(t) ? ' active' : ''}" onclick="toggleCwPersonalityTag('trait_tags','${t}')">${t}</span>`).join('');
+}
+function toggleCwPersonalityTag(field, tag) {
+  const widget = CHAT_WIDGETS.find(w => w.id === cwActiveWidgetId);
+  if (!widget) return;
+  if (!Array.isArray(widget[field])) widget[field] = [];
+  const idx = widget[field].indexOf(tag);
+  if (idx >= 0) widget[field].splice(idx, 1); else widget[field].push(tag);
+  renderCwPersonalityTags(widget);
+}
+
+// ─── Tools: Transfer to Human + Calendar connection ─────────────────────
+function renderCwToolsList(widget) {
+  const wrap = document.getElementById('cwToolsList');
+  if (!wrap) return;
+  const transferOn = widget.transfer_to_human_enabled !== false;
+  wrap.innerHTML = `
+    <div class="cw-tool-card${transferOn ? ' connected' : ''}">
+      <div class="cw-tool-card-icon">${cwIcon('transfer',16)}</div>
+      <div class="cw-tool-card-info"><div class="cw-tool-card-name">Transfer to Human</div><div class="cw-tool-card-detail">${transferOn ? 'Enabled — Nirvana can hand off' : 'Disabled'}</div></div>
+      <span class="pref-switch${transferOn ? ' on' : ''}" onclick="toggleCwTransferToHuman()" style="cursor:pointer"><span class="pref-switch-thumb"></span></span>
+    </div>
+    <div class="cw-tool-card${widget.calendar_connected ? ' connected' : ''}">
+      <div class="cw-tool-card-icon">${cwIcon('calendar',16)}</div>
+      <div class="cw-tool-card-info"><div class="cw-tool-card-name">Google Calendar</div><div class="cw-tool-card-detail">${widget.calendar_connected ? escAttr(widget.calendar_email || 'Connected') : 'Not connected'}</div></div>
+      ${widget.calendar_connected ? cwIcon('check', 15) : ''}
+    </div>`;
+}
+function toggleCwTransferToHuman() {
+  const widget = CHAT_WIDGETS.find(w => w.id === cwActiveWidgetId);
+  if (!widget) return;
+  widget.transfer_to_human_enabled = widget.transfer_to_human_enabled === false;
+  renderCwToolsList(widget);
+}
+
+// ─── Knowledge Base: link existing Hub Knowledge Base entries ───────────
+function renderCwKbDocsList(widget) {
+  const wrap = document.getElementById('cwKbDocsList');
+  if (!wrap) return;
+  const linked = Array.isArray(widget.kb_entry_ids) ? widget.kb_entry_ids : [];
+  if (!KNOWLEDGE_BASE || KNOWLEDGE_BASE.length === 0) {
+    wrap.innerHTML = `<div style="font-size:var(--font-2xs);color:var(--text3)">No Knowledge Base entries yet — add some in the Knowledge Base page first.</div>`;
+    return;
+  }
+  wrap.innerHTML = KNOWLEDGE_BASE.map(k => `
+    <div class="cw-kb-doc-row">
+      <input type="checkbox" ${linked.includes(k.id) ? 'checked' : ''} onchange="toggleCwKbDoc('${k.id}')">
+      <span class="cw-kb-doc-name">${escAttr(k.title)}</span>
+      ${linked.includes(k.id) ? cwIcon('check', 13) : ''}
+    </div>`).join('');
+}
+function toggleCwKbDoc(entryId) {
+  const widget = CHAT_WIDGETS.find(w => w.id === cwActiveWidgetId);
+  if (!widget) return;
+  if (!Array.isArray(widget.kb_entry_ids)) widget.kb_entry_ids = [];
+  const idx = widget.kb_entry_ids.indexOf(entryId);
+  if (idx >= 0) widget.kb_entry_ids.splice(idx, 1); else widget.kb_entry_ids.push(entryId);
+  renderCwKbDocsList(widget);
 }
 
 function getCwWidgetFields() {
   const widget = CHAT_WIDGETS.find(w => w.id === cwActiveWidgetId);
   return widget && Array.isArray(widget.data_fields) ? widget.data_fields : [];
-}
-function toggleCwFieldEnabled(i, checked) {
-  const fields = getCwWidgetFields();
-  if (fields[i]) fields[i].enabled = checked;
-  renderCwDataFields(fields);
-}
-function renameCwField(i, value) {
-  const fields = getCwWidgetFields();
-  if (fields[i]) fields[i].label = value;
-}
-function toggleCwFieldRequired(i) {
-  const fields = getCwWidgetFields();
-  if (fields[i]) fields[i].required = !fields[i].required;
-  renderCwDataFields(fields);
-}
-function removeCwDataField(i) {
-  const fields = getCwWidgetFields();
-  fields.splice(i, 1);
-  renderCwDataFields(fields);
-}
-function addCwDataField() {
-  const fields = getCwWidgetFields();
-  fields.push({ key: 'field_' + Date.now(), label: 'New Field', enabled: true, required: false });
-  renderCwDataFields(fields);
 }
 
 function toggleCwHoursDay(day, enabled) {
@@ -16884,9 +17067,9 @@ async function saveChatWidgetSettings() {
   const widget = CHAT_WIDGETS.find(w => w.id === cwActiveWidgetId);
   if (!widget) { showToast('No widget to save yet.', 'warning'); return; }
   widget.agent_name = document.getElementById('cwAgentName').value.trim() || 'Nirvana';
-  widget.instructions = document.getElementById('cwInstructions').value.trim();
   widget.welcome_prompt = document.getElementById('cwWelcomePrompt').value.trim();
-  widget.tone = document.getElementById('cwTone').value;
+  widget.opening_line = document.getElementById('cwOpeningLine').value.trim();
+  widget.personality_summary = document.getElementById('cwPersonalitySummary').value.trim();
   widget.timezone = document.getElementById('cwTimezone').value;
   widget.allow_after_hours = document.getElementById('cwAllowAfterHours').checked;
   widget.service_duration_minutes = parseInt(document.getElementById('cwServiceDuration').value) || 60;
@@ -16900,7 +17083,11 @@ async function saveChatWidgetSettings() {
   if (dockPosBtn) widget.dock_position = dockPosBtn.dataset.val;
   const dockSizeBtn = document.querySelector('#cwDockSizeToggle .cw-toggle-btn.active');
   if (dockSizeBtn) widget.dock_size = dockSizeBtn.dataset.val;
-  widget.data_fields = getCwWidgetFields();
+  // conversation_steps, data_fields, tone_tags/style_tags/trait_tags,
+  // transfer_to_human_enabled, and kb_entry_ids are all mutated directly
+  // on the widget object by their own handlers as the person edits them
+  // (step add/remove, tag toggle, etc.) rather than read from a form field
+  // here, so they're already current on `widget` by this point.
   widget.updated_at = new Date().toISOString();
   try { await sbUpsert('chat_widgets', widget); }
   catch(e) { showToast('Could not save: ' + e.message, 'error'); return; }
