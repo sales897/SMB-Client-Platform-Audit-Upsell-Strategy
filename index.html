@@ -764,11 +764,25 @@ body.ai-panel-open .main {
    Consolidates what used to be identical inline styles repeated 40+ times
    across every "Add X" form (Ad Spend, Collections, Team, Products, etc.) */
 .field-label { font-size: 11px; color: var(--text3); display: block; margin-bottom: 5px; }
-.field-input, .field-select {
+.field-input, .field-select, select {
   width: 100%; padding: 9px 12px; background: var(--bg3); border: 1px solid var(--border);
   border-radius: var(--radius-sm); color: var(--text); font-size: 13px; outline: none; transition: border-color var(--transition-slow);
   box-sizing: border-box;
 }
+/* Applying the themed box style to the bare `select` tag (not just the
+   .field-select class) means every dropdown in the Hub is styled by
+   default, rather than needing the class added one at a time -- several
+   dropdowns (Workflow Builder's node-type picker among them) were falling
+   back to the browser's unstyled default box because they never had
+   .field-select applied. Elements with explicit inline styles or a fixed
+   width are unaffected, since inline styles win regardless. */
+select {
+  appearance: none; -webkit-appearance: none; -moz-appearance: none;
+  line-height: normal; padding-right: 32px; cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23a39a92' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 12px center;
+}
+select:focus { border-color: var(--orange); }
 .field-select {
   appearance: none; -webkit-appearance: none; -moz-appearance: none;
   line-height: normal; padding-right: 32px; cursor: pointer;
@@ -1560,7 +1574,7 @@ tr.hidden-row { display: none; }
 .status-dot::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
 .status-dot.active { color: var(--green); }
 .status-dot.inactive { color: var(--text3); }
-.status-select { font-size: var(--font-2xs); font-weight: 700; padding: 4px 8px; border-radius: 12px; border: none; cursor: pointer; outline: none; -webkit-appearance: none; appearance: none; }
+.status-select { font-size: var(--font-2xs); font-weight: 700; padding: 4px 8px; border-radius: 12px; border: none; cursor: pointer; outline: none; -webkit-appearance: none; appearance: none; background-image: none; }
 .notes-thread { max-height: 260px; overflow-y: auto; margin-bottom: 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); }
 .note-entry { padding: 10px 14px; border-top: 1px solid var(--border); }
 .note-entry:first-child { border-top: none; }
@@ -2172,6 +2186,7 @@ tr.hidden-row { display: none; }
   padding: 6px 8px; font-size: 10.5px; color: var(--text); font-family: inherit; resize: vertical;
 }
 .wfb-field-input:focus { border-color: var(--node-color, var(--orange)); outline: none; }
+select.wfb-field-input { padding-right: 26px; }
 .wfb-expanded-btns { display: flex; gap: 6px; margin-top: 10px; }
 .wfb-mini-btn {
   font-size: 9px; font-weight: 700; padding: 5px 9px; border-radius: var(--radius-xs); border: 1px solid var(--border);
@@ -2192,7 +2207,9 @@ tr.hidden-row { display: none; }
 .wfb-node-hd .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--node-color); box-shadow: 0 0 6px var(--node-color); }
 .wfb-node-hd .menu, .wfb-node-hd .wfb-node-close { margin-left: auto; color: var(--text3); cursor: pointer; display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; font-size: 11px; flex-shrink: 0; }
 .wfb-node-hd .menu:hover, .wfb-node-hd .wfb-node-close:hover { background: var(--bg4); color: var(--text); }
-.wfb-node-label { font-size: var(--font-sm); font-weight: 700; color: var(--text); }
+.wfb-node-label { font-size: var(--font-sm); font-weight: 700; color: var(--text); cursor: text; border-radius: 3px; padding: 1px 3px; margin: -1px -3px; }
+.wfb-node-label:hover { background: rgba(255,255,255,.06); }
+.wfb-node-label:focus { outline: 1px solid var(--node-color, var(--orange)); background: rgba(255,255,255,.06); }
 .wfb-node-sublabel { font-size: var(--font-2xs); color: var(--text3); margin-top: 1px; }
 .wfb-branch-label {
   position: absolute; font-size: 9px; font-weight: 800; padding: 1px 6px; border-radius: var(--radius-pill);
@@ -13576,7 +13593,7 @@ function rebuildProductCatalogPage() {
           <div class="support-name">${p.label}</div>
           <div class="support-detail">${using} / ${cl.length} clients (${pct}%) &nbsp;·&nbsp; <span style="color:var(--text3)">key: ${p.key}</span></div>
         </div>
-        <select onchange="setProductPriority('${pk}','${p.key}', this.value)" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:var(--font-xs);font-weight:700;padding:var(--space-1) var(--space-2);border-radius:var(--radius-pill);outline:none;cursor:pointer">
+        <select onchange="setProductPriority('${pk}','${p.key}', this.value)" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:var(--font-xs);font-weight:700;padding:var(--space-1) var(--space-2);border-radius:var(--radius-pill);outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:none">
           <option value="high" ${p.priority==='high'?'selected':''}><span class="icon" data-icon="trending" data-icon-size="14"></span> High</option>
           <option value="medium" ${p.priority==='medium'?'selected':''}>Medium</option>
           <option value="low" ${p.priority==='low'?'selected':''}>Targeted</option>
@@ -14290,7 +14307,7 @@ function renderWorkflowCanvas() {
     }
     return `<div class="wfb-node" style="left:${n.pos_x}px;top:${n.pos_y}px;--node-color:${color}" data-node-id="${n.id}">
       <div class="wfb-node-hd"><span class="dot"></span>${icon} ${escAttr(typeLabel)}<span class="menu">⋮</span></div>
-      <div class="wfb-node-label">${escAttr(n.label)}</div>
+      <div class="wfb-node-label" contenteditable="true" spellcheck="false" onmousedown="event.stopPropagation()" onclick="event.stopPropagation()" onkeydown="handleWfbInlineLabelKey(event, '${n.id}')" onblur="saveWfbInlineLabel(this, '${n.id}')">${escAttr(n.label)}</div>
       ${n.sublabel ? `<div class="wfb-node-sublabel">${escAttr(n.sublabel)}</div>` : ''}
       ${n.node_type !== 'end' ? '<div class="wfb-node-port" title="Drag to another node to connect"></div>' : ''}
     </div>`;
@@ -14312,14 +14329,14 @@ function renderWorkflowCanvas() {
     // from source to target rather than just a static connector.
     const flowDur = (2.4 + (edgeIdx % 3) * 0.4).toFixed(1); // slight variety so edges don't all pulse in unison
     const flowBegin = (edgeIdx * 0.35).toFixed(2);
-    edgesHtml += `<path d="${pathD}" fill="none" stroke="${pathColor}" stroke-width="2" />
+    edgesHtml += `<g data-edge-id="${e.id}"><path d="${pathD}" fill="none" stroke="${pathColor}" stroke-width="2" />
       <path class="wfb-edge-hit" d="${pathD}" fill="none" stroke="transparent" stroke-width="14" onmousedown="event.stopPropagation()" onclick="deleteWorkflowEdgeConfirm('${e.id}')"><title>Click to remove this connection</title></path>
       <circle cx="${x1}" cy="${y1}" r="3.5" fill="${pathColor}" />
       <circle cx="${x2}" cy="${y2}" r="3.5" fill="${pathColor}" />
       <circle r="3" fill="${pathColor}" style="filter:drop-shadow(0 0 5px ${pathColor}) drop-shadow(0 0 9px ${pathColor})">
         <animateMotion dur="${flowDur}s" begin="${flowBegin}s" repeatCount="indefinite" path="${pathD}" />
         <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.92;1" dur="${flowDur}s" begin="${flowBegin}s" repeatCount="indefinite" />
-      </circle>`;
+      </circle></g>`;
     if (e.branch_label) {
       // Point at t=0.35 along the exact same cubic bezier as the path
       // above (M x1,y1 C midX,y1, midX,y2, x2,y2) -- NOT just "40% of the
@@ -14330,7 +14347,7 @@ function renderWorkflowCanvas() {
       const t = 0.35, mt = 1 - t;
       const bx = mt * mt * mt * x1 + 3 * mt * mt * t * midX + 3 * mt * t * t * midX + t * t * t * x2;
       const by = mt * mt * mt * y1 + 3 * mt * mt * t * y1 + 3 * mt * t * t * y2 + t * t * t * y2;
-      branchLabelsHtml += `<div class="wfb-branch-label" style="left:${bx}px;top:${by}px;color:${pathColor};border-color:${pathColor}">${escAttr(e.branch_label)}</div>`;
+      branchLabelsHtml += `<div class="wfb-branch-label" data-edge-id="${e.id}" style="left:${bx}px;top:${by}px;color:${pathColor};border-color:${pathColor}">${escAttr(e.branch_label)}</div>`;
     }
   });
   svg.innerHTML = edgesHtml;
@@ -14375,6 +14392,26 @@ let wfbDragState = null;
 let wfbPanState = null;
 let wfbConnectState = null;
 let wfbBranchModalResolve = null;
+
+let wfbInlineLabelOriginal = null;
+function handleWfbInlineLabelKey(e, nodeId) {
+  if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); }
+  else if (e.key === 'Escape') {
+    e.preventDefault();
+    const node = workflowNodesCache.find(n => n.id === nodeId);
+    if (node) e.target.textContent = node.label;
+    e.target.blur();
+  }
+}
+async function saveWfbInlineLabel(el, nodeId) {
+  const node = workflowNodesCache.find(n => n.id === nodeId);
+  if (!node) return;
+  const newLabel = el.textContent.trim();
+  if (!newLabel || newLabel === node.label) { el.textContent = node.label; return; }
+  node.label = newLabel;
+  try { await sbPatch('workflow_nodes', `id=eq.${nodeId}`, { label: newLabel }); }
+  catch(e) { showToast('Could not save the rename: ' + e.message, 'error'); }
+}
 
 function initWorkflowCanvasInteractions() {
   const nodesLayer = document.getElementById('wfbNodesLayer');
@@ -14471,7 +14508,56 @@ function onWfbNodeDragMove(e) {
   if (!node) return;
   node.pos_x = Math.max(0, Math.round(wfbDragState.startPosX + dx));
   node.pos_y = Math.max(0, Math.round(wfbDragState.startPosY + dy));
-  renderWorkflowCanvas();
+  updateWfbNodePositionLive(node.id);
+}
+
+// Rebuilding the entire node layer + edges SVG (including restarting every
+// traveling-light animation) on every single mousemove was the source of
+// the drag jank -- the browser can't keep up with a full DOM/SVG rebuild
+// at mouse-move frequency. This instead directly repositions just the
+// dragged node's own element and recalculates only the edges actually
+// touching it, leaving everything else in the DOM completely untouched
+// during the drag. A full renderWorkflowCanvas() still happens once at
+// drag-end to fully resync (canvas bounds, traveling-light timing, etc.)
+// -- cheap since it only runs once per drag, not once per pixel.
+function updateWfbNodePositionLive(nodeId) {
+  const node = workflowNodesCache.find(n => n.id === nodeId);
+  if (!node) return;
+  const nodeEl = document.querySelector(`.wfb-node[data-node-id="${nodeId}"]`);
+  if (nodeEl) { nodeEl.style.left = node.pos_x + 'px'; nodeEl.style.top = node.pos_y + 'px'; }
+  const svg = document.getElementById('wfbEdgesSvg');
+  if (!svg) return;
+  const nodeById = Object.fromEntries(workflowNodesCache.map(n => [n.id, n]));
+  workflowEdgesCache.forEach(e => {
+    if (e.source_node_id !== nodeId && e.target_node_id !== nodeId) return;
+    const s = nodeById[e.source_node_id], t = nodeById[e.target_node_id];
+    if (!s || !t) return;
+    const x1 = s.pos_x + WFB_NODE_W, y1 = s.pos_y + WFB_NODE_H / 2;
+    const x2 = t.pos_x, y2 = t.pos_y + WFB_NODE_H / 2;
+    const midX = (x1 + x2) / 2;
+    const pathD = `M ${x1} ${y1} C ${midX} ${y1}, ${midX} ${y2}, ${x2} ${y2}`;
+    const group = svg.querySelector(`g[data-edge-id="${e.id}"]`);
+    if (group) {
+      const paths = group.querySelectorAll('path');
+      paths.forEach(p => p.setAttribute('d', pathD));
+      const circles = group.querySelectorAll('circle[cx]');
+      if (circles[0]) { circles[0].setAttribute('cx', x1); circles[0].setAttribute('cy', y1); }
+      if (circles[1]) { circles[1].setAttribute('cx', x2); circles[1].setAttribute('cy', y2); }
+      // The traveling-light circle's animateMotion path is deliberately
+      // left as-is here -- SMIL doesn't resync smoothly mid-animation when
+      // you rewrite its path attribute, so it'll look slightly stale
+      // until the drag-end render fixes it, which is a fine trade for a
+      // smooth drag.
+    }
+    const label = document.querySelector(`.wfb-branch-label[data-edge-id="${e.id}"]`);
+    if (label && e.branch_label) {
+      const tt = 0.35, mt = 1 - tt;
+      const bx = mt * mt * mt * x1 + 3 * mt * mt * tt * midX + 3 * mt * tt * tt * midX + tt * tt * tt * x2;
+      const by = mt * mt * mt * y1 + 3 * mt * mt * tt * y1 + 3 * mt * tt * tt * y2 + tt * tt * tt * y2;
+      label.style.left = bx + 'px';
+      label.style.top = by + 'px';
+    }
+  });
 }
 async function onWfbNodeDragEnd(e) {
   document.removeEventListener('mousemove', onWfbNodeDragMove);
@@ -14485,6 +14571,7 @@ async function onWfbNodeDragEnd(e) {
   // no-op reposition -- this is what makes a plain click on a node open
   // modify/delete, rather than requiring the small ⋮ menu or a double-click.
   if (totalMove < 4) { openWorkflowNodeEditor(nodeId); return; }
+  renderWorkflowCanvas(); // one full resync now that the drag is done (canvas bounds, traveling-light timing, etc.)
   try { await sbPatch('workflow_nodes', `id=eq.${node.id}`, { pos_x: node.pos_x, pos_y: node.pos_y }); }
   catch(e) { console.warn('Could not save node position:', e.message); }
 }
