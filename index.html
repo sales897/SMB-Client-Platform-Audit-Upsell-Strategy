@@ -1499,7 +1499,7 @@ tr.hidden-row { display: none; }
   50% { filter: drop-shadow(0 0 10px rgba(239,68,68,1)); }
 }
 /* Standalone quick-access bell under the profile badge */
-.topbar-bell-wrap { display: flex; justify-content: center; margin-top: 4px; }
+.topbar-bell-wrap { display: flex; align-items: center; justify-content: center; }
 .topbar-bell-btn { background: none; border: none; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; position: relative; }
 /* Star glow (2026-07-16): filled rating stars glow yellow, matching the
    bell's at-rest glow so both read as the same "active/positive" signal
@@ -2266,7 +2266,7 @@ tr.hidden-row { display: none; }
     </div>
   </div>
 
-  <div style="position:relative">
+  <div style="position:relative;display:flex;align-items:center;gap:10px">
     <div class="user-badge" id="userBadge" onclick="toggleProfileMenu()" title="Account">
       <div style="position:relative;display:flex">
         <span class="user-avatar" id="userAvatar">?</span>
@@ -13950,7 +13950,7 @@ function renderWorkflowCanvas() {
   const nodeById = Object.fromEntries(workflowNodesCache.map(n => [n.id, n]));
   let edgesHtml = '';
   let branchLabelsHtml = '';
-  workflowEdgesCache.forEach(e => {
+  workflowEdgesCache.forEach((e, edgeIdx) => {
     const s = nodeById[e.source_node_id], t = nodeById[e.target_node_id];
     if (!s || !t) return;
     const x1 = s.pos_x + WFB_NODE_W, y1 = s.pos_y + WFB_NODE_H / 2;
@@ -13958,10 +13958,19 @@ function renderWorkflowCanvas() {
     const midX = (x1 + x2) / 2;
     const pathColor = e.branch_label === 'No' ? resolveCssColor('var(--red)') : e.branch_label === 'Yes' ? resolveCssColor('var(--green)') : resolveCssColor('var(--border)');
     const pathD = `M ${x1} ${y1} C ${midX} ${y1}, ${midX} ${y2}, ${x2} ${y2}`;
+    // Traveling glow dot: same idea as the login screen's orbiting glow
+    // dots, following this edge's own path so it reads as flow moving
+    // from source to target rather than just a static connector.
+    const flowDur = (2.4 + (edgeIdx % 3) * 0.4).toFixed(1); // slight variety so edges don't all pulse in unison
+    const flowBegin = (edgeIdx * 0.35).toFixed(2);
     edgesHtml += `<path d="${pathD}" fill="none" stroke="${pathColor}" stroke-width="2" />
       <path class="wfb-edge-hit" d="${pathD}" fill="none" stroke="transparent" stroke-width="14" onmousedown="event.stopPropagation()" onclick="deleteWorkflowEdgeConfirm('${e.id}')"><title>Click to remove this connection</title></path>
       <circle cx="${x1}" cy="${y1}" r="3.5" fill="${pathColor}" />
-      <circle cx="${x2}" cy="${y2}" r="3.5" fill="${pathColor}" />`;
+      <circle cx="${x2}" cy="${y2}" r="3.5" fill="${pathColor}" />
+      <circle r="3" fill="${pathColor}" style="filter:drop-shadow(0 0 5px ${pathColor}) drop-shadow(0 0 9px ${pathColor})">
+        <animateMotion dur="${flowDur}s" begin="${flowBegin}s" repeatCount="indefinite" path="${pathD}" />
+        <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.92;1" dur="${flowDur}s" begin="${flowBegin}s" repeatCount="indefinite" />
+      </circle>`;
     if (e.branch_label) {
       // Point at t=0.35 along the exact same cubic bezier as the path
       // above (M x1,y1 C midX,y1, midX,y2, x2,y2) -- NOT just "40% of the
