@@ -14470,6 +14470,17 @@ function initWorkflowCanvasInteractions() {
   if (scrollWrap && !scrollWrap.dataset.wfbPanInit) {
     scrollWrap.dataset.wfbPanInit = '1';
     scrollWrap.addEventListener('mousedown', (e) => {
+      // Any mousedown that starts inside a node -- expanded or not, on a
+      // button, input, or anywhere else in it -- must never start a pan.
+      // The node-drag handler above already stops propagation for the
+      // normal (collapsed) case, but deliberately does NOT for an
+      // expanded node (so its inputs/buttons work normally) -- which
+      // meant, without this check, that mousedown bubbled all the way up
+      // to here and started panning the canvas underneath whatever the
+      // person was actually trying to click (Cancel/Delete/Save, a field,
+      // etc.), which is what made those controls seem unresponsive and
+      // made the canvas feel like it was jumping around.
+      if (e.target.closest('.wfb-node')) return;
       wfbPanState = { startX: e.clientX, startY: e.clientY, startScrollLeft: scrollWrap.scrollLeft, startScrollTop: scrollWrap.scrollTop };
       scrollWrap.classList.add('panning');
       document.addEventListener('mousemove', onWfbPanMove);
@@ -14673,7 +14684,7 @@ async function deleteWorkflowNode(nodeId) {
   catch(e) { showToast('Could not delete: ' + e.message, 'error'); return; }
   workflowNodesCache = workflowNodesCache.filter(n => n.id !== nodeId);
   workflowEdgesCache = workflowEdgesCache.filter(e => e.source_node_id !== nodeId && e.target_node_id !== nodeId);
-  closeWfbNodeEditModal();
+  if (wfbExpandedNodeId === nodeId) wfbExpandedNodeId = null;
   renderWorkflowCanvas();
   showToast('Node deleted.', 'success');
 }
