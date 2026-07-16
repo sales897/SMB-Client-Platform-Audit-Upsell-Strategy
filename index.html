@@ -1820,6 +1820,10 @@ tr.hidden-row { display: none; }
 .cw-header-icon { width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, var(--orange), var(--orange2)); display: flex; align-items: center; justify-content: center; color: #fff; box-shadow: 0 0 20px rgba(226,84,31,.6); flex-shrink: 0; }
 .cw-header-name { font-family: var(--font-display); font-size: var(--font-lg); font-weight: 800; color: var(--text); }
 .cw-header-sub { font-size: var(--font-xs); color: var(--text3); margin-top: 1px; }
+.cw-widget-selector-row { display: flex; align-items: center; gap: 8px; margin-top: 4px; }
+.cw-widget-select { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-xs); color: var(--text); font-size: var(--font-xs); font-weight: 700; padding: 5px 10px; cursor: pointer; max-width: 220px; }
+.cw-new-widget-btn { display: flex; align-items: center; gap: 5px; background: none; border: 1px dashed var(--border); border-radius: var(--radius-xs); color: var(--text3); font-size: var(--font-2xs); font-weight: 700; padding: 5px 10px; cursor: pointer; white-space: nowrap; }
+.cw-new-widget-btn:hover { border-color: var(--orange); color: var(--orange); }
 .cw-header-stats { display: flex; gap: var(--space-4); margin-left: auto; z-index: 1; }
 .cw-stat { text-align: center; }
 .cw-stat-num { font-size: var(--font-lg); font-weight: 800; color: var(--text); text-shadow: 0 0 12px rgba(226,84,31,.4); }
@@ -1939,6 +1943,61 @@ tr.hidden-row { display: none; }
 .cw-mode-btn { flex: 1; background: none; border: none; padding: 7px; font-size: var(--font-xs); font-weight: 700; border-radius: var(--radius-xs); color: var(--text3); cursor: pointer; }
 .cw-mode-btn.active { background: linear-gradient(90deg, var(--orange), var(--orange2)); color: #fff; box-shadow: 0 0 10px rgba(226,84,31,.4); }
 .cw-nirvana-input { min-height: 36px; max-height: 100px; resize: none; }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   CHAT WIDGET OVERVIEW DASHBOARD (2026-07-16) -- analytics tab, adapted
+   from the reference "call dashboard" design to reflect chat-widget-
+   originated leads/messages instead of phone calls.
+   ═══════════════════════════════════════════════════════════════════════ */
+.cw-toplevel-tabs { display: flex; gap: 4px; background: var(--bg2); border-radius: var(--radius-pill); padding: 4px; margin: 0 var(--space-4); }
+.cw-toplevel-tab { background: none; border: none; padding: 8px 20px; font-size: var(--font-sm); font-weight: 700; color: var(--text3); border-radius: var(--radius-pill); cursor: pointer; transition: all var(--transition-base); }
+.cw-toplevel-tab.active { background: linear-gradient(90deg, var(--orange), var(--orange2)); color: #fff; box-shadow: 0 0 14px rgba(226,84,31,.45); }
+.cw-overview-pane { flex: 1; overflow-y: auto; padding-right: 4px; }
+.cw-kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3); margin-bottom: var(--space-3); }
+.cw-kpi-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-3) var(--space-4); display: flex; align-items: center; gap: 12px; position: relative; overflow: hidden; }
+.cw-kpi-card-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: var(--kpi-tint, rgba(226,84,31,.15)); color: var(--kpi-color, var(--orange)); }
+.cw-kpi-card-num { font-size: 22px; font-weight: 800; color: var(--text); line-height: 1; }
+.cw-kpi-card-lbl { font-size: var(--font-2xs); color: var(--text3); margin-top: 3px; }
+.cw-kpi-card-trend { margin-left: auto; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: var(--radius-pill); flex-shrink: 0; align-self: flex-start; }
+.cw-kpi-card-trend.up { background: rgba(34,197,94,.15); color: var(--green); }
+.cw-kpi-card-trend.down { background: rgba(239,68,68,.15); color: var(--red); }
+.cw-ai-impact-bar { display: flex; align-items: center; gap: var(--space-4); background: linear-gradient(90deg, rgba(226,84,31,.12), rgba(226,84,31,.02)); border: 1px solid rgba(226,84,31,.3); border-radius: var(--radius); padding: var(--space-2) var(--space-4); margin-bottom: var(--space-3); font-size: var(--font-xs); color: var(--text2); flex-wrap: wrap; box-shadow: 0 0 16px rgba(226,84,31,.1); }
+.cw-ai-impact-item { display: flex; align-items: center; gap: 6px; }
+.cw-ai-impact-label { font-weight: 800; color: var(--orange); text-transform: uppercase; font-size: 10px; letter-spacing: .04em; display: flex; align-items: center; gap: 5px; }
+.cw-overview-grid-1 { display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-3); margin-bottom: var(--space-3); }
+.cw-overview-grid-2 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-3); }
+.cw-panel { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-4); }
+.cw-panel-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-3); }
+.cw-panel-title { display: flex; align-items: center; gap: 7px; font-weight: 700; font-size: var(--font-sm); color: var(--text); }
+.cw-panel-title .icon { color: var(--orange); }
+.cw-panel-sublabel { font-size: 9px; font-weight: 800; color: var(--text3); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; }
+.cw-leads-chart-body { display: flex; gap: var(--space-4); }
+.cw-chart-wrap { flex: 1; height: 220px; }
+.cw-source-breakdown { width: 190px; flex-shrink: 0; text-align: center; }
+.cw-donut-wrap { position: relative; height: 140px; }
+.cw-donut-legend { text-align: left; margin-top: 10px; }
+.cw-donut-legend-row { display: flex; align-items: center; justify-content: space-between; font-size: var(--font-2xs); color: var(--text2); padding: 3px 0; }
+.cw-activity-list { display: flex; flex-direction: column; gap: 2px; max-height: 260px; overflow-y: auto; }
+.cw-activity-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: var(--font-xs); }
+.cw-activity-row:last-child { border-bottom: none; }
+.cw-activity-avatar { width: 26px; height: 26px; border-radius: 50%; background: var(--bg4); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; color: var(--text2); flex-shrink: 0; }
+.cw-activity-name { font-weight: 700; color: var(--text); }
+.cw-activity-time { color: var(--text3); font-size: 10px; }
+.cw-activity-tag { margin-left: auto; font-size: 9px; font-weight: 800; padding: 2px 8px; border-radius: var(--radius-pill); background: var(--bg3); color: var(--text2); white-space: nowrap; }
+.cw-lead-funnel { display: flex; gap: var(--space-3); align-items: center; }
+.cw-funnel-svg-wrap { width: 90px; flex-shrink: 0; }
+.cw-funnel-stages { flex: 1; display: flex; flex-direction: column; gap: 10px; }
+.cw-funnel-stage-row { display: flex; align-items: center; gap: 10px; font-size: var(--font-xs); }
+.cw-funnel-stage-label { display: flex; align-items: center; gap: 6px; width: 130px; flex-shrink: 0; color: var(--text2); }
+.cw-funnel-bar-track { flex: 1; height: 8px; background: var(--bg4); border-radius: 4px; overflow: hidden; }
+.cw-funnel-bar-fill { height: 100%; background: linear-gradient(90deg, var(--orange), var(--orange2)); box-shadow: 0 0 8px rgba(226,84,31,.5); }
+.cw-funnel-stage-val { width: 80px; text-align: right; flex-shrink: 0; color: var(--text); font-weight: 700; }
+.cw-appt-stat-big { font-size: 30px; font-weight: 800; color: var(--text); line-height: 1; }
+.cw-appt-stat-lbl { font-size: var(--font-2xs); color: var(--text3); margin: 2px 0 var(--space-3); }
+.cw-appt-stat-pct { font-size: 22px; font-weight: 800; color: var(--orange); }
+.cw-insight-row { display: flex; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: var(--font-2xs); color: var(--text2); line-height: 1.4; }
+.cw-insight-row:last-child { border-bottom: none; }
+.cw-insight-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--orange); box-shadow: 0 0 6px var(--orange); flex-shrink: 0; margin-top: 3px; }
 
 /* ═══════════════════════════════════════════════════════════════════════
    WORKFLOW BUILDER (2026-07-15) -- visual node-graph canvas replacing the
@@ -3229,14 +3288,58 @@ tr.hidden-row { display: none; }
         <span class="cw-header-icon" id="cwHeaderIcon"></span>
         <div>
           <div class="cw-header-name">Chat Widget</div>
-          <div class="cw-header-sub">Nirvana on your clients' websites — capturing leads, answering questions, booking calls</div>
+          <div class="cw-widget-selector-row">
+            <select id="cwWidgetSelector" class="cw-widget-select" onchange="switchChatWidget(this.value)"></select>
+            <button class="cw-new-widget-btn" onclick="createNewChatWidget()" title="Create a new widget for another client"><span id="cwNewWidgetIcon"></span> New Widget</button>
+          </div>
         </div>
       </div>
-      <div class="cw-header-stats" id="cwHeaderStats"></div>
+      <div class="cw-toplevel-tabs" id="cwToplevelTabs">
+        <button class="cw-toplevel-tab active" data-val="overview" onclick="setCwToplevelTab('overview')">Overview</button>
+        <button class="cw-toplevel-tab" data-val="inbox" onclick="setCwToplevelTab('inbox')">Inbox</button>
+      </div>
       <button class="cw-glow-btn" onclick="openCwConfigDrawer()"><span id="cwConfigBtnIcon"></span> Configure</button>
     </div>
 
-    <div class="cw-workspace">
+    <div id="cwToplevelPane-overview" class="cw-overview-pane">
+      <div class="cw-kpi-row" id="cwOverviewKpiRow"></div>
+      <div class="cw-ai-impact-bar" id="cwAiImpactBar"></div>
+      <div class="cw-overview-grid-1">
+        <div class="cw-panel cw-leads-chart-panel">
+          <div class="cw-panel-hd">
+            <span class="cw-panel-title"><span id="cwLeadsChartIcon"></span> Leads Over Time</span>
+          </div>
+          <div class="cw-leads-chart-body">
+            <div class="cw-chart-wrap"><canvas id="cwLeadsOverTimeChart"></canvas></div>
+            <div class="cw-source-breakdown">
+              <div class="cw-panel-sublabel">Resolution Breakdown</div>
+              <div class="cw-donut-wrap"><canvas id="cwResolutionDonut"></canvas></div>
+              <div id="cwDonutLegend" class="cw-donut-legend"></div>
+            </div>
+          </div>
+        </div>
+        <div class="cw-panel cw-activity-panel">
+          <div class="cw-panel-hd"><span class="cw-panel-title"><span id="cwActivityIcon"></span> Recent Activity</span></div>
+          <div id="cwRecentActivityList" class="cw-activity-list"></div>
+        </div>
+      </div>
+      <div class="cw-overview-grid-2">
+        <div class="cw-panel cw-funnel-panel">
+          <div class="cw-panel-hd"><span class="cw-panel-title"><span id="cwFunnelIcon"></span> Lead Funnel</span></div>
+          <div id="cwLeadFunnel" class="cw-lead-funnel"></div>
+        </div>
+        <div class="cw-panel cw-appt-perf-panel">
+          <div class="cw-panel-hd"><span class="cw-panel-title"><span id="cwApptPerfIcon"></span> Appointment Performance</span></div>
+          <div id="cwApptPerformance"></div>
+        </div>
+        <div class="cw-panel cw-ai-insight-panel">
+          <div class="cw-panel-hd"><span class="cw-panel-title"><span id="cwInsightIcon"></span> AI Insight</span></div>
+          <div id="cwAiInsightBody"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="cwToplevelPane-inbox" class="cw-workspace" style="display:none">
       <div class="cw-conv-list-col">
         <div class="cw-search-wrap"><span id="cwSearchIcon"></span><input type="text" id="cwConvSearch" placeholder="Search leads..." oninput="rebuildChatWidgetInbox()"></div>
         <div class="cw-filter-tabs" id="cwFilterTabs">
@@ -15933,6 +16036,8 @@ function renderCwStaticIcons() {
     cwHeaderIcon: ['chat', 22], cwConfigBtnIcon: ['settings', 15], cwSearchIcon: ['search', 15],
     cwEmptyDetailIcon: ['chat', 40], cwDrawerTitleIcon: ['settings', 16], cwDrawerCloseBtn: ['close', 15],
     cwSaveBtnIcon: ['sparkle', 15], cwPreviewIcon: ['bot', 15], cwEmbedIcon: ['link', 15], cwCopyIcon: ['tag', 12],
+    cwNewWidgetIcon: ['plus', 12], cwLeadsChartIcon: ['trending', 14], cwActivityIcon: ['clock', 14],
+    cwFunnelIcon: ['target', 14], cwApptPerfIcon: ['calendar', 14], cwInsightIcon: ['sparkle', 14],
   };
   Object.entries(map).forEach(([id, [icon, size]]) => {
     const el = document.getElementById(id);
@@ -15947,12 +16052,319 @@ async function rebuildChatWidgetPage() {
   if (!cwActiveWidgetId || !CHAT_WIDGETS.find(w => w.id === cwActiveWidgetId)) {
     cwActiveWidgetId = CHAT_WIDGETS.length > 0 ? CHAT_WIDGETS[0].id : null;
   }
-  try { CW_CONVERSATIONS = await sbSelect('widget_conversations', 'order=updated_at.desc'); }
-  catch(e) { console.warn('widget_conversations unavailable:', e.message); CW_CONVERSATIONS = []; }
-  const badge = document.getElementById('navChatWidgetBadge');
-  if (badge) badge.textContent = CW_CONVERSATIONS.filter(c => c.resolution === 'exploring' || c.resolution === 'transfer').length;
+  renderCwWidgetSelector();
+  await reloadCwConversationsForActiveWidget();
+}
+
+function renderCwWidgetSelector() {
+  const sel = document.getElementById('cwWidgetSelector');
+  if (!sel) return;
+  if (CHAT_WIDGETS.length === 0) {
+    sel.innerHTML = '<option value="">No widgets yet</option>';
+    return;
+  }
+  sel.innerHTML = CHAT_WIDGETS.map(w => `<option value="${escAttr(w.id)}" ${w.id === cwActiveWidgetId ? 'selected' : ''}>${escAttr(w.client_name || w.agent_name || w.id)}</option>`).join('');
+}
+
+// Conversations are fetched SCOPED to whichever widget is currently
+// selected -- important once there's more than one widget, since without
+// this every client's leads would show up mixed together in one inbox.
+async function reloadCwConversationsForActiveWidget() {
+  if (!cwActiveWidgetId) { CW_CONVERSATIONS = []; }
+  else {
+    try { CW_CONVERSATIONS = await sbSelect('widget_conversations', `widget_id=eq.${cwActiveWidgetId}&order=updated_at.desc`); }
+    catch(e) { console.warn('widget_conversations unavailable:', e.message); CW_CONVERSATIONS = []; }
+  }
+  await refreshCwNavBadgeAcrossAllWidgets();
+  cwActiveConversationId = null;
   rebuildChatWidgetInbox();
-  rebuildCwHeaderStats();
+  rebuildCwOverview();
+  const detail = document.getElementById('cwConvDetail');
+  if (detail) detail.innerHTML = `<div class="cw-empty-detail" id="cwEmptyDetailIcon">${cwIcon('chat', 40)}</div>`;
+}
+
+function setCwToplevelTab(tab) {
+  document.querySelectorAll('#cwToplevelTabs .cw-toplevel-tab').forEach(b => b.classList.toggle('active', b.dataset.val === tab));
+  document.getElementById('cwToplevelPane-overview').style.display = tab === 'overview' ? '' : 'none';
+  document.getElementById('cwToplevelPane-inbox').style.display = tab === 'inbox' ? 'flex' : 'none';
+}
+
+// ─── Overview dashboard (2026-07-16) ───────────────────────────────────────
+// Adapted from a reference "call analytics" dashboard design -- same visual
+// structure (KPI row, AI impact bar, trend chart + breakdown donut, recent
+// activity, lead funnel, appointment performance, AI insight), but every
+// metric here reflects chat widget CONVERSATIONS, not phone calls.
+async function rebuildCwOverview() {
+  const kpiRow = document.getElementById('cwOverviewKpiRow');
+  if (!kpiRow) return;
+  const convos = CW_CONVERSATIONS;
+  const totalLeads = convos.length;
+  const contactsCaptured = convos.filter(c => c.lead_phone || c.lead_email).length;
+  const appointments = convos.filter(c => c.resolution === 'booked').length;
+  const contactRate = totalLeads ? Math.round((contactsCaptured / totalLeads) * 1000) / 10 : 0;
+  const apptRate = totalLeads ? Math.round((appointments / totalLeads) * 1000) / 10 : 0;
+
+  // Message counts per conversation -- powers "Engaged" (2+ messages
+  // exchanged) in the funnel, the "Messages Handled by AI" KPI, and the
+  // time-saved estimate in the AI impact bar.
+  let messagesByConv = {};
+  let totalAssistantMessages = 0;
+  const convIds = convos.map(c => c.id);
+  if (convIds.length > 0) {
+    try {
+      const msgs = await sbSelect('widget_messages', `conversation_id=in.(${convIds.join(',')})&select=role,conversation_id`);
+      msgs.forEach(m => { messagesByConv[m.conversation_id] = (messagesByConv[m.conversation_id] || 0) + 1; });
+      totalAssistantMessages = msgs.filter(m => m.role === 'assistant').length;
+    } catch(e) { console.warn('Could not load message counts:', e.message); }
+  }
+  const engagedCount = convos.filter(c => (messagesByConv[c.id] || 0) >= 2).length;
+  const minutesSaved = Math.round(totalAssistantMessages * 1.5);
+
+  const kpiDefs = [
+    { icon: 'user', color: 'var(--orange)', tint: 'rgba(226,84,31,.15)', num: totalLeads, lbl: 'Leads' },
+    { icon: 'mail', color: 'var(--blue)', tint: 'rgba(59,130,246,.15)', num: contactsCaptured, lbl: `Contacts Captured · ${contactRate}%` },
+    { icon: 'calendar', color: 'var(--green)', tint: 'rgba(34,197,94,.15)', num: appointments, lbl: 'Appointments' },
+    { icon: 'chat', color: 'var(--purple)', tint: 'rgba(168,85,247,.15)', num: totalAssistantMessages, lbl: 'Messages Handled by AI' },
+  ];
+  kpiRow.innerHTML = kpiDefs.map(k => `
+    <div class="cw-kpi-card">
+      <div class="cw-kpi-card-icon" style="--kpi-color:${k.color};--kpi-tint:${k.tint}">${cwIcon(k.icon, 18)}</div>
+      <div><div class="cw-kpi-card-num">${k.num}</div><div class="cw-kpi-card-lbl">${k.lbl}</div></div>
+    </div>`).join('');
+
+  const impactBar = document.getElementById('cwAiImpactBar');
+  if (impactBar) {
+    impactBar.innerHTML = `
+      <div class="cw-ai-impact-label">${cwIcon('sparkle',13)} AI Impact</div>
+      <div class="cw-ai-impact-item">${cwIcon('clock',13)} <b>${minutesSaved} min</b>&nbsp;saved responding to leads</div>
+      <div class="cw-ai-impact-item">${cwIcon('calendar',13)} <b>${appointments}</b>&nbsp;conversation${appointments === 1 ? '' : 's'} became appointment${appointments === 1 ? '' : 's'}</div>
+      <div class="cw-ai-impact-item">${cwIcon('target',13)} <b>${contactRate}%</b>&nbsp;contact capture rate</div>`;
+  }
+
+  renderCwLeadsOverTimeChart(convos);
+  renderCwResolutionDonut(convos);
+  renderCwRecentActivity(convos);
+  renderCwLeadFunnel(totalLeads, engagedCount, contactsCaptured, appointments);
+  renderCwApptPerformance(appointments, apptRate);
+  renderCwAiInsight(totalLeads, contactRate, apptRate, minutesSaved);
+}
+
+function renderCwLeadsOverTimeChart(convos) {
+  const canvas = document.getElementById('cwLeadsOverTimeChart');
+  if (!canvas) return;
+  destroyChart('cwLeadsOverTime');
+  const days = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    days.push(d);
+  }
+  const dayKey = (d) => d.toISOString().slice(0, 10);
+  const leadsPerDay = days.map(d => convos.filter(c => (c.created_at || '').slice(0, 10) === dayKey(d)).length);
+  const contactsPerDay = days.map(d => convos.filter(c => (c.created_at || '').slice(0, 10) === dayKey(d) && (c.lead_phone || c.lead_email)).length);
+  chartRegistry['cwLeadsOverTime'] = new Chart(canvas, {
+    type: 'bar',
+    data: {
+      labels: days.map(d => d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })),
+      datasets: [
+        { label: 'Leads', data: leadsPerDay, backgroundColor: (ctx) => verticalGradient(ctx.chart.ctx, ctx.chart.chartArea, C.orange), borderRadius: 4, barPercentage: 0.6 },
+        { label: 'Contacts Captured', data: contactsPerDay, backgroundColor: 'rgba(255,255,255,.15)', borderRadius: 4, barPercentage: 0.6 },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: true, position: 'bottom', labels: { color: C.text, boxWidth: 10, font: { size: 10 } } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: C.tick, font: { size: 10 } } },
+        y: { beginAtZero: true, grid: { color: C.grid }, ticks: { color: C.tick, font: { size: 10 } } },
+      },
+    },
+  });
+}
+
+function renderCwResolutionDonut(convos) {
+  const canvas = document.getElementById('cwResolutionDonut');
+  if (!canvas) return;
+  destroyChart('cwResolutionDonut');
+  const counts = { exploring: 0, booked: 0, transfer: 0, handled_ai: 0, handled_human: 0 };
+  convos.forEach(c => { if (counts[c.resolution] !== undefined) counts[c.resolution]++; });
+  const colorMap = { exploring: C.blue, booked: C.green, transfer: C.yellow, handled_ai: C.purple, handled_human: C.orange };
+  const labelMap = { exploring: 'Exploring', booked: 'Booked', transfer: 'Transferred', handled_ai: 'Handled by AI', handled_human: 'Handled by Human' };
+  const entries = Object.entries(counts).filter(([, v]) => v > 0);
+  const total = convos.length;
+  chartRegistry['cwResolutionDonut'] = new Chart(canvas, {
+    type: 'doughnut',
+    data: {
+      labels: entries.map(([k]) => labelMap[k]),
+      datasets: [{ data: entries.map(([, v]) => v), backgroundColor: entries.map(([k]) => colorMap[k]), borderWidth: 0 }],
+    },
+    options: { responsive: true, maintainAspectRatio: false, cutout: '72%', plugins: { legend: { display: false } } },
+    plugins: [{
+      id: 'cwDonutCenter',
+      afterDraw(chart) {
+        const { ctx, chartArea } = chart;
+        const cx = (chartArea.left + chartArea.right) / 2, cy = (chartArea.top + chartArea.bottom) / 2;
+        ctx.save();
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.font = '800 20px sans-serif'; ctx.fillStyle = C.text;
+        ctx.fillText(String(total), cx, cy - 8);
+        ctx.font = '700 9px sans-serif'; ctx.fillStyle = C.tick;
+        ctx.fillText('LEADS', cx, cy + 10);
+        ctx.restore();
+      },
+    }],
+  });
+  const legend = document.getElementById('cwDonutLegend');
+  if (legend) {
+    legend.innerHTML = entries.map(([k, v]) => `
+      <div class="cw-donut-legend-row"><span style="display:flex;align-items:center;gap:6px"><span class="cw-dot" style="background:${colorMap[k]}"></span>${labelMap[k]}</span><span>${v}</span></div>`).join('');
+  }
+}
+
+function renderCwRecentActivity(convos) {
+  const wrap = document.getElementById('cwRecentActivityList');
+  if (!wrap) return;
+  const recent = [...convos].sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at)).slice(0, 8);
+  if (recent.length === 0) {
+    wrap.innerHTML = emptyStateHTML({ icon: cwIcon('chat', 28), title: 'No activity yet', compact: true });
+    return;
+  }
+  const tagFor = (c) => {
+    if (c.resolution === 'booked') return { label: 'Appointment Booked', cls: 'cw-resolution-booked' };
+    if (c.lead_phone || c.lead_email) return { label: 'Contact Captured', cls: 'cw-resolution-exploring' };
+    return { label: 'New Lead', cls: 'cw-resolution-handled_ai' };
+  };
+  wrap.innerHTML = recent.map(c => {
+    const tag = tagFor(c);
+    const initials = (c.lead_name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    return `<div class="cw-activity-row">
+      <div class="cw-activity-avatar">${escAttr(initials)}</div>
+      <div><div class="cw-activity-name">${escAttr(c.lead_name || 'Unnamed lead')}</div><div class="cw-activity-time">${fmtNoteTime(c.updated_at)}</div></div>
+      <span class="cw-activity-tag cw-resolution-badge ${tag.cls}">${tag.label}</span>
+    </div>`;
+  }).join('');
+}
+
+// Funnel is drawn as a real SVG trapezoid stack (not a css hack) to match
+// the reference design's funnel graphic as closely as possible.
+function renderCwLeadFunnel(leadsReceived, engaged, contactsCaptured, appointments) {
+  const wrap = document.getElementById('cwLeadFunnel');
+  if (!wrap) return;
+  const stages = [
+    { icon: 'user', label: 'Leads received', val: leadsReceived },
+    { icon: 'chat', label: 'Engaged (2+ msgs)', val: engaged },
+    { icon: 'mail', label: 'Contact captured', val: contactsCaptured },
+    { icon: 'calendar', label: 'Appointments', val: appointments },
+  ];
+  const max = leadsReceived || 1;
+  const svgH = 140, svgW = 90, n = stages.length;
+  const segH = svgH / n;
+  let svgSegs = '';
+  for (let i = 0; i < n; i++) {
+    const topW = svgW * (1 - i / n) * 0.9 + svgW * 0.1;
+    const botW = svgW * (1 - (i + 1) / n) * 0.9 + svgW * 0.1;
+    const y1 = i * segH, y2 = (i + 1) * segH;
+    const x1a = (svgW - topW) / 2, x1b = svgW - x1a;
+    const x2a = (svgW - botW) / 2, x2b = svgW - x2a;
+    const opacity = 0.35 + (i / n) * 0.65;
+    svgSegs += `<polygon points="${x1a},${y1} ${x1b},${y1} ${x2b},${y2} ${x2a},${y2}" fill="var(--orange)" opacity="${opacity.toFixed(2)}" />`;
+  }
+  wrap.innerHTML = `
+    <div class="cw-funnel-svg-wrap"><svg viewBox="0 0 ${svgW} ${svgH}" width="100%" style="filter:drop-shadow(0 0 8px rgba(226,84,31,.4))">${svgSegs}</svg></div>
+    <div class="cw-funnel-stages">
+      ${stages.map(s => {
+        const pct = max ? Math.round((s.val / max) * 1000) / 10 : 0;
+        return `<div class="cw-funnel-stage-row">
+          <span class="cw-funnel-stage-label">${cwIcon(s.icon, 13)} ${escAttr(s.label)}</span>
+          <div class="cw-funnel-bar-track"><div class="cw-funnel-bar-fill" style="width:${pct}%"></div></div>
+          <span class="cw-funnel-stage-val">${s.val} · ${pct}%</span>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+function renderCwApptPerformance(appointments, apptRate) {
+  const wrap = document.getElementById('cwApptPerformance');
+  if (!wrap) return;
+  wrap.innerHTML = `
+    <div class="cw-appt-stat-big">${appointments}</div>
+    <div class="cw-appt-stat-lbl">Total Appointments</div>
+    <div class="cw-appt-stat-pct">${apptRate}%</div>
+    <div class="cw-appt-stat-lbl">Appointment Rate (of leads)</div>`;
+}
+
+function renderCwAiInsight(totalLeads, contactRate, apptRate, minutesSaved) {
+  const wrap = document.getElementById('cwAiInsightBody');
+  if (!wrap) return;
+  if (totalLeads === 0) {
+    wrap.innerHTML = emptyStateHTML({ icon: cwIcon('sparkle', 28), title: 'Nothing to analyze yet', sub: 'Insights appear once leads start coming through.', compact: true });
+    return;
+  }
+  const insights = [];
+  insights.push(`${contactRate}% of leads were captured as contacts${contactRate >= 40 ? ' — strong performance, keep the current approach' : ' — consider making the welcome message more direct about collecting contact info'}.`);
+  if (apptRate > 0) insights.push(`${apptRate}% of leads became appointments. ${apptRate < 5 ? 'There may be room to nudge qualified leads toward booking sooner.' : 'Solid conversion into real appointments.'}`);
+  else insights.push(`No appointments booked yet — if Calendar isn't connected for this widget, that's likely why. Connect it in Configure to let Nirvana book directly.`);
+  insights.push(`${minutesSaved} minutes of team time saved this period by letting Nirvana handle the first response.`);
+  wrap.innerHTML = insights.map(t => `<div class="cw-insight-row"><span class="cw-insight-dot"></span><span>${t}</span></div>`).join('');
+}
+
+// The nav badge (unread/needs-attention count) reflects ALL widgets at
+// once, unlike the inbox itself which is scoped to whichever widget is
+// selected -- so switching widgets doesn't visually "lose" leads waiting
+// on a different one.
+async function refreshCwNavBadgeAcrossAllWidgets() {
+  const badge = document.getElementById('navChatWidgetBadge');
+  if (!badge) return;
+  try {
+    const all = await sbSelect('widget_conversations', 'select=resolution');
+    badge.textContent = all.filter(c => c.resolution === 'exploring' || c.resolution === 'transfer').length;
+  } catch(e) { /* leave badge as-is on failure */ }
+}
+
+async function switchChatWidget(widgetId) {
+  if (!widgetId || widgetId === cwActiveWidgetId) return;
+  cwActiveWidgetId = widgetId;
+  await reloadCwConversationsForActiveWidget();
+}
+
+async function createNewChatWidget() {
+  if (!requirePermission('edit')) return;
+  const name = prompt('What business/client is this widget for?');
+  if (!name || !name.trim()) return;
+  const widget = {
+    id: 'cw_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+    client_name: name.trim(),
+    agent_name: 'Nirvana',
+    instructions: 'You are a friendly AI assistant for this business. Identify what the visitor needs, collect their contact info, and offer to book a strategy call if they seem like a good fit. Keep replies short and warm.',
+    orb_color: CHAT_WIDGET_COLORS[CHAT_WIDGETS.length % CHAT_WIDGET_COLORS.length],
+    welcome_prompt: `Hi! I'm Nirvana, your AI assistant. How can I help you grow your business today?`,
+    avatar: CW_AVATARS[CHAT_WIDGETS.length % CW_AVATARS.length],
+    tone: 'professional_friendly',
+    dock_position: 'right', dock_size: 'expanded',
+    collect_name: true, collect_phone: true, collect_email: true, collect_service_requested: true, collect_company: false,
+    data_fields: [
+      { key: 'name', label: 'Name', enabled: true, required: true },
+      { key: 'phone', label: 'Phone', enabled: true, required: true },
+      { key: 'email', label: 'Email', enabled: true, required: true },
+      { key: 'service_needed', label: 'Service Needed', enabled: true, required: false },
+    ],
+    timezone: 'America/Los_Angeles',
+    business_hours: {
+      mon:{open:'07:00',close:'19:00',enabled:true}, tue:{open:'07:00',close:'19:00',enabled:true}, wed:{open:'07:00',close:'19:00',enabled:true},
+      thu:{open:'07:00',close:'19:00',enabled:true}, fri:{open:'07:00',close:'19:00',enabled:true},
+      sat:{open:'08:00',close:'14:00',enabled:true}, sun:{open:'08:00',close:'14:00',enabled:false},
+    },
+    allow_after_hours: true, service_duration_minutes: 60, buffer_time_minutes: 15, min_notice_hours: 2,
+    calendar_connected: false, active: true, created_by: (getCurrentUser() || {}).name || 'Guest',
+    created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+  };
+  try { await sbUpsert('chat_widgets', widget); }
+  catch(e) { showToast('Could not create widget: ' + e.message, 'error'); return; }
+  CHAT_WIDGETS.push(widget);
+  cwActiveWidgetId = widget.id;
+  renderCwWidgetSelector();
+  await reloadCwConversationsForActiveWidget();
+  showToast(`Created a new widget for "${name.trim()}". Open Configure to customize and grab its embed code.`, 'success');
 }
 
 function rebuildCwHeaderStats() {
