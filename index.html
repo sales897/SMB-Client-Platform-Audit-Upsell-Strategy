@@ -14881,7 +14881,7 @@ function getNodeFieldSchema(node) {
       ];
       case 'notify_team': return [
         { key: 'sublabel', label: 'Message', type: 'textarea', merge: true },
-        { key: 'recipient', label: 'Notify', type: 'select', options: 'TEAM_MEMBERS', source: 'config' },
+        { key: 'recipient', label: 'Notify (comma-separated for multiple people)', type: 'text', source: 'config' },
       ];
       case 'update_status': return [{ key: 'sublabel', label: 'New Status', type: 'text' }];
       case 'add_note': return [
@@ -15234,7 +15234,7 @@ const WORKFLOW_BUILD_TOOLS = [
         value: { type: 'string', description: 'Condition nodes: the comparison value' },
         duration: { type: 'number', description: 'Delay nodes' },
         unit: { type: 'string', description: 'Delay nodes: minutes, hours, or days' },
-        recipient: { type: 'string', description: 'notify_team action nodes: teammate name to notify' },
+        recipient: { type: 'string', description: 'notify_team action nodes: who to notify. If more than one person should be notified about the same thing, put all their names in this ONE field separated by commas (e.g. "Kevin, Pasquale, Mijail") rather than creating a separate notify_team node for each person.' },
         tag: { type: 'string', description: 'add_note action nodes: teammate name to tag in the note' },
       },
       required: ['node_type', 'subtype', 'label'],
@@ -15478,6 +15478,34 @@ function validateWorkflowGraph() {
     if (!branches.includes('Yes')) issues.push(`"${n.label}" (condition) has no "Yes" branch.`);
     if (!branches.includes('No')) issues.push(`"${n.label}" (condition) has no "No" branch.`);
   });
+  // A chain of nodes with the identical type+subtype almost always means
+  // several near-duplicate steps (e.g. "Notify Kevin" -> "Notify
+  // Pasquale" -> "Notify Mijail") that should have been one node with
+  // multiple recipients instead -- flag it as a suggestion rather than an
+  // error, since it's a style issue, not a broken graph. Walks the actual
+  // edges rather than array order, since workflowNodesCache isn't
+  // guaranteed to be in graph sequence.
+  const nodeById = Object.fromEntries(nodes.map(n => [n.id, n]));
+  const outgoingCount = {};
+  edges.forEach(e => { outgoingCount[e.source_node_id] = (outgoingCount[e.source_node_id] || 0) + 1; });
+  const nextOf = {};
+  edges.forEach(e => { if (outgoingCount[e.source_node_id] === 1) nextOf[e.source_node_id] = e.target_node_id; });
+  const visitedInChain = new Set();
+  nodes.forEach(startNode => {
+    if (visitedInChain.has(startNode.id)) return;
+    let chain = [startNode];
+    let cur = startNode;
+    while (nextOf[cur.id]) {
+      const next = nodeById[nextOf[cur.id]];
+      if (!next || next.node_type !== startNode.node_type || next.subtype !== startNode.subtype) break;
+      chain.push(next);
+      cur = next;
+    }
+    if (chain.length >= 3) {
+      chain.forEach(n => visitedInChain.add(n.id));
+      issues.push(`${chain.length} "${WORKFLOW_NODE_TYPE_LABELS[startNode.node_type] || startNode.node_type}" nodes are chained back to back ("${chain.map(n => n.label).join('" → "')}") — consider combining them into one node instead.`);
+    }
+  });
   return issues;
 }
 
@@ -15544,6 +15572,11 @@ async function sendWfbBuildMessage() {
 Before making any change, decide: is the user describing a genuinely NEW workflow/scenario that has nothing to do with what's currently in the graph, or are they asking to adjust/extend what's already there? For a genuinely new scenario, use rebuild_workflow to replace the whole graph in one atomic step — never leave the old nodes sitting there disconnected while you add new ones alongside them with add_node; that leaves a mess of orphaned nodes behind, which is exactly what NOT to do. For anything that's clearly building on or adjusting the existing graph, use the granular add_node/update_node/delete_node/add_edge/delete_edge tools instead, and only touch what actually needs to change.
 
 Every change gets saved as a version automatically before it's applied, so nothing is ever truly destructive — the person can always go back. After changes are applied, the workflow is automatically checked for real problems (disconnected nodes, missing branches, no trigger) and flagged to the user if anything's off — you don't need to check this yourself, but keep it in mind: build things that would actually pass that check.
+
+Build workflows the way a person actually would, not as a literal transcript of the request:
+- If the same step needs to reach several people, that's ONE node with all their names in the recipient/tag field (comma-separated), never one node per person — a chain of near-identical "Notify Kevin" / "Notify Pasquale" / "Notify Mijail" nodes back to back looks like a mistake, not a real workflow.
+- Match the action to what's actually being described, not the nearest literal keyword: "send a welcome email" is a Send Email action, not a second Create Task that just says "reminder" in its title — a task is something a person does, an email is something the system sends. Don't create two tasks that are really one task plus one email.
+- If the request implies a delay ("once done", "a day later", "after a week"), consider whether a Wait/Delay node between the steps would make the sequence read correctly.
 
 ${serializeWorkflowGraphForAi()}`;
   try {
