@@ -505,8 +505,10 @@ body.ai-panel-open .main {
 .kpi[class*="kpi-theme-"]::after { border-color: var(--kpi-accent); }
 .kpi[class*="kpi-theme-"]:hover { border-color: var(--kpi-accent); }
 .kpi-comet { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; opacity: .8; }
-.kpi-comet path { fill: none; stroke: var(--kpi-accent, var(--orange)); stroke-width: 2; stroke-linecap: round; filter: drop-shadow(0 0 5px var(--kpi-accent, var(--orange))); }
-.kpi-comet circle { fill: var(--kpi-accent, var(--orange)); filter: drop-shadow(0 0 4px var(--kpi-accent, var(--orange))); }
+.kpi-comet path, .kpi-comet polyline { fill: none; stroke: var(--kpi-accent, var(--orange)); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 5px var(--kpi-accent, var(--orange))); }
+.kpi-comet circle:not(.ring) { fill: var(--kpi-accent, var(--orange)); filter: drop-shadow(0 0 4px var(--kpi-accent, var(--orange))); }
+.kpi-comet circle.ring { fill: none; stroke: var(--kpi-accent, var(--orange)); stroke-width: 1.4; opacity: .55; filter: drop-shadow(0 0 3px var(--kpi-accent, var(--orange))); }
+.kpi-comet line { stroke: var(--kpi-accent, var(--orange)); stroke-width: 1.2; opacity: .5; }
 
 /* ─── Client Portfolio Command Board (2026-07-17) ────────────────────────── */
 .cmdboard-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: var(--space-4); }
@@ -2858,19 +2860,19 @@ select.wfb-field-input { padding-right: 26px; }
   <div class="page" id="page-clients">
     <div class="kpi-row">
       <div class="kpi kpi-theme-orange"><div class="kpi-icon"><span class="icon" data-icon="users" data-icon-size="16"></span></div><div class="kpi-val orange" id="cl-total">0</div><div class="kpi-lbl" data-i18n="cl_unique_clients">Unique Clients</div><div class="kpi-sub" data-i18n="cl_across_portfolios">Across all portfolios</div>
-        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 130 105 C 160 95, 175 72, 192 55 C 207 40, 216 26, 232 12" /><circle cx="192" cy="55" r="2.5" /><circle cx="232" cy="12" r="3" /></svg>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 130 105 C 160 95, 175 72, 192 55 C 207 40, 216 26, 232 12"/><circle cx="150" cy="97"/><circle cx="192" cy="55"/><circle cx="232" cy="12" r="3"/></svg>
       </div>
       <div class="kpi kpi-theme-blue"><div class="kpi-icon"><span class="icon" data-icon="chart" data-icon-size="16"></span></div><div class="kpi-val blue" id="cl-smb-count">0</div><div class="kpi-lbl" data-i18n="cl_smb_clients">SMB Clients</div>
-        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 130 105 C 160 95, 175 72, 192 55 C 207 40, 216 26, 232 12" /><circle cx="192" cy="55" r="2.5" /><circle cx="232" cy="12" r="3" /></svg>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><line x1="148" y1="92" x2="188" y2="52"/><line x1="188" y1="52" x2="226" y2="70"/><line x1="188" y1="52" x2="212" y2="18"/><line x1="148" y1="92" x2="198" y2="102"/><circle cx="148" cy="92" r="2.2"/><circle cx="188" cy="52" r="3"/><circle cx="226" cy="70" r="2.2"/><circle cx="212" cy="18" r="2.2"/><circle cx="198" cy="102" r="2"/></svg>
       </div>
       <div class="kpi kpi-theme-green"><div class="kpi-icon"><span class="icon" data-icon="tag" data-icon-size="14"></span></div><div class="kpi-val green" id="cl-wl-count">0</div><div class="kpi-lbl" data-i18n="cl_wl_partners">White Label Partners</div>
-        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 130 105 C 160 95, 175 72, 192 55 C 207 40, 216 26, 232 12" /><circle cx="192" cy="55" r="2.5" /><circle cx="232" cy="12" r="3" /></svg>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><circle class="ring" cx="205" cy="48" r="12"/><circle class="ring" cx="205" cy="48" r="22"/><circle class="ring" cx="205" cy="48" r="32"/><circle cx="205" cy="48" r="3"/></svg>
       </div>
       <div class="kpi kpi-theme-red"><div class="kpi-icon"><span class="icon" data-icon="ticket" data-icon-size="14"></span></div><div class="kpi-val red" id="cl-support-count">0</div><div class="kpi-lbl" data-i18n="cl_support_clients">Support Clients</div>
-        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 130 105 C 160 95, 175 72, 192 55 C 207 40, 216 26, 232 12" /><circle cx="192" cy="55" r="2.5" /><circle cx="232" cy="12" r="3" /></svg>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><polyline points="128,68 152,68 162,42 173,96 184,58 194,68 232,68"/></svg>
       </div>
       <div class="kpi kpi-theme-purple"><div class="kpi-icon"><span class="icon" data-icon="link" data-icon-size="13"></span></div><div class="kpi-val purple" id="cl-multi-count">0</div><div class="kpi-lbl" data-i18n="cl_multi_portfolio">In 2+ Portfolios</div><div class="kpi-sub" data-i18n="cl_cross_sold">Cross-sold accounts</div>
-        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 130 105 C 160 95, 175 72, 192 55 C 207 40, 216 26, 232 12" /><circle cx="192" cy="55" r="2.5" /><circle cx="232" cy="12" r="3" /></svg>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><circle class="ring" cx="188" cy="55" r="24"/><circle class="ring" cx="220" cy="55" r="24"/><circle cx="204" cy="55" r="2.5"/></svg>
       </div>
     </div>
     <div class="cmdboard-header">
@@ -2907,6 +2909,14 @@ select.wfb-field-input { padding-right: 26px; }
       </div>
 
       <div class="cmdboard-main">
+        <div class="ai-insights-banner" id="clDirNirvanaBanner">
+          <div class="ai-insights-icon"><span class="icon" data-icon="sparkle" data-icon-size="14"></span></div>
+          <div style="flex:1;min-width:0">
+            <div class="ai-insights-label">Nirvana's take</div>
+            <div class="ai-insights-text" id="clDirNirvanaText">Looking at the directory…</div>
+          </div>
+          <button class="ai-insights-refresh" id="clDirNirvanaRefreshBtn" onclick="loadClDirNirvanaInsight()" title="Get a new insight" aria-label="Get a new insight">↻</button>
+        </div>
         <div class="cmdboard-toolbar">
           <div>Viewing: <b id="clDirViewingLabel">All Clients</b> · <span class="row-count" id="clientsRowCount">0 clients</span></div>
           <div class="cmdboard-toolbar-right">
@@ -14708,6 +14718,7 @@ function rebuildClientsDirectory() {
   renderClDirAiInsights(allRows);
   renderClDirRecentActivity();
   updateClDirBottomBar(allRows);
+  loadClDirNirvanaInsight();
   filterClientsDirectory();
   updateBulkActionBar();
 }
@@ -14833,6 +14844,7 @@ function renderClientBoardView(rows) {
         <div class="cmdboard-group-actions">
           <a onclick="jumpClDirToCompact('${g.key}')">View all ›</a>
           <span class="cmdboard-health-pill ${health.cls}">${health.label}</span>
+          <button class="vital-ask" onclick="askNirvanaAboutClDir('group_${g.key}')" title="Ask Nirvana about this group"><span class="icon" data-icon="sparkle" data-icon-size="13"></span></button>
         </div>
       </div>
       <div class="cmdboard-card-grid">${shown.map(renderClDirBoardClientCard).join('')}</div>
@@ -14847,6 +14859,7 @@ function renderClientBoardView(rows) {
         <div class="cmdboard-group-actions">
           <a onclick="jumpClDirToCompact('multi')">View all ›</a>
           <span class="cmdboard-health-pill healthy">Opportunity</span>
+          <button class="vital-ask" onclick="askNirvanaAboutClDir('group_crosssold')" title="Ask Nirvana about this group"><span class="icon" data-icon="sparkle" data-icon-size="13"></span></button>
         </div>
       </div>
       <div class="cmdboard-card-grid">${shown.map(renderClDirBoardClientCard).join('')}</div>
@@ -14962,19 +14975,80 @@ function renderClDirAiInsights(rows) {
     const mergeCount = groups.length;
     const crossSellCount = rows.filter(r => r.pks.length === 1 && r.total > 0 && r.total < 3).length;
     wrap.innerHTML = `
-      <div class="cmdboard-insight-card" onclick="showPage('settings')">
-        <div class="cmdboard-insight-hd"><span class="icon" data-icon="puzzle" data-icon-size="12"></span> Merge Suggestions <span class="cmdboard-insight-count">${mergeCount}</span></div>
-        <div class="cmdboard-insight-desc">Clients with matching names across portfolios that can be merged.</div>
+      <div class="cmdboard-insight-card">
+        <div class="cmdboard-insight-hd" onclick="showPage('settings')" style="cursor:pointer"><span class="icon" data-icon="puzzle" data-icon-size="12"></span> Merge Suggestions <span class="cmdboard-insight-count">${mergeCount}</span><button class="vital-ask" onclick="event.stopPropagation();askNirvanaAboutClDir('merge')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button></div>
+        <div class="cmdboard-insight-desc" onclick="showPage('settings')" style="cursor:pointer">Clients with matching names across portfolios that can be merged.</div>
       </div>
-      <div class="cmdboard-insight-card" onclick="showPage('settings')">
-        <div class="cmdboard-insight-hd"><span class="icon" data-icon="link" data-icon-size="12"></span> Duplicate Detection <span class="cmdboard-insight-count">${mergeCount}</span></div>
-        <div class="cmdboard-insight-desc">Potential duplicate rows detected across your directory.</div>
+      <div class="cmdboard-insight-card">
+        <div class="cmdboard-insight-hd" onclick="showPage('settings')" style="cursor:pointer"><span class="icon" data-icon="link" data-icon-size="12"></span> Duplicate Detection <span class="cmdboard-insight-count">${mergeCount}</span><button class="vital-ask" onclick="event.stopPropagation();askNirvanaAboutClDir('merge')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button></div>
+        <div class="cmdboard-insight-desc" onclick="showPage('settings')" style="cursor:pointer">Potential duplicate rows detected across your directory.</div>
       </div>
-      <div class="cmdboard-insight-card" onclick="applyClDirSavedView('all')">
-        <div class="cmdboard-insight-hd"><span class="icon" data-icon="trending" data-icon-size="12"></span> Cross-Sell Opportunities <span class="cmdboard-insight-count">${crossSellCount}</span></div>
-        <div class="cmdboard-insight-desc">Single-portfolio clients using fewer than 3 products — room to expand.</div>
+      <div class="cmdboard-insight-card">
+        <div class="cmdboard-insight-hd" onclick="applyClDirSavedView('all')" style="cursor:pointer"><span class="icon" data-icon="trending" data-icon-size="12"></span> Cross-Sell Opportunities <span class="cmdboard-insight-count">${crossSellCount}</span><button class="vital-ask" onclick="event.stopPropagation();askNirvanaAboutClDir('crosssell')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button></div>
+        <div class="cmdboard-insight-desc" onclick="applyClDirSavedView('all')" style="cursor:pointer">Single-portfolio clients using fewer than 3 products — room to expand.</div>
       </div>`;
   });
+}
+// Same panel-opening pattern as askNirvanaAboutVital (Home) -- Nirvana is
+// the Hub's co-pilot everywhere, not just Home and Workflows, so any new
+// page/widget gets a real "Ask Nirvana" hook, not just a decorative AI label.
+const CLDIR_NIRVANA_PROMPTS = {
+  merge: 'Which clients look like duplicates across portfolios, and should any be merged?',
+  crosssell: 'Which single-portfolio clients are the best cross-sell opportunities right now, and why?',
+  group_whitelabel: 'Which White Label Partners need attention right now, and why?',
+  group_smb: 'Which SMB Clients need attention right now, and why?',
+  group_support: 'Which Support Clients need attention right now, and why?',
+  group_crosssold: 'Of our cross-sold clients, which ones look ready for an additional product?',
+};
+function askNirvanaAboutClDir(topic) {
+  const panel = document.getElementById('aiAgentPanel');
+  if (panel && panel.style.display === 'none') toggleAiAgentPanel();
+  const prompt = CLDIR_NIRVANA_PROMPTS[topic];
+  if (prompt) sendAiAgentQuickMessage(prompt);
+}
+// Nirvana's Take banner for the Command Board -- same anti-repeat pattern
+// as Home's loadAiInsightsBanner (tells the model what it already said and
+// gives it a rotating angle), since giving it the same directory numbers
+// twice in a row otherwise just re-derives the same sentence.
+let lastClDirNirvanaInsight = null;
+const CLDIR_NIRVANA_ANGLES = [
+  'the single group (White Label/SMB/Support) that needs attention most',
+  'merge/duplicate cleanup opportunities',
+  'cross-sell opportunities for single-portfolio clients',
+  'clients with no note in 60+ days',
+  'clients missing contact info entirely',
+];
+async function loadClDirNirvanaInsight() {
+  const textEl = document.getElementById('clDirNirvanaText');
+  const btn = document.getElementById('clDirNirvanaRefreshBtn');
+  if (!textEl) return;
+  if (btn) btn.disabled = true;
+  textEl.textContent = 'Looking at the directory…';
+  const rows = computeClientDirectoryRows();
+  const needsAttention = rows.filter(r => clRowMatchesSmartFilter(r, 'needsattention')).length;
+  const noContact = rows.filter(r => clRowMatchesSmartFilter(r, 'nocontact')).length;
+  const crossSell = rows.filter(r => r.pks.length === 1 && r.total > 0 && r.total < 3).length;
+  let mergeCount = 0;
+  try { mergeCount = (await detectDuplicateClientGroups()).length; } catch(e) {}
+  const fallback = needsAttention > 0
+    ? `${needsAttention} clients need attention across the directory — that's the fastest place to start.`
+    : 'The directory looks healthy — a good day to work cross-sell opportunities.';
+  try {
+    const angle = CLDIR_NIRVANA_ANGLES[Math.floor(Math.random() * CLDIR_NIRVANA_ANGLES.length)];
+    let userText = `Total clients: ${rows.length}\nNeeds attention: ${needsAttention}\nMissing contact info: ${noContact}\nCross-sell opportunities: ${crossSell}\nPossible duplicate groups: ${mergeCount}\n\nLead with this angle if it's genuinely relevant: ${angle}.`;
+    if (lastClDirNirvanaInsight) userText += `\n\nYou already said this last time -- give a genuinely different insight now: "${lastClDirNirvanaInsight}"`;
+    const insight = await quickAiCompletion(
+      'You are Nirvana, a concise client success advisor for a home-services marketing agency, looking at the unified client directory. Give ONE punchy, specific sentence (max 20 words) highlighting a useful thing to focus on. No greeting, no filler.',
+      userText
+    );
+    const finalText = (insight || '').trim() || fallback;
+    textEl.textContent = finalText;
+    lastClDirNirvanaInsight = finalText;
+  } catch(e) {
+    textEl.textContent = fallback;
+  } finally {
+    if (btn) btn.disabled = false;
+  }
 }
 
 function renderClDirRecentActivity() {
