@@ -2530,6 +2530,19 @@ select.wfb-field-input { padding-right: 26px; }
   </div>
 </div>
 
+<div class="modal-overlay" id="textPromptModal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="textPromptTitle">
+    <h3 id="textPromptTitle"><span class="icon" data-icon="edit" data-icon-size="16"></span> Enter a name</h3>
+    <p id="textPromptMessage" style="white-space:pre-wrap;display:none"></p>
+    <label id="textPromptLabel" class="field-label" for="textPromptInput" style="display:none"></label>
+    <input type="text" id="textPromptInput" class="field-input" style="margin-bottom:4px">
+    <div class="modal-btns">
+      <button class="btn btn-ghost" id="textPromptCancelBtn">Cancel</button>
+      <button class="btn btn-primary" id="textPromptConfirmBtn">OK</button>
+    </div>
+  </div>
+</div>
+
 <!-- CLIENT NOTES & TASKS MODAL -->
 <div class="modal-overlay" id="clientNotesTasksModal">
   <div class="modal xwide" role="dialog" aria-modal="true" aria-labelledby="cntTitle">
@@ -7313,6 +7326,47 @@ function showConfirmDialog(message, opts = {}) {
   });
 }
 
+// Themed replacement for window.prompt() -- the browser's native prompt
+// can't be styled at all, so it always looks like a jarring, unbranded
+// interruption no matter how polished the rest of the Hub is. Same
+// promise-based shape as showConfirmDialog: resolves with the entered
+// text, or null if cancelled/closed, so every call site that used to do
+// `const name = window.prompt(...)` can become `const name = await
+// showTextPromptDialog(...)` with no other changes needed.
+function showTextPromptDialog(opts = {}) {
+  return new Promise((resolve) => {
+    const modal = document.getElementById('textPromptModal');
+    const titleEl = document.getElementById('textPromptTitle');
+    const msgEl = document.getElementById('textPromptMessage');
+    const labelEl = document.getElementById('textPromptLabel');
+    const input = document.getElementById('textPromptInput');
+    const confirmBtn = document.getElementById('textPromptConfirmBtn');
+    const cancelBtn = document.getElementById('textPromptCancelBtn');
+    titleEl.innerHTML = iconizeLeading(opts.title || '✏️ Enter a name', 16);
+    if (opts.message) { msgEl.textContent = opts.message; msgEl.style.display = ''; } else { msgEl.style.display = 'none'; }
+    if (opts.label) { labelEl.textContent = opts.label; labelEl.style.display = ''; } else { labelEl.style.display = 'none'; }
+    input.placeholder = opts.placeholder || '';
+    input.value = opts.defaultValue || '';
+    confirmBtn.textContent = opts.confirmLabel || 'OK';
+    modal.classList.add('open');
+    setTimeout(() => input.focus(), 50);
+
+    function cleanup(result) {
+      modal.classList.remove('open');
+      confirmBtn.removeEventListener('click', onConfirm);
+      cancelBtn.removeEventListener('click', onCancel);
+      input.removeEventListener('keydown', onKeydown);
+      resolve(result);
+    }
+    function onConfirm() { cleanup(input.value.trim() || null); }
+    function onCancel() { cleanup(null); }
+    function onKeydown(e) { if (e.key === 'Enter') onConfirm(); }
+    confirmBtn.addEventListener('click', onConfirm);
+    cancelBtn.addEventListener('click', onCancel);
+    input.addEventListener('keydown', onKeydown);
+  });
+}
+
 // ─── ESCAPE-TO-CLOSE FOR MODALS ────────────────────────────────────────────
 // One global listener rather than a handler on every modal — finds whichever
 // modal (if any) is currently open and closes it the same way its own
@@ -7344,6 +7398,14 @@ document.addEventListener('keydown', (e) => {
       // Route through the existing Cancel button so the pending
       // showConfirmDialog() promise resolves (false) instead of hanging forever.
       const cancelBtn = document.getElementById('confirmDialogCancelBtn');
+      if (cancelBtn) cancelBtn.click();
+      return;
+    }
+    if (openOverlay.id === 'textPromptModal') {
+      // Same reasoning as confirmDialogModal above -- routes through the
+      // real Cancel button so the pending showTextPromptDialog() promise
+      // resolves (null) instead of hanging forever.
+      const cancelBtn = document.getElementById('textPromptCancelBtn');
       if (cancelBtn) cancelBtn.click();
       return;
     }
@@ -10826,7 +10888,36 @@ async function loadClientNotesTasks() {
   }
   rebuildHomePage();
   syncMyTasksToGoogleCalendar();
+  checkTaskReminders();
 }
+
+// ─── In-Hub task reminders (2026-07-16) ─────────────────────────────────
+// Previously, a task's "reminder" setting only ever became real if it got
+// pushed to Google Calendar -- and that push fails silently (returns
+// false, no message) if the person hasn't connected their calendar. That
+// meant setting a reminder could visibly do nothing at all, with zero
+// indication why. This runs independently of any calendar connection: it
+// checks your own upcoming tasks against their reminder window and fires
+// a real Hub notification (bell icon + dropdown) the same way any other
+// notification does, whether or not Google Calendar is involved.
+function checkTaskReminders() {
+  const u = getCurrentUser();
+  if (!u || !u.email) return;
+  const now = Date.now();
+  CLIENT_TASKS.forEach(async (task) => {
+    if (task.status === 'done' || task.reminder_notified) return;
+    if (!task.due_date || task.reminder_minutes === null || task.reminder_minutes === undefined) return;
+    if ((task.assigned_to_email || '').toLowerCase() !== u.email.toLowerCase()) return;
+    const dueTime = new Date(taskHasSpecificTime(task.due_date) ? task.due_date : task.due_date + 'T09:00:00').getTime();
+    if (isNaN(dueTime)) return;
+    const fireAt = dueTime - task.reminder_minutes * 60000;
+    if (now < fireAt) return; // reminder window hasn't started yet
+    task.reminder_notified = true; // mark first so a slow network response can't cause a duplicate on the next check
+    await createNotification(u.email, 'task_reminder', `Reminder: "${task.title}"${task.client_name ? ' — ' + task.client_name : ''} is due ${fmtNoteTime(task.due_date)}`, task.client_name);
+    try { await sbPatch('client_tasks', `id=eq.${task.id}`, { reminder_notified: true }); } catch(e) { console.warn('Could not mark reminder as sent:', e.message); }
+  });
+}
+setInterval(checkTaskReminders, 60000);
 
 // ─── Client Contact Info (name/title/email/phone) ──────────────────────────
 // ════════════════════════════════════════════════════════════════════════
@@ -12465,12 +12556,12 @@ function wrapNoteSelection(prefix, suffix, placeholder) {
   ta.setSelectionRange(newPos, newPos);
 }
 
-function insertNoteLink() {
+async function insertNoteLink() {
   const ta = document.getElementById('cntNewNoteText');
   if (!ta) return;
   const start = ta.selectionStart, end = ta.selectionEnd;
   const selected = ta.value.slice(start, end) || 'link text';
-  const url = prompt('Paste the URL:', 'https://');
+  const url = await showTextPromptDialog({ title: '🔗 Insert Link', label: 'URL', placeholder: 'https://', defaultValue: 'https://' });
   if (!url) return;
   const before = ta.value.slice(0, start);
   const after = ta.value.slice(end);
@@ -14418,7 +14509,7 @@ async function switchWfbWorkflowTab(workflowId) {
 }
 async function createNewWfbWorkflow() {
   if (!requirePermission('edit')) return;
-  const name = window.prompt('Name this workflow:', '');
+  const name = await showTextPromptDialog({ title: '✏️ New Workflow', label: 'Workflow name', placeholder: 'e.g. New Client Onboarding' });
   if (!name || !name.trim()) return;
   const wf = { id: 'wf_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8), name: name.trim(), status: 'draft', active: false, created_at: new Date().toISOString(), updated_at: new Date().toISOString() };
   await persistWorkflow(wf);
@@ -17100,7 +17191,7 @@ async function switchChatWidget(widgetId) {
 
 async function createNewChatWidget() {
   if (!requirePermission('edit')) return;
-  const name = prompt('What business/client is this widget for?');
+  const name = await showTextPromptDialog({ title: '✏️ New Chat Widget', label: 'Business or client name', placeholder: 'e.g. Adaptive Living Renovations' });
   if (!name || !name.trim()) return;
   const widget = {
     id: 'cw_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
@@ -18858,7 +18949,7 @@ function closeAnyOpenPopup() {
   const overlays = document.querySelectorAll('.modal-overlay.open');
   let closed = 0;
   overlays.forEach(el => {
-    if (el.id === 'wfbBranchModal' || el.id === 'confirmDialogModal') return;
+    if (el.id === 'wfbBranchModal' || el.id === 'confirmDialogModal' || el.id === 'textPromptModal') return;
     const closer = MODAL_CLOSE_FUNCTIONS[el.id];
     if (closer) closer();
     else el.classList.remove('open'); // not individually mapped -- still closes visually
