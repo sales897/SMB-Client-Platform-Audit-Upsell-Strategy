@@ -3125,13 +3125,13 @@ select.wfb-field-input { padding-right: 26px; }
   <div class="page" id="page-smb">
 
     <div class="hub-grid-toolbar">
-      <button class="btn btn-ghost btn-sm" onclick="resetHubGridLayout('grid-smb','hub_grid_smb_v2')" title="Reset back to the default layout"><span class="icon" data-icon="refresh" data-icon-size="13"></span> Reset Layout</button>
+      <button class="btn btn-ghost btn-sm" onclick="resetHubGridLayout('grid-smb', 'hub_grid_smb_v3')" title="Reset back to the default layout"><span class="icon" data-icon="refresh" data-icon-size="13"></span> Reset Layout</button>
       <button class="btn btn-ghost btn-sm hub-edit-layout-btn" onclick="toggleHubGridEdit('grid-smb', this)"><span class="icon" data-icon="edit" data-icon-size="13"></span> Edit Layout</button>
     </div>
     <div class="hub-grid grid-stack" id="grid-smb">
 
     <!-- KPIs -->
-    <div class="grid-stack-item" gs-x="0" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
+    <div class="grid-stack-item" gs-id="smb-kpi-total" gs-x="0" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
       <div class="kpi kpi-theme-orange">
         <div class="kpi-icon"><span class="icon" data-icon="users" data-icon-size="16"></span></div>
         <div class="kpi-val" id="kpi-smb-total">63</div>
@@ -3140,7 +3140,7 @@ select.wfb-field-input { padding-right: 26px; }
         <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 130 100 C 150 95, 160 80, 172 75 C 184 70, 190 50, 200 45 C 212 39, 220 20, 232 12"/><circle cx="172" cy="75"/><circle cx="200" cy="45"/><circle cx="232" cy="12" r="3"/><circle r="3"><animateMotion dur="2.6s" repeatCount="indefinite" path="M 130 100 C 150 95, 160 80, 172 75 C 184 70, 190 50, 200 45 C 212 39, 220 20, 232 12"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.9;1" dur="2.6s" repeatCount="indefinite"/></circle></svg>
       </div>
     </div></div>
-    <div class="grid-stack-item" gs-x="2" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
+    <div class="grid-stack-item" gs-id="smb-kpi-products" gs-x="2" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
       <div class="kpi kpi-theme-orange">
         <div class="kpi-icon"><span class="icon" data-icon="package" data-icon-size="16"></span></div>
         <div class="kpi-val orange" id="kpi-smb-products">0</div>
@@ -3149,7 +3149,7 @@ select.wfb-field-input { padding-right: 26px; }
         <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><line class="bar bar-grow" x1="150" y1="105" x2="150" y2="80" style="animation-delay:0s"/><line class="bar bar-grow" x1="170" y1="105" x2="170" y2="60" style="animation-delay:.15s"/><line class="bar bar-grow" x1="190" y1="105" x2="190" y2="70" style="animation-delay:.3s"/><line class="bar bar-grow" x1="210" y1="105" x2="210" y2="40" style="animation-delay:.45s"/><line class="bar bar-grow" x1="230" y1="105" x2="230" y2="20" style="animation-delay:.6s"/></svg>
       </div>
     </div></div>
-    <div class="grid-stack-item" gs-x="4" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
+    <div class="grid-stack-item" gs-id="smb-kpi-avg" gs-x="4" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
       <div class="kpi kpi-theme-blue">
         <div class="kpi-icon"><span class="icon" data-icon="trending" data-icon-size="14"></span></div>
         <div class="kpi-val" id="kpi-smb-avg">0</div>
@@ -3158,7 +3158,7 @@ select.wfb-field-input { padding-right: 26px; }
         <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 185 78 L 200 78 L 200 60 L 212 60 L 212 40 L 223 40 L 223 18 L 232 18"/><circle r="3"><animateMotion dur="2.4s" repeatCount="indefinite" path="M 185 78 L 200 78 L 200 60 L 212 60 L 212 40 L 223 40 L 223 18 L 232 18"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.9;1" dur="2.4s" repeatCount="indefinite"/></circle></svg>
       </div>
     </div></div>
-    <div class="grid-stack-item" gs-x="6" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
+    <div class="grid-stack-item" gs-id="smb-kpi-opps" gs-x="6" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
       <div class="kpi kpi-theme-orange">
         <div class="kpi-icon"><span class="icon" data-icon="target" data-icon-size="16"></span></div>
         <div class="kpi-val orange" id="kpi-smb-opps">0</div>
@@ -3170,7 +3170,7 @@ select.wfb-field-input { padding-right: 26px; }
         </svg>
       </div>
     </div></div>
-    <div class="grid-stack-item" gs-x="8" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
+    <div class="grid-stack-item" gs-id="smb-kpi-untouched" gs-x="8" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
       <div class="kpi kpi-theme-red">
         <div class="kpi-icon"><span class="icon" data-icon="alert" data-icon-size="16"></span></div>
         <div class="kpi-val red" id="kpi-smb-untouched">0 / 0</div>
@@ -3179,7 +3179,7 @@ select.wfb-field-input { padding-right: 26px; }
         <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><circle class="ring" cx="205" cy="60" r="10"/><circle class="ring pulse-1" cx="205" cy="60" r="19"/><circle class="ring pulse-2" cx="205" cy="60" r="28"/><circle cx="205" cy="60" r="3"/></svg>
       </div>
     </div></div>
-    <div class="grid-stack-item" gs-x="10" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
+    <div class="grid-stack-item" gs-id="smb-kpi-top" gs-x="10" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
       <div class="kpi kpi-theme-green">
         <div class="kpi-icon"><span class="icon" data-icon="check" data-icon-size="16"></span></div>
         <div class="kpi-val green" id="kpi-smb-top">0%</div>
@@ -3192,11 +3192,11 @@ select.wfb-field-input { padding-right: 26px; }
       </div>
     </div></div>
 
-    <div class="grid-stack-item" gs-x="0" gs-y="2" gs-w="3" gs-h="8" gs-min-w="2" gs-min-h="5"><div class="grid-stack-item-content">
+    <div class="grid-stack-item" gs-id="smb-spotlight" gs-x="0" gs-y="2" gs-w="3" gs-h="8" gs-min-w="2" gs-min-h="5"><div class="grid-stack-item-content">
       <div id="spotlight-smb" style="width:100%"></div>
     </div></div>
 
-    <div class="grid-stack-item" gs-x="3" gs-y="2" gs-w="6" gs-h="8" gs-min-w="4" gs-min-h="5"><div class="grid-stack-item-content" style="flex-direction:column;gap:12px">
+    <div class="grid-stack-item" gs-id="smb-matrix" gs-x="3" gs-y="2" gs-w="6" gs-h="8" gs-min-w="4" gs-min-h="5"><div class="grid-stack-item-content" style="flex-direction:column;gap:12px">
       <div class="card" id="orgRollup-smb" style="display:none"></div>
       <div class="card" style="flex:1;display:flex;flex-direction:column;min-height:0">
         <div class="card-header">
@@ -3242,7 +3242,7 @@ select.wfb-field-input { padding-right: 26px; }
       </div>
     </div></div>
 
-    <div class="grid-stack-item" gs-x="9" gs-y="2" gs-w="3" gs-h="3" gs-min-w="2" gs-min-h="3"><div class="grid-stack-item-content">
+    <div class="grid-stack-item" gs-id="smb-adoption-chart" gs-x="9" gs-y="2" gs-w="3" gs-h="3" gs-min-w="2" gs-min-h="3"><div class="grid-stack-item-content">
       <div class="card" style="width:100%">
         <div class="card-header">
           <div><div class="card-title" data-i18n="chart_product_adoption">Product Adoption Rate</div><div class="card-sub" id="sub-smb-adoption" data-i18n="chart_pct_clients_using">% of clients using each product</div></div>
@@ -3254,7 +3254,7 @@ select.wfb-field-input { padding-right: 26px; }
         <div class="chart-wrap h260"><canvas id="adoptionBar-smb"></canvas></div>
       </div>
     </div></div>
-    <div class="grid-stack-item" gs-x="9" gs-y="5" gs-w="3" gs-h="3" gs-min-w="2" gs-min-h="3"><div class="grid-stack-item-content">
+    <div class="grid-stack-item" gs-id="smb-distribution-chart" gs-x="9" gs-y="5" gs-w="3" gs-h="3" gs-min-w="2" gs-min-h="3"><div class="grid-stack-item-content">
       <div class="card" style="width:100%">
         <div class="card-header">
           <div><div class="card-title" data-i18n="chart_products_per_client">Products Per Client</div><div class="card-sub" data-i18n="chart_distribution">Distribution of product count</div></div>
@@ -3272,7 +3272,7 @@ select.wfb-field-input { padding-right: 26px; }
         </div>
       </div>
     </div></div>
-    <div class="grid-stack-item" gs-x="9" gs-y="8" gs-w="3" gs-h="4" gs-min-w="2" gs-min-h="3"><div class="grid-stack-item-content">
+    <div class="grid-stack-item" gs-id="smb-opportunity-radar" gs-x="9" gs-y="8" gs-w="3" gs-h="4" gs-min-w="2" gs-min-h="3"><div class="grid-stack-item-content">
       <div class="card" style="width:100%">
         <div class="card-header">
           <div><div class="card-title">AI Opportunity Radar</div><div class="card-sub">Top white-space products</div></div>
@@ -3283,7 +3283,7 @@ select.wfb-field-input { padding-right: 26px; }
       </div>
     </div></div>
 
-    <div class="grid-stack-item" gs-x="0" gs-y="10" gs-w="5" gs-h="5" gs-min-w="3" gs-min-h="3"><div class="grid-stack-item-content">
+    <div class="grid-stack-item" gs-id="smb-gap-chart" gs-x="0" gs-y="10" gs-w="5" gs-h="5" gs-min-w="3" gs-min-h="3"><div class="grid-stack-item-content">
       <div class="card" style="width:100%">
         <div class="card-header">
           <div><div class="card-title" data-i18n="chart_upsell_gap">Upsell Gap — Clients NOT Using Each Product</div><div class="card-sub" data-i18n="chart_upsell_gap_sub">Bigger bar = bigger revenue opportunity</div></div>
@@ -3293,7 +3293,7 @@ select.wfb-field-input { padding-right: 26px; }
       </div>
     </div></div>
 
-    <div class="grid-stack-item" gs-x="5" gs-y="10" gs-w="4" gs-h="5" gs-min-w="3" gs-min-h="3"><div class="grid-stack-item-content">
+    <div class="grid-stack-item" gs-id="smb-next-moves" gs-x="5" gs-y="10" gs-w="4" gs-h="5" gs-min-w="3" gs-min-h="3"><div class="grid-stack-item-content">
       <div class="card" style="width:100%">
         <div class="card-header">
           <div><div class="card-title">Recommended Next Moves</div></div>
@@ -3304,7 +3304,7 @@ select.wfb-field-input { padding-right: 26px; }
       </div>
     </div></div>
 
-    <div class="grid-stack-item" gs-x="9" gs-y="10" gs-w="3" gs-h="5" gs-min-w="2" gs-min-h="3"><div class="grid-stack-item-content">
+    <div class="grid-stack-item" gs-id="smb-nirvana-suggestions" gs-x="9" gs-y="10" gs-w="3" gs-h="5" gs-min-w="2" gs-min-h="3"><div class="grid-stack-item-content">
       <div class="card" style="width:100%">
         <div class="card-header">
           <div><div class="card-title"><span class="icon" data-icon="sparkle" data-icon-size="14"></span> Nirvana Suggestions</div></div>
@@ -5325,7 +5325,7 @@ function showPage(id) {
   const gridEl = document.getElementById('grid-' + id);
   if (gridEl) {
     requestAnimationFrame(() => {
-      const grid = initHubGrid('grid-' + id, 'hub_grid_' + id + '_v2');
+      const grid = initHubGrid('grid-' + id, 'hub_grid_' + id + '_v3');
       if (grid && typeof grid.onParentResize === 'function') grid.onParentResize();
     });
   }
@@ -6638,15 +6638,24 @@ function initHubGrid(gridId, storageKey) {
   }, el);
   HUB_GRIDS[gridId] = grid;
 
+  // Root cause of the "all over the place after refresh" bug: grid items
+  // had no stable identity, so save()/load() matched purely by array
+  // position. Dragging a card reorders it in the DOM (GridStack does this
+  // for accessibility/tab order), so after a refresh the saved x/y/w/h at
+  // position N got applied to whichever card now sits at DOM position N --
+  // not necessarily the same card it was saved from. Every grid item now
+  // has a real gs-id, so load() matches each saved entry back to the
+  // correct card by identity, regardless of what order they're in.
   let saved = null;
   try { saved = JSON.parse(localStorage.getItem(storageKey) || 'null'); } catch(e) {}
-  if (saved && Array.isArray(saved) && saved.length) {
+  if (saved && Array.isArray(saved) && saved.length && saved.every(item => item.id)) {
     grid.load(saved);
   }
 
   grid.on('change', () => {
     try { localStorage.setItem(storageKey, JSON.stringify(grid.save(false))); } catch(e) {}
   });
+
   // Chart.js canvases don't reliably notice a GridStack-driven resize on
   // their own -- this is what actually makes charts follow a card being
   // resized, live, instead of staying the old size until the next full
@@ -6674,9 +6683,7 @@ function toggleHubGridEdit(gridId, btnEl) {
     : '<span class="icon" data-icon="edit" data-icon-size="13"></span> Edit Layout';
 }
 function resetHubGridLayout(gridId, storageKey) {
-  const grid = HUB_GRIDS[gridId];
-  if (!grid) return;
-  localStorage.removeItem(storageKey);
+  try { localStorage.removeItem(storageKey); } catch(e) {}
   location.reload();
 }
 
