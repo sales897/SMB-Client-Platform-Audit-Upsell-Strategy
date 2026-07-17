@@ -491,7 +491,7 @@ body.ai-panel-open .main {
 .kpi-val.blue { color: var(--blue); }
 .kpi-val.purple { color: var(--purple); }
 .kpi-lbl { font-size: 12px; color: var(--text2); margin-top: 6px; }
-.kpi-sub { font-size: 11px; color: var(--text3); margin-top: 3px; }
+.kpi-sub { font-size: 11px; color: var(--text3); margin-top: 3px; max-width: 62%; }
 /* Per-metric color theme (2026-07-17, Command Board redesign) -- sets one
    CSS var that both the top-border gradient and the comet-trail decoration
    below read from, so a themed card is a single class instead of repeating
@@ -515,7 +515,7 @@ body.ai-panel-open .main {
 /* Corner radial gauge (2026-07-17) -- used where a card's number IS a real
    percentage/coverage ratio, so the arc fill is computed from the actual
    value in JS (see rebuildKPIs), not just decorative. */
-.kpi-gauge { position: absolute; top: 8px; right: 8px; inset: auto; width: 60px; height: 60px; opacity: 1; }
+.kpi-gauge { position: absolute; top: 8px; right: 8px; bottom: auto; left: auto; width: 60px; height: 60px; opacity: 1; }
 .kpi-gauge .ring { stroke: var(--border); opacity: 1; filter: none; stroke-width: 8; }
 .kpi-gauge .gauge-fill { fill: none; stroke: var(--kpi-accent, var(--orange)); stroke-width: 8; stroke-linecap: round; animation: gaugeGlowPulse 2.2s ease-in-out infinite; transition: stroke-dasharray var(--transition-slower); }
 @keyframes gaugeGlowPulse { 0%, 100% { filter: drop-shadow(0 0 4px var(--kpi-accent, var(--orange))); } 50% { filter: drop-shadow(0 0 11px var(--kpi-accent, var(--orange))); } }
@@ -529,10 +529,10 @@ body.ai-panel-open .main {
 .mc-cmd-row { display: grid; grid-template-columns: 320px 1fr 320px; gap: 16px; align-items: start; margin-bottom: 20px; }
 @media (max-width: 1300px) { .mc-cmd-row { grid-template-columns: 1fr; } }
 .mc-cmd-row > #spotlight-smb, .mc-cmd-row > #spotlight-whitelabel, .mc-cmd-row > #spotlight-support {
-  position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow-y: auto;
+  position: sticky; top: 16px;
 }
 @media (max-width: 1300px) {
-  .mc-cmd-row > #spotlight-smb, .mc-cmd-row > #spotlight-whitelabel, .mc-cmd-row > #spotlight-support { position: static; max-height: none; }
+  .mc-cmd-row > #spotlight-smb, .mc-cmd-row > #spotlight-whitelabel, .mc-cmd-row > #spotlight-support { position: static; }
 }
 .mc-cmd-col-right { display: flex; flex-direction: column; gap: 16px; }
 .mc-table-pagination { display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding: 10px 4px 2px; font-size: 12px; color: var(--text3); }
@@ -549,8 +549,8 @@ body.ai-panel-open .main {
   background: var(--gradient-card); border: 1px solid var(--border); border-radius: var(--radius);
   padding: var(--space-4); display: flex; flex-direction: column; gap: 4px;
 }
-.cmdboard-sidebar-right { position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow-y: auto; }
-@media (max-width: 1200px) { .cmdboard-sidebar-right { position: static; max-height: none; } }
+.cmdboard-sidebar-right { position: sticky; top: 16px; }
+@media (max-width: 1200px) { .cmdboard-sidebar-right { position: static; } }
 .cmdboard-section { margin-bottom: var(--space-4); }
 .cmdboard-section:last-child { margin-bottom: 0; }
 .cmdboard-section-hd { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--text3); margin-bottom: 8px; }
@@ -3109,7 +3109,7 @@ select.wfb-field-input { padding-right: 26px; }
         <div class="kpi-val" id="kpi-smb-avg">0</div>
         <div class="kpi-lbl" data-i18n="kpi_avg_products">Avg Products / Client</div>
         <div class="kpi-sub" data-i18n="kpi_upside">Significant upside potential</div>
-        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 150 90 L 175 90 L 175 70 L 200 70 L 200 45 L 220 45 L 220 20 L 232 20"/><circle r="3"><animateMotion dur="2.4s" repeatCount="indefinite" path="M 150 90 L 175 90 L 175 70 L 200 70 L 200 45 L 220 45 L 220 20 L 232 20"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.9;1" dur="2.4s" repeatCount="indefinite"/></circle></svg>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 185 78 L 200 78 L 200 60 L 212 60 L 212 40 L 223 40 L 223 18 L 232 18"/><circle r="3"><animateMotion dur="2.4s" repeatCount="indefinite" path="M 185 78 L 200 78 L 200 60 L 212 60 L 212 40 L 223 40 L 223 18 L 232 18"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.9;1" dur="2.4s" repeatCount="indefinite"/></circle></svg>
       </div>
       <div class="kpi kpi-theme-orange">
         <div class="kpi-icon"><span class="icon" data-icon="target" data-icon-size="16"></span></div>
@@ -3265,116 +3265,175 @@ select.wfb-field-input { padding-right: 26px; }
 
     <!-- KPIs -->
     <div class="kpi-row">
-      <div class="kpi">
+      <div class="kpi kpi-theme-orange">
         <div class="kpi-icon"><span class="icon" data-icon="users" data-icon-size="16"></span></div>
         <div class="kpi-val" id="kpi-whitelabel-total">12</div>
         <div class="kpi-lbl" data-i18n="kpi_total_clients">Total Clients</div>
         <div class="kpi-sub" data-i18n="kpi_active_platform">Active in platform</div>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 130 100 C 150 95, 160 80, 172 75 C 184 70, 190 50, 200 45 C 212 39, 220 20, 232 12"/><circle cx="172" cy="75"/><circle cx="200" cy="45"/><circle cx="232" cy="12" r="3"/><circle r="3"><animateMotion dur="2.6s" repeatCount="indefinite" path="M 130 100 C 150 95, 160 80, 172 75 C 184 70, 190 50, 200 45 C 212 39, 220 20, 232 12"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.9;1" dur="2.6s" repeatCount="indefinite"/></circle></svg>
       </div>
-      <div class="kpi">
+      <div class="kpi kpi-theme-blue">
         <div class="kpi-icon"><span class="icon" data-icon="store" data-icon-size="14"></span></div>
         <div class="kpi-val orange" id="kpi-whitelabel-multiloc">0</div>
         <div class="kpi-lbl" data-i18n="kpi_whitelabel_multiloc">White Label / Multilocation</div>
         <div class="kpi-sub" data-i18n="kpi_multiloc_sub">Businesses with 2+ locations</div>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><line x1="195" y1="45" x2="175" y2="75"/><line x1="195" y1="45" x2="200" y2="80"/><line x1="195" y1="45" x2="222" y2="72"/><circle class="mesh-node" cx="195" cy="45" r="3.2" style="animation-delay:0s"/><circle class="mesh-node" cx="175" cy="75" r="2.2" style="animation-delay:.25s"/><circle class="mesh-node" cx="200" cy="80" r="2.2" style="animation-delay:.5s"/><circle class="mesh-node" cx="222" cy="72" r="2.2" style="animation-delay:.75s"/></svg>
       </div>
-      <div class="kpi">
+      <div class="kpi kpi-theme-orange">
         <div class="kpi-icon"><span class="icon" data-icon="package" data-icon-size="16"></span></div>
         <div class="kpi-val orange" id="kpi-whitelabel-products">0</div>
         <div class="kpi-lbl" data-i18n="kpi_products_tracked">Products Tracked</div>
         <div class="kpi-sub" data-i18n="kpi_across_clients">Across all clients</div>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><line class="bar bar-grow" x1="150" y1="105" x2="150" y2="80" style="animation-delay:0s"/><line class="bar bar-grow" x1="170" y1="105" x2="170" y2="60" style="animation-delay:.15s"/><line class="bar bar-grow" x1="190" y1="105" x2="190" y2="70" style="animation-delay:.3s"/><line class="bar bar-grow" x1="210" y1="105" x2="210" y2="40" style="animation-delay:.45s"/><line class="bar bar-grow" x1="230" y1="105" x2="230" y2="20" style="animation-delay:.6s"/></svg>
       </div>
-      <div class="kpi">
+      <div class="kpi kpi-theme-blue">
         <div class="kpi-icon"><span class="icon" data-icon="trending" data-icon-size="14"></span></div>
         <div class="kpi-val" id="kpi-whitelabel-avg">0</div>
         <div class="kpi-lbl" data-i18n="kpi_avg_products">Avg Products / Client</div>
         <div class="kpi-sub" data-i18n="kpi_upside">Significant upside potential</div>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 185 78 L 200 78 L 200 60 L 212 60 L 212 40 L 223 40 L 223 18 L 232 18"/><circle r="3"><animateMotion dur="2.4s" repeatCount="indefinite" path="M 185 78 L 200 78 L 200 60 L 212 60 L 212 40 L 223 40 L 223 18 L 232 18"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.9;1" dur="2.4s" repeatCount="indefinite"/></circle></svg>
       </div>
-      <div class="kpi">
+      <div class="kpi kpi-theme-orange">
         <div class="kpi-icon"><span class="icon" data-icon="target" data-icon-size="16"></span></div>
         <div class="kpi-val orange" id="kpi-whitelabel-opps">0</div>
         <div class="kpi-lbl" data-i18n="kpi_upsell_opps">Upsell Opportunities</div>
         <div class="kpi-sub" id="kpi-whitelabel-opps-sub">Across all products</div>
+        <svg class="kpi-comet kpi-gauge" viewBox="0 0 120 120" aria-hidden="true">
+          <circle class="ring" cx="60" cy="60" r="46" stroke-dasharray="289" stroke-dashoffset="72"/>
+          <circle class="gauge-fill" id="kpi-whitelabel-opps-arc" cx="60" cy="60" r="46" stroke-dasharray="0 289" stroke-dashoffset="72" transform="rotate(-90 60 60)"/>
+        </svg>
       </div>
-      <div class="kpi">
+      <div class="kpi kpi-theme-red">
         <div class="kpi-icon"><span class="icon" data-icon="alert" data-icon-size="16"></span></div>
         <div class="kpi-val red" id="kpi-whitelabel-untouched">0 / 0</div>
         <div class="kpi-lbl" id="kpi-whitelabel-untouched-lbl">Products Untouched</div>
         <div class="kpi-sub" id="kpi-whitelabel-untouched-sub">—</div>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><circle class="ring" cx="205" cy="60" r="10"/><circle class="ring pulse-1" cx="205" cy="60" r="10"/><circle class="ring pulse-2" cx="205" cy="60" r="10"/><circle cx="205" cy="60" r="3"/></svg>
       </div>
-      <div class="kpi">
+      <div class="kpi kpi-theme-green">
         <div class="kpi-icon"><span class="icon" data-icon="check" data-icon-size="16"></span></div>
         <div class="kpi-val green" id="kpi-whitelabel-top">0%</div>
         <div class="kpi-lbl" id="kpi-whitelabel-top-lbl" data-i18n="kpi_top_adoption">Top Adoption</div>
         <div class="kpi-sub">Highest adoption product</div>
+        <svg class="kpi-comet kpi-gauge" viewBox="0 0 120 120" aria-hidden="true">
+          <circle class="ring" cx="60" cy="60" r="46" stroke-dasharray="289" stroke-dashoffset="72"/>
+          <circle class="gauge-fill" id="kpi-whitelabel-top-arc" cx="60" cy="60" r="46" stroke-dasharray="0 289" stroke-dashoffset="72" transform="rotate(-90 60 60)"/>
+        </svg>
       </div>
     </div>
 
-    <!-- Client Spotlight -->
-    <div id="spotlight-whitelabel" style="margin-bottom:20px"></div>
+    <div class="mc-cmd-row">
+      <div id="spotlight-whitelabel"></div>
 
-    <!-- Charts Row 1 -->
-    <div class="grid-2" style="margin-bottom:20px">
+      <div class="mc-cmd-col-center">
+      <div class="card" id="orgRollup-whitelabel" style="display:none;margin-bottom:16px"></div>
       <div class="card">
         <div class="card-header">
-          <div><div class="card-title" data-i18n="chart_product_adoption">Product Adoption Rate</div><div class="card-sub" id="sub-whitelabel-adoption" data-i18n="chart_pct_clients_using">% of clients using each product</div></div>
-          <span class="card-badge" id="badge-whitelabel-products"><span class="icon" data-icon="chart" data-icon-size="16"></span> 0 Products</span>
+          <div><div class="card-title" data-i18n="matrix_whitelabel_title">Full White Label Partner Matrix</div><div class="card-sub" id="rowCount-whitelabel">0 clients</div></div>
+          <button class="reset-columns-btn" onclick="resetColumnPrefs('client-whitelabel'); rebuildPortfolio('whitelabel')" title="Reset column order and widths back to default">↺ <span data-i18n="reset_columns">Columns</span></button>
         </div>
-        <div class="chart-wrap h260"><canvas id="adoptionBar-whitelabel"></canvas></div>
+        <div class="table-controls">
+          <input type="text" class="search-box" id="clientSearch-whitelabel" placeholder="Search clients..." data-i18n-placeholder="search_clients" oninput="debouncedFilterTable('whitelabel')">
+          <select id="orgFilter-whitelabel" onchange="filterByOrg('whitelabel', this.value)" style="width:auto;max-width:240px">
+            <option value="" data-i18n="all_businesses"><span class="icon" data-icon="building" data-icon-size="14"></span> All Businesses</option>
+          </select>
+          <div style="display:flex;gap:6px;flex-wrap:wrap" id="filterPills-whitelabel">
+            <button class="filter-pill active" onclick="filterByProduct('whitelabel','all',this)"><span data-i18n="filter_all">All</span></button>
+          </div>
+          <button class="export-csv-btn" onclick="exportClientTable('whitelabel')" title="Download the currently visible rows as a CSV file"><span class="icon" data-icon="download" data-icon-size="12"></span> <span data-i18n="export_csv">Export CSV</span></button>
+        </div>
+        <div class="card" id="whitelabelBulkBar" style="display:none;margin-bottom:12px;padding:10px 14px;background:var(--orange-dim);border-color:rgba(226,84,31,.3);align-items:center;gap:12px">
+          <span style="font-weight:700;color:var(--text);font-size:13px"><span id="whitelabelSelectedCount">0</span> selected</span>
+          <button class="btn btn-primary btn-sm" onclick="openBulkActionModal('task','whitelabel')"><span class="icon" data-icon="plus" data-icon-size="12"></span> <span data-i18n="add_task_selected">Add Task to Selected</span></button>
+          <button class="btn btn-ghost btn-sm" onclick="openBulkActionModal('note','whitelabel')"><span class="icon" data-icon="note" data-icon-size="14"></span> <span data-i18n="add_note_selected">Add Note to Selected</span></button>
+          <button class="btn btn-ghost btn-sm" onclick="clearClientSelection('whitelabel')" style="margin-left:auto" data-i18n="clear_selection">Clear Selection</button>
+        </div>
+        <div class="tbl-scroll">
+          <table class="resizable-table client-portfolio-table" id="clientTable-whitelabel">
+            <thead><tr id="tableHead-whitelabel">
+              <th data-i18n="th_client_name">Client Name</th><th data-i18n="th_num_prods_short"># Prods</th>
+            </tr></thead>
+            <tbody id="clientTableBody-whitelabel"></tbody>
+          </table>
+        </div>
+        <div class="mc-table-pagination">
+          <span>Rows per page:</span>
+          <select onchange="setClientTableRowsPerPage('whitelabel', this.value)">
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+          <span id="clientTablePageLabel-whitelabel">0 of 0</span>
+          <button id="clientTablePrevBtn-whitelabel" onclick="changeClientTablePage('whitelabel', -1)" aria-label="Previous page">‹</button>
+          <button id="clientTableNextBtn-whitelabel" onclick="changeClientTablePage('whitelabel', 1)" aria-label="Next page">›</button>
+        </div>
       </div>
-      <div class="card">
-        <div class="card-header">
-          <div><div class="card-title" data-i18n="chart_products_per_client">Products Per Client</div><div class="card-sub" data-i18n="chart_distribution">Distribution of product count</div></div>
-          <span class="card-badge" id="badge-whitelabel-clients"><span class="icon" data-icon="users" data-icon-size="16"></span> 0 Clients</span>
+      </div>
+
+      <div class="mc-cmd-col-right">
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title" data-i18n="chart_product_adoption">Product Adoption Rate</div><div class="card-sub" id="sub-whitelabel-adoption" data-i18n="chart_pct_clients_using">% of clients using each product</div></div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <button class="vital-ask" onclick="askNirvanaAboutPortfolioChart('whitelabel','adoption')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
+              <span class="card-badge" id="badge-whitelabel-products"><span class="icon" data-icon="chart" data-icon-size="16"></span> 0 Products</span>
+            </div>
+          </div>
+          <div class="chart-wrap h260"><canvas id="adoptionBar-whitelabel"></canvas></div>
         </div>
-        <div class="chart-wrap h260" style="position:relative">
-          <canvas id="distPie-whitelabel"></canvas>
-          <div style="position:absolute;top:50%;left:36%;transform:translate(-50%,-50%);text-align:center;pointer-events:none">
-            <div id="distCenterNum-whitelabel" style="font-size:26px;font-weight:800;color:var(--text);line-height:1">0</div>
-            <div style="font-size:10px;color:var(--text3);margin-top:2px">clients</div>
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title" data-i18n="chart_products_per_client">Products Per Client</div><div class="card-sub" data-i18n="chart_distribution">Distribution of product count</div></div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <button class="vital-ask" onclick="askNirvanaAboutPortfolioChart('whitelabel','distribution')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
+              <span class="card-badge" id="badge-whitelabel-clients"><span class="icon" data-icon="users" data-icon-size="16"></span> 0 Clients</span>
+            </div>
+          </div>
+          <div class="chart-wrap h260" style="position:relative">
+            <canvas id="distPie-whitelabel"></canvas>
+            <div style="position:absolute;top:50%;left:36%;transform:translate(-50%,-50%);text-align:center;pointer-events:none">
+              <div id="distCenterNum-whitelabel" style="font-size:26px;font-weight:800;color:var(--text);line-height:1">0</div>
+              <div style="font-size:10px;color:var(--text3);margin-top:2px">clients</div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- Gap Chart -->
-    <div class="card" style="margin-bottom:20px">
-      <div class="card-header">
-        <div><div class="card-title" data-i18n="chart_upsell_gap">Upsell Gap — Clients NOT Using Each Product</div><div class="card-sub" data-i18n="chart_upsell_gap_sub">Bigger bar = bigger revenue opportunity</div></div>
-        <span class="card-badge" id="badge-whitelabel-opps"><span class="icon" data-icon="target" data-icon-size="16"></span> 0 Total Opportunities</span>
-      </div>
-      <div class="chart-wrap h300"><canvas id="gapBar-whitelabel"></canvas></div>
-    </div>
-
-    <!-- Client Matrix -->
-    <div class="section-hd"><div class="section-num">2</div><h2 data-i18n="matrix_whitelabel_title">Full White Label Partner Matrix</h2></div>
-    <div class="section-div"></div>
-    <div class="card" id="orgRollup-whitelabel" style="display:none;margin-bottom:16px"></div>
-    <div class="card">
-      <div class="table-controls">
-        <input type="text" class="search-box" id="clientSearch-whitelabel" placeholder="Search clients..." data-i18n-placeholder="search_clients" oninput="debouncedFilterTable('whitelabel')">
-        <select id="orgFilter-whitelabel" onchange="filterByOrg('whitelabel', this.value)" style="width:auto;max-width:240px">
-          <option value="" data-i18n="all_businesses"><span class="icon" data-icon="building" data-icon-size="14"></span> All Businesses</option>
-        </select>
-        <div style="display:flex;gap:6px;flex-wrap:wrap" id="filterPills-whitelabel">
-          <button class="filter-pill active" onclick="filterByProduct('whitelabel','all',this)"><span data-i18n="filter_all">All</span></button>
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">AI Opportunity Radar</div><div class="card-sub">Top white-space products</div></div>
+            <button class="vital-ask" onclick="askNirvanaAboutPortfolioChart('whitelabel','opportunity')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
+          </div>
+          <div id="oppRadar-whitelabel"></div>
+          <div class="opp-radar-foot" id="oppRadarFoot-whitelabel"></div>
         </div>
-        <span class="row-count" id="rowCount-whitelabel">0 clients</span>
-        <button class="reset-columns-btn" onclick="resetColumnPrefs('client-whitelabel'); rebuildPortfolio('whitelabel')" title="Reset column order and widths back to default">↺ <span data-i18n="reset_columns">Columns</span></button>
-        <button class="export-csv-btn" onclick="exportClientTable('whitelabel')" title="Download the currently visible rows as a CSV file"><span class="icon" data-icon="download" data-icon-size="12"></span> <span data-i18n="export_csv">Export CSV</span></button>
       </div>
-      <div class="card" id="whitelabelBulkBar" style="display:none;margin-bottom:12px;padding:10px 14px;background:var(--orange-dim);border-color:rgba(226,84,31,.3);align-items:center;gap:12px">
-        <span style="font-weight:700;color:var(--text);font-size:13px"><span id="whitelabelSelectedCount">0</span> selected</span>
-        <button class="btn btn-primary btn-sm" onclick="openBulkActionModal('task','whitelabel')"><span class="icon" data-icon="plus" data-icon-size="12"></span> <span data-i18n="add_task_selected">Add Task to Selected</span></button>
-        <button class="btn btn-ghost btn-sm" onclick="openBulkActionModal('note','whitelabel')"><span class="icon" data-icon="note" data-icon-size="14"></span> <span data-i18n="add_note_selected">Add Note to Selected</span></button>
-        <button class="btn btn-ghost btn-sm" onclick="clearClientSelection('whitelabel')" style="margin-left:auto" data-i18n="clear_selection">Clear Selection</button>
+    </div>
+
+    <!-- Bottom row: Gap chart + Recommended Next Moves + Nirvana Suggestions -->
+    <div class="mc-bottom-row">
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title" data-i18n="chart_upsell_gap">Upsell Gap — Clients NOT Using Each Product</div><div class="card-sub" data-i18n="chart_upsell_gap_sub">Bigger bar = bigger revenue opportunity</div></div>
+          <span class="card-badge" id="badge-whitelabel-opps"><span class="icon" data-icon="target" data-icon-size="16"></span> 0 Total Opportunities</span>
+        </div>
+        <div class="chart-wrap h300"><canvas id="gapBar-whitelabel"></canvas></div>
       </div>
-      <div class="tbl-scroll">
-        <table class="resizable-table client-portfolio-table" id="clientTable-whitelabel">
-          <thead><tr id="tableHead-whitelabel">
-            <th data-i18n="th_client_name">Client Name</th><th data-i18n="th_num_prods_short"># Prods</th>
-          </tr></thead>
-          <tbody id="clientTableBody-whitelabel"></tbody>
-        </table>
+
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">Recommended Next Moves</div></div>
+          <button class="vital-ask" onclick="askNirvanaAboutPortfolioChart('whitelabel','opportunity')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
+        </div>
+        <div id="nextMoves-whitelabel"></div>
+        <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:10px" onclick="showPage('upsell')">View All Opportunities <span class="icon" data-icon="chevronRight" data-icon-size="13"></span></button>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title"><span class="icon" data-icon="sparkle" data-icon-size="14"></span> Nirvana Suggestions</div></div>
+        </div>
+        <div id="nirvanaSuggestions-whitelabel"></div>
+        <button class="btn btn-ghost btn-sm spotlight-ai-btn" style="width:100%;margin-top:10px" onclick="askNirvanaAboutPortfolioChart('whitelabel','opportunity')">Ask Nirvana for More <span class="icon" data-icon="chevronRight" data-icon-size="13"></span></button>
       </div>
     </div>
 
@@ -3515,110 +3574,168 @@ select.wfb-field-input { padding-right: 26px; }
 
     <!-- KPIs -->
     <div class="kpi-row">
-      <div class="kpi">
+      <div class="kpi kpi-theme-orange">
         <div class="kpi-icon"><span class="icon" data-icon="users" data-icon-size="16"></span></div>
         <div class="kpi-val" id="kpi-support-total">28</div>
         <div class="kpi-lbl" data-i18n="kpi_total_clients">Total Clients</div>
         <div class="kpi-sub" data-i18n="kpi_active_platform">Active in platform</div>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 130 100 C 150 95, 160 80, 172 75 C 184 70, 190 50, 200 45 C 212 39, 220 20, 232 12"/><circle cx="172" cy="75"/><circle cx="200" cy="45"/><circle cx="232" cy="12" r="3"/><circle r="3"><animateMotion dur="2.6s" repeatCount="indefinite" path="M 130 100 C 150 95, 160 80, 172 75 C 184 70, 190 50, 200 45 C 212 39, 220 20, 232 12"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.9;1" dur="2.6s" repeatCount="indefinite"/></circle></svg>
       </div>
-      <div class="kpi">
+      <div class="kpi kpi-theme-orange">
         <div class="kpi-icon"><span class="icon" data-icon="package" data-icon-size="16"></span></div>
         <div class="kpi-val orange" id="kpi-support-products">0</div>
         <div class="kpi-lbl" data-i18n="kpi_products_tracked">Products Tracked</div>
         <div class="kpi-sub" data-i18n="kpi_across_clients">Across all clients</div>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><line class="bar bar-grow" x1="150" y1="105" x2="150" y2="80" style="animation-delay:0s"/><line class="bar bar-grow" x1="170" y1="105" x2="170" y2="60" style="animation-delay:.15s"/><line class="bar bar-grow" x1="190" y1="105" x2="190" y2="70" style="animation-delay:.3s"/><line class="bar bar-grow" x1="210" y1="105" x2="210" y2="40" style="animation-delay:.45s"/><line class="bar bar-grow" x1="230" y1="105" x2="230" y2="20" style="animation-delay:.6s"/></svg>
       </div>
-      <div class="kpi">
+      <div class="kpi kpi-theme-blue">
         <div class="kpi-icon"><span class="icon" data-icon="trending" data-icon-size="14"></span></div>
         <div class="kpi-val" id="kpi-support-avg">0</div>
         <div class="kpi-lbl" data-i18n="kpi_avg_products">Avg Products / Client</div>
         <div class="kpi-sub" data-i18n="kpi_upside">Significant upside potential</div>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 185 78 L 200 78 L 200 60 L 212 60 L 212 40 L 223 40 L 223 18 L 232 18"/><circle r="3"><animateMotion dur="2.4s" repeatCount="indefinite" path="M 185 78 L 200 78 L 200 60 L 212 60 L 212 40 L 223 40 L 223 18 L 232 18"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.9;1" dur="2.4s" repeatCount="indefinite"/></circle></svg>
       </div>
-      <div class="kpi">
+      <div class="kpi kpi-theme-orange">
         <div class="kpi-icon"><span class="icon" data-icon="target" data-icon-size="16"></span></div>
         <div class="kpi-val orange" id="kpi-support-opps">0</div>
         <div class="kpi-lbl" data-i18n="kpi_upsell_opps">Upsell Opportunities</div>
         <div class="kpi-sub" id="kpi-support-opps-sub">Across all products</div>
+        <svg class="kpi-comet kpi-gauge" viewBox="0 0 120 120" aria-hidden="true">
+          <circle class="ring" cx="60" cy="60" r="46" stroke-dasharray="289" stroke-dashoffset="72"/>
+          <circle class="gauge-fill" id="kpi-support-opps-arc" cx="60" cy="60" r="46" stroke-dasharray="0 289" stroke-dashoffset="72" transform="rotate(-90 60 60)"/>
+        </svg>
       </div>
-      <div class="kpi">
+      <div class="kpi kpi-theme-red">
         <div class="kpi-icon"><span class="icon" data-icon="alert" data-icon-size="16"></span></div>
         <div class="kpi-val red" id="kpi-support-untouched">0 / 0</div>
         <div class="kpi-lbl" id="kpi-support-untouched-lbl">Products Untouched</div>
         <div class="kpi-sub" id="kpi-support-untouched-sub">—</div>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><circle class="ring" cx="205" cy="60" r="10"/><circle class="ring pulse-1" cx="205" cy="60" r="10"/><circle class="ring pulse-2" cx="205" cy="60" r="10"/><circle cx="205" cy="60" r="3"/></svg>
       </div>
-      <div class="kpi">
+      <div class="kpi kpi-theme-green">
         <div class="kpi-icon"><span class="icon" data-icon="check" data-icon-size="16"></span></div>
         <div class="kpi-val green" id="kpi-support-top">0%</div>
         <div class="kpi-lbl" id="kpi-support-top-lbl" data-i18n="kpi_top_adoption">Top Adoption</div>
         <div class="kpi-sub">Highest adoption product</div>
+        <svg class="kpi-comet kpi-gauge" viewBox="0 0 120 120" aria-hidden="true">
+          <circle class="ring" cx="60" cy="60" r="46" stroke-dasharray="289" stroke-dashoffset="72"/>
+          <circle class="gauge-fill" id="kpi-support-top-arc" cx="60" cy="60" r="46" stroke-dasharray="0 289" stroke-dashoffset="72" transform="rotate(-90 60 60)"/>
+        </svg>
       </div>
     </div>
 
-    <!-- Client Spotlight -->
-    <div id="spotlight-support" style="margin-bottom:20px"></div>
+    <div class="mc-cmd-row">
+      <div id="spotlight-support"></div>
 
-    <!-- Charts Row 1 -->
-    <div class="grid-2" style="margin-bottom:20px">
+      <div class="mc-cmd-col-center">
+      <div class="card" id="orgRollup-support" style="display:none;margin-bottom:16px"></div>
       <div class="card">
         <div class="card-header">
-          <div><div class="card-title" data-i18n="chart_product_adoption">Product Adoption Rate</div><div class="card-sub" id="sub-support-adoption" data-i18n="chart_pct_clients_using">% of clients using each product</div></div>
-          <span class="card-badge" id="badge-support-products"><span class="icon" data-icon="chart" data-icon-size="16"></span> 0 Products</span>
+          <div><div class="card-title" data-i18n="matrix_support_title">Full Support Client Matrix</div><div class="card-sub" id="rowCount-support">0 clients</div></div>
+          <button class="reset-columns-btn" onclick="resetColumnPrefs('client-support'); rebuildPortfolio('support')" title="Reset column order and widths back to default">↺ <span data-i18n="reset_columns">Columns</span></button>
         </div>
-        <div class="chart-wrap h260"><canvas id="adoptionBar-support"></canvas></div>
+        <div class="table-controls">
+          <input type="text" class="search-box" id="clientSearch-support" placeholder="Search clients..." data-i18n-placeholder="search_clients" oninput="debouncedFilterTable('support')">
+          <select id="orgFilter-support" onchange="filterByOrg('support', this.value)" style="width:auto;max-width:240px">
+            <option value="" data-i18n="all_businesses"><span class="icon" data-icon="building" data-icon-size="14"></span> All Businesses</option>
+          </select>
+          <div style="display:flex;gap:6px;flex-wrap:wrap" id="filterPills-support">
+            <button class="filter-pill active" onclick="filterByProduct('support','all',this)"><span data-i18n="filter_all">All</span></button>
+          </div>
+          <button class="export-csv-btn" onclick="exportClientTable('support')" title="Download the currently visible rows as a CSV file"><span class="icon" data-icon="download" data-icon-size="12"></span> <span data-i18n="export_csv">Export CSV</span></button>
+        </div>
+        <div class="card" id="supportBulkBar" style="display:none;margin-bottom:12px;padding:10px 14px;background:var(--orange-dim);border-color:rgba(226,84,31,.3);align-items:center;gap:12px">
+          <span style="font-weight:700;color:var(--text);font-size:13px"><span id="supportSelectedCount">0</span> selected</span>
+          <button class="btn btn-primary btn-sm" onclick="openBulkActionModal('task','support')"><span class="icon" data-icon="plus" data-icon-size="12"></span> <span data-i18n="add_task_selected">Add Task to Selected</span></button>
+          <button class="btn btn-ghost btn-sm" onclick="openBulkActionModal('note','support')"><span class="icon" data-icon="note" data-icon-size="14"></span> <span data-i18n="add_note_selected">Add Note to Selected</span></button>
+          <button class="btn btn-ghost btn-sm" onclick="clearClientSelection('support')" style="margin-left:auto" data-i18n="clear_selection">Clear Selection</button>
+        </div>
+        <div class="tbl-scroll">
+          <table class="resizable-table client-portfolio-table" id="clientTable-support">
+            <thead><tr id="tableHead-support">
+              <th data-i18n="th_client_name">Client Name</th><th data-i18n="th_num_prods_short"># Prods</th>
+            </tr></thead>
+            <tbody id="clientTableBody-support"></tbody>
+          </table>
+        </div>
+        <div class="mc-table-pagination">
+          <span>Rows per page:</span>
+          <select onchange="setClientTableRowsPerPage('support', this.value)">
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+          <span id="clientTablePageLabel-support">0 of 0</span>
+          <button id="clientTablePrevBtn-support" onclick="changeClientTablePage('support', -1)" aria-label="Previous page">‹</button>
+          <button id="clientTableNextBtn-support" onclick="changeClientTablePage('support', 1)" aria-label="Next page">›</button>
+        </div>
       </div>
-      <div class="card">
-        <div class="card-header">
-          <div><div class="card-title" data-i18n="chart_products_per_client">Products Per Client</div><div class="card-sub" data-i18n="chart_distribution">Distribution of product count</div></div>
-          <span class="card-badge" id="badge-support-clients"><span class="icon" data-icon="users" data-icon-size="16"></span> 0 Clients</span>
+      </div>
+
+      <div class="mc-cmd-col-right">
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title" data-i18n="chart_product_adoption">Product Adoption Rate</div><div class="card-sub" id="sub-support-adoption" data-i18n="chart_pct_clients_using">% of clients using each product</div></div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <button class="vital-ask" onclick="askNirvanaAboutPortfolioChart('support','adoption')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
+              <span class="card-badge" id="badge-support-products"><span class="icon" data-icon="chart" data-icon-size="16"></span> 0 Products</span>
+            </div>
+          </div>
+          <div class="chart-wrap h260"><canvas id="adoptionBar-support"></canvas></div>
         </div>
-        <div class="chart-wrap h260" style="position:relative">
-          <canvas id="distPie-support"></canvas>
-          <div style="position:absolute;top:50%;left:36%;transform:translate(-50%,-50%);text-align:center;pointer-events:none">
-            <div id="distCenterNum-support" style="font-size:26px;font-weight:800;color:var(--text);line-height:1">0</div>
-            <div style="font-size:10px;color:var(--text3);margin-top:2px">clients</div>
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title" data-i18n="chart_products_per_client">Products Per Client</div><div class="card-sub" data-i18n="chart_distribution">Distribution of product count</div></div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <button class="vital-ask" onclick="askNirvanaAboutPortfolioChart('support','distribution')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
+              <span class="card-badge" id="badge-support-clients"><span class="icon" data-icon="users" data-icon-size="16"></span> 0 Clients</span>
+            </div>
+          </div>
+          <div class="chart-wrap h260" style="position:relative">
+            <canvas id="distPie-support"></canvas>
+            <div style="position:absolute;top:50%;left:36%;transform:translate(-50%,-50%);text-align:center;pointer-events:none">
+              <div id="distCenterNum-support" style="font-size:26px;font-weight:800;color:var(--text);line-height:1">0</div>
+              <div style="font-size:10px;color:var(--text3);margin-top:2px">clients</div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- Gap Chart -->
-    <div class="card" style="margin-bottom:20px">
-      <div class="card-header">
-        <div><div class="card-title" data-i18n="chart_upsell_gap">Upsell Gap — Clients NOT Using Each Product</div><div class="card-sub" data-i18n="chart_upsell_gap_sub">Bigger bar = bigger revenue opportunity</div></div>
-        <span class="card-badge" id="badge-support-opps"><span class="icon" data-icon="target" data-icon-size="16"></span> 0 Total Opportunities</span>
-      </div>
-      <div class="chart-wrap h300"><canvas id="gapBar-support"></canvas></div>
-    </div>
-
-    <!-- Client Matrix -->
-    <div class="section-hd"><div class="section-num">4</div><h2 data-i18n="matrix_support_title">Full Support Client Matrix</h2></div>
-    <div class="section-div"></div>
-    <div class="card" id="orgRollup-support" style="display:none;margin-bottom:16px"></div>
-    <div class="card">
-      <div class="table-controls">
-        <input type="text" class="search-box" id="clientSearch-support" placeholder="Search clients..." data-i18n-placeholder="search_clients" oninput="debouncedFilterTable('support')">
-        <select id="orgFilter-support" onchange="filterByOrg('support', this.value)" style="width:auto;max-width:240px">
-          <option value="" data-i18n="all_businesses"><span class="icon" data-icon="building" data-icon-size="14"></span> All Businesses</option>
-        </select>
-        <div style="display:flex;gap:6px;flex-wrap:wrap" id="filterPills-support">
-          <button class="filter-pill active" onclick="filterByProduct('support','all',this)"><span data-i18n="filter_all">All</span></button>
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">AI Opportunity Radar</div><div class="card-sub">Top white-space products</div></div>
+            <button class="vital-ask" onclick="askNirvanaAboutPortfolioChart('support','opportunity')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
+          </div>
+          <div id="oppRadar-support"></div>
+          <div class="opp-radar-foot" id="oppRadarFoot-support"></div>
         </div>
-        <span class="row-count" id="rowCount-support">0 clients</span>
-        <button class="reset-columns-btn" onclick="resetColumnPrefs('client-support'); rebuildPortfolio('support')" title="Reset column order and widths back to default">↺ <span data-i18n="reset_columns">Columns</span></button>
-        <button class="export-csv-btn" onclick="exportClientTable('support')" title="Download the currently visible rows as a CSV file"><span class="icon" data-icon="download" data-icon-size="12"></span> <span data-i18n="export_csv">Export CSV</span></button>
       </div>
-      <div class="card" id="supportBulkBar" style="display:none;margin-bottom:12px;padding:10px 14px;background:var(--orange-dim);border-color:rgba(226,84,31,.3);align-items:center;gap:12px">
-        <span style="font-weight:700;color:var(--text);font-size:13px"><span id="supportSelectedCount">0</span> selected</span>
-        <button class="btn btn-primary btn-sm" onclick="openBulkActionModal('task','support')"><span class="icon" data-icon="plus" data-icon-size="12"></span> <span data-i18n="add_task_selected">Add Task to Selected</span></button>
-        <button class="btn btn-ghost btn-sm" onclick="openBulkActionModal('note','support')"><span class="icon" data-icon="note" data-icon-size="14"></span> <span data-i18n="add_note_selected">Add Note to Selected</span></button>
-        <button class="btn btn-ghost btn-sm" onclick="clearClientSelection('support')" style="margin-left:auto" data-i18n="clear_selection">Clear Selection</button>
+    </div>
+
+    <!-- Bottom row: Gap chart + Recommended Next Moves + Nirvana Suggestions -->
+    <div class="mc-bottom-row">
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title" data-i18n="chart_upsell_gap">Upsell Gap — Clients NOT Using Each Product</div><div class="card-sub" data-i18n="chart_upsell_gap_sub">Bigger bar = bigger revenue opportunity</div></div>
+          <span class="card-badge" id="badge-support-opps"><span class="icon" data-icon="target" data-icon-size="16"></span> 0 Total Opportunities</span>
+        </div>
+        <div class="chart-wrap h300"><canvas id="gapBar-support"></canvas></div>
       </div>
-      <div class="tbl-scroll">
-        <table class="resizable-table client-portfolio-table" id="clientTable-support">
-          <thead><tr id="tableHead-support">
-            <th data-i18n="th_client_name">Client Name</th><th data-i18n="th_num_prods_short"># Prods</th>
-          </tr></thead>
-          <tbody id="clientTableBody-support"></tbody>
-        </table>
+
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">Recommended Next Moves</div></div>
+          <button class="vital-ask" onclick="askNirvanaAboutPortfolioChart('support','opportunity')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
+        </div>
+        <div id="nextMoves-support"></div>
+        <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:10px" onclick="showPage('upsell')">View All Opportunities <span class="icon" data-icon="chevronRight" data-icon-size="13"></span></button>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title"><span class="icon" data-icon="sparkle" data-icon-size="14"></span> Nirvana Suggestions</div></div>
+        </div>
+        <div id="nirvanaSuggestions-support"></div>
+        <button class="btn btn-ghost btn-sm spotlight-ai-btn" style="width:100%;margin-top:10px" onclick="askNirvanaAboutPortfolioChart('support','opportunity')">Ask Nirvana for More <span class="icon" data-icon="chevronRight" data-icon-size="13"></span></button>
       </div>
     </div>
 
