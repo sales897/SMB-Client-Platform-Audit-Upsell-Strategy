@@ -618,36 +618,37 @@ body.ai-panel-open .main {
 .filter-pill:hover { border-color: var(--orange); color: var(--orange); }
 .filter-pill.active { background: var(--gradient-accent); border-color: var(--orange); color: white; }
 
-/* Custom Start/End date+time picker (2026-07) -- replaces the native
-   datetime-local input, which can't be restyled and looks out of place
-   against the rest of the dark theme. Shared by the Starts and Ends
-   triggers in the task form; built dynamically and appended to
-   document.body on open, same pattern as .vital-swap-menu, so it isn't
-   clipped by the modal it lives inside. */
-.dt-trigger { display: flex; align-items: center; cursor: pointer; color: var(--text); font-family: inherit; }
-.dt-trigger:hover { border-color: var(--orange); }
-.dt-trigger.placeholder { color: var(--text3); }
-.dt-trigger:disabled { cursor: not-allowed; opacity: .5; }
-.cnt-dt-popover {
+/* Hub-wide date+time picker (2026-07) -- replaces every native date /
+   datetime-local input across the app, which can't be restyled and looks
+   out of place against the dark theme. Shared class set used by the task
+   Start/End pair AND the generic single-field picker (Ad Spend, Collections,
+   Bulk Tasks, Remind Me) so every calendar in the Hub is visually identical.
+   Built dynamically and appended to document.body on open, same pattern as
+   .vital-swap-menu, so it isn't clipped by the modal it lives inside. */
+.hub-dt-trigger { display: flex; align-items: center; cursor: pointer; color: var(--text); font-family: inherit; }
+.hub-dt-trigger:hover { border-color: var(--orange); }
+.hub-dt-trigger.placeholder { color: var(--text3); }
+.hub-dt-trigger:disabled { cursor: not-allowed; opacity: .5; }
+.hub-dt-popover {
   position: fixed; z-index: 1200;
   background: var(--bg4); border: 1px solid var(--orange); border-radius: var(--radius-sm);
   box-shadow: 0 10px 32px rgba(0,0,0,.7), 0 0 20px rgba(226,84,31,.35);
   padding: 12px; width: 240px;
 }
-.cnt-dt-cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 12px; font-weight: 600; color: var(--text); }
-.cnt-dt-cal-head button { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 13px; padding: 2px 6px; }
-.cnt-dt-cal-head button:hover { color: var(--orange); }
-.cnt-dt-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-bottom: 10px; }
-.cnt-dt-dow { font-size: 9px; color: var(--text3); text-align: center; padding-bottom: 4px; }
-.cnt-dt-day { font-size: 11px; text-align: center; padding: 5px 0; border-radius: var(--radius-xs); color: var(--text2); cursor: pointer; }
-.cnt-dt-day:hover { background: var(--bg3); color: var(--text); }
-.cnt-dt-day.muted { color: var(--text3); opacity: .4; cursor: default; }
-.cnt-dt-day.muted:hover { background: none; color: var(--text3); }
-.cnt-dt-day.today { border: 1px solid var(--orange); }
-.cnt-dt-day.selected { background: var(--orange); color: #fff; font-weight: 600; }
-.cnt-dt-time-row { display: flex; gap: 4px; margin-bottom: 10px; }
-.cnt-dt-time-row select { height: 30px; font-size: 12px; padding: 0 4px; }
-.cnt-dt-actions { display: flex; justify-content: flex-end; gap: 6px; }
+.hub-dt-cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 12px; font-weight: 600; color: var(--text); }
+.hub-dt-cal-head button { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 13px; padding: 2px 6px; }
+.hub-dt-cal-head button:hover { color: var(--orange); }
+.hub-dt-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-bottom: 10px; }
+.hub-dt-dow { font-size: 9px; color: var(--text3); text-align: center; padding-bottom: 4px; }
+.hub-dt-day { font-size: 11px; text-align: center; padding: 5px 0; border-radius: var(--radius-xs); color: var(--text2); cursor: pointer; }
+.hub-dt-day:hover { background: var(--bg3); color: var(--text); }
+.hub-dt-day.muted { color: var(--text3); opacity: .4; cursor: default; }
+.hub-dt-day.muted:hover { background: none; color: var(--text3); }
+.hub-dt-day.today { border: 1px solid var(--orange); }
+.hub-dt-day.selected { background: var(--orange); color: #fff; font-weight: 600; }
+.hub-dt-time-row { display: flex; gap: 4px; margin-bottom: 10px; }
+.hub-dt-time-row select { height: 30px; font-size: 12px; padding: 0 4px; }
+.hub-dt-actions { display: flex; justify-content: flex-end; gap: 6px; }
 
 .pm-tab {
   padding: var(--space-2) var(--space-4);
@@ -2631,11 +2632,11 @@ select.wfb-field-input { padding-right: 26px; }
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px">
           <div>
             <span class="field-label" style="margin-bottom:4px;display:block">Starts</span>
-            <button type="button" class="field-input dt-trigger" id="cntTaskStartTrigger" style="height:36px;text-align:left" onclick="openCntTaskDateTimePicker('start')">Pick a date &amp; time</button>
+            <button type="button" class="field-input hub-dt-trigger" id="cntTaskStartTrigger" style="height:36px;text-align:left" onclick="openCntTaskDateTimePicker('start')">Pick a date &amp; time</button>
           </div>
           <div>
             <span class="field-label" style="margin-bottom:4px;display:block">Ends</span>
-            <button type="button" class="field-input dt-trigger" id="cntTaskEndTrigger" style="height:36px;text-align:left" onclick="openCntTaskDateTimePicker('end')">—</button>
+            <button type="button" class="field-input hub-dt-trigger" id="cntTaskEndTrigger" style="height:36px;text-align:left" onclick="openCntTaskDateTimePicker('end')">—</button>
           </div>
         </div>
         <div id="cntTaskDurationSummary" style="font-size:11px;color:var(--text3);margin-bottom:6px"></div>
@@ -3788,7 +3789,8 @@ select.wfb-field-input { padding-right: 26px; }
         </div>
         <div>
           <label for="asStartDate" class="field-label">Start Date</label>
-          <input type="date" id="asStartDate" class="field-input">
+          <button type="button" class="field-input hub-dt-trigger placeholder" id="asStartDateTrigger" onclick="openHubDatePicker('asStartDate','date')">Pick a date</button>
+          <input type="hidden" id="asStartDate">
         </div>
         <div>
           <label for="asPromo" class="field-label">Promo Eligible</label>
@@ -3856,7 +3858,8 @@ select.wfb-field-input { padding-right: 26px; }
         </div>
         <div>
           <label for="asEditStartDate" class="field-label" data-i18n="as_start_date">Start Date</label>
-          <input type="date" id="asEditStartDate" style="margin-bottom:0">
+          <button type="button" class="field-input hub-dt-trigger placeholder" id="asEditStartDateTrigger" style="margin-bottom:0" onclick="openHubDatePicker('asEditStartDate','date')">Pick a date</button>
+          <input type="hidden" id="asEditStartDate">
         </div>
         <div>
           <label for="asEditPromo" class="field-label" data-i18n="as_promo_eligible">Promo Eligible</label>
@@ -3977,11 +3980,13 @@ select.wfb-field-input { padding-right: 26px; }
         </div>
         <div>
           <label for="colDate" class="field-label" id="colDateLabel">Due Date</label>
-          <input type="date" id="colDate" class="field-input">
+          <button type="button" class="field-input hub-dt-trigger placeholder" id="colDateTrigger" onclick="openHubDatePicker('colDate','date')">Pick a date</button>
+          <input type="hidden" id="colDate">
         </div>
         <div>
           <label for="colResolvedDate" class="field-label">Resolved Date</label>
-          <input type="date" id="colResolvedDate" class="field-input">
+          <button type="button" class="field-input hub-dt-trigger placeholder" id="colResolvedDateTrigger" onclick="openHubDatePicker('colResolvedDate','date')">Pick a date</button>
+          <input type="hidden" id="colResolvedDate">
         </div>
         <div>
           <label for="colStatus" class="field-label">Status</label>
@@ -4026,11 +4031,13 @@ select.wfb-field-input { padding-right: 26px; }
         </div>
         <div>
           <label for="colEditDate" class="field-label" id="colEditDateLabel" data-i18n="col_due_date">Due Date</label>
-          <input type="date" id="colEditDate" style="margin-bottom:0">
+          <button type="button" class="field-input hub-dt-trigger placeholder" id="colEditDateTrigger" style="margin-bottom:0" onclick="openHubDatePicker('colEditDate','date')">Pick a date</button>
+          <input type="hidden" id="colEditDate">
         </div>
         <div>
           <label for="colEditResolvedDate" class="field-label" data-i18n="col_resolved_date">Resolved Date</label>
-          <input type="date" id="colEditResolvedDate" style="margin-bottom:0">
+          <button type="button" class="field-input hub-dt-trigger placeholder" id="colEditResolvedDateTrigger" style="margin-bottom:0" onclick="openHubDatePicker('colEditResolvedDate','date')">Pick a date</button>
+          <input type="hidden" id="colEditResolvedDate">
         </div>
         <div>
           <label for="colEditStatus" class="field-label" data-i18n="col_status">Status</label>
@@ -4261,7 +4268,8 @@ select.wfb-field-input { padding-right: 26px; }
     <input type="text" id="remTitle" class="field-input" style="height:38px;margin-bottom:14px" placeholder="e.g. Follow up on the renewal call">
 
     <label for="remWhen" class="field-label"><span data-i18n="rem_when">When</span> <span style="color:var(--orange)">*</span></label>
-    <input type="datetime-local" id="remWhen" class="field-input" style="height:38px;margin-bottom:14px">
+    <button type="button" class="field-input hub-dt-trigger placeholder" id="remWhenTrigger" style="height:38px;margin-bottom:14px" onclick="openHubDatePicker('remWhen','datetime')">Pick a date &amp; time</button>
+    <input type="hidden" id="remWhen">
 
     <label for="remClientName" class="field-label"><span data-i18n="rem_client_optional">Client</span> <span style="color:var(--text3)" data-i18n="rem_optional">(optional)</span></label>
     <input type="text" id="remClientName" class="field-input" style="height:38px;margin-bottom:4px" placeholder="e.g. Summit Roofing Co.">
@@ -4582,7 +4590,7 @@ select.wfb-field-input { padding-right: 26px; }
       <input type="text" id="bulkTaskTitle" class="field-input" style="height:38px" placeholder="e.g. Check in — no recent contact">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:12px">
         <div><label class="field-label" for="bulkTaskAssignee" data-i18n="fld_assign_to">Assign to</label><select id="bulkTaskAssignee" class="field-select" style="height:38px"></select></div>
-        <div><label class="field-label" for="bulkTaskDueDate" data-i18n="fld_due_date">Due Date</label><input type="date" id="bulkTaskDueDate" class="field-input" style="height:38px"></div>
+        <div><label class="field-label" for="bulkTaskDueDate" data-i18n="fld_due_date">Due Date</label><button type="button" class="field-input hub-dt-trigger placeholder" id="bulkTaskDueDateTrigger" style="height:38px" onclick="openHubDatePicker('bulkTaskDueDate','date')">Pick a date</button><input type="hidden" id="bulkTaskDueDate"></div>
       </div>
     </div>
 
@@ -6028,6 +6036,14 @@ async function getSpotlightAiSuggestion(pk, btn) {
 // today's portfolio numbers into a single actionable line. Falls back to a
 // computed-from-the-same-numbers sentence if the AI call fails, so the
 // banner never shows a broken or empty state.
+let lastNirvanaInsight = null;
+const NIRVANA_INSIGHT_ANGLES = [
+  'the single account that needs attention most urgently',
+  'the collections total and what chasing it today would recover',
+  'stale leads that are going cold',
+  'ad spend promo eligibility across accounts',
+  'the biggest opportunity for growth today, not just what\'s broken',
+];
 async function loadAiInsightsBanner() {
   const textEl = document.getElementById('aiInsightsText');
   const btn = document.getElementById('aiInsightsRefreshBtn');
@@ -6043,11 +6059,24 @@ async function loadAiInsightsBanner() {
     const totalClients = Object.keys(buildMergedClients()).length;
     const staleLeads = getTextAgentStaleLeads().length;
     const collectionsOwed = COLLECTIONS_ACCOUNTS.reduce((s, a) => s + (a.amount || 0), 0);
+    // The underlying numbers barely change between one click of the
+    // refresh button and the next, so without an explicit nudge the model
+    // just re-derives the same "obviously correct" sentence every time --
+    // that was the actual bug, not a caching issue. Telling it what it
+    // already said, and suggesting a different angle to lead with, is what
+    // actually produces a new insight on each press.
+    const angle = NIRVANA_INSIGHT_ANGLES[Math.floor(Math.random() * NIRVANA_INSIGHT_ANGLES.length)];
+    let userText = `Total clients: ${totalClients}\nAccounts needing attention: ${needsAttention}\nStale leads: ${staleLeads}\nCollections outstanding: ${fmtMoney(collectionsOwed)}\n\nLead with this angle if it's genuinely relevant: ${angle}.`;
+    if (lastNirvanaInsight) {
+      userText += `\n\nYou already said this last time -- give a genuinely different insight now, not a reworded version of it: "${lastNirvanaInsight}"`;
+    }
     const insight = await quickAiCompletion(
-      'You are Nirvana, a concise client success advisor for a home-services marketing agency. Given today\'s portfolio numbers, give ONE punchy, specific sentence (max 20 words) highlighting the single most useful thing for the person to focus on today. No greeting, no filler, just the insight itself.',
-      `Total clients: ${totalClients}\nAccounts needing attention: ${needsAttention}\nStale leads: ${staleLeads}\nCollections outstanding: ${fmtMoney(collectionsOwed)}`
+      'You are Nirvana, a concise client success advisor for a home-services marketing agency. Given today\'s portfolio numbers, give ONE punchy, specific sentence (max 20 words) highlighting a useful thing for the person to focus on today. No greeting, no filler, just the insight itself.',
+      userText
     );
-    textEl.textContent = (insight || '').trim() || fallback;
+    const finalText = (insight || '').trim() || fallback;
+    textEl.textContent = finalText;
+    lastNirvanaInsight = finalText;
   } catch(e) {
     textEl.textContent = fallback;
   } finally {
@@ -6370,8 +6399,8 @@ function renderVitalAdSpend() {
   const canvas = document.getElementById('vitalAdSpendRing');
   if (!canvas) return;
   const totalBudget = AD_SPEND_BUSINESSES.reduce((s, b) => s + (b.budget || 0), 0);
-  const eligible = AD_SPEND_BUSINESSES.filter(b => b.promo === 'Yes' || b.promo === 'Using').length;
-  const using = AD_SPEND_BUSINESSES.filter(b => b.promo === 'Using').length;
+  const eligible = AD_SPEND_BUSINESSES.filter(b => b.promo === 'Yes' || b.promo === 'Already Using').length;
+  const using = AD_SPEND_BUSINESSES.filter(b => b.promo === 'Already Using').length;
   const pct = eligible > 0 ? Math.round((using / eligible) * 100) : 0;
   const pctEl = document.getElementById('vitalAdSpendPct');
   if (pctEl) pctEl.textContent = pct + '%';
@@ -9746,6 +9775,7 @@ function addAdSpendBusiness() {
   AD_SPEND_BUSINESSES.push(b);
   persistAdSpendBusiness(b);
   ['asName','asBudget','asWatermark','asAddons','asStartDate','asRecs'].forEach(id => document.getElementById(id).value = '');
+  refreshHubDtTrigger('asStartDate', 'date');
   document.getElementById('asPromo').value = 'Yes';
   rebuildAdSpendPage();
 }
@@ -9760,6 +9790,7 @@ function openEditAdSpendModal(id) {
   document.getElementById('asEditBudget').value = b.budget;
   document.getElementById('asEditWatermark').value = b.watermark;
   document.getElementById('asEditStartDate').value = b.startDate;
+  refreshHubDtTrigger('asEditStartDate', 'date');
   document.getElementById('asEditPromo').value = b.promo;
   document.getElementById('asEditAddons').value = b.addons.join(', ');
   document.getElementById('asEditRecs').value = b.recs;
@@ -10364,6 +10395,8 @@ function addCollectionsAccount() {
   COLLECTIONS_ACCOUNTS.push(a);
   persistCollectionsAccount(a);
   ['colName','colAmount','colDate','colResolvedDate'].forEach(id => document.getElementById(id).value = '');
+  refreshHubDtTrigger('colDate', 'date');
+  refreshHubDtTrigger('colResolvedDate', 'date');
   rebuildCollectionsPage();
 }
 
@@ -10406,6 +10439,8 @@ function openEditCollectionsModal(id) {
   document.getElementById('colEditDateLabel').textContent = a.type === 'outstanding' ? 'Due Date' : 'Last Attempt';
   document.getElementById('colEditDate').value = a.date || '';
   document.getElementById('colEditResolvedDate').value = a.resolvedDate || '';
+  refreshHubDtTrigger('colEditDate', 'date');
+  refreshHubDtTrigger('colEditResolvedDate', 'date');
   sel.value = a.status;
   document.getElementById('editCollectionsModal').classList.add('open');
 }
@@ -11988,6 +12023,7 @@ async function addOnboardingNoteFromModal() {
 function openAddReminderModal() {
   document.getElementById('remTitle').value = '';
   document.getElementById('remWhen').value = '';
+  refreshHubDtTrigger('remWhen', 'datetime');
   document.getElementById('remClientName').value = '';
   document.getElementById('reminderModal').classList.add('open');
 }
@@ -12954,7 +12990,7 @@ function openCntTaskDateTimePicker(which) {
   cntDtSelMinute = base.getMinutes();
   const pop = document.createElement('div');
   pop.id = 'cntDtPopover';
-  pop.className = 'cnt-dt-popover';
+  pop.className = 'hub-dt-popover';
   document.body.appendChild(pop);
   renderCntDtPopover();
   const trigger = document.getElementById(which === 'start' ? 'cntTaskStartTrigger' : 'cntTaskEndTrigger');
@@ -12965,7 +13001,7 @@ function openCntTaskDateTimePicker(which) {
 }
 function cntDtOutsideClick(e) {
   const pop = document.getElementById('cntDtPopover');
-  if (pop && !pop.contains(e.target) && !e.target.classList.contains('dt-trigger')) closeCntDtPopover();
+  if (pop && !pop.contains(e.target) && !e.target.classList.contains('hub-dt-trigger')) closeCntDtPopover();
 }
 function closeCntDtPopover() {
   const pop = document.getElementById('cntDtPopover');
@@ -13001,15 +13037,15 @@ function renderCntDtPopover() {
   const today = new Date();
 
   let cells = '';
-  for (let i = 0; i < firstDow; i++) cells += `<div class="cnt-dt-day muted">${daysInPrevMonth - firstDow + i + 1}</div>`;
+  for (let i = 0; i < firstDow; i++) cells += `<div class="hub-dt-day muted">${daysInPrevMonth - firstDow + i + 1}</div>`;
   for (let d = 1; d <= daysInMonth; d++) {
     const isToday = today.getFullYear() === year && today.getMonth() === month && today.getDate() === d;
     const isSel = d === cntDtSelDay;
-    cells += `<div class="cnt-dt-day${isToday ? ' today' : ''}${isSel ? ' selected' : ''}" onclick="cntDtPickDay(${d})">${d}</div>`;
+    cells += `<div class="hub-dt-day${isToday ? ' today' : ''}${isSel ? ' selected' : ''}" onclick="cntDtPickDay(${d})">${d}</div>`;
   }
   const totalCells = firstDow + daysInMonth;
   const trailing = (7 - (totalCells % 7)) % 7;
-  for (let i = 1; i <= trailing; i++) cells += `<div class="cnt-dt-day muted">${i}</div>`;
+  for (let i = 1; i <= trailing; i++) cells += `<div class="hub-dt-day muted">${i}</div>`;
 
   const hour12 = (cntDtSelHour % 12) || 12;
   const ampm = cntDtSelHour >= 12 ? 'PM' : 'AM';
@@ -13017,21 +13053,21 @@ function renderCntDtPopover() {
   const minOpts = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55].map(m => `<option value="${m}"${m === cntDtSelMinute ? ' selected' : ''}>${String(m).padStart(2, '0')}</option>`).join('');
 
   pop.innerHTML = `
-    <div class="cnt-dt-cal-head">
+    <div class="hub-dt-cal-head">
       <button type="button" onclick="cntDtChangeMonth(-1)" aria-label="Previous month">‹</button>
       <span>${new Date(year, month, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
       <button type="button" onclick="cntDtChangeMonth(1)" aria-label="Next month">›</button>
     </div>
-    <div class="cnt-dt-cal-grid">
-      <div class="cnt-dt-dow">Su</div><div class="cnt-dt-dow">Mo</div><div class="cnt-dt-dow">Tu</div><div class="cnt-dt-dow">We</div><div class="cnt-dt-dow">Th</div><div class="cnt-dt-dow">Fr</div><div class="cnt-dt-dow">Sa</div>
+    <div class="hub-dt-cal-grid">
+      <div class="hub-dt-dow">Su</div><div class="hub-dt-dow">Mo</div><div class="hub-dt-dow">Tu</div><div class="hub-dt-dow">We</div><div class="hub-dt-dow">Th</div><div class="hub-dt-dow">Fr</div><div class="hub-dt-dow">Sa</div>
       ${cells}
     </div>
-    <div class="cnt-dt-time-row">
+    <div class="hub-dt-time-row">
       <select id="cntDtHour" class="field-select" onchange="cntDtTimeChanged()">${hourOpts}</select>
       <select id="cntDtMinute" class="field-select" onchange="cntDtTimeChanged()">${minOpts}</select>
       <select id="cntDtAmpm" class="field-select" onchange="cntDtTimeChanged()"><option${ampm === 'AM' ? ' selected' : ''}>AM</option><option${ampm === 'PM' ? ' selected' : ''}>PM</option></select>
     </div>
-    <div class="cnt-dt-actions">
+    <div class="hub-dt-actions">
       <button type="button" class="btn btn-ghost btn-sm" onclick="closeCntDtPopover()">Cancel</button>
       <button type="button" class="btn btn-primary btn-sm" onclick="cntDtApply()">Apply</button>
     </div>`;
@@ -13054,6 +13090,160 @@ function cntDtApply() {
   }
   closeCntDtPopover();
   cntTaskRefreshDtDisplay();
+}
+
+// ─── Generic Hub-wide date/time picker (2026-07) ──────────────────────────
+// One shared engine for every single-field date or datetime input in the
+// app outside the task form (which has its own Start/End-pair logic just
+// above, for the duration math). This one is simpler: a single hidden
+// input holds the value in the exact same string format the native input
+// used to produce (yyyy-mm-dd for date, yyyy-mm-ddThh:mm for datetime), so
+// every existing read/reset call site (Ad Spend, Collections, Bulk Tasks,
+// Remind Me) needed zero changes beyond swapping the input for a trigger
+// button with the same id on a hidden field.
+let hubDtTargetId = null;
+let hubDtMode = 'date'; // 'date' | 'datetime'
+let hubDtViewYear = 0;
+let hubDtViewMonth = 0;
+let hubDtSelDay = null;
+let hubDtSelHour = 9;
+let hubDtSelMinute = 0;
+
+function hubDtParseValue(raw, mode) {
+  if (!raw) return null;
+  const d = mode === 'date' ? new Date(raw + 'T00:00:00') : new Date(raw);
+  return isNaN(d) ? null : d;
+}
+function hubDtFormatValue(d, mode) {
+  const pad = n => String(n).padStart(2, '0');
+  const datePart = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  return mode === 'date' ? datePart : `${datePart}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function hubDtDisplayLabel(d, mode) {
+  return mode === 'date'
+    ? d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    : d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+}
+// Call this any time a hidden field's value is set programmatically
+// (e.g. opening an edit modal for an existing record) so the trigger
+// button's label actually reflects the current value.
+function refreshHubDtTrigger(targetId, mode) {
+  const hidden = document.getElementById(targetId);
+  const btn = document.getElementById(targetId + 'Trigger');
+  if (!hidden || !btn) return;
+  const d = hubDtParseValue(hidden.value, mode);
+  if (d) { btn.textContent = hubDtDisplayLabel(d, mode); btn.classList.remove('placeholder'); }
+  else { btn.textContent = mode === 'date' ? 'Pick a date' : 'Pick a date & time'; btn.classList.add('placeholder'); }
+}
+function openHubDatePicker(targetId, mode) {
+  hubDtTargetId = targetId;
+  hubDtMode = mode;
+  closeHubDtPopover();
+  const hidden = document.getElementById(targetId);
+  const base = hubDtParseValue(hidden.value, mode) || new Date();
+  hubDtViewYear = base.getFullYear();
+  hubDtViewMonth = base.getMonth();
+  hubDtSelDay = base.getDate();
+  hubDtSelHour = base.getHours() || 9;
+  hubDtSelMinute = base.getMinutes() || 0;
+  const pop = document.createElement('div');
+  pop.id = 'hubDtPopover';
+  pop.className = 'hub-dt-popover';
+  document.body.appendChild(pop);
+  renderHubDtPopover();
+  const trigger = document.getElementById(targetId + 'Trigger');
+  const rect = trigger.getBoundingClientRect();
+  const popWidth = 240;
+  let left = rect.left;
+  if (left + popWidth > window.innerWidth - 12) left = Math.max(12, window.innerWidth - popWidth - 12);
+  pop.style.top = (rect.bottom + 6) + 'px';
+  pop.style.left = left + 'px';
+  setTimeout(() => document.addEventListener('mousedown', hubDtOutsideClick), 0);
+}
+function hubDtOutsideClick(e) {
+  const pop = document.getElementById('hubDtPopover');
+  if (pop && !pop.contains(e.target) && !e.target.classList.contains('hub-dt-trigger')) closeHubDtPopover();
+}
+function closeHubDtPopover() {
+  const pop = document.getElementById('hubDtPopover');
+  if (pop) pop.remove();
+  document.removeEventListener('mousedown', hubDtOutsideClick);
+}
+function hubDtChangeMonth(delta) {
+  hubDtViewMonth += delta;
+  if (hubDtViewMonth < 0) { hubDtViewMonth = 11; hubDtViewYear--; }
+  if (hubDtViewMonth > 11) { hubDtViewMonth = 0; hubDtViewYear++; }
+  renderHubDtPopover();
+}
+function hubDtPickDay(day) {
+  hubDtSelDay = day;
+  renderHubDtPopover();
+}
+function hubDtTimeChanged() {
+  const h12 = parseInt(document.getElementById('hubDtHour').value);
+  const m = parseInt(document.getElementById('hubDtMinute').value);
+  const ampm = document.getElementById('hubDtAmpm').value;
+  let h24 = h12 % 12;
+  if (ampm === 'PM') h24 += 12;
+  hubDtSelHour = h24;
+  hubDtSelMinute = m;
+}
+function renderHubDtPopover() {
+  const pop = document.getElementById('hubDtPopover');
+  if (!pop) return;
+  const year = hubDtViewYear, month = hubDtViewMonth;
+  const firstDow = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const daysInPrevMonth = new Date(year, month, 0).getDate();
+  const today = new Date();
+
+  let cells = '';
+  for (let i = 0; i < firstDow; i++) cells += `<div class="hub-dt-day muted">${daysInPrevMonth - firstDow + i + 1}</div>`;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const isToday = today.getFullYear() === year && today.getMonth() === month && today.getDate() === d;
+    const isSel = d === hubDtSelDay;
+    cells += `<div class="hub-dt-day${isToday ? ' today' : ''}${isSel ? ' selected' : ''}" onclick="hubDtPickDay(${d})">${d}</div>`;
+  }
+  const totalCells = firstDow + daysInMonth;
+  const trailing = (7 - (totalCells % 7)) % 7;
+  for (let i = 1; i <= trailing; i++) cells += `<div class="hub-dt-day muted">${i}</div>`;
+
+  let timeRow = '';
+  if (hubDtMode === 'datetime') {
+    const hour12 = (hubDtSelHour % 12) || 12;
+    const ampm = hubDtSelHour >= 12 ? 'PM' : 'AM';
+    const hourOpts = Array.from({ length: 12 }, (_, i) => i + 1).map(h => `<option value="${h}"${h === hour12 ? ' selected' : ''}>${h}</option>`).join('');
+    const minOpts = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55].map(m => `<option value="${m}"${m === hubDtSelMinute ? ' selected' : ''}>${String(m).padStart(2, '0')}</option>`).join('');
+    timeRow = `<div class="hub-dt-time-row">
+      <select id="hubDtHour" class="field-select" onchange="hubDtTimeChanged()">${hourOpts}</select>
+      <select id="hubDtMinute" class="field-select" onchange="hubDtTimeChanged()">${minOpts}</select>
+      <select id="hubDtAmpm" class="field-select" onchange="hubDtTimeChanged()"><option${ampm === 'AM' ? ' selected' : ''}>AM</option><option${ampm === 'PM' ? ' selected' : ''}>PM</option></select>
+    </div>`;
+  }
+
+  pop.innerHTML = `
+    <div class="hub-dt-cal-head">
+      <button type="button" onclick="hubDtChangeMonth(-1)" aria-label="Previous month">‹</button>
+      <span>${new Date(year, month, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
+      <button type="button" onclick="hubDtChangeMonth(1)" aria-label="Next month">›</button>
+    </div>
+    <div class="hub-dt-cal-grid">
+      <div class="hub-dt-dow">Su</div><div class="hub-dt-dow">Mo</div><div class="hub-dt-dow">Tu</div><div class="hub-dt-dow">We</div><div class="hub-dt-dow">Th</div><div class="hub-dt-dow">Fr</div><div class="hub-dt-dow">Sa</div>
+      ${cells}
+    </div>
+    ${timeRow}
+    <div class="hub-dt-actions">
+      <button type="button" class="btn btn-ghost btn-sm" onclick="closeHubDtPopover()">Cancel</button>
+      <button type="button" class="btn btn-primary btn-sm" onclick="hubDtApply()">Apply</button>
+    </div>`;
+}
+function hubDtApply() {
+  if (hubDtSelDay === null) { showToast('Pick a day.', 'warning'); return; }
+  const chosen = new Date(hubDtViewYear, hubDtViewMonth, hubDtSelDay, hubDtSelHour, hubDtSelMinute);
+  const hidden = document.getElementById(hubDtTargetId);
+  hidden.value = hubDtFormatValue(chosen, hubDtMode);
+  refreshHubDtTrigger(hubDtTargetId, hubDtMode);
+  closeHubDtPopover();
 }
 
 async function addClientTask() {
@@ -14144,6 +14334,7 @@ function openBulkActionModal(mode, scope = 'directory') {
   if (mode === 'task') {
     document.getElementById('bulkTaskTitle').value = '';
     document.getElementById('bulkTaskDueDate').value = '';
+    refreshHubDtTrigger('bulkTaskDueDate', 'date');
     const sel = document.getElementById('bulkTaskAssignee');
     const u = getCurrentUser();
     sel.innerHTML = TEAM_MEMBERS.map(m => `<option value="${escAttr(m.email)}" ${u && m.email === u.email ? 'selected' : ''}>${escAttr(m.name)}${u && m.email === u.email ? escAttr(t('myself_suffix')) : ''}</option>`).join('');
@@ -14794,6 +14985,37 @@ async function loadWorkflowGraph(workflowId) {
   renderWorkflowCanvas();
 }
 
+// Picks which side of the source node an edge exits from, and which side
+// of the target it enters, based on where the target actually sits --
+// previously every edge always exited the source's right side and entered
+// the target's left side regardless of actual position, which looked like
+// a backwards loop whenever a node was dragged above, below, or to the
+// left of its source. sx/sy/tx/ty are already screen (offset-adjusted)
+// top-left corners, not raw pos_x/pos_y.
+function wfbEdgeGeometry(sx, sy, tx, ty) {
+  const scx = sx + WFB_NODE_W / 2, scy = sy + WFB_NODE_H / 2;
+  const tcx = tx + WFB_NODE_W / 2, tcy = ty + WFB_NODE_H / 2;
+  const dx = tcx - scx, dy = tcy - scy;
+  const horizontal = Math.abs(dx) >= Math.abs(dy);
+  let x1, y1, x2, y2, cx1, cy1, cx2, cy2;
+  if (horizontal) {
+    if (dx >= 0) { x1 = sx + WFB_NODE_W; x2 = tx; } // target is to the right -- exit right, enter left
+    else { x1 = sx; x2 = tx + WFB_NODE_W; } // target is to the left -- exit left, enter right
+    y1 = scy; y2 = tcy;
+    const midX = (x1 + x2) / 2;
+    cx1 = midX; cy1 = y1; cx2 = midX; cy2 = y2;
+  } else {
+    if (dy >= 0) { y1 = sy + WFB_NODE_H; y2 = ty; } // target is below -- exit bottom, enter top
+    else { y1 = sy; y2 = ty + WFB_NODE_H; } // target is above -- exit top, enter bottom
+    x1 = scx; x2 = tcx;
+    const midY = (y1 + y2) / 2;
+    cx1 = x1; cy1 = midY; cx2 = x2; cy2 = midY;
+  }
+  const pathD = `M ${x1} ${y1} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${x2} ${y2}`;
+  wfbEdgeGeometry.lastControlPoints = { cx1, cy1, cx2, cy2 };
+  return { x1, y1, x2, y2, pathD };
+}
+
 function renderWorkflowCanvas() {
   const nodesLayer = document.getElementById('wfbNodesLayer');
   const svg = document.getElementById('wfbEdgesSvg');
@@ -14806,8 +15028,18 @@ function renderWorkflowCanvas() {
     renderWfbAiSuggestions();
     return;
   }
-  const maxX = Math.max(...workflowNodesCache.map(n => n.pos_x)) + WFB_NODE_W + 60;
-  const maxY = Math.max(...workflowNodesCache.map(n => n.pos_y)) + WFB_NODE_H + 60;
+  // Nodes can now sit at negative pos_x/pos_y (dragged above/left of the
+  // original origin) -- pos_x/pos_y stay the true logical coordinate
+  // (simplest for diffing/patching), but everything drawn on screen is
+  // shifted by wfbOffsetX/Y so the leftmost/topmost node still lands
+  // inside the scrollable canvas box instead of clipping off the edge.
+  const PAD = 60;
+  const minX = Math.min(0, ...workflowNodesCache.map(n => n.pos_x));
+  const minY = Math.min(0, ...workflowNodesCache.map(n => n.pos_y));
+  wfbOffsetX = PAD - minX;
+  wfbOffsetY = PAD - minY;
+  const maxX = Math.max(...workflowNodesCache.map(n => n.pos_x)) + WFB_NODE_W + wfbOffsetX + PAD;
+  const maxY = Math.max(...workflowNodesCache.map(n => n.pos_y)) + WFB_NODE_H + wfbOffsetY + PAD;
   canvas.style.width = maxX + 'px';
   canvas.style.height = maxY + 'px';
   svg.setAttribute('width', maxX);
@@ -14819,7 +15051,7 @@ function renderWorkflowCanvas() {
     const icon = customType ? customType.icon : (WORKFLOW_NODE_ICONS[n.node_type] || '📋');
     const typeLabel = WORKFLOW_NODE_TYPE_LABELS[n.node_type] || n.node_type;
     const selected = n.id === wfbSelectedNodeId ? ' selected' : '';
-    return `<div class="wfb-node${selected}" style="left:${n.pos_x}px;top:${n.pos_y}px;--node-color:${color}" data-node-id="${n.id}">
+    return `<div class="wfb-node${selected}" style="left:${n.pos_x + wfbOffsetX}px;top:${n.pos_y + wfbOffsetY}px;--node-color:${color}" data-node-id="${n.id}">
       <div class="wfb-node-hd"><span class="dot"></span>${icon} ${escAttr(typeLabel)}<span class="menu">⋮</span></div>
       <div class="wfb-node-label">${escAttr(n.label)}</div>
       ${n.sublabel ? `<div class="wfb-node-sublabel">${escAttr(n.sublabel)}</div>` : ''}
@@ -14833,11 +15065,11 @@ function renderWorkflowCanvas() {
   workflowEdgesCache.forEach((e, edgeIdx) => {
     const s = nodeById[e.source_node_id], t = nodeById[e.target_node_id];
     if (!s || !t) return;
-    const x1 = s.pos_x + WFB_NODE_W, y1 = s.pos_y + WFB_NODE_H / 2;
-    const x2 = t.pos_x, y2 = t.pos_y + WFB_NODE_H / 2;
-    const midX = (x1 + x2) / 2;
+    const { x1, y1, x2, y2, pathD } = wfbEdgeGeometry(
+      s.pos_x + wfbOffsetX, s.pos_y + wfbOffsetY,
+      t.pos_x + wfbOffsetX, t.pos_y + wfbOffsetY
+    );
     const pathColor = e.branch_label === 'No' ? resolveCssColor('var(--red)') : e.branch_label === 'Yes' ? resolveCssColor('var(--green)') : resolveCssColor('var(--border)');
-    const pathD = `M ${x1} ${y1} C ${midX} ${y1}, ${midX} ${y2}, ${x2} ${y2}`;
     // Traveling glow dot: same idea as the login screen's orbiting glow
     // dots, following this edge's own path so it reads as flow moving
     // from source to target rather than just a static connector.
@@ -14853,14 +15085,17 @@ function renderWorkflowCanvas() {
       </circle></g>`;
     if (e.branch_label) {
       // Point at t=0.35 along the exact same cubic bezier as the path
-      // above (M x1,y1 C midX,y1, midX,y2, x2,y2) -- NOT just "40% of the
-      // way from x1 to midX at the source's height", which was the bug:
-      // that ignored where the curve actually bends toward y2, so a branch
-      // curving sharply toward a much higher or lower target left its
-      // label sitting near the source while the line dove away from it.
+      // above -- NOT just "40% of the way from x1 to midX at the source's
+      // height", which was the bug: that ignored where the curve actually
+      // bends toward y2, so a branch curving sharply toward a much higher
+      // or lower target left its label sitting near the source while the
+      // line dove away from it. Works the same way for the vertical-axis
+      // curves (bottom/top routing) since bx/by are computed generically
+      // from whichever two control points wfbEdgeGeometry actually used.
       const t = 0.35, mt = 1 - t;
-      const bx = mt * mt * mt * x1 + 3 * mt * mt * t * midX + 3 * mt * t * t * midX + t * t * t * x2;
-      const by = mt * mt * mt * y1 + 3 * mt * mt * t * y1 + 3 * mt * t * t * y2 + t * t * t * y2;
+      const { cx1, cy1, cx2, cy2 } = wfbEdgeGeometry.lastControlPoints;
+      const bx = mt * mt * mt * x1 + 3 * mt * mt * t * cx1 + 3 * mt * t * t * cx2 + t * t * t * x2;
+      const by = mt * mt * mt * y1 + 3 * mt * mt * t * cy1 + 3 * mt * t * t * cy2 + t * t * t * y2;
       branchLabelsHtml += `<div class="wfb-branch-label" data-edge-id="${e.id}" style="left:${bx}px;top:${by}px;color:${pathColor};border-color:${pathColor}">${escAttr(e.branch_label)}</div>`;
     }
   });
@@ -14878,7 +15113,7 @@ function renderWorkflowMinimap(canvasW, canvasH) {
   const scale = Math.min(150 / canvasW, 90 / canvasH);
   mm.innerHTML = workflowNodesCache.map(n => {
     const color = resolveCssColor(WORKFLOW_NODE_COLORS[n.node_type] || 'var(--text3)');
-    return `<div class="wfb-minimap-dot" style="left:${n.pos_x * scale}px;top:${n.pos_y * scale}px;background:${color}"></div>`;
+    return `<div class="wfb-minimap-dot" style="left:${(n.pos_x + wfbOffsetX) * scale}px;top:${(n.pos_y + wfbOffsetY) * scale}px;background:${color}"></div>`;
   }).join('');
 }
 
@@ -14903,6 +15138,8 @@ function applyWorkflowZoomTransform() {
 // listeners, since renderWorkflowCanvas() fully rebuilds that innerHTML on
 // every change -- per-node listeners would need re-binding constantly.
 let wfbDragState = null;
+let wfbOffsetX = 0;
+let wfbOffsetY = 0;
 let wfbPanState = null;
 let wfbConnectState = null;
 let wfbBranchModalResolve = null;
@@ -15044,8 +15281,8 @@ function applyWfbDragFrame() {
   const dy = (e.clientY - wfbDragState.startMouseY) / workflowZoomLevel;
   const node = workflowNodesCache.find(n => n.id === wfbDragState.nodeId);
   if (!node) return;
-  const liveX = Math.max(0, wfbDragState.startPosX + dx);
-  const liveY = Math.max(0, wfbDragState.startPosY + dy);
+  const liveX = wfbDragState.startPosX + dx;
+  const liveY = wfbDragState.startPosY + dy;
   wfbDragState.liveX = liveX;
   wfbDragState.liveY = liveY;
   const nodeEl = document.querySelector(`.wfb-node[data-node-id="${node.id}"]`);
@@ -15064,14 +15301,11 @@ function updateWfbEdgesForLiveNodePosition(nodeId, liveX, liveY) {
     if (e.source_node_id !== nodeId && e.target_node_id !== nodeId) return;
     const s = nodeById[e.source_node_id], t = nodeById[e.target_node_id];
     if (!s || !t) return;
-    const sx = e.source_node_id === nodeId ? liveX : s.pos_x;
-    const sy = e.source_node_id === nodeId ? liveY : s.pos_y;
-    const tx = e.target_node_id === nodeId ? liveX : t.pos_x;
-    const ty = e.target_node_id === nodeId ? liveY : t.pos_y;
-    const x1 = sx + WFB_NODE_W, y1 = sy + WFB_NODE_H / 2;
-    const x2 = tx, y2 = ty + WFB_NODE_H / 2;
-    const midX = (x1 + x2) / 2;
-    const pathD = `M ${x1} ${y1} C ${midX} ${y1}, ${midX} ${y2}, ${x2} ${y2}`;
+    const sx = (e.source_node_id === nodeId ? liveX : s.pos_x) + wfbOffsetX;
+    const sy = (e.source_node_id === nodeId ? liveY : s.pos_y) + wfbOffsetY;
+    const tx = (e.target_node_id === nodeId ? liveX : t.pos_x) + wfbOffsetX;
+    const ty = (e.target_node_id === nodeId ? liveY : t.pos_y) + wfbOffsetY;
+    const { x1, y1, x2, y2, pathD } = wfbEdgeGeometry(sx, sy, tx, ty);
     const group = svg.querySelector(`g[data-edge-id="${e.id}"]`);
     if (group) {
       group.querySelectorAll('path').forEach(p => p.setAttribute('d', pathD));
@@ -15082,8 +15316,9 @@ function updateWfbEdgesForLiveNodePosition(nodeId, liveX, liveY) {
     const label = document.querySelector(`.wfb-branch-label[data-edge-id="${e.id}"]`);
     if (label && e.branch_label) {
       const tt = 0.35, mt = 1 - tt;
-      const bx = mt * mt * mt * x1 + 3 * mt * mt * tt * midX + 3 * mt * tt * tt * midX + tt * tt * tt * x2;
-      const by = mt * mt * mt * y1 + 3 * mt * mt * tt * y1 + 3 * mt * tt * tt * y2 + tt * tt * tt * y2;
+      const { cx1, cy1, cx2, cy2 } = wfbEdgeGeometry.lastControlPoints;
+      const bx = mt * mt * mt * x1 + 3 * mt * mt * tt * cx1 + 3 * mt * tt * tt * cx2 + tt * tt * tt * x2;
+      const by = mt * mt * mt * y1 + 3 * mt * mt * tt * cy1 + 3 * mt * tt * tt * cy2 + tt * tt * tt * y2;
       label.style.left = bx + 'px';
       label.style.top = by + 'px';
     }
@@ -15113,8 +15348,8 @@ async function onWfbNodeDragEnd(e) {
   // slightly stale committed position once the transform was cleared.
   const finalDx = (e.clientX - startMouseX) / workflowZoomLevel;
   const finalDy = (e.clientY - startMouseY) / workflowZoomLevel;
-  node.pos_x = Math.max(0, Math.round(startPosX + finalDx));
-  node.pos_y = Math.max(0, Math.round(startPosY + finalDy));
+  node.pos_x = Math.round(startPosX + finalDx);
+  node.pos_y = Math.round(startPosY + finalDy);
   renderWorkflowCanvas(); // one full resync now that the drag is done (canvas bounds, traveling-light timing, etc.)
   try { await sbPatch('workflow_nodes', `id=eq.${node.id}`, { pos_x: node.pos_x, pos_y: node.pos_y }); }
   catch(e) { console.warn('Could not save node position:', e.message); }
@@ -15127,7 +15362,7 @@ function onWfbConnectMove(e) {
   const rect = canvas.getBoundingClientRect();
   const sourceNode = workflowNodesCache.find(n => n.id === wfbConnectState.sourceNodeId);
   if (!sourceNode) return;
-  const x1 = sourceNode.pos_x + WFB_NODE_W, y1 = sourceNode.pos_y + WFB_NODE_H / 2;
+  const sx = sourceNode.pos_x + wfbOffsetX, sy = sourceNode.pos_y + wfbOffsetY;
   const x2 = (e.clientX - rect.left) / workflowZoomLevel;
   const y2 = (e.clientY - rect.top) / workflowZoomLevel;
   let preview = document.getElementById('wfbConnectPreviewPath');
@@ -15140,8 +15375,11 @@ function onWfbConnectMove(e) {
     preview.setAttribute('stroke-dasharray', '5,4');
     svg.appendChild(preview);
   }
-  const midX = (x1 + x2) / 2;
-  preview.setAttribute('d', `M ${x1} ${y1} C ${midX} ${y1}, ${midX} ${y2}, ${x2} ${y2}`);
+  // Treat the live mouse point as a zero-size "target" so the same
+  // side-picking logic previews exiting from the bottom/left/top of the
+  // source, not just the right, depending on which way it's being dragged.
+  const { pathD } = wfbEdgeGeometry(sx, sy, x2 - WFB_NODE_W / 2, y2 - WFB_NODE_H / 2);
+  preview.setAttribute('d', pathD);
 }
 async function onWfbConnectEnd(e) {
   document.removeEventListener('mousemove', onWfbConnectMove);
