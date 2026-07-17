@@ -430,11 +430,11 @@ body.ai-panel-open .main {
 .vital-sub { font-size: var(--font-2xs); color: var(--text3); margin-bottom: var(--space-3); }
 .vital-ask { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 13px; padding: 2px 5px; border-radius: var(--radius-xs); transition: all var(--transition-base); line-height: 1; }
 .vital-ask:hover { color: var(--orange); background: var(--bg3); }
-.vital-chart-wrap { flex: 1; min-height: 0; position: relative; }
+.vital-chart-wrap { flex: 1; min-height: 0; position: relative; animation: chartGlowPulse 3.4s ease-in-out infinite; }
 .vital-stat { font-size: 22px; font-weight: 800; color: var(--orange); font-family: var(--font-display); line-height: 1; }
 .vital-stat-sub { font-size: var(--font-2xs); color: var(--text3); margin-top: 2px; }
 .vital-ring-wrap { display: flex; align-items: center; gap: var(--space-3); flex: 1; }
-.vital-ring-canvas-wrap { position: relative; width: 66px; height: 66px; flex-shrink: 0; }
+.vital-ring-canvas-wrap { position: relative; width: 66px; height: 66px; flex-shrink: 0; animation: chartGlowPulse 3.4s ease-in-out infinite; }
 .vital-ring-label { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: var(--text); }
 .vital-legend { display: flex; flex-direction: column; gap: 4px; font-size: var(--font-2xs); }
 .vital-legend span { display: flex; align-items: center; gap: 6px; color: var(--text2); }
@@ -506,16 +506,19 @@ body.ai-panel-open .main {
 .kpi[class*="kpi-theme-"]:hover { border-color: var(--kpi-accent); }
 .kpi-comet { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; opacity: .8; }
 .kpi-comet path, .kpi-comet polyline { fill: none; stroke: var(--kpi-accent, var(--orange)); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 5px var(--kpi-accent, var(--orange))); }
-.kpi-comet circle:not(.ring) { fill: var(--kpi-accent, var(--orange)); filter: drop-shadow(0 0 4px var(--kpi-accent, var(--orange))); }
+.kpi-comet circle:not(.ring):not(.gauge-fill) { fill: var(--kpi-accent, var(--orange)); filter: drop-shadow(0 0 4px var(--kpi-accent, var(--orange))); }
 .kpi-comet circle.ring { fill: none; stroke: var(--kpi-accent, var(--orange)); stroke-width: 1.4; opacity: .55; filter: drop-shadow(0 0 3px var(--kpi-accent, var(--orange))); }
 .kpi-comet line { stroke: var(--kpi-accent, var(--orange)); stroke-width: 1.2; opacity: .5; }
 .kpi-comet line.bar { stroke-width: 6; stroke-linecap: round; opacity: .85; filter: drop-shadow(0 0 4px var(--kpi-accent, var(--orange))); }
+.kpi-comet line.bar-grow { transform-box: fill-box; transform-origin: bottom; animation: barGrow 1.8s ease-in-out infinite; }
+@keyframes barGrow { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(.55); } }
 /* Corner radial gauge (2026-07-17) -- used where a card's number IS a real
    percentage/coverage ratio, so the arc fill is computed from the actual
    value in JS (see rebuildKPIs), not just decorative. */
 .kpi-gauge { position: absolute; top: 8px; right: 8px; inset: auto; width: 60px; height: 60px; opacity: 1; }
 .kpi-gauge .ring { stroke: var(--border); opacity: 1; filter: none; stroke-width: 8; }
-.kpi-gauge .gauge-fill { fill: none; stroke: var(--kpi-accent, var(--orange)); stroke-width: 8; stroke-linecap: round; filter: drop-shadow(0 0 5px var(--kpi-accent, var(--orange))); transition: stroke-dasharray var(--transition-slower); }
+.kpi-gauge .gauge-fill { fill: none; stroke: var(--kpi-accent, var(--orange)); stroke-width: 8; stroke-linecap: round; animation: gaugeGlowPulse 2.2s ease-in-out infinite; transition: stroke-dasharray var(--transition-slower); }
+@keyframes gaugeGlowPulse { 0%, 100% { filter: drop-shadow(0 0 4px var(--kpi-accent, var(--orange))); } 50% { filter: drop-shadow(0 0 11px var(--kpi-accent, var(--orange))); } }
 /* Alert sonar ping (Products Untouched) -- rings expand and fade on a loop */
 .kpi-comet .pulse-1 { animation: kpiPulse 2.4s ease-out infinite; transform-box: fill-box; transform-origin: center; }
 .kpi-comet .pulse-2 { animation: kpiPulse 2.4s ease-out infinite; animation-delay: .5s; transform-box: fill-box; transform-origin: center; }
@@ -525,6 +528,12 @@ body.ai-panel-open .main {
 /* ─── Mission Control 3-column layout (Spotlight | Matrix | Analytics) ─── */
 .mc-cmd-row { display: grid; grid-template-columns: 320px 1fr 320px; gap: 16px; align-items: start; margin-bottom: 20px; }
 @media (max-width: 1300px) { .mc-cmd-row { grid-template-columns: 1fr; } }
+.mc-cmd-row > #spotlight-smb, .mc-cmd-row > #spotlight-whitelabel, .mc-cmd-row > #spotlight-support {
+  position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow-y: auto;
+}
+@media (max-width: 1300px) {
+  .mc-cmd-row > #spotlight-smb, .mc-cmd-row > #spotlight-whitelabel, .mc-cmd-row > #spotlight-support { position: static; max-height: none; }
+}
 .mc-cmd-col-right { display: flex; flex-direction: column; gap: 16px; }
 .mc-table-pagination { display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding: 10px 4px 2px; font-size: 12px; color: var(--text3); }
 .mc-table-pagination select { width: auto; height: 30px; font-size: 12px; }
@@ -645,7 +654,11 @@ body.ai-panel-open .main {
   font-size: var(--font-2xs); font-weight: 700;
   padding: var(--space-1) var(--space-2); border-radius: var(--radius-pill);
 }
-.chart-wrap { position: relative; filter: drop-shadow(0 0 10px rgba(226,84,31,.18)); }
+.chart-wrap { position: relative; animation: chartGlowPulse 3.4s ease-in-out infinite; }
+@keyframes chartGlowPulse {
+  0%, 100% { filter: drop-shadow(0 0 8px rgba(226,84,31,.14)); }
+  50% { filter: drop-shadow(0 0 16px rgba(226,84,31,.3)); }
+}
 .chart-wrap.h260 { height: 260px; }
 /* AI Opportunity Radar (2026-07-17) -- a custom glowing bar-list, distinct
    in shape from the Chart.js bar chart and donut already in this column. */
@@ -2269,9 +2282,9 @@ tr.pg-hidden-row { display: none; }
 .cw-panel-title .icon { color: var(--orange); }
 .cw-panel-sublabel { font-size: 9px; font-weight: 800; color: var(--text3); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; }
 .cw-leads-chart-body { display: flex; gap: var(--space-4); }
-.cw-chart-wrap { flex: 1; height: 220px; }
+.cw-chart-wrap { flex: 1; height: 220px; animation: chartGlowPulse 3.4s ease-in-out infinite; }
 .cw-source-breakdown { width: 190px; flex-shrink: 0; text-align: center; }
-.cw-donut-wrap { position: relative; height: 140px; }
+.cw-donut-wrap { position: relative; height: 140px; animation: chartGlowPulse 3.4s ease-in-out infinite; }
 .cw-donut-legend { text-align: left; margin-top: 10px; }
 .cw-donut-legend-row { display: flex; align-items: center; justify-content: space-between; font-size: var(--font-2xs); color: var(--text2); padding: 3px 0; }
 .cw-activity-list { display: flex; flex-direction: column; gap: 2px; max-height: 260px; overflow-y: auto; }
@@ -3082,21 +3095,21 @@ select.wfb-field-input { padding-right: 26px; }
         <div class="kpi-val" id="kpi-smb-total">63</div>
         <div class="kpi-lbl" data-i18n="kpi_total_clients">Total Clients</div>
         <div class="kpi-sub" data-i18n="kpi_active_platform">Active in platform</div>
-        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 130 100 C 150 95, 160 80, 172 75 C 184 70, 190 50, 200 45 C 212 39, 220 20, 232 12"/><circle cx="172" cy="75"/><circle cx="200" cy="45"/><circle cx="232" cy="12" r="3"/></svg>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 130 100 C 150 95, 160 80, 172 75 C 184 70, 190 50, 200 45 C 212 39, 220 20, 232 12"/><circle cx="172" cy="75"/><circle cx="200" cy="45"/><circle cx="232" cy="12" r="3"/><circle r="3"><animateMotion dur="2.6s" repeatCount="indefinite" path="M 130 100 C 150 95, 160 80, 172 75 C 184 70, 190 50, 200 45 C 212 39, 220 20, 232 12"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.9;1" dur="2.6s" repeatCount="indefinite"/></circle></svg>
       </div>
       <div class="kpi kpi-theme-orange">
         <div class="kpi-icon"><span class="icon" data-icon="package" data-icon-size="16"></span></div>
         <div class="kpi-val orange" id="kpi-smb-products">0</div>
         <div class="kpi-lbl" data-i18n="kpi_products_tracked">Products Tracked</div>
         <div class="kpi-sub" data-i18n="kpi_across_clients">Across all clients</div>
-        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><line class="bar" x1="150" y1="105" x2="150" y2="80"/><line class="bar" x1="170" y1="105" x2="170" y2="60"/><line class="bar" x1="190" y1="105" x2="190" y2="70"/><line class="bar" x1="210" y1="105" x2="210" y2="40"/><line class="bar" x1="230" y1="105" x2="230" y2="20"/></svg>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><line class="bar bar-grow" x1="150" y1="105" x2="150" y2="80" style="animation-delay:0s"/><line class="bar bar-grow" x1="170" y1="105" x2="170" y2="60" style="animation-delay:.15s"/><line class="bar bar-grow" x1="190" y1="105" x2="190" y2="70" style="animation-delay:.3s"/><line class="bar bar-grow" x1="210" y1="105" x2="210" y2="40" style="animation-delay:.45s"/><line class="bar bar-grow" x1="230" y1="105" x2="230" y2="20" style="animation-delay:.6s"/></svg>
       </div>
       <div class="kpi kpi-theme-blue">
         <div class="kpi-icon"><span class="icon" data-icon="trending" data-icon-size="14"></span></div>
         <div class="kpi-val" id="kpi-smb-avg">0</div>
         <div class="kpi-lbl" data-i18n="kpi_avg_products">Avg Products / Client</div>
         <div class="kpi-sub" data-i18n="kpi_upside">Significant upside potential</div>
-        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 130 95 L 160 95 L 160 75 L 190 75 L 190 50 L 215 50 L 215 22 L 232 22"/></svg>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 150 90 L 175 90 L 175 70 L 200 70 L 200 45 L 220 45 L 220 20 L 232 20"/><circle r="3"><animateMotion dur="2.4s" repeatCount="indefinite" path="M 150 90 L 175 90 L 175 70 L 200 70 L 200 45 L 220 45 L 220 20 L 232 20"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.9;1" dur="2.4s" repeatCount="indefinite"/></circle></svg>
       </div>
       <div class="kpi kpi-theme-orange">
         <div class="kpi-icon"><span class="icon" data-icon="target" data-icon-size="16"></span></div>
