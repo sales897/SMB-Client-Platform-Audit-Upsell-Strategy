@@ -520,6 +520,8 @@ body.ai-panel-open .main {
 .kpi-comet .pulse-1 { animation: kpiPulse 2.4s ease-out infinite; transform-box: fill-box; transform-origin: center; }
 .kpi-comet .pulse-2 { animation: kpiPulse 2.4s ease-out infinite; animation-delay: .5s; transform-box: fill-box; transform-origin: center; }
 @keyframes kpiPulse { 0% { opacity: .6; transform: scale(.8); } 100% { opacity: 0; transform: scale(1.25); } }
+@keyframes meshNodePulse { 0%, 100% { opacity: .5; transform: scale(.85); } 50% { opacity: 1; transform: scale(1.15); } }
+.kpi-comet .mesh-node { transform-box: fill-box; transform-origin: center; animation: meshNodePulse 2s ease-in-out infinite; }
 /* ─── Mission Control 3-column layout (Spotlight | Matrix | Analytics) ─── */
 .mc-cmd-row { display: grid; grid-template-columns: 320px 1fr 320px; gap: 16px; align-items: start; margin-bottom: 20px; }
 @media (max-width: 1300px) { .mc-cmd-row { grid-template-columns: 1fr; } }
@@ -538,6 +540,8 @@ body.ai-panel-open .main {
   background: var(--gradient-card); border: 1px solid var(--border); border-radius: var(--radius);
   padding: var(--space-4); display: flex; flex-direction: column; gap: 4px;
 }
+.cmdboard-sidebar-right { position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow-y: auto; }
+@media (max-width: 1200px) { .cmdboard-sidebar-right { position: static; max-height: none; } }
 .cmdboard-section { margin-bottom: var(--space-4); }
 .cmdboard-section:last-child { margin-bottom: 0; }
 .cmdboard-section-hd { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--text3); margin-bottom: 8px; }
@@ -2925,19 +2929,19 @@ select.wfb-field-input { padding-right: 26px; }
   <div class="page" id="page-clients">
     <div class="kpi-row">
       <div class="kpi kpi-theme-orange"><div class="kpi-icon"><span class="icon" data-icon="users" data-icon-size="16"></span></div><div class="kpi-val orange" id="cl-total">0</div><div class="kpi-lbl" data-i18n="cl_unique_clients">Unique Clients</div><div class="kpi-sub" data-i18n="cl_across_portfolios">Across all portfolios</div>
-        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 130 105 C 160 95, 175 72, 192 55 C 207 40, 216 26, 232 12"/><circle cx="150" cy="97"/><circle cx="192" cy="55"/><circle cx="232" cy="12" r="3"/></svg>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 130 105 C 160 95, 175 72, 192 55 C 207 40, 216 26, 232 12"/><circle cx="150" cy="97"/><circle cx="192" cy="55"/><circle cx="232" cy="12" r="3"/><circle r="3"><animateMotion dur="2.6s" repeatCount="indefinite" path="M 130 105 C 160 95, 175 72, 192 55 C 207 40, 216 26, 232 12"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.9;1" dur="2.6s" repeatCount="indefinite"/></circle></svg>
       </div>
       <div class="kpi kpi-theme-blue"><div class="kpi-icon"><span class="icon" data-icon="chart" data-icon-size="16"></span></div><div class="kpi-val blue" id="cl-smb-count">0</div><div class="kpi-lbl" data-i18n="cl_smb_clients">SMB Clients</div>
-        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><line x1="148" y1="92" x2="188" y2="52"/><line x1="188" y1="52" x2="226" y2="70"/><line x1="188" y1="52" x2="212" y2="18"/><line x1="148" y1="92" x2="198" y2="102"/><circle cx="148" cy="92" r="2.2"/><circle cx="188" cy="52" r="3"/><circle cx="226" cy="70" r="2.2"/><circle cx="212" cy="18" r="2.2"/><circle cx="198" cy="102" r="2"/></svg>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><line x1="148" y1="92" x2="188" y2="52"/><line x1="188" y1="52" x2="226" y2="70"/><line x1="188" y1="52" x2="212" y2="18"/><line x1="148" y1="92" x2="198" y2="102"/><circle class="mesh-node" cx="148" cy="92" r="2.2" style="animation-delay:0s"/><circle class="mesh-node" cx="188" cy="52" r="3" style="animation-delay:.3s"/><circle class="mesh-node" cx="226" cy="70" r="2.2" style="animation-delay:.6s"/><circle class="mesh-node" cx="212" cy="18" r="2.2" style="animation-delay:.9s"/><circle class="mesh-node" cx="198" cy="102" r="2" style="animation-delay:1.2s"/></svg>
       </div>
       <div class="kpi kpi-theme-green"><div class="kpi-icon"><span class="icon" data-icon="tag" data-icon-size="14"></span></div><div class="kpi-val green" id="cl-wl-count">0</div><div class="kpi-lbl" data-i18n="cl_wl_partners">White Label Partners</div>
-        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><circle class="ring" cx="205" cy="48" r="12"/><circle class="ring" cx="205" cy="48" r="22"/><circle class="ring" cx="205" cy="48" r="32"/><circle cx="205" cy="48" r="3"/></svg>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><circle class="ring" cx="205" cy="48" r="12"/><circle class="ring pulse-1" cx="205" cy="48" r="12"/><circle class="ring pulse-2" cx="205" cy="48" r="12"/><circle cx="205" cy="48" r="3"/></svg>
       </div>
       <div class="kpi kpi-theme-red"><div class="kpi-icon"><span class="icon" data-icon="ticket" data-icon-size="14"></span></div><div class="kpi-val red" id="cl-support-count">0</div><div class="kpi-lbl" data-i18n="cl_support_clients">Support Clients</div>
-        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><polyline points="128,68 152,68 162,42 173,96 184,58 194,68 232,68"/></svg>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><polyline points="128,68 152,68 162,42 173,96 184,58 194,68 232,68"/><circle r="3"><animateMotion dur="2.2s" repeatCount="indefinite" path="M128,68 L152,68 L162,42 L173,96 L184,58 L194,68 L232,68"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.9;1" dur="2.2s" repeatCount="indefinite"/></circle></svg>
       </div>
       <div class="kpi kpi-theme-purple"><div class="kpi-icon"><span class="icon" data-icon="link" data-icon-size="13"></span></div><div class="kpi-val purple" id="cl-multi-count">0</div><div class="kpi-lbl" data-i18n="cl_multi_portfolio">In 2+ Portfolios</div><div class="kpi-sub" data-i18n="cl_cross_sold">Cross-sold accounts</div>
-        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><circle class="ring" cx="188" cy="55" r="24"/><circle class="ring" cx="220" cy="55" r="24"/><circle cx="204" cy="55" r="2.5"/></svg>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><circle class="ring" cx="188" cy="55" r="24"/><circle class="ring pulse-1" cx="188" cy="55" r="24"/><circle class="ring" cx="220" cy="55" r="24"/><circle class="ring pulse-2" cx="220" cy="55" r="24"/><circle cx="204" cy="55" r="2.5"/></svg>
       </div>
     </div>
     <div class="cmdboard-header">
@@ -2956,7 +2960,7 @@ select.wfb-field-input { padding-right: 26px; }
         <div class="cmdboard-section">
           <div class="cmdboard-section-hd">Command Filters</div>
           <div style="position:relative">
-            <input type="text" class="search-box" id="clientsSearch" placeholder="Search all clients..." oninput="debouncedFilterClientsDirectory()" style="padding-right:30px">
+            <input type="text" class="search-box" id="clientsSearch" placeholder="Search all clients..." oninput="debouncedFilterClientsDirectory()" style="width:100%">
           </div>
         </div>
         <div class="cmdboard-section">
@@ -15392,6 +15396,8 @@ function renderClDirAiInsights(rows) {
         <div class="cmdboard-insight-hd" onclick="applyClDirSavedView('all')" style="cursor:pointer"><span class="icon" data-icon="trending" data-icon-size="12"></span> Cross-Sell Opportunities <span class="cmdboard-insight-count">${crossSellCount}</span><button class="vital-ask" onclick="event.stopPropagation();askNirvanaAboutClDir('crosssell')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button></div>
         <div class="cmdboard-insight-desc" onclick="applyClDirSavedView('all')" style="cursor:pointer">Single-portfolio clients using fewer than 3 products — room to expand.</div>
       </div>`;
+  }).catch(e => {
+    wrap.innerHTML = `<div class="cmdboard-insight-desc">Couldn't load insights right now (${escAttr(e.message)}).</div>`;
   });
 }
 // Same panel-opening pattern as askNirvanaAboutVital (Home) -- Nirvana is
@@ -15481,11 +15487,7 @@ function renderClDirRecentActivity() {
 async function updateClDirBottomBar(rows) {
   const healthEl = document.getElementById('clDirDataHealth');
   if (healthEl) {
-    const healthyCount = rows.filter(r => {
-      const c = getClientContact(r.row.displayName);
-      const hasContact = !!(c && (c.contact_name || c.email || c.phone));
-      return r.total > 0 && hasContact;
-    }).length;
+    const healthyCount = rows.filter(r => r.total > 0).length;
     const pct = rows.length ? Math.round((healthyCount / rows.length) * 100) : 100;
     healthEl.textContent = pct + '%';
   }
