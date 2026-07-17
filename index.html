@@ -679,7 +679,7 @@ body.ai-panel-open .main {
    dragging/resizing, "Done" re-locks and saves. Layout persists per page,
    per browser (same pattern as Home's existing widget-swap system). ─── */
 .hub-grid { }
-.hub-grid .grid-stack-item-content { inset: 0 !important; background: transparent; overflow: auto; display: flex; }
+.hub-grid .grid-stack-item-content { background: transparent; overflow: auto; display: flex; }
 .hub-grid .grid-stack-item-content > * { width: 100%; }
 .hub-grid .grid-stack-item-content > .kpi { margin: 0; }
 .grid-stack-placeholder > .placeholder-content {
@@ -6620,7 +6620,7 @@ function initHubGrid(gridId, storageKey) {
   const grid = GridStack.init({
     column: 12,
     cellHeight: 70,
-    margin: 8,
+    margin: 12,
     float: true,
     staticGrid: true,
     animate: true,
