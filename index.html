@@ -520,6 +520,15 @@ body.ai-panel-open .main {
 .kpi-comet .pulse-1 { animation: kpiPulse 2.4s ease-out infinite; transform-box: fill-box; transform-origin: center; }
 .kpi-comet .pulse-2 { animation: kpiPulse 2.4s ease-out infinite; animation-delay: .5s; transform-box: fill-box; transform-origin: center; }
 @keyframes kpiPulse { 0% { opacity: .6; transform: scale(.8); } 100% { opacity: 0; transform: scale(1.25); } }
+/* ─── Mission Control 3-column layout (Spotlight | Matrix | Analytics) ─── */
+.mc-cmd-row { display: grid; grid-template-columns: 320px 1fr 320px; gap: 16px; align-items: start; margin-bottom: 20px; }
+@media (max-width: 1300px) { .mc-cmd-row { grid-template-columns: 1fr; } }
+.mc-cmd-col-right { display: flex; flex-direction: column; gap: 16px; }
+.mc-table-pagination { display: flex; align-items: center; justify-content: flex-end; gap: 12px; padding: 10px 4px 2px; font-size: 12px; color: var(--text3); }
+.mc-table-pagination select { width: auto; height: 30px; font-size: 12px; }
+.mc-table-pagination button { background: var(--bg3); border: 1px solid var(--border); color: var(--text2); width: 26px; height: 26px; border-radius: var(--radius-xs); cursor: pointer; }
+.mc-table-pagination button:disabled { opacity: .35; cursor: not-allowed; }
+.mc-table-pagination button:not(:disabled):hover { border-color: var(--orange); color: var(--orange); }
 
 /* ─── Client Portfolio Command Board (2026-07-17) ────────────────────────── */
 .cmdboard-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: var(--space-4); }
@@ -634,6 +643,37 @@ body.ai-panel-open .main {
 }
 .chart-wrap { position: relative; filter: drop-shadow(0 0 10px rgba(226,84,31,.18)); }
 .chart-wrap.h260 { height: 260px; }
+/* AI Opportunity Radar (2026-07-17) -- a custom glowing bar-list, distinct
+   in shape from the Chart.js bar chart and donut already in this column. */
+.opp-radar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.opp-radar-row:last-child { margin-bottom: 0; }
+.opp-radar-icon { flex-shrink: 0; width: 18px; display: flex; align-items: center; justify-content: center; color: var(--text2); }
+.opp-radar-label { font-size: 11.5px; color: var(--text2); width: 78px; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.opp-radar-bar-track { flex: 1; height: 7px; background: var(--bg3); border-radius: 4px; overflow: hidden; }
+.opp-radar-bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--orange), var(--orange2)); box-shadow: 0 0 8px rgba(226,84,31,.7); transition: width var(--transition-slower); }
+.opp-radar-count { font-size: 10.5px; color: var(--text3); font-family: var(--font-mono); flex-shrink: 0; width: 56px; text-align: right; }
+.opp-radar-foot { font-size: 11px; color: var(--text3); margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 6px; }
+/* ─── Bottom row: Gap chart + Recommended Next Moves + Nirvana Suggestions */
+.mc-bottom-row { display: grid; grid-template-columns: 1.6fr 1fr 1fr; gap: 16px; align-items: start; margin-bottom: 20px; }
+@media (max-width: 1300px) { .mc-bottom-row { grid-template-columns: 1fr; } }
+.next-move-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.next-move-item:last-child { border-bottom: none; }
+.next-move-priority { font-size: 9px; font-weight: 800; padding: 3px 7px; border-radius: 5px; flex-shrink: 0; letter-spacing: .02em; }
+.next-move-priority.high { background: rgba(239,68,68,.15); color: var(--red); }
+.next-move-priority.medium { background: rgba(245,158,11,.15); color: var(--yellow); }
+.next-move-body { flex: 1; min-width: 0; }
+.next-move-title { font-size: 12.5px; font-weight: 700; color: var(--text); }
+.next-move-sub { font-size: 10.5px; color: var(--text3); margin-top: 1px; }
+.next-move-btn { font-size: 10.5px; font-weight: 700; padding: 5px 10px; border-radius: var(--radius-xs); border: 1px solid var(--border); background: var(--bg3); color: var(--text2); cursor: pointer; flex-shrink: 0; white-space: nowrap; }
+.next-move-btn:hover { border-color: var(--orange); color: var(--orange); }
+.next-move-btn.urgent { background: linear-gradient(90deg, var(--orange), var(--orange2)); color: #fff; border: none; }
+.suggestion-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.suggestion-item:last-child { border-bottom: none; }
+.suggestion-icon { flex-shrink: 0; width: 20px; display: flex; align-items: center; justify-content: center; color: var(--text2); }
+.suggestion-body { flex: 1; min-width: 0; }
+.suggestion-title { font-size: 12.5px; font-weight: 700; color: var(--text); }
+.suggestion-sub { font-size: 10.5px; color: var(--text3); margin-top: 1px; }
+.suggestion-fit { font-size: 11px; font-weight: 800; font-family: var(--font-mono); color: var(--green); flex-shrink: 0; }
 .chart-wrap.h300 { height: 300px; }
 .chart-wrap.h340 { height: 340px; }
 .chart-wrap.h200 { height: 200px; }
@@ -1101,6 +1141,7 @@ td:first-child { text-align: left; padding-left: 14px; white-space: normal; word
 tr:last-child td { border-bottom: none; }
 tr:hover td { background: rgba(226,84,31,.05); }
 tr.hidden-row { display: none; }
+tr.pg-hidden-row { display: none; }
 
 .dot {
   display: inline-flex; width: 20px; height: 20px;
@@ -1408,6 +1449,13 @@ tr.hidden-row { display: none; }
 .spotlight-card.risk-high { border-color: rgba(239,68,68,.5); box-shadow: 0 0 24px rgba(239,68,68,.25); }
 .spotlight-card.risk-medium { border-color: rgba(245,158,11,.5); box-shadow: 0 0 24px rgba(245,158,11,.22); }
 .spotlight-card.risk-low { border-color: rgba(34,197,94,.6); box-shadow: 0 0 28px rgba(34,197,94,.35); }
+.spotlight-featured-pill { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; background: var(--orange-dim); color: var(--orange2); padding: 4px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.spotlight-status-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.spotlight-grid-1 { display: flex; flex-direction: column; gap: 12px; margin-bottom: 12px; }
+.spotlight-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+.spotlight-action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.spotlight-ai-btn { background: rgba(20,184,166,.12); border-color: rgba(20,184,166,.4) !important; color: #2dd4bf !important; }
+.spotlight-ai-btn:hover { background: rgba(20,184,166,.22); border-color: #2dd4bf !important; }
 .spotlight-hd { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
 .spotlight-title { font-size: 13px; font-weight: 800; color: var(--orange); text-transform: uppercase; letter-spacing: .04em; display: flex; align-items: center; gap: 8px; }
 .spotlight-name-row { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
@@ -3075,72 +3123,118 @@ select.wfb-field-input { padding-right: 26px; }
       </div>
     </div>
 
-    <!-- Client Spotlight -->
-    <div id="spotlight-smb" style="margin-bottom:20px"></div>
+    <div class="mc-cmd-row">
+      <div id="spotlight-smb"></div>
 
-    <!-- Charts Row 1 -->
-    <div class="grid-2" style="margin-bottom:20px">
+      <div class="mc-cmd-col-center">
+      <div class="card" id="orgRollup-smb" style="display:none;margin-bottom:16px"></div>
       <div class="card">
         <div class="card-header">
-          <div><div class="card-title" data-i18n="chart_product_adoption">Product Adoption Rate</div><div class="card-sub" id="sub-smb-adoption" data-i18n="chart_pct_clients_using">% of clients using each product</div></div>
-          <span class="card-badge" id="badge-smb-products"><span class="icon" data-icon="chart" data-icon-size="16"></span> 0 Products</span>
+          <div><div class="card-title" data-i18n="matrix_smb_title">Full SMB Client Platform Matrix</div><div class="card-sub" id="rowCount-smb">0 clients</div></div>
+          <button class="reset-columns-btn" onclick="resetColumnPrefs('client-smb'); rebuildPortfolio('smb')" title="Reset column order and widths back to default">↺ <span data-i18n="reset_columns">Columns</span></button>
         </div>
-        <div class="chart-wrap h260"><canvas id="adoptionBar-smb"></canvas></div>
+        <div class="table-controls">
+          <input type="text" class="search-box" id="clientSearch-smb" placeholder="Search clients..." data-i18n-placeholder="search_clients" oninput="debouncedFilterTable('smb')">
+          <select id="orgFilter-smb" onchange="filterByOrg('smb', this.value)" style="width:auto;max-width:240px">
+            <option value="" data-i18n="all_businesses"><span class="icon" data-icon="building" data-icon-size="14"></span> All Businesses</option>
+          </select>
+          <div style="display:flex;gap:6px;flex-wrap:wrap" id="filterPills-smb">
+            <button class="filter-pill active" onclick="filterByProduct('smb','all',this)"><span data-i18n="filter_all">All</span></button>
+          </div>
+          <button class="export-csv-btn" onclick="exportClientTable('smb')" title="Download the currently visible rows as a CSV file"><span class="icon" data-icon="download" data-icon-size="12"></span> <span data-i18n="export_csv">Export CSV</span></button>
+        </div>
+        <div class="card" id="smbBulkBar" style="display:none;margin-bottom:12px;padding:10px 14px;background:var(--orange-dim);border-color:rgba(226,84,31,.3);align-items:center;gap:12px">
+          <span style="font-weight:700;color:var(--text);font-size:13px"><span id="smbSelectedCount">0</span> selected</span>
+          <button class="btn btn-primary btn-sm" onclick="openBulkActionModal('task','smb')"><span class="icon" data-icon="plus" data-icon-size="12"></span> <span data-i18n="add_task_selected">Add Task to Selected</span></button>
+          <button class="btn btn-ghost btn-sm" onclick="openBulkActionModal('note','smb')"><span class="icon" data-icon="note" data-icon-size="14"></span> <span data-i18n="add_note_selected">Add Note to Selected</span></button>
+          <button class="btn btn-ghost btn-sm" onclick="clearClientSelection('smb')" style="margin-left:auto" data-i18n="clear_selection">Clear Selection</button>
+        </div>
+        <div class="tbl-scroll">
+          <table class="resizable-table client-portfolio-table" id="clientTable-smb">
+            <thead><tr id="tableHead-smb">
+              <th data-i18n="th_client_name">Client Name</th><th data-i18n="th_num_prods_short"># Prods</th>
+            </tr></thead>
+            <tbody id="clientTableBody-smb"></tbody>
+          </table>
+        </div>
+        <div class="mc-table-pagination">
+          <span>Rows per page:</span>
+          <select onchange="setClientTableRowsPerPage('smb', this.value)">
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+          <span id="clientTablePageLabel-smb">0 of 0</span>
+          <button id="clientTablePrevBtn-smb" onclick="changeClientTablePage('smb', -1)" aria-label="Previous page">‹</button>
+          <button id="clientTableNextBtn-smb" onclick="changeClientTablePage('smb', 1)" aria-label="Next page">›</button>
+        </div>
       </div>
-      <div class="card">
-        <div class="card-header">
-          <div><div class="card-title" data-i18n="chart_products_per_client">Products Per Client</div><div class="card-sub" data-i18n="chart_distribution">Distribution of product count</div></div>
-          <span class="card-badge" id="badge-smb-clients"><span class="icon" data-icon="users" data-icon-size="16"></span> 0 Clients</span>
+      </div>
+
+      <div class="mc-cmd-col-right">
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title" data-i18n="chart_product_adoption">Product Adoption Rate</div><div class="card-sub" id="sub-smb-adoption" data-i18n="chart_pct_clients_using">% of clients using each product</div></div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <button class="vital-ask" onclick="askNirvanaAboutPortfolioChart('smb','adoption')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
+              <span class="card-badge" id="badge-smb-products"><span class="icon" data-icon="chart" data-icon-size="16"></span> 0 Products</span>
+            </div>
+          </div>
+          <div class="chart-wrap h260"><canvas id="adoptionBar-smb"></canvas></div>
         </div>
-        <div class="chart-wrap h260" style="position:relative">
-          <canvas id="distPie-smb"></canvas>
-          <div style="position:absolute;top:50%;left:36%;transform:translate(-50%,-50%);text-align:center;pointer-events:none">
-            <div id="distCenterNum-smb" style="font-size:26px;font-weight:800;color:var(--text);line-height:1">0</div>
-            <div style="font-size:10px;color:var(--text3);margin-top:2px">clients</div>
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title" data-i18n="chart_products_per_client">Products Per Client</div><div class="card-sub" data-i18n="chart_distribution">Distribution of product count</div></div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <button class="vital-ask" onclick="askNirvanaAboutPortfolioChart('smb','distribution')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
+              <span class="card-badge" id="badge-smb-clients"><span class="icon" data-icon="users" data-icon-size="16"></span> 0 Clients</span>
+            </div>
+          </div>
+          <div class="chart-wrap h260" style="position:relative">
+            <canvas id="distPie-smb"></canvas>
+            <div style="position:absolute;top:50%;left:36%;transform:translate(-50%,-50%);text-align:center;pointer-events:none">
+              <div id="distCenterNum-smb" style="font-size:26px;font-weight:800;color:var(--text);line-height:1">0</div>
+              <div style="font-size:10px;color:var(--text3);margin-top:2px">clients</div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- Gap Chart -->
-    <div class="card" style="margin-bottom:20px">
-      <div class="card-header">
-        <div><div class="card-title" data-i18n="chart_upsell_gap">Upsell Gap — Clients NOT Using Each Product</div><div class="card-sub" data-i18n="chart_upsell_gap_sub">Bigger bar = bigger revenue opportunity</div></div>
-        <span class="card-badge" id="badge-smb-opps"><span class="icon" data-icon="target" data-icon-size="16"></span> 0 Total Opportunities</span>
-      </div>
-      <div class="chart-wrap h300"><canvas id="gapBar-smb"></canvas></div>
-    </div>
-
-    <!-- Client Matrix -->
-    <div class="section-hd"><div class="section-num">3</div><h2 data-i18n="matrix_smb_title">Full SMB Client Platform Matrix</h2></div>
-    <div class="section-div"></div>
-    <div class="card" id="orgRollup-smb" style="display:none;margin-bottom:16px"></div>
-    <div class="card">
-      <div class="table-controls">
-        <input type="text" class="search-box" id="clientSearch-smb" placeholder="Search clients..." data-i18n-placeholder="search_clients" oninput="debouncedFilterTable('smb')">
-        <select id="orgFilter-smb" onchange="filterByOrg('smb', this.value)" style="width:auto;max-width:240px">
-          <option value="" data-i18n="all_businesses"><span class="icon" data-icon="building" data-icon-size="14"></span> All Businesses</option>
-        </select>
-        <div style="display:flex;gap:6px;flex-wrap:wrap" id="filterPills-smb">
-          <button class="filter-pill active" onclick="filterByProduct('smb','all',this)"><span data-i18n="filter_all">All</span></button>
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">AI Opportunity Radar</div><div class="card-sub">Top white-space products</div></div>
+            <button class="vital-ask" onclick="askNirvanaAboutPortfolioChart('smb','opportunity')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
+          </div>
+          <div id="oppRadar-smb"></div>
+          <div class="opp-radar-foot" id="oppRadarFoot-smb"></div>
         </div>
-        <span class="row-count" id="rowCount-smb">0 clients</span>
-        <button class="reset-columns-btn" onclick="resetColumnPrefs('client-smb'); rebuildPortfolio('smb')" title="Reset column order and widths back to default">↺ <span data-i18n="reset_columns">Columns</span></button>
-        <button class="export-csv-btn" onclick="exportClientTable('smb')" title="Download the currently visible rows as a CSV file"><span class="icon" data-icon="download" data-icon-size="12"></span> <span data-i18n="export_csv">Export CSV</span></button>
       </div>
-      <div class="card" id="smbBulkBar" style="display:none;margin-bottom:12px;padding:10px 14px;background:var(--orange-dim);border-color:rgba(226,84,31,.3);align-items:center;gap:12px">
-        <span style="font-weight:700;color:var(--text);font-size:13px"><span id="smbSelectedCount">0</span> selected</span>
-        <button class="btn btn-primary btn-sm" onclick="openBulkActionModal('task','smb')"><span class="icon" data-icon="plus" data-icon-size="12"></span> <span data-i18n="add_task_selected">Add Task to Selected</span></button>
-        <button class="btn btn-ghost btn-sm" onclick="openBulkActionModal('note','smb')"><span class="icon" data-icon="note" data-icon-size="14"></span> <span data-i18n="add_note_selected">Add Note to Selected</span></button>
-        <button class="btn btn-ghost btn-sm" onclick="clearClientSelection('smb')" style="margin-left:auto" data-i18n="clear_selection">Clear Selection</button>
+    </div>
+
+    <!-- Bottom row: Gap chart + Recommended Next Moves + Nirvana Suggestions -->
+    <div class="mc-bottom-row">
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title" data-i18n="chart_upsell_gap">Upsell Gap — Clients NOT Using Each Product</div><div class="card-sub" data-i18n="chart_upsell_gap_sub">Bigger bar = bigger revenue opportunity</div></div>
+          <span class="card-badge" id="badge-smb-opps"><span class="icon" data-icon="target" data-icon-size="16"></span> 0 Total Opportunities</span>
+        </div>
+        <div class="chart-wrap h300"><canvas id="gapBar-smb"></canvas></div>
       </div>
-      <div class="tbl-scroll">
-        <table class="resizable-table client-portfolio-table" id="clientTable-smb">
-          <thead><tr id="tableHead-smb">
-            <th data-i18n="th_client_name">Client Name</th><th data-i18n="th_num_prods_short"># Prods</th>
-          </tr></thead>
-          <tbody id="clientTableBody-smb"></tbody>
-        </table>
+
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">Recommended Next Moves</div></div>
+          <button class="vital-ask" onclick="askNirvanaAboutPortfolioChart('smb','opportunity')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
+        </div>
+        <div id="nextMoves-smb"></div>
+        <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:10px" onclick="showPage('upsell')">View All Opportunities <span class="icon" data-icon="chevronRight" data-icon-size="13"></span></button>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title"><span class="icon" data-icon="sparkle" data-icon-size="14"></span> Nirvana Suggestions</div></div>
+        </div>
+        <div id="nirvanaSuggestions-smb"></div>
+        <button class="btn btn-ghost btn-sm spotlight-ai-btn" style="width:100%;margin-top:10px" onclick="askNirvanaAboutPortfolioChart('smb','opportunity')">Ask Nirvana for More <span class="icon" data-icon="chevronRight" data-icon-size="13"></span></button>
       </div>
     </div>
 
@@ -6078,44 +6172,42 @@ async function renderClientSpotlight(pk) {
   el.innerHTML = `
     <div class="spotlight-card ${riskClass}">
       <div class="spotlight-hd">
-        <div class="spotlight-title"><span class="icon" data-icon="search" data-icon-size="13"></span> Today's Client Spotlight</div>
-        <div class="spotlight-actions">
-          <button class="btn btn-ghost btn-sm" onclick="shuffleSpotlightClient('${pk}')">⇄ Show a Different Client</button>
-          <button class="btn btn-primary btn-sm" onclick="openClientNotesTasksModal('${safe}')"><span class="icon" data-icon="user" data-icon-size="14"></span> Open Full Profile</button>
+        <div class="spotlight-title"><span class="icon" data-icon="search" data-icon-size="13"></span> Client Spotlight</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="spotlight-featured-pill"><span class="icon" data-icon="clock" data-icon-size="10"></span> Featured Today</span>
+          <button class="row-action-btn" onclick="shuffleSpotlightClient('${pk}')" title="Show a different client" aria-label="Show a different client"><span class="icon" data-icon="refresh" data-icon-size="13"></span></button>
         </div>
       </div>
-      <div class="spotlight-name-row">
-        <div>
-          <div class="spotlight-name">${escAttr(client.name)}</div>
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px">
-            ${portfolioChipsHtml}
-            ${client.org ? `<span class="spotlight-org"><span class="icon" data-icon="building" data-icon-size="14"></span> ${escAttr(client.org)}</span>` : ''}
-          </div>
-        </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
-          <span class="spotlight-worked-badge ${workedToday ? 'spotlight-worked-yes' : 'spotlight-worked-no'}">${workedToday ? '✅ Worked today' : '⏳ Not touched yet today'}</span>
-          <span class="spotlight-health-badge spotlight-health-${riskClass}"><span class="icon" data-icon="building" data-icon-size="13"></span> ${health.score}/100 — ${health.category}</span>
-        </div>
+      <div class="spotlight-name">${escAttr(client.name)}</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:4px">
+        ${portfolioChipsHtml}
+        ${client.org ? `<span class="spotlight-org"><span class="icon" data-icon="building" data-icon-size="14"></span> ${escAttr(client.org)}</span>` : ''}
+      </div>
+      <div class="spotlight-status-row">
+        <span class="spotlight-worked-badge ${workedToday ? 'spotlight-worked-yes' : 'spotlight-worked-no'}">${workedToday ? '✅ Worked today' : '⏳ Not touched yet today'}</span>
+        <span class="spotlight-health-badge spotlight-health-${riskClass}"><span class="icon" data-icon="building" data-icon-size="13"></span> ${health.score}/100 · ${health.category}</span>
       </div>
 
       ${whyHtml}
 
-      <div class="spotlight-grid">
+      <div class="spotlight-grid-1">
         <div class="spotlight-block"><div class="spotlight-block-label"><span class="icon" data-icon="check" data-icon-size="16"></span> Using (${using.length})</div>${usingHtml}</div>
         <div class="spotlight-block"><div class="spotlight-block-label"><span class="icon" data-icon="target" data-icon-size="16"></span> Upsell Opportunity (${notUsing.length})</div>${notUsingHtml}</div>
+        <div class="spotlight-block"><div class="spotlight-block-label"><span class="icon" data-icon="note" data-icon-size="14"></span> Recent Notes</div>${notesHtml}</div>
+      </div>
+      <div class="spotlight-grid-2">
+        <div class="spotlight-block"><div class="spotlight-block-label"><span class="icon" data-icon="check" data-icon-size="16"></span> Open Tasks</div>${tasksHtml}</div>
         <div class="spotlight-block"><div class="spotlight-block-label"><span class="icon" data-icon="user" data-icon-size="14"></span> Contact</div>${contactHtml}</div>
       </div>
-      <div class="spotlight-grid">
-        <div class="spotlight-block"><div class="spotlight-block-label"><span class="icon" data-icon="note" data-icon-size="14"></span> Recent Notes</div>${notesHtml}</div>
-        <div class="spotlight-block"><div class="spotlight-block-label"><span class="icon" data-icon="check" data-icon-size="16"></span> Open Tasks</div>${tasksHtml}</div>
-        <div class="spotlight-block"><div class="spotlight-block-label"><span class="icon" data-icon="alert" data-icon-size="16"></span> Billing &amp; Ad Spend</div>${flagsHtml}</div>
-      </div>
 
-      <div class="spotlight-quick-actions">
+      <button class="btn btn-primary btn-sm" style="width:100%" onclick="openClientNotesTasksModal('${safe}')"><span class="icon" data-icon="user" data-icon-size="14"></span> Open Full Profile</button>
+      <div class="spotlight-action-row">
         <button class="btn btn-ghost btn-sm" onclick="toggleSpotlightQuickForm('${pk}','note')"><span class="icon" data-icon="note" data-icon-size="14"></span> Quick Note</button>
         <button class="btn btn-ghost btn-sm" onclick="toggleSpotlightQuickForm('${pk}','task')"><span class="icon" data-icon="check" data-icon-size="16"></span> Quick Task</button>
-        <button class="btn btn-ghost btn-sm" onclick="askNirvanaAboutSpotlight('${pk}')"><img class="nirvana-inline-icon" src="data:image/jpeg;base64,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" alt="Nirvana"> Ask Nirvana</button>
-        <button class="btn btn-ghost btn-sm" id="spotlightSuggestBtn-${pk}" onclick="getSpotlightAiSuggestion('${pk}', this)"><span class="icon" data-icon="lightbulb" data-icon-size="14"></span> Get a Suggestion</button>
+      </div>
+      <div class="spotlight-action-row">
+        <button class="btn btn-ghost btn-sm spotlight-ai-btn" onclick="askNirvanaAboutSpotlight('${pk}')"><span class="icon" data-icon="sparkle" data-icon-size="13"></span> Ask Nirvana</button>
+        <button class="btn btn-ghost btn-sm spotlight-ai-btn" id="spotlightSuggestBtn-${pk}" onclick="getSpotlightAiSuggestion('${pk}', this)"><span class="icon" data-icon="lightbulb" data-icon-size="14"></span> Get a Suggestion</button>
       </div>
 
       <div class="spotlight-quick-form" id="spotlightNoteForm-${pk}">
@@ -6303,6 +6395,9 @@ function rebuildPortfolio(pk) {
   rebuildKPIs(pk);
   rebuildAdoptionBar(pk);
   rebuildDistDonut(pk);
+  renderOpportunityRadar(pk);
+  renderRecommendedNextMoves(pk);
+  renderNirvanaSuggestions(pk);
   rebuildGapBar(pk);
   rebuildClientTable(pk);
   renderClientSpotlight(pk);
@@ -7336,6 +7431,14 @@ function rebuildAdoptionBar(pk) {
       ctx.restore();
     }
   };
+  // Neon glow behind the bars (2026-07-17) -- part of the standing "techy,
+  // futuristic" rule for every chart in the Hub. Chart.js has no built-in
+  // glow, so this toggles a canvas shadow just around the dataset draw.
+  const barGlowPlugin = {
+    id: 'barGlow-' + pk,
+    beforeDatasetsDraw(chart) { chart.ctx.shadowColor = 'rgba(226,84,31,.6)'; chart.ctx.shadowBlur = 12; },
+    afterDatasetsDraw(chart) { chart.ctx.shadowBlur = 0; }
+  };
 
   const ds = {
     data: pcts,
@@ -7349,7 +7452,7 @@ function rebuildAdoptionBar(pk) {
   ds._pcts = pcts;
 
   chartRegistry[chartKey] = new Chart(ctx, {
-    type: 'bar', plugins: [labelPlugin, makeProductAxisIconPlugin(cat)],
+    type: 'bar', plugins: [barGlowPlugin, labelPlugin, makeProductAxisIconPlugin(cat)],
     data: { labels, datasets: [ds] },
     options: {
       responsive: true, maintainAspectRatio: false, layout: { padding: { top: 20, bottom: 26 } },
@@ -7410,6 +7513,121 @@ function rebuildDistDonut(pk) {
 }
 
 // ─── UPSELL GAP BAR ───────────────────────────────────────────────────────────
+// ─── AI OPPORTUNITY RADAR ──────────────────────────────────────────────────
+// Shared by the Radar, Recommended Next Moves, and Nirvana Suggestions --
+// all three read from this one ranking so they can't ever disagree about
+// which products are the biggest white-space opportunity.
+function getRankedOpportunities(pk, limit) {
+  const cat = getCatalog(pk);
+  const cl = getClients(pk);
+  const total = cl.length;
+  if (total === 0 || cat.length === 0) return { total: 0, ranked: [] };
+  const ranked = cat.map(p => ({ p, notUsing: cl.filter(c => !c[p.key]).length }))
+    .sort((a, b) => b.notUsing - a.notUsing)
+    .slice(0, limit || cat.length);
+  return { total, ranked };
+}
+
+// Top 5 products ranked by how many clients aren't using them yet -- the
+// biggest revenue white-space, not just an alphabetical or catalog-order
+// list. Feeds the same numbers as the Upsell Gap chart below it, just
+// surfaced as a compact ranked list instead of a full bar chart.
+function renderOpportunityRadar(pk) {
+  const wrap = document.getElementById('oppRadar-' + pk);
+  if (!wrap) return;
+  const footEl = document.getElementById('oppRadarFoot-' + pk);
+  const { total, ranked } = getRankedOpportunities(pk, 5);
+  if (total === 0) {
+    wrap.innerHTML = `<div class="spotlight-empty-line">Not enough data yet.</div>`;
+    if (footEl) footEl.innerHTML = '';
+    return;
+  }
+  const maxNotUsing = ranked[0] ? ranked[0].notUsing : 1;
+  wrap.innerHTML = ranked.map(r => {
+    const barPct = maxNotUsing ? Math.round(r.notUsing / maxNotUsing * 100) : 0;
+    return `<div class="opp-radar-row">
+      <span class="opp-radar-icon">${renderProductIcon(r.p.icon, 14)}</span>
+      <span class="opp-radar-label" title="${escAttr(r.p.label)}">${escAttr(r.p.label)}</span>
+      <div class="opp-radar-bar-track"><div class="opp-radar-bar-fill" style="width:${barPct}%"></div></div>
+      <span class="opp-radar-count">${r.notUsing} clients</span>
+    </div>`;
+  }).join('');
+  const cat = getCatalog(pk), cl = getClients(pk);
+  const totalOpps = cat.reduce((sum, p) => sum + cl.filter(c => !c[p.key]).length, 0);
+  if (footEl) footEl.innerHTML = `<span class="icon" data-icon="target" data-icon-size="12"></span> ${totalOpps} total opportunities across ${total} clients`;
+}
+
+// Recommended Next Moves -- same ranking as the Radar, reframed as concrete
+// actions. Priority is real (High = at least half the client base is
+// missing it), and "Act Now" actually does something: it filters the
+// matrix table to exactly the clients missing that product and scrolls to
+// it, rather than being a decorative button.
+const NEXT_MOVE_VERBS = ['Activate', 'Deploy', 'Enable', 'Expand', 'Push'];
+function renderRecommendedNextMoves(pk) {
+  const wrap = document.getElementById('nextMoves-' + pk);
+  if (!wrap) return;
+  const { total, ranked } = getRankedOpportunities(pk, 4);
+  if (total === 0) { wrap.innerHTML = `<div class="spotlight-empty-line">Not enough data yet.</div>`; return; }
+  wrap.innerHTML = ranked.map((r, i) => {
+    const isHigh = r.notUsing >= total * 0.5;
+    const verb = NEXT_MOVE_VERBS[i % NEXT_MOVE_VERBS.length];
+    const safeKey = escOnclickArg(r.p.key);
+    return `<div class="next-move-item">
+      <span class="next-move-priority ${isHigh ? 'high' : 'medium'}">${isHigh ? 'HIGH' : 'MEDIUM'}</span>
+      <div class="next-move-body">
+        <div class="next-move-title">${verb} ${escAttr(r.p.label)}</div>
+        <div class="next-move-sub">${r.notUsing} client${r.notUsing === 1 ? '' : 's'} not using this yet</div>
+      </div>
+      <button class="next-move-btn${isHigh ? ' urgent' : ''}" onclick="actOnOpportunity('${pk}','${safeKey}')">${isHigh ? 'Act Now' : 'Review'}</button>
+    </div>`;
+  }).join('');
+}
+// Filters the matrix table down to exactly the clients missing this
+// product and scrolls it into view -- the actual "action" behind Act Now,
+// not just a label.
+function actOnOpportunity(pk, productKey) {
+  activeFilters[pk] = productKey;
+  document.querySelectorAll(`#filterPills-${pk} .filter-pill`).forEach(b => b.classList.remove('active'));
+  filterTable(pk);
+  const table = document.getElementById('clientTable-' + pk);
+  if (table) table.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// Nirvana Suggestions -- same ranking again, framed as fit %. "Fit" here is
+// an honest, transparent number: the real share of clients not yet using
+// the product (identical math to the Radar bars), not a fabricated
+// personalized ML confidence score dressed up to look more precise than it is.
+function renderNirvanaSuggestions(pk) {
+  const wrap = document.getElementById('nirvanaSuggestions-' + pk);
+  if (!wrap) return;
+  const { total, ranked } = getRankedOpportunities(pk, 4);
+  if (total === 0) { wrap.innerHTML = `<div class="spotlight-empty-line">Not enough data yet.</div>`; return; }
+  wrap.innerHTML = ranked.map(r => {
+    const fitPct = Math.round(r.notUsing / total * 100);
+    const isHigh = r.notUsing >= total * 0.5;
+    return `<div class="suggestion-item">
+      <span class="suggestion-icon">${renderProductIcon(r.p.icon, 15)}</span>
+      <div class="suggestion-body">
+        <div class="suggestion-title">${escAttr(r.p.label)}</div>
+        <div class="suggestion-sub">${isHigh ? 'High' : 'Medium'} impact · ${r.notUsing} clients</div>
+      </div>
+      <span class="suggestion-fit">${fitPct}% fit</span>
+    </div>`;
+  }).join('');
+}
+
+const PORTFOLIO_CHART_NIRVANA_PROMPTS = {
+  adoption: (pkLabel) => `Looking at ${pkLabel} product adoption, which product should we push hardest right now and why?`,
+  distribution: (pkLabel) => `Looking at ${pkLabel} products-per-client distribution, which single-product clients are the best upsell targets?`,
+  opportunity: (pkLabel) => `Looking at the ${pkLabel} white-space products, what's the fastest win we could go after this week?`,
+};
+function askNirvanaAboutPortfolioChart(pk, topic) {
+  const panel = document.getElementById('aiAgentPanel');
+  if (panel && panel.style.display === 'none') toggleAiAgentPanel();
+  const builder = PORTFOLIO_CHART_NIRVANA_PROMPTS[topic];
+  if (builder) sendAiAgentQuickMessage(builder(PORTFOLIOS[pk].name));
+}
+
 function rebuildGapBar(pk) {
   const cat = getCatalog(pk);
   const cl = getClients(pk);
@@ -7443,6 +7661,11 @@ function rebuildGapBar(pk) {
       ctx.restore();
     }
   };
+  const barGlowPlugin = {
+    id: 'gapGlow-' + pk,
+    beforeDatasetsDraw(chart) { chart.ctx.shadowColor = 'rgba(239,68,68,.55)'; chart.ctx.shadowBlur = 10; },
+    afterDatasetsDraw(chart) { chart.ctx.shadowBlur = 0; }
+  };
 
   const ds = {
     data: gaps,
@@ -7456,7 +7679,7 @@ function rebuildGapBar(pk) {
   ds._gaps = gaps;
 
   chartRegistry[chartKey] = new Chart(canvas, {
-    type: 'bar', plugins: [labelPlugin, makeProductYAxisIconPlugin(cat)],
+    type: 'bar', plugins: [barGlowPlugin, labelPlugin, makeProductYAxisIconPlugin(cat)],
     data: { labels, datasets: [ds] },
     options: {
       indexAxis: 'y', responsive: true, maintainAspectRatio: false, layout: { padding: { right: 16, left: 30 } },
@@ -8130,6 +8353,8 @@ function renderOrgRollup(pk) {
 
 // ─── TABLE FILTER / SEARCH (per portfolio) ────────────────────────────────────
 const activeFilters = { smb: 'all', whitelabel: 'all', support: 'all' };
+const clientTablePage = { smb: 1, whitelabel: 1, support: 1 };
+const clientTableRowsPerPage = { smb: 10, whitelabel: 10, support: 10 };
 
 function filterTable(pk) {
   const searchEl = document.getElementById('clientSearch-' + pk);
@@ -8152,6 +8377,39 @@ function filterTable(pk) {
   });
   const rc = document.getElementById('rowCount-' + pk);
   if (rc) rc.textContent = `${n} client${n !== 1 ? 's' : ''}`;
+  clientTablePage[pk] = 1;
+  applyClientTablePagination(pk);
+}
+
+// Layers on top of the filter's hidden-row class rather than replacing it --
+// a row is only ever shown if it passes BOTH the active filter AND the
+// current page's slice, so paging and searching/filtering never fight
+// each other regardless of which one ran most recently.
+function applyClientTablePagination(pk) {
+  const rows = Array.from(document.querySelectorAll(`#clientTableBody-${pk} tr`)).filter(r => !r.classList.contains('hidden-row'));
+  const perPage = clientTableRowsPerPage[pk];
+  const totalPages = Math.max(1, Math.ceil(rows.length / perPage));
+  if (clientTablePage[pk] > totalPages) clientTablePage[pk] = totalPages;
+  if (clientTablePage[pk] < 1) clientTablePage[pk] = 1;
+  const page = clientTablePage[pk];
+  const start = (page - 1) * perPage;
+  const end = start + perPage;
+  rows.forEach((r, i) => r.classList.toggle('pg-hidden-row', i < start || i >= end));
+  const label = document.getElementById(`clientTablePageLabel-${pk}`);
+  if (label) label.textContent = rows.length === 0 ? '0 of 0' : `${start + 1}-${Math.min(end, rows.length)} of ${rows.length}`;
+  const prevBtn = document.getElementById(`clientTablePrevBtn-${pk}`);
+  const nextBtn = document.getElementById(`clientTableNextBtn-${pk}`);
+  if (prevBtn) prevBtn.disabled = page <= 1;
+  if (nextBtn) nextBtn.disabled = page >= totalPages;
+}
+function setClientTableRowsPerPage(pk, n) {
+  clientTableRowsPerPage[pk] = parseInt(n);
+  clientTablePage[pk] = 1;
+  applyClientTablePagination(pk);
+}
+function changeClientTablePage(pk, delta) {
+  clientTablePage[pk] += delta;
+  applyClientTablePagination(pk);
 }
 
 function filterByProduct(pk, p, btn) {
