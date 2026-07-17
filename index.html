@@ -488,8 +488,90 @@ body.ai-panel-open .main {
 .kpi-val.orange { color: var(--orange); }
 .kpi-val.green { color: var(--green); }
 .kpi-val.red { color: var(--red); }
+.kpi-val.blue { color: var(--blue); }
+.kpi-val.purple { color: var(--purple); }
 .kpi-lbl { font-size: 12px; color: var(--text2); margin-top: 6px; }
 .kpi-sub { font-size: 11px; color: var(--text3); margin-top: 3px; }
+/* Per-metric color theme (2026-07-17, Command Board redesign) -- sets one
+   CSS var that both the top-border gradient and the comet-trail decoration
+   below read from, so a themed card is a single class instead of repeating
+   the color in three places. */
+.kpi-theme-orange { --kpi-accent: var(--orange); --kpi-accent2: var(--orange2); }
+.kpi-theme-blue { --kpi-accent: var(--blue); --kpi-accent2: #60a5fa; }
+.kpi-theme-green { --kpi-accent: var(--green); --kpi-accent2: #16a34a; }
+.kpi-theme-red { --kpi-accent: var(--red); --kpi-accent2: #dc2626; }
+.kpi-theme-purple { --kpi-accent: var(--purple); --kpi-accent2: #c084fc; }
+.kpi[class*="kpi-theme-"]::before { background: linear-gradient(90deg, var(--kpi-accent), var(--kpi-accent2)); }
+.kpi[class*="kpi-theme-"]::after { border-color: var(--kpi-accent); }
+.kpi[class*="kpi-theme-"]:hover { border-color: var(--kpi-accent); }
+.kpi-comet { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; opacity: .8; }
+.kpi-comet path { fill: none; stroke: var(--kpi-accent, var(--orange)); stroke-width: 2; stroke-linecap: round; filter: drop-shadow(0 0 5px var(--kpi-accent, var(--orange))); }
+.kpi-comet circle { fill: var(--kpi-accent, var(--orange)); filter: drop-shadow(0 0 4px var(--kpi-accent, var(--orange))); }
+
+/* ─── Client Portfolio Command Board (2026-07-17) ────────────────────────── */
+.cmdboard-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: var(--space-4); }
+.cmdboard-layout { display: grid; grid-template-columns: 250px 1fr 280px; gap: 16px; align-items: start; }
+@media (max-width: 1200px) { .cmdboard-layout { grid-template-columns: 1fr; } }
+.cmdboard-sidebar-left, .cmdboard-sidebar-right {
+  background: var(--gradient-card); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: var(--space-4); display: flex; flex-direction: column; gap: 4px;
+}
+.cmdboard-section { margin-bottom: var(--space-4); }
+.cmdboard-section:last-child { margin-bottom: 0; }
+.cmdboard-section-hd { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--text3); margin-bottom: 8px; }
+.cmdboard-list-item {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 7px 8px;
+  border-radius: var(--radius-xs); font-size: 12px; color: var(--text2); cursor: pointer; transition: background var(--transition-base), color var(--transition-base);
+}
+.cmdboard-list-item:hover { background: var(--bg3); color: var(--text); }
+.cmdboard-list-item.active { background: var(--orange-dim); color: var(--orange2); font-weight: 600; }
+.cmdboard-list-item .cmdboard-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-right: 6px; box-shadow: 0 0 5px currentColor; }
+.cmdboard-list-item .cmdboard-check { width: 13px; height: 13px; flex-shrink: 0; margin-right: 6px; color: var(--green); }
+.cmdboard-count { font-family: var(--font-mono); font-size: 10.5px; color: var(--text3); }
+.cmdboard-list-item.active .cmdboard-count { color: var(--orange2); }
+.cmdboard-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: var(--space-4); font-size: 13px; color: var(--text2); }
+.cmdboard-toolbar-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.cmdboard-view-toggle { display: flex; border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+.cmdboard-view-toggle button { background: var(--bg3); border: none; color: var(--text3); font-size: 11px; font-weight: 600; padding: 6px 12px; cursor: pointer; }
+.cmdboard-view-toggle button.active { background: var(--gradient-accent); color: #fff; }
+.cmdboard-group { margin-bottom: var(--space-5); }
+.cmdboard-group-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.cmdboard-group-title { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: var(--text); }
+.cmdboard-group-count { font-family: var(--font-mono); font-size: 10.5px; color: var(--text3); font-weight: 400; text-transform: none; letter-spacing: 0; }
+.cmdboard-group-actions { display: flex; align-items: center; gap: 10px; font-size: 11px; }
+.cmdboard-group-actions a { color: var(--text3); text-decoration: none; cursor: pointer; }
+.cmdboard-group-actions a:hover { color: var(--orange); }
+.cmdboard-health-pill { font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 20px; text-transform: uppercase; letter-spacing: .03em; }
+.cmdboard-health-pill.healthy { background: rgba(34,197,94,.15); color: var(--green); }
+.cmdboard-health-pill.watch { background: rgba(245,158,11,.15); color: var(--yellow); }
+.cmdboard-health-pill.risk { background: rgba(239,68,68,.15); color: var(--red); }
+.cmdboard-card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+.cmdboard-client-card {
+  background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px;
+  cursor: pointer; transition: border-color var(--transition-base), transform var(--transition-base);
+}
+.cmdboard-client-card:hover { border-color: var(--orange); transform: translateY(-1px); }
+.cc-name { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 12.5px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.cc-name .cc-menu { color: var(--text3); font-weight: 400; }
+.cc-products { font-size: 10.5px; color: var(--text3); margin-bottom: 8px; }
+.cc-tags { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.cc-product-icons { display: flex; gap: 3px; margin-left: auto; }
+.cmdboard-beta { font-size: 8.5px; font-weight: 800; background: var(--orange-dim); color: var(--orange2); padding: 2px 6px; border-radius: 10px; margin-left: 4px; vertical-align: middle; }
+.cmdboard-insight-card { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 8px; cursor: pointer; transition: border-color var(--transition-base); }
+.cmdboard-insight-card:hover { border-color: var(--orange); }
+.cmdboard-insight-hd { display: flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; color: var(--text2); margin-bottom: 4px; }
+.cmdboard-insight-hd .cmdboard-insight-count { margin-left: auto; font-family: var(--font-mono); background: var(--orange-dim); color: var(--orange2); font-size: 10px; padding: 1px 7px; border-radius: 10px; }
+.cmdboard-insight-desc { font-size: 11px; color: var(--text3); line-height: 1.4; }
+.cmdboard-activity-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 11px; color: var(--text2); border-bottom: 1px solid var(--border); }
+.cmdboard-activity-item:last-child { border-bottom: none; }
+.cmdboard-activity-item .cmdboard-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--orange); flex-shrink: 0; box-shadow: 0 0 5px var(--orange); }
+.cmdboard-activity-item .cc-name-txt { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); font-weight: 600; }
+.cmdboard-activity-item .cmdboard-activity-time { color: var(--text3); flex-shrink: 0; font-size: 10px; }
+.cmdboard-bottombar {
+  display: flex; gap: 24px; margin-top: var(--space-4); padding: 10px 16px; background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); font-size: 11.5px; color: var(--text2); flex-wrap: wrap;
+}
+.cmdboard-bottombar b { color: var(--text); }
 .kpi-glow-green {
   border-color: rgba(34,197,94,.5);
   box-shadow: 0 0 0 1px rgba(34,197,94,.3), 0 0 24px rgba(34,197,94,.35);
@@ -2775,50 +2857,113 @@ select.wfb-field-input { padding-right: 26px; }
   ════════════════════════════════════════════════════════════════════════ -->
   <div class="page" id="page-clients">
     <div class="kpi-row">
-      <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="users" data-icon-size="16"></span></div><div class="kpi-val orange" id="cl-total">0</div><div class="kpi-lbl" data-i18n="cl_unique_clients">Unique Clients</div><div class="kpi-sub" data-i18n="cl_across_portfolios">Across all portfolios</div></div>
-      <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="chart" data-icon-size="16"></span></div><div class="kpi-val" id="cl-smb-count">0</div><div class="kpi-lbl" data-i18n="cl_smb_clients">SMB Clients</div></div>
-      <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="tag" data-icon-size="14"></span></div><div class="kpi-val green" id="cl-wl-count">0</div><div class="kpi-lbl" data-i18n="cl_wl_partners">White Label Partners</div></div>
-      <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="ticket" data-icon-size="14"></span></div><div class="kpi-val red" id="cl-support-count">0</div><div class="kpi-lbl" data-i18n="cl_support_clients">Support Clients</div></div>
-      <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="link" data-icon-size="13"></span></div><div class="kpi-val" id="cl-multi-count" style="color:var(--purple)">0</div><div class="kpi-lbl" data-i18n="cl_multi_portfolio">In 2+ Portfolios</div><div class="kpi-sub" data-i18n="cl_cross_sold">Cross-sold accounts</div></div>
+      <div class="kpi kpi-theme-orange"><div class="kpi-icon"><span class="icon" data-icon="users" data-icon-size="16"></span></div><div class="kpi-val orange" id="cl-total">0</div><div class="kpi-lbl" data-i18n="cl_unique_clients">Unique Clients</div><div class="kpi-sub" data-i18n="cl_across_portfolios">Across all portfolios</div>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 130 105 C 160 95, 175 72, 192 55 C 207 40, 216 26, 232 12" /><circle cx="192" cy="55" r="2.5" /><circle cx="232" cy="12" r="3" /></svg>
+      </div>
+      <div class="kpi kpi-theme-blue"><div class="kpi-icon"><span class="icon" data-icon="chart" data-icon-size="16"></span></div><div class="kpi-val blue" id="cl-smb-count">0</div><div class="kpi-lbl" data-i18n="cl_smb_clients">SMB Clients</div>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 130 105 C 160 95, 175 72, 192 55 C 207 40, 216 26, 232 12" /><circle cx="192" cy="55" r="2.5" /><circle cx="232" cy="12" r="3" /></svg>
+      </div>
+      <div class="kpi kpi-theme-green"><div class="kpi-icon"><span class="icon" data-icon="tag" data-icon-size="14"></span></div><div class="kpi-val green" id="cl-wl-count">0</div><div class="kpi-lbl" data-i18n="cl_wl_partners">White Label Partners</div>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 130 105 C 160 95, 175 72, 192 55 C 207 40, 216 26, 232 12" /><circle cx="192" cy="55" r="2.5" /><circle cx="232" cy="12" r="3" /></svg>
+      </div>
+      <div class="kpi kpi-theme-red"><div class="kpi-icon"><span class="icon" data-icon="ticket" data-icon-size="14"></span></div><div class="kpi-val red" id="cl-support-count">0</div><div class="kpi-lbl" data-i18n="cl_support_clients">Support Clients</div>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 130 105 C 160 95, 175 72, 192 55 C 207 40, 216 26, 232 12" /><circle cx="192" cy="55" r="2.5" /><circle cx="232" cy="12" r="3" /></svg>
+      </div>
+      <div class="kpi kpi-theme-purple"><div class="kpi-icon"><span class="icon" data-icon="link" data-icon-size="13"></span></div><div class="kpi-val purple" id="cl-multi-count">0</div><div class="kpi-lbl" data-i18n="cl_multi_portfolio">In 2+ Portfolios</div><div class="kpi-sub" data-i18n="cl_cross_sold">Cross-sold accounts</div>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 130 105 C 160 95, 175 72, 192 55 C 207 40, 216 26, 232 12" /><circle cx="192" cy="55" r="2.5" /><circle cx="232" cy="12" r="3" /></svg>
+      </div>
     </div>
-    <div class="card">
-      <div class="card-header">
-        <div><div class="card-title" data-i18n="cl_directory_title">Unified Client Directory</div><div class="card-sub" data-i18n="cl_directory_sub">Clients with the same name across portfolios are merged · Updates live with every upload</div></div>
-        <button class="btn btn-primary btn-sm" id="addClientBtn" onclick="openAddClientModal()">＋ <span data-i18n="cl_add_client_btn">Add Client</span></button>
+    <div class="cmdboard-header">
+      <div>
+        <div class="card-title" style="font-family:var(--font-display);font-size:20px;letter-spacing:.02em">CLIENT PORTFOLIO COMMAND BOARD</div>
+        <div class="card-sub">Unified directory across every portfolio</div>
       </div>
-      <div class="table-controls">
-        <input type="text" class="search-box" id="clientsSearch" placeholder="Search all clients..." data-i18n-placeholder="cl_search_all" oninput="debouncedFilterClientsDirectory()">
-        <div style="display:flex;gap:6px;flex-wrap:wrap" id="clientsFilterPills">
-          <button class="filter-pill active" onclick="filterClientsByPortfolio('all',this)" data-i18n="cl_all_portfolios">All Portfolios</button>
-          <button class="filter-pill" onclick="filterClientsByPortfolio('smb',this)"><span class="icon" data-icon="chart" data-icon-size="16"></span> SMB</button>
-          <button class="filter-pill" onclick="filterClientsByPortfolio('whitelabel',this)"><span class="icon" data-icon="tag" data-icon-size="14"></span> <span data-i18n="cl_wl_partners_short">White Label</span></button>
-          <button class="filter-pill" onclick="filterClientsByPortfolio('support',this)"><span class="icon" data-icon="ticket" data-icon-size="14"></span> <span data-i18n="cl_support_clients_short">Support</span></button>
-          <button class="filter-pill" onclick="filterClientsByPortfolio('multi',this)"><span class="icon" data-icon="link" data-icon-size="13"></span> 2+ Portfolios</button>
+      <div style="display:flex;gap:8px">
+        <button class="export-csv-btn" onclick="exportAllClientsTable()" title="Download the currently visible rows as a CSV file"><span class="icon" data-icon="download" data-icon-size="12"></span> Export CSV</button>
+        <button class="btn btn-primary btn-sm" id="addClientBtn" onclick="openAddClientModal()">＋ Add Client</button>
+      </div>
+    </div>
+
+    <div class="cmdboard-layout">
+      <div class="cmdboard-sidebar-left">
+        <div class="cmdboard-section">
+          <div class="cmdboard-section-hd">Command Filters</div>
+          <div style="position:relative">
+            <input type="text" class="search-box" id="clientsSearch" placeholder="Search all clients..." oninput="debouncedFilterClientsDirectory()" style="padding-right:30px">
+          </div>
         </div>
-        <select id="clientsProductFilter" onchange="filterClientsByProduct(this.value)" style="width:auto;max-width:200px">
-          <option value="all" data-i18n="cl_all_products"><span class="icon" data-icon="package" data-icon-size="16"></span> All Products</option>
-        </select>
-        <span class="row-count" id="clientsRowCount">0 clients</span>
-        <button class="export-csv-btn" onclick="exportAllClientsTable()" title="Download the currently visible rows as a CSV file"><span class="icon" data-icon="download" data-icon-size="12"></span> <span data-i18n="export_csv">Export CSV</span></button>
+        <div class="cmdboard-section">
+          <div class="cmdboard-section-hd">Saved Views</div>
+          <div id="clDirSavedViews"></div>
+        </div>
+        <div class="cmdboard-section">
+          <div class="cmdboard-section-hd">Smart Filters</div>
+          <div id="clDirSmartFilters"></div>
+        </div>
+        <div class="cmdboard-section">
+          <div class="cmdboard-section-hd">Portfolio Filters</div>
+          <div id="clDirPortfolioFilters"></div>
+        </div>
       </div>
-      <div class="card" id="clDirBulkBar" style="display:none;margin-bottom:var(--space-3);padding:var(--space-2) var(--space-3);background:var(--orange-dim);border-color:rgba(226,84,31,.3);align-items:center;gap:var(--space-3)">
-        <span style="font-weight:700;color:var(--text);font-size:var(--font-base)"><span id="clDirSelectedCount">0</span> selected</span>
-        <button class="btn btn-primary btn-sm" onclick="openBulkActionModal('task')"><span class="icon" data-icon="plus" data-icon-size="12"></span> <span data-i18n="add_task_selected">Add Task to Selected</span></button>
-        <button class="btn btn-ghost btn-sm" onclick="openBulkActionModal('note')"><span class="icon" data-icon="note" data-icon-size="14"></span> <span data-i18n="add_note_selected">Add Note to Selected</span></button>
-        <button class="btn btn-ghost btn-sm" onclick="clearDirectorySelection()" style="margin-left:auto" data-i18n="clear_selection">Clear Selection</button>
+
+      <div class="cmdboard-main">
+        <div class="cmdboard-toolbar">
+          <div>Viewing: <b id="clDirViewingLabel">All Clients</b> · <span class="row-count" id="clientsRowCount">0 clients</span></div>
+          <div class="cmdboard-toolbar-right">
+            <select id="clientsProductFilter" onchange="filterClientsByProduct(this.value)" style="width:auto;max-width:170px;height:32px">
+              <option value="all">All Products</option>
+            </select>
+            <span style="font-size:var(--font-xs);color:var(--text3)">Sort by:</span>
+            <select id="clDirSortSelect" onchange="handleClientsDirectorySortSelect(this.value)" style="width:auto;height:32px">
+              <option value="name-asc">Name (A–Z)</option>
+              <option value="name-desc">Name (Z–A)</option>
+              <option value="products-desc">Most Products</option>
+              <option value="products-asc">Fewest Products</option>
+            </select>
+            <div class="cmdboard-view-toggle">
+              <button class="active" id="clDirViewBtnBoard" onclick="setClDirViewMode('board')">▦ Board</button>
+              <button id="clDirViewBtnCompact" onclick="setClDirViewMode('compact')">☰ Compact</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="clDirBulkBar" style="display:none;margin-bottom:var(--space-3);padding:var(--space-2) var(--space-3);background:var(--orange-dim);border:1px solid rgba(226,84,31,.3);border-radius:var(--radius-sm);align-items:center;gap:var(--space-3)">
+          <span style="font-weight:700;color:var(--text);font-size:var(--font-base)"><span id="clDirSelectedCount">0</span> selected</span>
+          <button class="btn btn-primary btn-sm" onclick="openBulkActionModal('task')"><span class="icon" data-icon="plus" data-icon-size="12"></span> Add Task to Selected</button>
+          <button class="btn btn-ghost btn-sm" onclick="openBulkActionModal('note')"><span class="icon" data-icon="note" data-icon-size="14"></span> Add Note to Selected</button>
+          <button class="btn btn-ghost btn-sm" onclick="clearDirectorySelection()" style="margin-left:auto">Clear Selection</button>
+        </div>
+
+        <div id="clDirBoardView"></div>
+
+        <div id="clDirCompactView" class="card" style="display:none">
+          <div class="tbl-scroll" style="max-height:560px">
+            <table style="table-layout:auto" id="allClientsTable">
+              <thead><tr>
+                <th style="width:34px"><input type="checkbox" id="clDirSelectAll" onchange="toggleDirectorySelectAll(this.checked)" aria-label="Select all clients"></th>
+                <th id="clDirSortName" onclick="handleClientsDirectorySort('name')" style="text-align:left;width:19%;cursor:pointer">Client Name</th>
+                <th style="width:23%">Portfolios</th>
+                <th id="clDirSortProducts" onclick="handleClientsDirectorySort('products')" style="width:25%;cursor:pointer"># Products</th>
+                <th style="width:29%">Actions</th>
+              </tr></thead>
+              <tbody id="clientsDirectoryBody"></tbody>
+            </table>
+          </div>
+        </div>
       </div>
-      <div class="tbl-scroll" style="max-height:560px">
-        <table style="table-layout:auto" id="allClientsTable">
-          <thead><tr>
-            <th style="width:34px"><input type="checkbox" id="clDirSelectAll" onchange="toggleDirectorySelectAll(this.checked)" aria-label="Select all clients"></th>
-            <th id="clDirSortName" onclick="handleClientsDirectorySort('name')" style="text-align:left;width:19%;cursor:pointer" data-i18n="th_client_name">Client Name</th>
-            <th style="width:23%" data-i18n="th_portfolios">Portfolios</th>
-            <th id="clDirSortProducts" onclick="handleClientsDirectorySort('products')" style="width:25%;cursor:pointer" data-i18n="th_num_products"># Products</th>
-            <th style="width:29%">Actions</th>
-          </tr></thead>
-          <tbody id="clientsDirectoryBody"></tbody>
-        </table>
+
+      <div class="cmdboard-sidebar-right">
+        <div class="cmdboard-section-hd">AI Insights <span class="cmdboard-beta">BETA</span></div>
+        <div id="clDirAiInsights"></div>
+        <div class="cmdboard-section-hd" style="margin-top:14px">Recently Updated Clients</div>
+        <div id="clDirRecentActivity"></div>
       </div>
+    </div>
+
+    <div class="cmdboard-bottombar">
+      <span><span class="icon" data-icon="refresh" data-icon-size="13"></span> Last Sync: <b id="clDirLastSync">—</b></span>
+      <span><span class="icon" data-icon="check" data-icon-size="13"></span> Auto-Merge: <b style="color:var(--green)">Enabled</b></span>
+      <span><span class="icon" data-icon="chart" data-icon-size="13"></span> Data Health: <b id="clDirDataHealth">—</b></span>
     </div>
     <div class="page-footer">The HUB · Niche Inc. · Unified Client Directory · v2.0 · Confidential</div>
   </div>
@@ -3496,6 +3641,8 @@ select.wfb-field-input { padding-right: 26px; }
     </div>
 
     <div class="wfb-statusbar">
+      <span><span id="wfbActiveDot" style="color:var(--text3)">●</span> Automation: <b id="wfbActiveText">Inactive</b></span>
+      <button class="btn btn-ghost btn-sm" id="wfbActiveToggleBtn" onclick="toggleCurrentWorkflowActive()" style="display:none"></button>
       <span>● Workflow Status: <b id="wfbStatusText">Draft</b></span>
       <span><span class="icon" data-icon="clock" data-icon-size="13"></span> Last Updated: <span id="wfbLastUpdated">—</span></span>
       <span><span class="icon" data-icon="user" data-icon-size="14"></span> Created by: <span id="wfbCreatedBy">—</span></span>
@@ -14450,14 +14597,81 @@ async function saveBulkAction() {
 function handleClientsDirectorySort(key) {
   const dir = (clientsDirectorySort.key === key && clientsDirectorySort.dir === 'asc') ? 'desc' : 'asc';
   clientsDirectorySort = { key, dir };
-  rebuildClientsDirectory();
+  syncClDirSortSelect();
+  filterClientsDirectory();
+}
+function handleClientsDirectorySortSelect(value) {
+  const [key, dir] = value.split('-');
+  clientsDirectorySort = { key, dir };
+  filterClientsDirectory();
+}
+function syncClDirSortSelect() {
+  const sel = document.getElementById('clDirSortSelect');
+  if (sel) sel.value = `${clientsDirectorySort.key}-${clientsDirectorySort.dir}`;
 }
 
-function rebuildClientsDirectory() {
+// Real "days since last note" per client -- the same activity proxy the
+// inactivity workflow trigger and lead-scoring logic already use elsewhere
+// in the app, reused here rather than inventing a second definition of
+// "inactive." There's no per-client creation-date field to build a real
+// "Recently Added" filter from (clients come in via spreadsheet upload,
+// not individually timestamped), so that's intentionally not one of the
+// smart filters below -- "Missing Contact Info" replaces it with something
+// actually backed by real data.
+function daysSinceLastClientNote(name) {
+  const notes = getClientNotes(name);
+  if (notes.length === 0) return Infinity;
+  const latestMs = notes.reduce((max, n) => Math.max(max, new Date(n.created_at).getTime() || 0), 0);
+  return (Date.now() - latestMs) / (24 * 60 * 60 * 1000);
+}
+
+let clDirViewMode = 'board';
+let activeClSavedView = 'all';
+let activeClSmartFilter = null;
+
+const CL_SAVED_VIEWS = [
+  { key: 'all', label: 'All Clients' },
+  { key: 'highvalue', label: 'High Value Clients' },
+  { key: 'atrisk', label: 'At Risk Clients' },
+  { key: 'recentlyupdated', label: 'Recently Updated' },
+  { key: 'crosssold', label: 'Cross-Sold Accounts' },
+];
+// "High Value" uses product count as a proxy for account value -- there's
+// no per-client revenue/budget field joined into the directory today. Ad
+// Spend budgets exist but only for the subset of clients tracked there, so
+// using it here would silently exclude everyone else rather than reflect
+// true value. Flagged rather than silently treated as exact.
+const CL_SMART_FILTERS = [
+  { key: 'needsattention', label: 'Needs Attention', color: 'var(--red)' },
+  { key: 'noproducts', label: 'No Products Assigned', color: 'var(--yellow)' },
+  { key: 'inactive90', label: 'Inactive > 90 Days', color: 'var(--text3)' },
+  { key: 'recentlyupdated7d', label: 'Recently Updated (7d)', color: 'var(--green)' },
+  { key: 'nocontact', label: 'Missing Contact Info', color: 'var(--blue)' },
+];
+
+function clRowMatchesSavedView(r, key) {
+  switch (key) {
+    case 'highvalue': return r.total >= 3;
+    case 'atrisk': return r.total === 0 || r.daysSinceNote > 60;
+    case 'recentlyupdated': return r.daysSinceNote <= 14;
+    case 'crosssold': return r.pks.length >= 2;
+    default: return true;
+  }
+}
+function clRowMatchesSmartFilter(r, key) {
+  switch (key) {
+    case 'needsattention': return r.total === 0 || r.daysSinceNote > 30;
+    case 'noproducts': return r.total === 0;
+    case 'inactive90': return r.daysSinceNote > 90;
+    case 'recentlyupdated7d': return r.daysSinceNote <= 7;
+    case 'nocontact': { const c = getClientContact(r.row.displayName); return !c || !(c.contact_name || c.email || c.phone); }
+    default: return true;
+  }
+}
+
+function computeClientDirectoryRows() {
   const merged = buildMergedClients();
-  // Compute each row's sortable values (portfolio count, product count) up
-  // front, before sorting, since those aren't raw fields on the merged record.
-  let rows = Object.values(merged).map(row => {
+  return Object.values(merged).map(row => {
     const pks = Object.keys(row.portfolios);
     let total = 0;
     const activeProducts = {};
@@ -14469,49 +14683,88 @@ function rebuildClientsDirectory() {
         }
       });
     });
-    return { row, pks, total, activeProducts };
+    return { row, pks, total, activeProducts, daysSinceNote: daysSinceLastClientNote(row.displayName) };
   });
-  const validNames = new Set(rows.map(r => r.row.displayName));
-  selectedDirectoryClients.forEach(name => { if (!validNames.has(name)) selectedDirectoryClients.delete(name); });
-  const mult = clientsDirectorySort.dir === 'desc' ? -1 : 1;
-  if (clientsDirectorySort.key === 'products') {
-    rows.sort((a, b) => (a.total - b.total) * mult);
-  } else {
-    rows.sort((a, b) => a.row.displayName.localeCompare(b.row.displayName) * mult);
-  }
-  const nameHead = document.getElementById('clDirSortName');
-  const productsHead = document.getElementById('clDirSortProducts');
-  if (nameHead) nameHead.innerHTML = 'Client Name' + (clientsDirectorySort.key === 'name' ? (clientsDirectorySort.dir === 'asc' ? ' ▲' : ' ▼') : '');
-  if (productsHead) productsHead.innerHTML = '# Products' + (clientsDirectorySort.key === 'products' ? (clientsDirectorySort.dir === 'asc' ? ' ▲' : ' ▼') : '');
+}
 
-  const multiCount = rows.filter(r => r.pks.length >= 2).length;
+function rebuildClientsDirectory() {
+  const allRows = computeClientDirectoryRows();
+  const validNames = new Set(allRows.map(r => r.row.displayName));
+  selectedDirectoryClients.forEach(name => { if (!validNames.has(name)) selectedDirectoryClients.delete(name); });
+
+  const multiCount = allRows.filter(r => r.pks.length >= 2).length;
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-  set('cl-total', rows.length);
+  set('cl-total', allRows.length);
   set('cl-smb-count', getClients('smb').length);
   set('cl-wl-count', getClients('whitelabel').length);
   set('cl-support-count', getClients('support').length);
   set('cl-multi-count', multiCount);
-  set('navClientsBadge', rows.length);
+  set('navClientsBadge', allRows.length);
   const addBtn = document.getElementById('addClientBtn');
   if (addBtn) addBtn.style.display = canEdit() ? '' : 'none';
   populateClientsProductFilter();
+  syncClDirSortSelect();
+  renderClDirSidebarLists(allRows);
+  renderClDirAiInsights(allRows);
+  renderClDirRecentActivity();
+  updateClDirBottomBar(allRows);
+  filterClientsDirectory();
+  updateBulkActionBar();
+}
+
+function getFilteredClientDirectoryRows() {
+  const q = (document.getElementById('clientsSearch') || {}).value || '';
+  const ql = q.trim().toLowerCase();
+  let rows = computeClientDirectoryRows().filter(r => {
+    if (ql && !r.row.displayName.toLowerCase().includes(ql)) return false;
+    if (activeClientsFilter !== 'all') {
+      if (activeClientsFilter === 'multi') { if (r.pks.length < 2) return false; }
+      else if (!r.pks.includes(activeClientsFilter)) return false;
+    }
+    if (activeProductFilter !== 'all' && !r.activeProducts[activeProductFilter]) return false;
+    if (activeClSavedView !== 'all' && !clRowMatchesSavedView(r, activeClSavedView)) return false;
+    if (activeClSmartFilter && !clRowMatchesSmartFilter(r, activeClSmartFilter)) return false;
+    return true;
+  });
+  const mult = clientsDirectorySort.dir === 'desc' ? -1 : 1;
+  if (clientsDirectorySort.key === 'products') rows.sort((a, b) => (a.total - b.total) * mult);
+  else rows.sort((a, b) => a.row.displayName.localeCompare(b.row.displayName) * mult);
+  return rows;
+}
+
+function filterClientsDirectory() {
+  const rows = getFilteredClientDirectoryRows();
+  const rc = document.getElementById('clientsRowCount');
+  if (rc) rc.textContent = `${rows.length} client${rows.length !== 1 ? 's' : ''}`;
+  const label = document.getElementById('clDirViewingLabel');
+  if (label) {
+    const smartFilter = CL_SMART_FILTERS.find(f => f.key === activeClSmartFilter);
+    const savedView = CL_SAVED_VIEWS.find(v => v.key === activeClSavedView);
+    label.textContent = smartFilter ? smartFilter.label : (savedView ? savedView.label : 'All Clients');
+  }
+  if (clDirViewMode === 'board') renderClientBoardView(rows);
+  else renderClientCompactTable(rows);
+}
+
+function renderClientCompactTable(rows) {
   const tbody = document.getElementById('clientsDirectoryBody');
   if (!tbody) return;
+  const nameHead = document.getElementById('clDirSortName');
+  const productsHead = document.getElementById('clDirSortProducts');
+  if (nameHead) nameHead.innerHTML = 'Client Name' + (clientsDirectorySort.key === 'name' ? (clientsDirectorySort.dir === 'asc' ? ' ▲' : ' ▼') : '');
+  if (productsHead) productsHead.innerHTML = '# Products' + (clientsDirectorySort.key === 'products' ? (clientsDirectorySort.dir === 'asc' ? ' ▲' : ' ▼') : '');
   const rowsHtml = rows.map(({ row, pks, total, activeProducts }) => {
     const chips = pks.map(pk => `<span class="portfolio-chip chip-${pk}">${PORTFOLIO_ICONS[pk]} ${PORTFOLIO_LABELS[pk]}</span>`).join('');
     const safe = escOnclickArg(row.displayName);
-    const attrs = pks.map(pk => `data-has-${pk}="true"`).join(' ');
     const productList = Object.values(activeProducts);
     const iconsHtml = productList.length
-      ? `<span class="product-icon-row">${productList.map(p =>
-          `<span class="product-icon-chip" title="${escAttr(p.label)}">${renderProductIcon(p.icon, 14)}</span>`
-        ).join('')}</span>`
+      ? `<span class="product-icon-row">${productList.map(p => `<span class="product-icon-chip" title="${escAttr(p.label)}">${renderProductIcon(p.icon, 14)}</span>`).join('')}</span>`
       : '';
     const contact = getClientContact(row.displayName);
     const contactHint = contact && (contact.contact_name || contact.email || contact.phone)
       ? `<div style="font-size:11px;color:var(--text3);font-weight:400;margin-top:1px">${escAttr(contact.contact_name || '')}${contact.contact_name && (contact.email || contact.phone) ? ' · ' : ''}${escAttr(contact.phone || contact.email || '')}</div>`
       : '';
-    return `<tr data-name="${escAttr(row.displayName.toLowerCase())}" data-portfolio-count="${pks.length}" data-products="${Object.keys(activeProducts).join(' ')}" ${attrs}>
+    return `<tr>
       <td><input type="checkbox" class="cl-dir-row-check" data-client="${escAttr(row.displayName)}" onchange="toggleDirectoryRowSelect('${safe}', this.checked)" ${selectedDirectoryClients.has(row.displayName) ? 'checked' : ''} aria-label="Select ${escAttr(row.displayName)}"></td>
       <td style="color:var(--text);font-weight:600">
         <a href="#" onclick="openClientNotesTasksModal('${safe}');return false;" style="color:inherit;text-decoration:none" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${escAttr(row.displayName)}</a>
@@ -14528,11 +14781,118 @@ function rebuildClientsDirectory() {
   });
   tbody.innerHTML = rowsHtml.length > 0 ? rowsHtml.join('') : emptyStateRow(5, {
     icon: hubIcon('users', 28),
-    title: 'No clients yet',
-    sub: 'Once clients are uploaded to any portfolio, they\'ll show up here in one unified directory.',
+    title: 'No clients match these filters',
+    sub: 'Try a different saved view, smart filter, or search term.',
   });
+}
+
+const CL_BOARD_GROUPS = [
+  { key: 'whitelabel', label: 'White Label Partners' },
+  { key: 'smb', label: 'SMB Clients' },
+  { key: 'support', label: 'Support Clients' },
+];
+
+// Health pill per group is a real computed signal (share of clients with no
+// products or no note in 60+ days), not a fixed cosmetic label -- so it
+// actually changes if a group's data changes.
+function clHealthPill(rows) {
+  if (rows.length === 0) return { cls: 'healthy', label: 'Healthy' };
+  const atRiskCount = rows.filter(r => r.total === 0 || r.daysSinceNote > 60).length;
+  const pct = 1 - (atRiskCount / rows.length);
+  if (pct >= 0.9) return { cls: 'healthy', label: 'Healthy' };
+  if (pct >= 0.75) return { cls: 'watch', label: 'Watch' };
+  return { cls: 'risk', label: 'At Risk' };
+}
+
+function renderClDirBoardClientCard(r) {
+  const safe = escOnclickArg(r.row.displayName);
+  const chips = r.pks.map(pk => `<span class="portfolio-chip chip-${pk}">${PORTFOLIO_ICONS[pk]} ${PORTFOLIO_LABELS[pk]}</span>`).join('');
+  return `<div class="cmdboard-client-card" onclick="openClientNotesTasksModal('${safe}')">
+    <div class="cc-name"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escAttr(r.row.displayName)}</span><span class="cc-menu">⋮</span></div>
+    <div class="cc-products">${r.total} product${r.total === 1 ? '' : 's'}</div>
+    <div class="cc-tags">${chips}</div>
+  </div>`;
+}
+
+function renderClientBoardView(rows) {
+  const wrap = document.getElementById('clDirBoardView');
+  if (!wrap) return;
+  if (rows.length === 0) {
+    wrap.innerHTML = emptyStateHTML({ icon: hubIcon('users', 28), title: 'No clients match these filters', sub: 'Try a different saved view, smart filter, or search term.' });
+    return;
+  }
+  let html = '';
+  CL_BOARD_GROUPS.forEach(g => {
+    const groupRows = rows.filter(r => r.pks.includes(g.key));
+    if (groupRows.length === 0) return;
+    const health = clHealthPill(groupRows);
+    const shown = groupRows.slice(0, 10);
+    html += `<div class="cmdboard-group">
+      <div class="cmdboard-group-hd">
+        <span class="cmdboard-group-title">${PORTFOLIO_ICONS[g.key]} ${g.label.toUpperCase()} <span class="cmdboard-group-count">${groupRows.length} clients</span></span>
+        <div class="cmdboard-group-actions">
+          <a onclick="jumpClDirToCompact('${g.key}')">View all ›</a>
+          <span class="cmdboard-health-pill ${health.cls}">${health.label}</span>
+        </div>
+      </div>
+      <div class="cmdboard-card-grid">${shown.map(renderClDirBoardClientCard).join('')}</div>
+    </div>`;
+  });
+  const crossSold = rows.filter(r => r.pks.length >= 2);
+  if (crossSold.length > 0) {
+    const shown = crossSold.slice(0, 10);
+    html += `<div class="cmdboard-group">
+      <div class="cmdboard-group-hd">
+        <span class="cmdboard-group-title" style="color:var(--purple)">${hubIcon('link',13)} CROSS-SOLD (2+ PORTFOLIOS) <span class="cmdboard-group-count">${crossSold.length} clients</span></span>
+        <div class="cmdboard-group-actions">
+          <a onclick="jumpClDirToCompact('multi')">View all ›</a>
+          <span class="cmdboard-health-pill healthy">Opportunity</span>
+        </div>
+      </div>
+      <div class="cmdboard-card-grid">${shown.map(renderClDirBoardClientCard).join('')}</div>
+    </div>`;
+  }
+  wrap.innerHTML = html;
+}
+
+function jumpClDirToCompact(portfolioKey) {
+  activeClientsFilter = portfolioKey;
+  clDirViewMode = 'compact';
+  const boardBtn = document.getElementById('clDirViewBtnBoard');
+  const compactBtn = document.getElementById('clDirViewBtnCompact');
+  const boardView = document.getElementById('clDirBoardView');
+  const compactView = document.getElementById('clDirCompactView');
+  if (boardBtn) boardBtn.classList.remove('active');
+  if (compactBtn) compactBtn.classList.add('active');
+  if (boardView) boardView.style.display = 'none';
+  if (compactView) compactView.style.display = '';
+  renderClDirSidebarLists(computeClientDirectoryRows());
   filterClientsDirectory();
-  updateBulkActionBar();
+}
+
+function setClDirViewMode(mode) {
+  clDirViewMode = mode;
+  const boardBtn = document.getElementById('clDirViewBtnBoard');
+  const compactBtn = document.getElementById('clDirViewBtnCompact');
+  const boardView = document.getElementById('clDirBoardView');
+  const compactView = document.getElementById('clDirCompactView');
+  if (boardBtn) boardBtn.classList.toggle('active', mode === 'board');
+  if (compactBtn) compactBtn.classList.toggle('active', mode === 'compact');
+  if (boardView) boardView.style.display = mode === 'board' ? '' : 'none';
+  if (compactView) compactView.style.display = mode === 'compact' ? '' : 'none';
+  filterClientsDirectory();
+}
+
+function applyClDirSavedView(key) {
+  activeClSavedView = key;
+  activeClSmartFilter = null; // saved view and smart filter are two lenses on the same list, not stackable
+  renderClDirSidebarLists(computeClientDirectoryRows());
+  filterClientsDirectory();
+}
+function applyClDirSmartFilter(key) {
+  activeClSmartFilter = (activeClSmartFilter === key) ? null : key;
+  renderClDirSidebarLists(computeClientDirectoryRows());
+  filterClientsDirectory();
 }
 
 function populateClientsProductFilter() {
@@ -14544,7 +14904,7 @@ function populateClientsProductFilter() {
   });
   const products = Object.values(seen);
   const prevVal = activeProductFilter;
-  sel.innerHTML = `<option value="all"><span class="icon" data-icon="package" data-icon-size="16"></span> All Products</option>` +
+  sel.innerHTML = `<option value="all">All Products</option>` +
     products.map(p => `<option value="${escAttr(p.key)}">${escAttr(p.label)}</option>`).join('');
   if (prevVal === 'all' || products.some(p => p.key === prevVal)) sel.value = prevVal;
   else { activeProductFilter = 'all'; sel.value = 'all'; }
@@ -14555,33 +14915,112 @@ function filterClientsByProduct(key) {
   filterClientsDirectory();
 }
 
-function filterClientsDirectory() {
-  const q = (document.getElementById('clientsSearch')||{}).value||'';
-  let n = 0;
-  document.querySelectorAll('#clientsDirectoryBody tr').forEach(row => {
-    const name = row.dataset.name||'';
-    const pc = parseInt(row.dataset.portfolioCount||0);
-    let show = name.includes(q.toLowerCase());
-    if (show && activeClientsFilter !== 'all') {
-      if (activeClientsFilter === 'multi') show = pc >= 2;
-      else show = row.dataset['has'+activeClientsFilter[0].toUpperCase()+activeClientsFilter.slice(1)] === 'true';
-    }
-    if (show && activeProductFilter !== 'all') {
-      const products = (row.dataset.products || '').split(' ').filter(Boolean);
-      show = products.includes(activeProductFilter);
-    }
-    row.style.display = show ? '' : 'none';
-    if (show) n++;
-  });
-  const rc = document.getElementById('clientsRowCount');
-  if (rc) rc.textContent = `${n} client${n!==1?'s':''}`;
+function filterClientsByPortfolio(p) {
+  activeClientsFilter = p;
+  renderClDirSidebarLists(computeClientDirectoryRows());
+  filterClientsDirectory();
 }
 
-function filterClientsByPortfolio(p, btn) {
-  activeClientsFilter = p;
-  document.querySelectorAll('#clientsFilterPills .filter-pill').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  filterClientsDirectory();
+function renderClDirSidebarLists(rows) {
+  const savedViewsWrap = document.getElementById('clDirSavedViews');
+  if (savedViewsWrap) {
+    savedViewsWrap.innerHTML = CL_SAVED_VIEWS.map(v => {
+      const count = v.key === 'all' ? rows.length : rows.filter(r => clRowMatchesSavedView(r, v.key)).length;
+      return `<div class="cmdboard-list-item${activeClSavedView === v.key ? ' active' : ''}" onclick="applyClDirSavedView('${v.key}')"><span>${escAttr(v.label)}</span><span class="cmdboard-count">${count}</span></div>`;
+    }).join('');
+  }
+  const smartWrap = document.getElementById('clDirSmartFilters');
+  if (smartWrap) {
+    smartWrap.innerHTML = CL_SMART_FILTERS.map(f => {
+      const count = rows.filter(r => clRowMatchesSmartFilter(r, f.key)).length;
+      return `<div class="cmdboard-list-item${activeClSmartFilter === f.key ? ' active' : ''}" onclick="applyClDirSmartFilter('${f.key}')"><span><span class="cmdboard-dot" style="background:${f.color};color:${f.color}"></span>${escAttr(f.label)}</span><span class="cmdboard-count">${count}</span></div>`;
+    }).join('');
+  }
+  const portfolioWrap = document.getElementById('clDirPortfolioFilters');
+  if (portfolioWrap) {
+    const items = [
+      { key: 'all', label: 'All Portfolios', count: rows.length },
+      { key: 'smb', label: 'SMB', count: getClients('smb').length },
+      { key: 'whitelabel', label: 'White Label', count: getClients('whitelabel').length },
+      { key: 'support', label: 'Support', count: getClients('support').length },
+      { key: 'multi', label: '2+ Portfolios', count: rows.filter(r => r.pks.length >= 2).length },
+    ];
+    portfolioWrap.innerHTML = items.map(it =>
+      `<div class="cmdboard-list-item${activeClientsFilter === it.key ? ' active' : ''}" onclick="filterClientsByPortfolio('${it.key}')"><span>${activeClientsFilter === it.key ? '<span class="icon cmdboard-check" data-icon="check" data-icon-size="12"></span>' : ''}${escAttr(it.label)}</span><span class="cmdboard-count">${it.count}</span></div>`
+    ).join('');
+  }
+}
+
+// ─── AI Insights (right sidebar) -- real numbers, not placeholders. Merge
+// suggestions/duplicate detection both read from the same duplicate-group
+// scan already used on the Settings tab, so the two panels can't drift.
+function renderClDirAiInsights(rows) {
+  const wrap = document.getElementById('clDirAiInsights');
+  if (!wrap) return;
+  wrap.innerHTML = '<div class="cmdboard-insight-desc">Scanning…</div>';
+  detectDuplicateClientGroups().then(groups => {
+    const mergeCount = groups.length;
+    const crossSellCount = rows.filter(r => r.pks.length === 1 && r.total > 0 && r.total < 3).length;
+    wrap.innerHTML = `
+      <div class="cmdboard-insight-card" onclick="showPage('settings')">
+        <div class="cmdboard-insight-hd"><span class="icon" data-icon="puzzle" data-icon-size="12"></span> Merge Suggestions <span class="cmdboard-insight-count">${mergeCount}</span></div>
+        <div class="cmdboard-insight-desc">Clients with matching names across portfolios that can be merged.</div>
+      </div>
+      <div class="cmdboard-insight-card" onclick="showPage('settings')">
+        <div class="cmdboard-insight-hd"><span class="icon" data-icon="link" data-icon-size="12"></span> Duplicate Detection <span class="cmdboard-insight-count">${mergeCount}</span></div>
+        <div class="cmdboard-insight-desc">Potential duplicate rows detected across your directory.</div>
+      </div>
+      <div class="cmdboard-insight-card" onclick="applyClDirSavedView('all')">
+        <div class="cmdboard-insight-hd"><span class="icon" data-icon="trending" data-icon-size="12"></span> Cross-Sell Opportunities <span class="cmdboard-insight-count">${crossSellCount}</span></div>
+        <div class="cmdboard-insight-desc">Single-portfolio clients using fewer than 3 products — room to expand.</div>
+      </div>`;
+  });
+}
+
+function renderClDirRecentActivity() {
+  const wrap = document.getElementById('clDirRecentActivity');
+  if (!wrap) return;
+  const recent = [...CLIENT_NOTES].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  if (recent.length === 0) {
+    wrap.innerHTML = '<div class="cmdboard-insight-desc">No recent activity yet.</div>';
+    return;
+  }
+  const seen = new Set();
+  const rowsHtml = [];
+  for (const n of recent) {
+    if (seen.has(n.client_name) || rowsHtml.length >= 8) continue;
+    seen.add(n.client_name);
+    rowsHtml.push(`<div class="cmdboard-activity-item" onclick="openClientNotesTasksModal('${escOnclickArg(n.client_name)}')"><span class="cmdboard-dot"></span><span class="cc-name-txt">${escAttr(n.client_name)}</span><span class="cmdboard-activity-time">${fmtNoteTime(n.created_at)}</span></div>`);
+  }
+  wrap.innerHTML = rowsHtml.join('') || '<div class="cmdboard-insight-desc">No recent activity yet.</div>';
+}
+
+// ─── Bottom bar -- Last Sync reads the real Google Sheets connection
+// timestamps (the actual place data enters this directory from), not a
+// generic "page loaded" time. Data Health is a real % (has at least one
+// product AND at least one piece of contact info on file), not decorative.
+async function updateClDirBottomBar(rows) {
+  const healthEl = document.getElementById('clDirDataHealth');
+  if (healthEl) {
+    const healthyCount = rows.filter(r => {
+      const c = getClientContact(r.row.displayName);
+      const hasContact = !!(c && (c.contact_name || c.email || c.phone));
+      return r.total > 0 && hasContact;
+    }).length;
+    const pct = rows.length ? Math.round((healthyCount / rows.length) * 100) : 100;
+    healthEl.textContent = pct + '%';
+  }
+  const syncEl = document.getElementById('clDirLastSync');
+  if (syncEl) {
+    try {
+      const conns = await sbSelect('sheets_connections');
+      if (conns.length === 0) { syncEl.textContent = 'No sheets connected'; return; }
+      const latest = conns.reduce((max, c) => Math.max(max, new Date(c.last_synced).getTime() || 0), 0);
+      syncEl.textContent = latest ? fmtNoteTime(new Date(latest).toISOString()) : '—';
+    } catch(e) {
+      syncEl.textContent = '—';
+    }
+  }
 }
 
 const PORTFOLIO_CHECKBOX_IDS = { smb: 'acPortfolioSmb', whitelabel: 'acPortfolioWhitelabel', support: 'acPortfolioSupport' };
@@ -14967,6 +15406,7 @@ async function rebuildWorkflowsPage() {
   } else {
     const nameEl = document.getElementById('wfbWorkflowName');
     if (nameEl) nameEl.textContent = 'No workflow yet';
+    setWfbActiveIndicator(false, 'draft');
     workflowNodesCache = []; workflowEdgesCache = [];
     renderWorkflowCanvas();
   }
@@ -14980,7 +15420,8 @@ function renderWfbTabs() {
   const bar = document.getElementById('wfbTabsBar');
   if (!bar) return;
   bar.innerHTML = WORKFLOWS.map(w => `
-    <div class="wfb-tab${w.id === currentWorkflowGraphId ? ' active' : ''}" onclick="switchWfbWorkflowTab('${w.id}')" title="${escAttr(w.name)}">
+    <div class="wfb-tab${w.id === currentWorkflowGraphId ? ' active' : ''}" onclick="switchWfbWorkflowTab('${w.id}')" title="${escAttr(w.name)} — ${w.active ? 'Active' : 'Inactive'}">
+      <span class="status-dot ${w.active ? 'active' : 'inactive'}"></span>
       <span class="wfb-tab-label">${escAttr(w.name || 'Untitled')}</span>
       <span class="wfb-tab-close" onclick="event.stopPropagation();confirmDeleteWfbWorkflowTab('${w.id}')" title="Delete this workflow">${hubIcon('close', 10)}</span>
     </div>`).join('') + `<div class="wfb-tab-new" onclick="createNewWfbWorkflow()" title="New workflow">${hubIcon('plus', 14)}</div>`;
@@ -15029,6 +15470,7 @@ async function loadWorkflowGraph(workflowId) {
   set('wfbStatusText', wf && wf.status === 'published' ? 'Published' : 'Draft');
   set('wfbLastUpdated', wf && wf.updated_at ? fmtNoteTime(wf.updated_at) : '—');
   set('wfbCreatedBy', wf ? (wf.created_by || '—') : '—');
+  setWfbActiveIndicator(!!(wf && wf.active), wf ? wf.status : 'draft');
 
   renderWorkflowCanvas();
 }
@@ -16593,7 +17035,48 @@ async function commitWorkflowSave(status) {
   set('wfbStatusText', status === 'published' ? 'Published' : 'Draft');
   set('wfbLastUpdated', fmtNoteTime(updated_at));
   set('wfbAutosaveNote', `Auto-saved ${fmtNoteTime(updated_at)}`);
+  setWfbActiveIndicator(patch.active, status);
+  renderWfbTabs();
   showToast(status === 'published' ? '🚀 Workflow is now live.' : '📝 Saved as draft — not running yet.', 'success');
+}
+// Keeps the statusbar's Active/Inactive readout in sync with wf.active --
+// separate from the Draft/Published badge above it, since "published"
+// currently always implies active in this flow, but the two read very
+// differently to someone scanning quickly for "is this actually running."
+// Pause/Resume (2026-07-17) -- previously the only way to stop a workflow
+// running was to re-open the Save modal and save it back as a Draft, which
+// also flips the Draft/Published badge even though the workflow itself is
+// still finished and correct -- pausing isn't "back to draft," it's "stop
+// running for now." This patches just the active column, independent of
+// status, so a paused workflow stays marked Published.
+async function toggleCurrentWorkflowActive() {
+  if (!requirePermission('edit')) return;
+  const wf = WORKFLOWS.find(w => w.id === currentWorkflowGraphId);
+  if (!wf) return;
+  if (wf.status !== 'published') { showToast('Publish this workflow first — a draft can\'t run.', 'warning'); return; }
+  const nextActive = !wf.active;
+  try {
+    await sbPatch('workflows', `id=eq.${wf.id}`, { active: nextActive });
+  } catch(e) { showToast('Could not update: ' + e.message, 'error'); return; }
+  wf.active = nextActive;
+  setWfbActiveIndicator(wf.active, wf.status);
+  renderWfbTabs();
+  showToast(wf.active ? '▸ Workflow resumed.' : '⏸ Workflow paused — it won\'t run until resumed.', 'success');
+}
+function setWfbActiveIndicator(active, status) {
+  const dot = document.getElementById('wfbActiveDot');
+  const text = document.getElementById('wfbActiveText');
+  const btn = document.getElementById('wfbActiveToggleBtn');
+  if (dot) dot.style.color = active ? 'var(--green)' : 'var(--text3)';
+  if (text) text.textContent = active ? 'Active' : 'Inactive';
+  if (btn) {
+    if (status === 'published' && canEdit()) {
+      btn.style.display = '';
+      btn.innerHTML = active ? '⏸ Pause' : '▸ Resume';
+    } else {
+      btn.style.display = 'none';
+    }
+  }
 }
 
 function rebuildWorkflowsPageOLD() {
