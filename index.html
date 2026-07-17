@@ -686,12 +686,22 @@ body.ai-panel-open .main {
   background: var(--orange-dim) !important; border: 2px dashed var(--orange) !important;
   border-radius: var(--radius) !important; opacity: .6;
 }
-.hub-grid .ui-resizable-handle { z-index: 20; }
-.hub-grid .ui-resizable-se {
-  width: 16px !important; height: 16px !important; right: 2px !important; bottom: 2px !important;
-  background: var(--orange) !important; border-radius: 4px; opacity: 0; transition: opacity var(--transition-base);
+.hub-grid .ui-resizable-handle { z-index: 20; opacity: 0; transition: opacity var(--transition-base); }
+.hub-grid .ui-resizable-se, .hub-grid .ui-resizable-sw, .hub-grid .ui-resizable-ne, .hub-grid .ui-resizable-nw {
+  width: 14px !important; height: 14px !important; background: var(--orange) !important; border-radius: 4px;
 }
-.hub-grid.editing .grid-stack-item:hover .ui-resizable-se { opacity: .85; }
+.hub-grid .ui-resizable-se { right: 2px !important; bottom: 2px !important; cursor: nwse-resize; }
+.hub-grid .ui-resizable-sw { left: 2px !important; bottom: 2px !important; cursor: nesw-resize; }
+.hub-grid .ui-resizable-ne { right: 2px !important; top: 2px !important; cursor: nesw-resize; }
+.hub-grid .ui-resizable-nw { left: 2px !important; top: 2px !important; cursor: nwse-resize; }
+.hub-grid .ui-resizable-e, .hub-grid .ui-resizable-w { width: 6px !important; background: var(--orange) !important; top: 8px !important; bottom: 8px !important; height: auto !important; border-radius: 3px; cursor: ew-resize; }
+.hub-grid .ui-resizable-e { right: 0 !important; }
+.hub-grid .ui-resizable-w { left: 0 !important; }
+.hub-grid .ui-resizable-n, .hub-grid .ui-resizable-s { height: 6px !important; background: var(--orange) !important; left: 8px !important; right: 8px !important; width: auto !important; border-radius: 3px; cursor: ns-resize; }
+.hub-grid .ui-resizable-n { top: 0 !important; }
+.hub-grid .ui-resizable-s { bottom: 0 !important; }
+.hub-grid.editing .grid-stack-item:hover .ui-resizable-handle { opacity: .7; }
+.hub-grid .ui-resizable-handle:hover { opacity: 1 !important; }
 .hub-grid.editing .grid-stack-item { cursor: grab; }
 .hub-grid.editing .grid-stack-item:active { cursor: grabbing; }
 .hub-grid.editing .grid-stack-item-content { outline: 1px dashed transparent; transition: outline-color var(--transition-base); }
@@ -6624,7 +6634,7 @@ function initHubGrid(gridId, storageKey) {
     float: true,
     staticGrid: true,
     animate: true,
-    resizable: { handles: 'se' },
+    resizable: { handles: 'e, se, s, sw, w, nw, n, ne' },
   }, el);
   HUB_GRIDS[gridId] = grid;
 
