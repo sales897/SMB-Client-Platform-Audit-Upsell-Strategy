@@ -509,6 +509,17 @@ body.ai-panel-open .main {
 .kpi-comet circle:not(.ring) { fill: var(--kpi-accent, var(--orange)); filter: drop-shadow(0 0 4px var(--kpi-accent, var(--orange))); }
 .kpi-comet circle.ring { fill: none; stroke: var(--kpi-accent, var(--orange)); stroke-width: 1.4; opacity: .55; filter: drop-shadow(0 0 3px var(--kpi-accent, var(--orange))); }
 .kpi-comet line { stroke: var(--kpi-accent, var(--orange)); stroke-width: 1.2; opacity: .5; }
+.kpi-comet line.bar { stroke-width: 6; stroke-linecap: round; opacity: .85; filter: drop-shadow(0 0 4px var(--kpi-accent, var(--orange))); }
+/* Corner radial gauge (2026-07-17) -- used where a card's number IS a real
+   percentage/coverage ratio, so the arc fill is computed from the actual
+   value in JS (see rebuildKPIs), not just decorative. */
+.kpi-gauge { position: absolute; top: 8px; right: 8px; inset: auto; width: 60px; height: 60px; opacity: 1; }
+.kpi-gauge .ring { stroke: var(--border); opacity: 1; filter: none; stroke-width: 8; }
+.kpi-gauge .gauge-fill { fill: none; stroke: var(--kpi-accent, var(--orange)); stroke-width: 8; stroke-linecap: round; filter: drop-shadow(0 0 5px var(--kpi-accent, var(--orange))); transition: stroke-dasharray var(--transition-slower); }
+/* Alert sonar ping (Products Untouched) -- rings expand and fade on a loop */
+.kpi-comet .pulse-1 { animation: kpiPulse 2.4s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+.kpi-comet .pulse-2 { animation: kpiPulse 2.4s ease-out infinite; animation-delay: .5s; transform-box: fill-box; transform-origin: center; }
+@keyframes kpiPulse { 0% { opacity: .6; transform: scale(.8); } 100% { opacity: 0; transform: scale(1.25); } }
 
 /* ─── Client Portfolio Command Board (2026-07-17) ────────────────────────── */
 .cmdboard-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: var(--space-4); }
@@ -530,6 +541,12 @@ body.ai-panel-open .main {
 .cmdboard-list-item .cmdboard-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; margin-right: 6px; box-shadow: 0 0 5px currentColor; }
 .cmdboard-list-item .cmdboard-check { width: 13px; height: 13px; flex-shrink: 0; margin-right: 6px; color: var(--green); }
 .cmdboard-count { font-family: var(--font-mono); font-size: 10.5px; color: var(--text3); }
+.cmdboard-list-item-removable { position: relative; padding-right: 24px; }
+.cmdboard-list-remove { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; border-radius: 4px; color: var(--text3); opacity: 0; background: none; border: none; cursor: pointer; }
+.cmdboard-list-item-removable:hover .cmdboard-list-remove { opacity: .7; }
+.cmdboard-list-remove:hover { opacity: 1 !important; background: var(--bg4); color: var(--red); }
+.cmdboard-list-item-action { color: var(--orange2); font-weight: 600; display: flex; align-items: center; gap: 5px; border-top: 1px solid var(--border); margin-top: 4px; padding-top: 9px; }
+.cmdboard-list-item-action:hover { color: var(--orange2); background: var(--bg3); }
 .cmdboard-list-item.active .cmdboard-count { color: var(--orange2); }
 .cmdboard-toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: var(--space-4); font-size: 13px; color: var(--text2); }
 .cmdboard-toolbar-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -3008,41 +3025,53 @@ select.wfb-field-input { padding-right: 26px; }
 
     <!-- KPIs -->
     <div class="kpi-row">
-      <div class="kpi">
+      <div class="kpi kpi-theme-orange">
         <div class="kpi-icon"><span class="icon" data-icon="users" data-icon-size="16"></span></div>
         <div class="kpi-val" id="kpi-smb-total">63</div>
         <div class="kpi-lbl" data-i18n="kpi_total_clients">Total Clients</div>
         <div class="kpi-sub" data-i18n="kpi_active_platform">Active in platform</div>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 130 100 C 150 95, 160 80, 172 75 C 184 70, 190 50, 200 45 C 212 39, 220 20, 232 12"/><circle cx="172" cy="75"/><circle cx="200" cy="45"/><circle cx="232" cy="12" r="3"/></svg>
       </div>
-      <div class="kpi">
+      <div class="kpi kpi-theme-orange">
         <div class="kpi-icon"><span class="icon" data-icon="package" data-icon-size="16"></span></div>
         <div class="kpi-val orange" id="kpi-smb-products">0</div>
         <div class="kpi-lbl" data-i18n="kpi_products_tracked">Products Tracked</div>
         <div class="kpi-sub" data-i18n="kpi_across_clients">Across all clients</div>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><line class="bar" x1="150" y1="105" x2="150" y2="80"/><line class="bar" x1="170" y1="105" x2="170" y2="60"/><line class="bar" x1="190" y1="105" x2="190" y2="70"/><line class="bar" x1="210" y1="105" x2="210" y2="40"/><line class="bar" x1="230" y1="105" x2="230" y2="20"/></svg>
       </div>
-      <div class="kpi">
+      <div class="kpi kpi-theme-blue">
         <div class="kpi-icon"><span class="icon" data-icon="trending" data-icon-size="14"></span></div>
         <div class="kpi-val" id="kpi-smb-avg">0</div>
         <div class="kpi-lbl" data-i18n="kpi_avg_products">Avg Products / Client</div>
         <div class="kpi-sub" data-i18n="kpi_upside">Significant upside potential</div>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 130 95 L 160 95 L 160 75 L 190 75 L 190 50 L 215 50 L 215 22 L 232 22"/></svg>
       </div>
-      <div class="kpi">
+      <div class="kpi kpi-theme-orange">
         <div class="kpi-icon"><span class="icon" data-icon="target" data-icon-size="16"></span></div>
         <div class="kpi-val orange" id="kpi-smb-opps">0</div>
         <div class="kpi-lbl" data-i18n="kpi_upsell_opps">Upsell Opportunities</div>
         <div class="kpi-sub" id="kpi-smb-opps-sub">Across all products</div>
+        <svg class="kpi-comet kpi-gauge" viewBox="0 0 120 120" aria-hidden="true">
+          <circle class="ring" cx="60" cy="60" r="46" stroke-dasharray="289" stroke-dashoffset="72"/>
+          <circle class="gauge-fill" id="kpi-smb-opps-arc" cx="60" cy="60" r="46" stroke-dasharray="0 289" stroke-dashoffset="72" transform="rotate(-90 60 60)"/>
+        </svg>
       </div>
-      <div class="kpi">
+      <div class="kpi kpi-theme-red">
         <div class="kpi-icon"><span class="icon" data-icon="alert" data-icon-size="16"></span></div>
         <div class="kpi-val red" id="kpi-smb-untouched">0 / 0</div>
         <div class="kpi-lbl" id="kpi-smb-untouched-lbl">Products Untouched</div>
         <div class="kpi-sub" id="kpi-smb-untouched-sub">—</div>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><circle class="ring" cx="205" cy="60" r="10"/><circle class="ring pulse-1" cx="205" cy="60" r="19"/><circle class="ring pulse-2" cx="205" cy="60" r="28"/><circle cx="205" cy="60" r="3"/></svg>
       </div>
-      <div class="kpi">
+      <div class="kpi kpi-theme-green">
         <div class="kpi-icon"><span class="icon" data-icon="check" data-icon-size="16"></span></div>
         <div class="kpi-val green" id="kpi-smb-top">0%</div>
         <div class="kpi-lbl" id="kpi-smb-top-lbl" data-i18n="kpi_top_adoption">Top Adoption</div>
         <div class="kpi-sub">Highest adoption product</div>
+        <svg class="kpi-comet kpi-gauge" viewBox="0 0 120 120" aria-hidden="true">
+          <circle class="ring" cx="60" cy="60" r="46" stroke-dasharray="289" stroke-dashoffset="72"/>
+          <circle class="gauge-fill" id="kpi-smb-top-arc" cx="60" cy="60" r="46" stroke-dasharray="0 289" stroke-dashoffset="72" transform="rotate(-90 60 60)"/>
+        </svg>
       </div>
     </div>
 
@@ -7221,11 +7250,14 @@ function rebuildKPIs(pk) {
   const avgEl = document.getElementById(`kpi-${pk}-avg`);
   const oppsEl = document.getElementById(`kpi-${pk}-opps`);
   const oppsSubEl = document.getElementById(`kpi-${pk}-opps-sub`);
+  const oppsArcEl = document.getElementById(`kpi-${pk}-opps-arc`);
   const untouchedEl = document.getElementById(`kpi-${pk}-untouched`);
   const untouchedLblEl = document.getElementById(`kpi-${pk}-untouched-lbl`);
   const untouchedSubEl = document.getElementById(`kpi-${pk}-untouched-sub`);
   const topEl = document.getElementById(`kpi-${pk}-top`);
   const topLblEl = document.getElementById(`kpi-${pk}-top-lbl`);
+  const topArcEl = document.getElementById(`kpi-${pk}-top-arc`);
+  const setGaugeArc = (el, pct) => { if (el) el.setAttribute('stroke-dasharray', `${(Math.max(0, Math.min(100, pct)) / 100 * 289).toFixed(1)} 289`); };
 
   if (totalEl) totalEl.textContent = total;
   if (prodEl) prodEl.textContent = cat.length;
@@ -7239,6 +7271,8 @@ function rebuildKPIs(pk) {
     if (oppsEl) oppsEl.textContent = '0';
     if (untouchedEl) untouchedEl.textContent = '0 / ' + cat.length;
     if (topEl) topEl.textContent = '0%';
+    setGaugeArc(oppsArcEl, 0);
+    setGaugeArc(topArcEl, 0);
     return;
   }
 
@@ -7250,15 +7284,21 @@ function rebuildKPIs(pk) {
   let topIdx = 0;
   counts.forEach((c,i) => { if (c > counts[topIdx]) topIdx = i; });
   const topPct = Math.round(counts[topIdx] / total * 1000) / 10;
+  // "Coverage gap" -- what share of every possible client×product pairing
+  // is still an open upsell opportunity. Real ratio, not decorative: fills
+  // the Upsell Opportunities gauge the same way topPct fills the other one.
+  const oppsPct = Math.round(totalOpps / (total * cat.length) * 1000) / 10;
 
   if (avgEl) avgEl.textContent = avg;
   if (oppsEl) oppsEl.textContent = totalOpps;
   if (oppsSubEl) oppsSubEl.textContent = `Across all ${cat.length} products`;
+  setGaugeArc(oppsArcEl, oppsPct);
   if (untouchedEl) untouchedEl.textContent = `${untouchedKeys.length} / ${cat.length}`;
   if (untouchedLblEl) untouchedLblEl.textContent = `${untouchedKeys.length} Products Untouched`;
   if (untouchedSubEl) untouchedSubEl.textContent = untouchedKeys.length ? untouchedKeys.map(p=>p.label).join(' · ') : 'Full coverage';
   if (topEl) topEl.textContent = topPct + '%';
   if (topLblEl) topLblEl.textContent = (cat[topIdx] ? cat[topIdx].label : '—') + ' Adoption';
+  setGaugeArc(topArcEl, topPct);
 }
 
 // ─── ADOPTION BAR ─────────────────────────────────────────────────────────────
@@ -11408,6 +11448,23 @@ async function loadReminders() {
   renderMyRemindersWidget();
 }
 
+// Command Board custom saved views (2026-07-17) -- team-shared like
+// Workflows, not personal-only like Reminders, since a named client filter
+// combo ("Renewal Targets Q3") is useful for the whole team to see and
+// reuse, not just whoever created it.
+const CLIENT_SAVED_VIEWS_CACHE_KEY = 'csh_client_saved_views_v1';
+let CLIENT_SAVED_VIEWS = [];
+async function loadClientSavedViews() {
+  try {
+    CLIENT_SAVED_VIEWS = await sbSelect('client_saved_views', 'order=created_at.asc');
+    localStorage.setItem(CLIENT_SAVED_VIEWS_CACHE_KEY, JSON.stringify(CLIENT_SAVED_VIEWS));
+  } catch(e) {
+    console.warn('client_saved_views table unavailable:', e.message);
+    try { CLIENT_SAVED_VIEWS = JSON.parse(localStorage.getItem(CLIENT_SAVED_VIEWS_CACHE_KEY) || '[]'); } catch(e2) { CLIENT_SAVED_VIEWS = []; }
+  }
+  if (document.getElementById('clDirSavedViews')) renderClDirSidebarLists(computeClientDirectoryRows());
+}
+
 async function createReminder(title, remindAtIso, clientName, ownerEmail) {
   const u = getCurrentUser();
   const owner = (ownerEmail || (u ? u.email : '')).trim().toLowerCase();
@@ -14607,12 +14664,14 @@ async function saveBulkAction() {
 function handleClientsDirectorySort(key) {
   const dir = (clientsDirectorySort.key === key && clientsDirectorySort.dir === 'asc') ? 'desc' : 'asc';
   clientsDirectorySort = { key, dir };
+  activeClCustomViewId = null;
   syncClDirSortSelect();
   filterClientsDirectory();
 }
 function handleClientsDirectorySortSelect(value) {
   const [key, dir] = value.split('-');
   clientsDirectorySort = { key, dir };
+  activeClCustomViewId = null;
   filterClientsDirectory();
 }
 function syncClDirSortSelect() {
@@ -14638,6 +14697,7 @@ function daysSinceLastClientNote(name) {
 let clDirViewMode = 'board';
 let activeClSavedView = 'all';
 let activeClSmartFilter = null;
+let activeClCustomViewId = null; // set when a user-created saved view is currently applied
 
 const CL_SAVED_VIEWS = [
   { key: 'all', label: 'All Clients' },
@@ -14899,11 +14959,13 @@ function setClDirViewMode(mode) {
 function applyClDirSavedView(key) {
   activeClSavedView = key;
   activeClSmartFilter = null; // saved view and smart filter are two lenses on the same list, not stackable
+  activeClCustomViewId = null;
   renderClDirSidebarLists(computeClientDirectoryRows());
   filterClientsDirectory();
 }
 function applyClDirSmartFilter(key) {
   activeClSmartFilter = (activeClSmartFilter === key) ? null : key;
+  activeClCustomViewId = null;
   renderClDirSidebarLists(computeClientDirectoryRows());
   filterClientsDirectory();
 }
@@ -14925,22 +14987,107 @@ function populateClientsProductFilter() {
 
 function filterClientsByProduct(key) {
   activeProductFilter = key;
+  activeClCustomViewId = null;
   filterClientsDirectory();
 }
 
 function filterClientsByPortfolio(p) {
   activeClientsFilter = p;
+  activeClCustomViewId = null;
   renderClDirSidebarLists(computeClientDirectoryRows());
   filterClientsDirectory();
+}
+
+// ─── Custom saved views (user-created, team-shared) ────────────────────────
+function countRowsForSavedView(rows, view) {
+  return rows.filter(r => {
+    if (view.portfolio_filter && view.portfolio_filter !== 'all') {
+      if (view.portfolio_filter === 'multi') { if (r.pks.length < 2) return false; }
+      else if (!r.pks.includes(view.portfolio_filter)) return false;
+    }
+    if (view.product_filter && view.product_filter !== 'all' && !r.activeProducts[view.product_filter]) return false;
+    if (view.smart_filter && !clRowMatchesSmartFilter(r, view.smart_filter)) return false;
+    return true;
+  }).length;
+}
+
+function applyClDirCustomSavedView(id) {
+  const view = CLIENT_SAVED_VIEWS.find(v => v.id === id);
+  if (!view) return;
+  activeClientsFilter = view.portfolio_filter || 'all';
+  activeProductFilter = view.product_filter || 'all';
+  activeClSmartFilter = view.smart_filter || null;
+  activeClSavedView = 'all'; // clear the built-in highlight -- a custom view is its own lens now
+  clientsDirectorySort = { key: view.sort_key || 'name', dir: view.sort_dir || 'asc' };
+  activeClCustomViewId = id;
+  const sel = document.getElementById('clientsProductFilter');
+  if (sel) sel.value = activeProductFilter;
+  syncClDirSortSelect();
+  renderClDirSidebarLists(computeClientDirectoryRows());
+  filterClientsDirectory();
+}
+
+async function deleteClDirSavedView(id, event) {
+  if (event) event.stopPropagation();
+  const view = CLIENT_SAVED_VIEWS.find(v => v.id === id);
+  if (!view) return;
+  if (!(await showConfirmDialog(`Delete the saved view "${view.name}"? Anyone on the team who uses it will lose it too.`, { danger: true, confirmLabel: 'Delete' }))) return;
+  CLIENT_SAVED_VIEWS = CLIENT_SAVED_VIEWS.filter(v => v.id !== id);
+  localStorage.setItem(CLIENT_SAVED_VIEWS_CACHE_KEY, JSON.stringify(CLIENT_SAVED_VIEWS));
+  if (activeClCustomViewId === id) { activeClCustomViewId = null; activeClSavedView = 'all'; }
+  try { await sbDelete('client_saved_views', `id=eq.${id}`); } catch(e) { showToast('Could not delete: ' + e.message, 'error'); }
+  renderClDirSidebarLists(computeClientDirectoryRows());
+  filterClientsDirectory();
+}
+
+async function openSaveClDirViewModal() {
+  if (!requirePermission('edit')) return;
+  const name = await showTextPromptDialog({
+    title: '✏️ Save current view',
+    label: 'Name this view',
+    placeholder: 'e.g. Renewal Targets Q3',
+  });
+  if (!name || !name.trim()) return;
+  const u = getCurrentUser();
+  const view = {
+    id: (crypto.randomUUID ? crypto.randomUUID() : 'v_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8)),
+    name: name.trim(),
+    portfolio_filter: activeClientsFilter,
+    product_filter: activeProductFilter,
+    smart_filter: activeClSmartFilter,
+    sort_key: clientsDirectorySort.key,
+    sort_dir: clientsDirectorySort.dir,
+    created_by: u ? u.name : 'Guest',
+    created_at: new Date().toISOString(),
+  };
+  CLIENT_SAVED_VIEWS.push(view);
+  localStorage.setItem(CLIENT_SAVED_VIEWS_CACHE_KEY, JSON.stringify(CLIENT_SAVED_VIEWS));
+  try { await sbUpsert('client_saved_views', view); } catch(e) { showToast('Could not save: ' + e.message, 'error'); return; }
+  activeClCustomViewId = view.id;
+  activeClSavedView = 'all';
+  renderClDirSidebarLists(computeClientDirectoryRows());
+  showToast(`Saved "${view.name}".`, 'success');
 }
 
 function renderClDirSidebarLists(rows) {
   const savedViewsWrap = document.getElementById('clDirSavedViews');
   if (savedViewsWrap) {
-    savedViewsWrap.innerHTML = CL_SAVED_VIEWS.map(v => {
+    const builtInHtml = CL_SAVED_VIEWS.map(v => {
       const count = v.key === 'all' ? rows.length : rows.filter(r => clRowMatchesSavedView(r, v.key)).length;
-      return `<div class="cmdboard-list-item${activeClSavedView === v.key ? ' active' : ''}" onclick="applyClDirSavedView('${v.key}')"><span>${escAttr(v.label)}</span><span class="cmdboard-count">${count}</span></div>`;
+      const active = !activeClCustomViewId && activeClSavedView === v.key;
+      return `<div class="cmdboard-list-item${active ? ' active' : ''}" onclick="applyClDirSavedView('${v.key}')"><span>${escAttr(v.label)}</span><span class="cmdboard-count">${count}</span></div>`;
     }).join('');
+    const customHtml = CLIENT_SAVED_VIEWS.map(v => {
+      const count = countRowsForSavedView(rows, v);
+      const active = activeClCustomViewId === v.id;
+      return `<div class="cmdboard-list-item cmdboard-list-item-removable${active ? ' active' : ''}" onclick="applyClDirCustomSavedView('${v.id}')">
+        <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><span class="icon" data-icon="star" data-icon-size="11" style="margin-right:5px;vertical-align:-1px"></span>${escAttr(v.name)}</span>
+        <span class="cmdboard-count">${count}</span>
+        <button class="cmdboard-list-remove" onclick="deleteClDirSavedView('${v.id}', event)" title="Delete this saved view" aria-label="Delete ${escAttr(v.name)}">${hubIcon('close', 10)}</button>
+      </div>`;
+    }).join('');
+    savedViewsWrap.innerHTML = builtInHtml + customHtml +
+      `<div class="cmdboard-list-item cmdboard-list-item-action" onclick="openSaveClDirViewModal()"><span class="icon" data-icon="plus" data-icon-size="11"></span> Save current view</div>`;
   }
   const smartWrap = document.getElementById('clDirSmartFilters');
   if (smartWrap) {
@@ -21760,6 +21907,7 @@ async function bootApp() {
     loadWorkflows(),              // Workflow automation engine
     loadKnowledgeBase(),          // Knowledge Base (SOPs, docs, website content Nirvana can search)
     loadNirvanaConversation(),    // Nirvana's saved conversation history
+    loadClientSavedViews(),       // Command Board custom saved views
   ]);
 
   // Genuine dependencies: these read the in-memory results of the batch above,
