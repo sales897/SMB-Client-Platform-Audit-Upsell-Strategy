@@ -296,9 +296,8 @@ body {
   gap: 2px;
 }
 .nav-dropdown-menu .nav-item { width: 100%; }
-.nav-dropdown:hover .nav-dropdown-menu,
-.nav-dropdown:focus-within .nav-dropdown-menu { display: flex; }
-.nav-dropdown:hover .nav-dropdown-trigger .caret { transform: rotate(180deg); }
+.nav-dropdown.open .nav-dropdown-menu { display: flex; }
+.nav-dropdown.open .nav-dropdown-trigger .caret { transform: rotate(180deg); }
 
 .nav-toggle {
   display: none;
@@ -2603,8 +2602,8 @@ select.wfb-field-input { padding-right: 26px; }
       <span class="icon" data-icon="home"></span> <span data-i18n="nav_home">Home</span>
     </div>
 
-    <div class="nav-dropdown">
-      <div class="nav-item nav-dropdown-trigger"><span data-i18n="nav_portfolios">Portfolios</span> <span class="caret">▾</span></div>
+    <div class="nav-dropdown" onmouseleave="closeNavDropdown(this)">
+      <div class="nav-item nav-dropdown-trigger" onclick="toggleNavDropdown(this)"><span data-i18n="nav_portfolios">Portfolios</span> <span class="caret">▾</span></div>
       <div class="nav-dropdown-menu">
         <div class="nav-item" onclick="showPage('clients')">
           <span class="icon" data-icon="users"></span> All Clients
@@ -2630,8 +2629,8 @@ select.wfb-field-input { padding-right: 26px; }
       <span class="badge" id="navOnboardingBadge">0</span>
     </div>
 
-    <div class="nav-dropdown">
-      <div class="nav-item nav-dropdown-trigger"><span data-i18n="nav_performance">Performance</span> <span class="caret">▾</span></div>
+    <div class="nav-dropdown" onmouseleave="closeNavDropdown(this)">
+      <div class="nav-item nav-dropdown-trigger" onclick="toggleNavDropdown(this)"><span data-i18n="nav_performance">Performance</span> <span class="caret">▾</span></div>
       <div class="nav-dropdown-menu">
         <div class="nav-item" onclick="showPage('voice')">
           <span class="icon" data-icon="mic"></span> Voice Agent
@@ -2643,8 +2642,8 @@ select.wfb-field-input { padding-right: 26px; }
       </div>
     </div>
 
-    <div class="nav-dropdown">
-      <div class="nav-item nav-dropdown-trigger"><span data-i18n="nav_growth_tools">Growth Tools</span> <span class="caret">▾</span></div>
+    <div class="nav-dropdown" onmouseleave="closeNavDropdown(this)">
+      <div class="nav-item nav-dropdown-trigger" onclick="toggleNavDropdown(this)"><span data-i18n="nav_growth_tools">Growth Tools</span> <span class="caret">▾</span></div>
       <div class="nav-dropdown-menu">
         <div class="nav-item" onclick="showPage('upsell')">
           <span class="icon" data-icon="rocket"></span> Upsell Playbook
@@ -2667,8 +2666,8 @@ select.wfb-field-input { padding-right: 26px; }
       </div>
     </div>
 
-    <div class="nav-dropdown">
-      <div class="nav-item nav-dropdown-trigger"><span data-i18n="nav_finance">Finance</span> <span class="caret">▾</span></div>
+    <div class="nav-dropdown" onmouseleave="closeNavDropdown(this)">
+      <div class="nav-item nav-dropdown-trigger" onclick="toggleNavDropdown(this)"><span data-i18n="nav_finance">Finance</span> <span class="caret">▾</span></div>
       <div class="nav-dropdown-menu">
         <div class="nav-item" onclick="showPage('adspend')">
           <span class="icon" data-icon="dollar"></span> Ad Spend Management
@@ -5230,8 +5229,28 @@ const pageMeta = {
   onboarding: { title: 'Onboarding',           sub: 'Track new clients from contract signature through go-live' },
 };
 
+// Top-nav dropdowns (Portfolios, Performance, Growth Tools, Finance) --
+// click to open, moving the pointer off the dropdown closes it again. Only
+// one open at a time; clicking elsewhere on the page also closes it.
+function toggleNavDropdown(triggerEl) {
+  const dropdown = triggerEl.closest('.nav-dropdown');
+  if (!dropdown) return;
+  const wasOpen = dropdown.classList.contains('open');
+  document.querySelectorAll('.nav-dropdown.open').forEach(d => d.classList.remove('open'));
+  if (!wasOpen) dropdown.classList.add('open');
+}
+function closeNavDropdown(dropdownEl) {
+  dropdownEl.classList.remove('open');
+}
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.nav-dropdown')) {
+    document.querySelectorAll('.nav-dropdown.open').forEach(d => d.classList.remove('open'));
+  }
+});
+
 function showPage(id) {
   if (id === 'products' && !requirePermission('admin')) return;
+  document.querySelectorAll('.nav-dropdown.open').forEach(d => d.classList.remove('open'));
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + id).classList.add('active');
