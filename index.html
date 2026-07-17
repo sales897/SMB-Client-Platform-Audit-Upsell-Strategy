@@ -446,6 +446,15 @@ body.ai-panel-open .main {
 .vital-list-item .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 6px currentColor; }
 .vital-list-item .title { color: var(--text); font-weight: 600; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .vital-list-item .meta { color: var(--text3); flex-shrink: 0; }
+/* Task due-status glow (2026-07) -- shared by .vital-list-item (Home's My
+   Tasks card) and .task-row (client Notes/Tasks modal) so both places use
+   the exact same color story: today=green, upcoming=yellow, overdue=red. */
+.task-status-today { box-shadow: 0 0 0 1px var(--green), 0 0 9px rgba(34,197,94,.4); }
+.task-status-upcoming { box-shadow: 0 0 0 1px var(--yellow), 0 0 9px rgba(245,158,11,.4); }
+.task-status-overdue { box-shadow: 0 0 0 1px var(--red), 0 0 9px rgba(239,68,68,.4); }
+.task-row.task-status-today { border-color: var(--green); }
+.task-row.task-status-upcoming { border-color: var(--yellow); }
+.task-row.task-status-overdue { border-color: var(--red); }
 .vital-list-empty { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--text3); font-size: var(--font-2xs); text-align: center; }
 @media (max-width: 1200px) {
   .home-vitals-grid { grid-template-columns: 1fr; grid-template-rows: none; }
@@ -2212,10 +2221,18 @@ tr.hidden-row { display: none; }
 }
 .wfb-node.dragging { cursor: grabbing; opacity: .85; z-index: 5; will-change: transform; }
 .wfb-node-port {
-  position: absolute; right: -7px; top: 50%; transform: translateY(-50%); width: 12px; height: 12px; border-radius: 50%;
+  position: absolute; width: 12px; height: 12px; border-radius: 50%;
   background: var(--node-color, var(--orange)); border: 2px solid var(--bg2); cursor: crosshair; box-shadow: 0 0 6px var(--node-color, var(--orange));
+  transition: transform var(--transition-fast);
 }
-.wfb-node-port:hover { transform: translateY(-50%) scale(1.3); }
+.wfb-node-port-right { right: -7px; top: 50%; transform: translateY(-50%); }
+.wfb-node-port-right:hover { transform: translateY(-50%) scale(1.3); }
+.wfb-node-port-left { left: -7px; top: 50%; transform: translateY(-50%); }
+.wfb-node-port-left:hover { transform: translateY(-50%) scale(1.3); }
+.wfb-node-port-bottom { bottom: -7px; left: 50%; transform: translateX(-50%); }
+.wfb-node-port-bottom:hover { transform: translateX(-50%) scale(1.3); }
+.wfb-node-port-top { top: -7px; left: 50%; transform: translateX(-50%); }
+.wfb-node-port-top:hover { transform: translateX(-50%) scale(1.3); }
 .wfb-node-menu {
   position: fixed; z-index: 200; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm);
   box-shadow: var(--shadow); padding: 4px; min-width: 130px;
@@ -2253,6 +2270,16 @@ select.wfb-field-input { padding-right: 26px; }
 }
 .wfb-mini-btn.primary { background: linear-gradient(90deg, var(--orange), var(--orange2)); color: #fff; border: none; margin-left: auto; }
 .wfb-mini-btn.danger { color: var(--red); margin-right: auto; display: flex; align-items: center; gap: 5px; }
+.wfb-node-desc {
+  background: var(--bg3); border-left: 2px solid var(--node-color, var(--orange)); border-radius: 0 var(--radius-xs) var(--radius-xs) 0;
+  padding: 7px 9px; font-size: 10.5px; color: var(--text2); line-height: 1.5; margin-bottom: 6px;
+}
+.wfb-preview-box {
+  background: var(--bg3); border: 1px dashed var(--node-color, var(--orange)); border-radius: var(--radius-xs);
+  padding: 7px 9px; font-size: 10.5px; color: var(--text); margin-top: 10px; line-height: 1.5;
+}
+.wfb-preview-box b { color: var(--node-color, var(--orange2)); }
+.wfb-preview-box.empty { color: var(--text3); font-style: italic; }
 .wfb-merge-dropdown {
   position: fixed; z-index: 300; background: var(--bg3); border: 1px solid var(--orange); border-radius: var(--radius-sm);
   box-shadow: 0 0 14px rgba(226,84,31,.3); max-height: 160px; overflow-y: auto;
@@ -6310,14 +6337,16 @@ function renderVitalTasks() {
     wrap.innerHTML = '<div class="vital-list-empty">Nothing on your plate 🎉</div>';
     return;
   }
-  const today = new Date().toISOString().slice(0, 10);
   wrap.innerHTML = tasks.slice(0, 6).map(t => {
-    const overdue = t.due_date && t.due_date < today;
+    const status = getTaskDueStatus(t.due_date);
+    const dotColor = status === 'overdue' ? 'var(--red)' : status === 'today' ? 'var(--green)' : status === 'upcoming' ? 'var(--yellow)' : 'var(--text3)';
+    const statusClass = status ? ` task-status-${status}` : '';
+    const metaLabel = status === 'overdue' ? 'Overdue' : status === 'today' ? 'Today' : t.due_date ? fmtDate(t.due_date) : escAttr(t.client_name);
     const safeClient = escOnclickArg(t.client_name);
-    return `<div class="vital-list-item" onclick="openClientNotesTasksModal('${safeClient}')" tabindex="0" role="button" aria-label="Open notes and tasks for ${escAttr(t.client_name)}">
-      <span class="dot" style="background:${overdue ? 'var(--red)' : 'var(--green)'};color:${overdue ? 'var(--red)' : 'var(--green)'}"></span>
+    return `<div class="vital-list-item${statusClass}" onclick="openClientNotesTasksModal('${safeClient}')" tabindex="0" role="button" aria-label="Open notes and tasks for ${escAttr(t.client_name)}">
+      <span class="dot" style="background:${dotColor};color:${dotColor}"></span>
       <span class="title">${escAttr(t.title)}</span>
-      <span class="meta">${t.due_date ? (overdue ? 'Overdue' : fmtDate(t.due_date)) : escAttr(t.client_name)}</span>
+      <span class="meta">${metaLabel}</span>
     </div>`;
   }).join('');
 }
@@ -9885,6 +9914,21 @@ function taskHasSpecificTime(dueDateStr) {
   return !(match[1] === '00' && match[2] === '00');
 }
 
+// Returns 'overdue' | 'today' | 'upcoming' | null (no due date). A
+// date-only task is treated as due by end-of-day, not midnight, so a
+// task due "today" doesn't flip to overdue the instant the clock passes
+// 12:00am on the day itself -- it only becomes overdue the day after.
+function getTaskDueStatus(dueDateStr) {
+  if (!dueDateStr) return null;
+  const hasTime = taskHasSpecificTime(dueDateStr);
+  const due = new Date(hasTime ? dueDateStr : dueDateStr.slice(0, 10) + 'T23:59:59');
+  if (isNaN(due)) return null;
+  const now = new Date();
+  if (due.getTime() < now.getTime()) return 'overdue';
+  const todayStr = now.toISOString().slice(0, 10);
+  return dueDateStr.slice(0, 10) === todayStr ? 'today' : 'upcoming';
+}
+
 function fmtDateTime(d) {
   if (!d) return '—';
   const hasTime = taskHasSpecificTime(d);
@@ -13306,8 +13350,11 @@ function renderClientTasksList() {
     wrap.innerHTML = emptyStateHTML({ icon: hubIcon('check', 28), title: t('es_no_tasks'), sub: t('es_no_tasks_sub'), compact: true });
     return;
   }
-  wrap.innerHTML = tasks.map(t => `
-    <div class="task-row ${t.status === 'done' ? 'done' : ''}">
+  wrap.innerHTML = tasks.map(t => {
+    const status = t.status !== 'done' ? getTaskDueStatus(t.due_date) : null;
+    const statusClass = status ? ` task-status-${status}` : '';
+    return `
+    <div class="task-row ${t.status === 'done' ? 'done' : ''}${statusClass}">
       <input type="checkbox" ${t.status === 'done' ? 'checked' : ''} onchange="toggleClientTaskStatus('${t.id}')">
       <div class="task-info">
         <div class="task-title">${escAttr(t.title)}</div>
@@ -13315,7 +13362,8 @@ function renderClientTasksList() {
       </div>
       ${t.due_date ? `<a href="${gcalQuickAddUrl(t)}" target="_blank" rel="noopener" class="row-action-btn" title="Add to Google Calendar"><span class="icon" data-icon="calendar" data-icon-size="14"></span></a>` : ''}
       ${canModifyTask(t) ? `<button class="row-action-btn danger" onclick="deleteClientTask('${t.id}')" aria-label="Delete task"><span class="icon" data-icon="trash" data-icon-size="13"></span></button>` : ''}
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
 async function toggleClientTaskStatus(id) {
@@ -15055,7 +15103,11 @@ function renderWorkflowCanvas() {
       <div class="wfb-node-hd"><span class="dot"></span>${icon} ${escAttr(typeLabel)}<span class="menu">⋮</span></div>
       <div class="wfb-node-label">${escAttr(n.label)}</div>
       ${n.sublabel ? `<div class="wfb-node-sublabel">${escAttr(n.sublabel)}</div>` : ''}
-      ${n.node_type !== 'end' ? '<div class="wfb-node-port" title="Drag to another node to connect"></div>' : ''}
+      ${n.node_type !== 'end' ? `
+      <div class="wfb-node-port wfb-node-port-right" title="Drag to another node to connect"></div>
+      <div class="wfb-node-port wfb-node-port-left" title="Drag to another node to connect"></div>
+      <div class="wfb-node-port wfb-node-port-bottom" title="Drag to another node to connect"></div>
+      <div class="wfb-node-port wfb-node-port-top" title="Drag to another node to connect"></div>` : ''}
     </div>`;
   }).join('');
 
@@ -15492,7 +15544,34 @@ const WORKFLOW_MERGE_FIELDS = [
   { token: 'portfolio', desc: 'Portfolio (SMB / White Label / Support)' },
 ];
 const WORKFLOW_CONDITION_OPERATORS = ['>=', '>', '==', '<', '<=', 'contains'];
+const WORKFLOW_CONDITION_OPERATOR_LABELS = { '>=': 'is at least', '>': 'is greater than', '==': 'equals', '<': 'is less than', '<=': 'is at most', 'contains': 'contains' };
 const WORKFLOW_DELAY_UNITS = ['minutes', 'hours', 'days'];
+// Plain-language explanations shown at the top of each node's editor panel
+// (2026-07-16) -- these were bare field forms with zero context, which is
+// exactly what made them confusing to anyone who didn't already know the
+// underlying model. Action descriptions are keyed by subtype since "Action"
+// alone covers 5+ genuinely different behaviors.
+const WORKFLOW_NODE_DESCRIPTIONS = {
+  trigger: 'Starts the workflow. Everything below only runs once this happens.',
+  condition: 'Splits the workflow into two paths based on a check you define below — Yes if it\'s true, No if it isn\'t. Both paths need to be connected to something, even if one just leads to End.',
+  delay: 'Pauses this path for the set amount of time before continuing to whatever comes next.',
+  logic: 'Splits the workflow into multiple paths at once (not just Yes/No) — connect each path to wherever that branch should go.',
+  end: 'Marks the end of a path. Nothing runs after this.',
+  action: {
+    send_email: 'Sends an email using the template and content below once this step is reached.',
+    add_tag: 'Adds a tag to the client record once this step is reached.',
+    create_task: 'Creates a task on the client\'s account, assigned to whoever you choose below.',
+    notify_team: 'Sends a Hub notification to the people listed below once this step is reached.',
+    update_status: 'Changes the client\'s status to the value below once this step is reached.',
+    add_note: 'Adds a note to the client\'s account, optionally tagging a teammate.',
+  },
+};
+function getWfbNodeDescription(node) {
+  const custom = WORKFLOW_CUSTOM_NODE_TYPES.find(ct => ct.subtype_key === node.subtype);
+  if (custom) return `Custom ${WORKFLOW_NODE_TYPE_LABELS[node.node_type] || node.node_type} node — runs the fields you defined for it below.`;
+  if (node.node_type === 'action') return WORKFLOW_NODE_DESCRIPTIONS.action[node.subtype] || 'Performs an action once this step is reached.';
+  return WORKFLOW_NODE_DESCRIPTIONS[node.node_type] || '';
+}
 
 // Fully customizable node types (2026-07-15) -- unlike the curated built-in
 // subtypes above, these are entirely user-defined: category, name, icon,
@@ -15577,38 +15656,42 @@ async function saveCustomNodeType() {
 function getNodeFieldSchema(node) {
   const custom = WORKFLOW_CUSTOM_NODE_TYPES.find(ct => ct.subtype_key === node.subtype);
   if (custom) return custom.fields;
-  if (node.node_type === 'trigger') return [{ key: 'sublabel', label: 'Source', type: 'text' }];
+  if (node.node_type === 'trigger') return [
+    { key: 'sublabel', label: 'Source', type: 'text', placeholder: 'e.g. New client added, Form submitted', hint: 'What causes this workflow to start — a plain description of the event.' },
+  ];
   if (node.node_type === 'condition') return [
-    { key: 'field', label: 'Field', type: 'text', source: 'config' },
-    { key: 'operator', label: 'Operator', type: 'select', options: WORKFLOW_CONDITION_OPERATORS, source: 'config' },
-    { key: 'value', label: 'Value', type: 'text', merge: true, source: 'config' },
+    { key: 'field', label: 'Field', type: 'text', source: 'config', placeholder: 'e.g. days_since_last_contact, status', hint: 'The client or task property to check.' },
+    { key: 'operator', label: 'Operator', type: 'select', options: WORKFLOW_CONDITION_OPERATORS, optionLabels: WORKFLOW_CONDITION_OPERATOR_LABELS, source: 'config', hint: 'How the field is compared to the value below.' },
+    { key: 'value', label: 'Value', type: 'text', merge: true, source: 'config', placeholder: 'e.g. 30, Active', hint: 'A fixed number/text, or type {{ to insert a merge field.' },
   ];
   if (node.node_type === 'delay') return [
-    { key: 'duration', label: 'Duration', type: 'number', source: 'config' },
+    { key: 'duration', label: 'Duration', type: 'number', source: 'config', placeholder: 'e.g. 3', hint: 'How long to wait, in the unit below.' },
     { key: 'unit', label: 'Unit', type: 'select', options: WORKFLOW_DELAY_UNITS, source: 'config' },
   ];
-  if (node.node_type === 'logic') return [{ key: 'sublabel', label: 'Details', type: 'text' }];
+  if (node.node_type === 'logic') return [
+    { key: 'sublabel', label: 'Details', type: 'text', placeholder: 'e.g. Split by portfolio', hint: 'How this workflow branches into multiple paths — connect each path below on the canvas.' },
+  ];
   if (node.node_type === 'end') return [];
   if (node.node_type === 'action') {
     switch (node.subtype) {
       case 'send_email': return [
-        { key: 'sublabel', label: 'Template Name', type: 'text' },
-        { key: 'subject', label: 'Subject', type: 'text', merge: true, source: 'config' },
-        { key: 'body', label: 'Body', type: 'textarea', merge: true, source: 'config' },
+        { key: 'sublabel', label: 'Template Name', type: 'text', placeholder: 'e.g. Renewal Reminder', hint: 'For your own reference — doesn\'t affect what\'s sent.' },
+        { key: 'subject', label: 'Subject', type: 'text', merge: true, source: 'config', placeholder: 'e.g. {{first_name}}, quick update on your account' },
+        { key: 'body', label: 'Body', type: 'textarea', merge: true, source: 'config', placeholder: 'Write the email — type {{ to insert the client\'s name, email, etc.' },
       ];
-      case 'add_tag': return [{ key: 'sublabel', label: 'Tag Name', type: 'text' }];
+      case 'add_tag': return [{ key: 'sublabel', label: 'Tag Name', type: 'text', placeholder: 'e.g. Hot Lead', hint: 'The tag to add to this client\'s record.' }];
       case 'create_task': return [
-        { key: 'sublabel', label: 'Task Title', type: 'text', merge: true },
-        { key: 'assignee', label: 'Assignee', type: 'select', options: 'TEAM_MEMBERS', source: 'config' },
+        { key: 'sublabel', label: 'Task Title', type: 'text', merge: true, placeholder: 'e.g. Follow up with {{first_name}}' },
+        { key: 'assignee', label: 'Assignee', type: 'select', options: 'TEAM_MEMBERS', source: 'config', hint: 'Who this task gets assigned to.' },
       ];
       case 'notify_team': return [
-        { key: 'sublabel', label: 'Message', type: 'textarea', merge: true },
-        { key: 'recipient', label: 'Notify (comma-separated for multiple people)', type: 'text', source: 'config' },
+        { key: 'sublabel', label: 'Message', type: 'textarea', merge: true, placeholder: 'e.g. {{business_name}} just went inactive' },
+        { key: 'recipient', label: 'Notify (comma-separated for multiple people)', type: 'text', source: 'config', placeholder: 'e.g. Pasquale, Adriana', hint: 'Team member names or emails.' },
       ];
-      case 'update_status': return [{ key: 'sublabel', label: 'New Status', type: 'text' }];
+      case 'update_status': return [{ key: 'sublabel', label: 'New Status', type: 'text', placeholder: 'e.g. Active, At Risk', hint: 'The status value to set on this client.' }];
       case 'add_note': return [
-        { key: 'sublabel', label: 'Note Text', type: 'textarea', merge: true },
-        { key: 'tag', label: 'Tag Teammate', type: 'select', options: 'TEAM_MEMBERS', source: 'config' },
+        { key: 'sublabel', label: 'Note Text', type: 'textarea', merge: true, placeholder: 'e.g. Auto-flagged for renewal outreach' },
+        { key: 'tag', label: 'Tag Teammate', type: 'select', options: 'TEAM_MEMBERS', source: 'config', hint: 'Optional — mentions them on the note like @name would.' },
       ];
       default: return [{ key: 'sublabel', label: 'Detail', type: 'text' }];
     }
@@ -15620,19 +15703,24 @@ function renderWfbField(n, f) {
   const fieldId = `wfb-field-${n.id}-${f.key}`;
   const currentVal = f.source === 'config' ? ((n.config && n.config[f.key]) || '') : (n[f.key] || '');
   const mergeHint = f.merge ? ' <span style="color:var(--text3);font-weight:400">(type {{ for merge fields)</span>' : '';
+  const hintHtml = f.hint ? `<div style="font-size:9.5px;color:var(--text3);margin:2px 0 0;line-height:1.4">${escAttr(f.hint)}</div>` : '';
+  const previewCall = `updateWfbPreview('${n.id}')`;
   if (f.type === 'select') {
     const opts = f.options === 'TEAM_MEMBERS' ? TEAM_MEMBERS.map(m => m.name) : f.options;
     return `<label class="wfb-field-label">${escAttr(f.label)}</label>
-      <select class="wfb-field-input" id="${fieldId}">
-        ${opts.map(o => `<option value="${escAttr(o)}" ${o === currentVal ? 'selected' : ''}>${escAttr(o)}</option>`).join('')}
-      </select>`;
+      <select class="wfb-field-input" id="${fieldId}" onchange="${previewCall}">
+        ${opts.map(o => `<option value="${escAttr(o)}" ${o === currentVal ? 'selected' : ''}>${escAttr((f.optionLabels && f.optionLabels[o]) || o)}</option>`).join('')}
+      </select>
+      ${hintHtml}`;
   }
   if (f.type === 'textarea') {
     return `<label class="wfb-field-label">${escAttr(f.label)}${mergeHint}</label>
-      <textarea class="wfb-field-input" id="${fieldId}" rows="2" oninput="handleWfbMergeInput(event)">${escAttr(currentVal)}</textarea>`;
+      <textarea class="wfb-field-input" id="${fieldId}" rows="2" placeholder="${escAttr(f.placeholder || '')}" oninput="handleWfbMergeInput(event);${previewCall}">${escAttr(currentVal)}</textarea>
+      ${hintHtml}`;
   }
   return `<label class="wfb-field-label">${escAttr(f.label)}${mergeHint}</label>
-    <input type="${f.type === 'number' ? 'number' : 'text'}" class="wfb-field-input" id="${fieldId}" value="${escAttr(currentVal)}" ${f.merge ? 'oninput="handleWfbMergeInput(event)"' : ''}>`;
+    <input type="${f.type === 'number' ? 'number' : 'text'}" class="wfb-field-input" id="${fieldId}" value="${escAttr(currentVal)}" placeholder="${escAttr(f.placeholder || '')}" oninput="${f.merge ? 'handleWfbMergeInput(event);' : ''}${previewCall}">
+    ${hintHtml}`;
 }
 
 function openWorkflowNodeEditor(nodeId) {
@@ -15673,14 +15761,89 @@ function renderWfbSidebarEditor(nodeId) {
       <span class="wfb-editor-type-label">${icon} ${escAttr(typeLabel)}</span>
       <button class="wfb-node-close" data-action="close-node" title="Back to node list"><span class="icon" data-icon="close" data-icon-size="12"></span></button>
     </div>
+    <div class="wfb-node-desc">${escAttr(getWfbNodeDescription(node))}</div>
     <label class="wfb-field-label">Label</label>
-    <input type="text" class="wfb-field-input" id="wfb-field-${node.id}-label" value="${escAttr(node.label)}">
+    <input type="text" class="wfb-field-input" id="wfb-field-${node.id}-label" oninput="updateWfbPreview('${node.id}')" value="${escAttr(node.label)}">
     ${schema.map(f => renderWfbField(node, f)).join('')}
+    <div class="wfb-preview-box" id="wfb-preview-${node.id}"></div>
     <div class="wfb-expanded-btns">
       <button class="wfb-mini-btn danger" data-action="delete-node"><span class="icon" data-icon="trash" data-icon-size="13"></span> Delete</button>
       <button class="wfb-mini-btn" data-action="close-node">Cancel</button>
       <button class="wfb-mini-btn primary" data-action="save-node">Save</button>
     </div>`;
+  updateWfbPreview(node.id);
+}
+// Builds the live plain-English summary at the bottom of the editor panel
+// (Option C) -- reads straight from the DOM inputs rather than the saved
+// node, so it updates as the person types, before Save is even clicked.
+function updateWfbPreview(nodeId) {
+  const node = workflowNodesCache.find(n => n.id === nodeId);
+  const box = document.getElementById(`wfb-preview-${nodeId}`);
+  if (!node || !box) return;
+  const val = (key) => {
+    const el = document.getElementById(`wfb-field-${nodeId}-${key}`);
+    return el ? el.value.trim() : '';
+  };
+  const label = val('label') || node.label || 'this step';
+  let html = '';
+  const custom = WORKFLOW_CUSTOM_NODE_TYPES.find(ct => ct.subtype_key === node.subtype);
+  if (custom) {
+    html = `<b>${escAttr(label)}</b> runs its custom fields once reached.`;
+  } else if (node.node_type === 'trigger') {
+    const source = val('sublabel');
+    html = source ? `This workflow starts when <b>${escAttr(source)}</b> happens.` : `Set a source below to describe what starts this workflow.`;
+  } else if (node.node_type === 'condition') {
+    const field = val('field'), op = val('operator'), value = val('value');
+    if (field && value) {
+      html = `If <b>${escAttr(field)}</b> ${escAttr(WORKFLOW_CONDITION_OPERATOR_LABELS[op] || op)} <b>${escAttr(value)}</b> → <b style="color:var(--green)">Yes</b> path, otherwise <b style="color:var(--red)">No</b> path.`;
+    } else {
+      html = `Fill in Field and Value to see what this check will actually do.`;
+    }
+  } else if (node.node_type === 'delay') {
+    const duration = val('duration'), unit = val('unit') || 'minutes';
+    html = duration ? `Waits <b>${escAttr(duration)} ${escAttr(unit)}</b> before continuing.` : `Set a duration below to see the wait time.`;
+  } else if (node.node_type === 'logic') {
+    const details = val('sublabel');
+    html = details ? `Splits into paths based on: <b>${escAttr(details)}</b>.` : `Describe how this should split below.`;
+  } else if (node.node_type === 'end') {
+    html = `Nothing runs after this — the path stops here.`;
+  } else if (node.node_type === 'action') {
+    switch (node.subtype) {
+      case 'send_email': {
+        const subject = val('subject');
+        html = subject ? `Sends an email with subject <b>"${escAttr(subject)}"</b>.` : `Add a subject below to see the preview.`;
+        break;
+      }
+      case 'add_tag': {
+        const tag = val('sublabel');
+        html = tag ? `Adds the tag <b>${escAttr(tag)}</b> to the client.` : `Enter a tag name below.`;
+        break;
+      }
+      case 'create_task': {
+        const title = val('sublabel'), assignee = val('assignee');
+        html = title ? `Creates a task <b>"${escAttr(title)}"</b>${assignee ? ` assigned to <b>${escAttr(assignee)}</b>` : ''}.` : `Enter a task title below.`;
+        break;
+      }
+      case 'notify_team': {
+        const recipient = val('recipient');
+        html = recipient ? `Notifies <b>${escAttr(recipient)}</b> in the Hub.` : `Enter who to notify below.`;
+        break;
+      }
+      case 'update_status': {
+        const status = val('sublabel');
+        html = status ? `Changes the client's status to <b>${escAttr(status)}</b>.` : `Enter the new status below.`;
+        break;
+      }
+      case 'add_note': {
+        const tag = val('tag');
+        html = `Adds a note to the client's account${tag ? `, tagging <b>${escAttr(tag)}</b>` : ''}.`;
+        break;
+      }
+      default: html = `Runs this action once reached.`;
+    }
+  }
+  box.innerHTML = html;
+  box.classList.toggle('empty', !html);
 }
 async function saveExpandedWfbNode(nodeId) {
   const node = workflowNodesCache.find(n => n.id === nodeId);
