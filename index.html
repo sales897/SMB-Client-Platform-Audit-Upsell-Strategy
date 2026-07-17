@@ -618,6 +618,37 @@ body.ai-panel-open .main {
 .filter-pill:hover { border-color: var(--orange); color: var(--orange); }
 .filter-pill.active { background: var(--gradient-accent); border-color: var(--orange); color: white; }
 
+/* Custom Start/End date+time picker (2026-07) -- replaces the native
+   datetime-local input, which can't be restyled and looks out of place
+   against the rest of the dark theme. Shared by the Starts and Ends
+   triggers in the task form; built dynamically and appended to
+   document.body on open, same pattern as .vital-swap-menu, so it isn't
+   clipped by the modal it lives inside. */
+.dt-trigger { display: flex; align-items: center; cursor: pointer; color: var(--text); font-family: inherit; }
+.dt-trigger:hover { border-color: var(--orange); }
+.dt-trigger.placeholder { color: var(--text3); }
+.dt-trigger:disabled { cursor: not-allowed; opacity: .5; }
+.cnt-dt-popover {
+  position: fixed; z-index: 1200;
+  background: var(--bg4); border: 1px solid var(--orange); border-radius: var(--radius-sm);
+  box-shadow: 0 10px 32px rgba(0,0,0,.7), 0 0 20px rgba(226,84,31,.35);
+  padding: 12px; width: 240px;
+}
+.cnt-dt-cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 12px; font-weight: 600; color: var(--text); }
+.cnt-dt-cal-head button { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 13px; padding: 2px 6px; }
+.cnt-dt-cal-head button:hover { color: var(--orange); }
+.cnt-dt-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; margin-bottom: 10px; }
+.cnt-dt-dow { font-size: 9px; color: var(--text3); text-align: center; padding-bottom: 4px; }
+.cnt-dt-day { font-size: 11px; text-align: center; padding: 5px 0; border-radius: var(--radius-xs); color: var(--text2); cursor: pointer; }
+.cnt-dt-day:hover { background: var(--bg3); color: var(--text); }
+.cnt-dt-day.muted { color: var(--text3); opacity: .4; cursor: default; }
+.cnt-dt-day.muted:hover { background: none; color: var(--text3); }
+.cnt-dt-day.today { border: 1px solid var(--orange); }
+.cnt-dt-day.selected { background: var(--orange); color: #fff; font-weight: 600; }
+.cnt-dt-time-row { display: flex; gap: 4px; margin-bottom: 10px; }
+.cnt-dt-time-row select { height: 30px; font-size: 12px; padding: 0 4px; }
+.cnt-dt-actions { display: flex; justify-content: flex-end; gap: 6px; }
+
 .pm-tab {
   padding: var(--space-2) var(--space-4);
   border: 1px solid var(--border);
@@ -2594,9 +2625,25 @@ select.wfb-field-input { padding-right: 26px; }
         <div id="cntTasksList" class="cnt-column-scroll" style="margin-bottom:12px"></div>
         <label for="cntNewTaskTitle" class="field-label" data-i18n="cnt_add_a_task">Add a Task</label>
         <input type="text" id="cntNewTaskTitle" class="field-input" style="height:36px;margin-bottom:8px" placeholder="e.g. Follow up about renewal" data-i18n-placeholder="cnt_task_placeholder">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-          <select id="cntNewTaskAssignee" class="field-select" style="height:36px"></select>
-          <input type="datetime-local" id="cntNewTaskDue" class="field-input" style="height:36px">
+        <select id="cntNewTaskAssignee" class="field-select" style="height:36px;width:100%;margin-bottom:8px"></select>
+        <input type="hidden" id="cntNewTaskDue">
+        <input type="hidden" id="cntNewTaskDuration">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px">
+          <div>
+            <span class="field-label" style="margin-bottom:4px;display:block">Starts</span>
+            <button type="button" class="field-input dt-trigger" id="cntTaskStartTrigger" style="height:36px;text-align:left" onclick="openCntTaskDateTimePicker('start')">Pick a date &amp; time</button>
+          </div>
+          <div>
+            <span class="field-label" style="margin-bottom:4px;display:block">Ends</span>
+            <button type="button" class="field-input dt-trigger" id="cntTaskEndTrigger" style="height:36px;text-align:left" onclick="openCntTaskDateTimePicker('end')">—</button>
+          </div>
+        </div>
+        <div id="cntTaskDurationSummary" style="font-size:11px;color:var(--text3);margin-bottom:6px"></div>
+        <div id="cntTaskDurationPills" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+          <div class="filter-pill" onclick="setCntTaskDuration(15)">15 min</div>
+          <div class="filter-pill" onclick="setCntTaskDuration(30)">30 min</div>
+          <div class="filter-pill" onclick="setCntTaskDuration(60)">1 hr</div>
+          <div class="filter-pill" onclick="setCntTaskDuration(120)">2 hr</div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
           <select id="cntNewTaskReminder" class="field-select" style="height:36px">
@@ -6136,6 +6183,7 @@ function buildHomeVitalsGrid() {
         <div class="vital-block-hd">
           <h3><span class="vital-dot" style="background:${def.dot};color:${def.dot}"></span>${escAttr(label)}</h3>
           <div class="vital-block-actions">
+            ${key === 'reminders' ? `<button class="vital-ask" onclick="event.stopPropagation();openAddReminderModal()" title="Remind me" aria-label="Set a personal reminder"><span class="icon" data-icon="plus" data-icon-size="14"></span></button>` : ''}
             <button class="vital-ask" onclick="event.stopPropagation();askNirvanaAboutVital('${key}')" title="Ask Nirvana about this" aria-label="Ask Nirvana about ${escAttr(label)}"><span class="icon" data-icon="sparkle" data-icon-size="14"></span></button>
             <button class="vital-ask" onclick="event.stopPropagation();openVitalSwapMenu(${i}, this)" title="Swap this block" aria-label="Swap this block for another">⇄</button>
           </div>
@@ -8809,7 +8857,7 @@ function gcalQuickAddUrl(task) {
     const hasTime = taskHasSpecificTime(task.due_date);
     if (hasTime) {
       const start = new Date(task.due_date);
-      const end = new Date(start.getTime() + 60 * 60 * 1000); // default 1hr block
+      const end = new Date(start.getTime() + (task.duration_minutes || 60) * 60 * 1000); // real duration if set, else 1hr default
       const toUtcStamp = (d) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
       datesParam = `${toUtcStamp(start)}/${toUtcStamp(end)}`;
     } else {
@@ -8838,7 +8886,7 @@ async function pushTaskToGoogleCalendar(task) {
     let event;
     if (hasTime) {
       const start = new Date(task.due_date);
-      const end = new Date(start.getTime() + 60 * 60 * 1000); // default 1hr block
+      const end = new Date(start.getTime() + (task.duration_minutes || 60) * 60 * 1000); // real duration if set, else 1hr default
       event = {
         summary: task.title,
         description: `The HUB task for ${task.client_name}`,
@@ -10906,11 +10954,18 @@ function checkTaskReminders() {
   const now = Date.now();
   CLIENT_TASKS.forEach(async (task) => {
     if (task.status === 'done' || task.reminder_notified) return;
-    if (!task.due_date || task.reminder_minutes === null || task.reminder_minutes === undefined) return;
+    if (!task.due_date) return;
     if ((task.assigned_to_email || '').toLowerCase() !== u.email.toLowerCase()) return;
     const dueTime = new Date(taskHasSpecificTime(task.due_date) ? task.due_date : task.due_date + 'T09:00:00').getTime();
     if (isNaN(dueTime)) return;
-    const fireAt = dueTime - task.reminder_minutes * 60000;
+    // "Calendar default" (reminder_minutes left unset) only means something if
+    // Google Calendar is actually connected -- otherwise it was silently a
+    // no-op, since there's no calendar to supply a default from. Falling back
+    // to 30 min here means every task with a due date gets SOME Hub-side
+    // warning regardless of Calendar connection, instead of only the tasks
+    // where a specific reminder offset was chosen.
+    const effectiveMinutes = (task.reminder_minutes === null || task.reminder_minutes === undefined) ? 30 : task.reminder_minutes;
+    const fireAt = dueTime - effectiveMinutes * 60000;
     if (now < fireAt) return; // reminder window hasn't started yet
     task.reminder_notified = true; // mark first so a slow network response can't cause a duplicate on the next check
     await createNotification(u.email, 'task_reminder', `Reminder: "${task.title}"${task.client_name ? ' — ' + task.client_name : ''} is due ${fmtNoteTime(task.due_date)}`, task.client_name);
@@ -12092,6 +12147,7 @@ function openClientNotesTasksModal(clientName) {
   if (polishBtn) polishBtn.remove();
   renderCntTagPicker();
   populateCntTaskAssigneeSelect();
+  resetCntTaskDtFields();
   renderClientContactInfo();
   renderClientNotesThread();
   renderClientTasksList();
@@ -12812,6 +12868,194 @@ function computeNextOccurrence(dueDateStr, recurrence, customN, customUnit) {
   return hasTime ? dateToDatetimeLocalString(d) : `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
+// ─── Custom Start/End date+time picker for the task form (2026-07) ───────
+// Replaces the native datetime-local input -- it can't be restyled at all,
+// so it always looked like a jarring unbranded popup no matter how dark/
+// polished the rest of the form is (see the 3 mockup options presented;
+// this is Option C -- Start/End fields with duration pills, so the field
+// that actually gets saved (a real end timestamp) is always visible and
+// directly editable rather than hidden behind a stepper).
+// Starts writes into the pre-existing cntNewTaskDue hidden input, so every
+// other read/write path (addClientTask, the reset after save, Nirvana's
+// create_task tool) needs zero changes. Duration lives in a new hidden
+// cntNewTaskDuration input (minutes) and is what actually gets persisted;
+// Ends is always just start + duration, computed on the fly.
+let cntDtPickerTarget = null;
+let cntDtViewYear = 0;
+let cntDtViewMonth = 0;
+let cntDtSelDay = null;
+let cntDtSelHour = 9; // 24h internally
+let cntDtSelMinute = 0;
+
+function cntTaskStartDate() {
+  const v = (document.getElementById('cntNewTaskDue') || {}).value;
+  return v ? new Date(v) : null;
+}
+function cntTaskDurationMinutes() {
+  const v = (document.getElementById('cntNewTaskDuration') || {}).value;
+  return v ? parseInt(v) : null;
+}
+function cntTaskEndDate() {
+  const start = cntTaskStartDate();
+  const mins = cntTaskDurationMinutes();
+  if (!start || !mins) return null;
+  return new Date(start.getTime() + mins * 60000);
+}
+function cntDurationLabel(m) {
+  if (m % 60 === 0) return `${m / 60} hr`;
+  if (m > 60) return `${Math.floor(m / 60)} hr ${m % 60} min`;
+  return `${m} min`;
+}
+
+function cntTaskRefreshDtDisplay() {
+  const startBtn = document.getElementById('cntTaskStartTrigger');
+  const endBtn = document.getElementById('cntTaskEndTrigger');
+  const summary = document.getElementById('cntTaskDurationSummary');
+  if (!startBtn || !endBtn || !summary) return;
+  const start = cntTaskStartDate();
+  const end = cntTaskEndDate();
+  const mins = cntTaskDurationMinutes();
+  const fmt = (d) => d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  if (start) { startBtn.textContent = fmt(start); startBtn.classList.remove('placeholder'); }
+  else { startBtn.textContent = 'Pick a date & time'; startBtn.classList.add('placeholder'); }
+  endBtn.disabled = !start;
+  if (end) { endBtn.textContent = fmt(end); endBtn.classList.remove('placeholder'); }
+  else { endBtn.textContent = start ? 'Pick a date & time' : '—'; endBtn.classList.toggle('placeholder', !!start); }
+  summary.textContent = (start && mins) ? `Duration: ${cntDurationLabel(mins)}` : '';
+  document.querySelectorAll('#cntTaskDurationPills .filter-pill').forEach(p => {
+    p.classList.toggle('active', !!mins && p.textContent.trim() === cntDurationLabel(mins));
+  });
+}
+
+function setCntTaskDuration(mins) {
+  if (!cntTaskStartDate()) { showToast('Pick a start time first.', 'warning'); return; }
+  document.getElementById('cntNewTaskDuration').value = mins;
+  cntTaskRefreshDtDisplay();
+}
+
+function resetCntTaskDtFields() {
+  document.getElementById('cntNewTaskDue').value = '';
+  document.getElementById('cntNewTaskDuration').value = '';
+  cntDtSelDay = null; cntDtSelHour = 9; cntDtSelMinute = 0;
+  cntTaskRefreshDtDisplay();
+}
+
+function openCntTaskDateTimePicker(which) {
+  if (which === 'end' && !cntTaskStartDate()) { showToast('Pick a start time first.', 'warning'); return; }
+  cntDtPickerTarget = which;
+  closeCntDtPopover();
+  const base = which === 'start'
+    ? (cntTaskStartDate() || new Date())
+    : (cntTaskEndDate() || new Date(cntTaskStartDate().getTime() + 30 * 60000));
+  cntDtViewYear = base.getFullYear();
+  cntDtViewMonth = base.getMonth();
+  cntDtSelDay = base.getDate();
+  cntDtSelHour = base.getHours();
+  cntDtSelMinute = base.getMinutes();
+  const pop = document.createElement('div');
+  pop.id = 'cntDtPopover';
+  pop.className = 'cnt-dt-popover';
+  document.body.appendChild(pop);
+  renderCntDtPopover();
+  const trigger = document.getElementById(which === 'start' ? 'cntTaskStartTrigger' : 'cntTaskEndTrigger');
+  const rect = trigger.getBoundingClientRect();
+  pop.style.top = (rect.bottom + 6) + 'px';
+  pop.style.left = rect.left + 'px';
+  setTimeout(() => document.addEventListener('mousedown', cntDtOutsideClick), 0);
+}
+function cntDtOutsideClick(e) {
+  const pop = document.getElementById('cntDtPopover');
+  if (pop && !pop.contains(e.target) && !e.target.classList.contains('dt-trigger')) closeCntDtPopover();
+}
+function closeCntDtPopover() {
+  const pop = document.getElementById('cntDtPopover');
+  if (pop) pop.remove();
+  document.removeEventListener('mousedown', cntDtOutsideClick);
+}
+function cntDtChangeMonth(delta) {
+  cntDtViewMonth += delta;
+  if (cntDtViewMonth < 0) { cntDtViewMonth = 11; cntDtViewYear--; }
+  if (cntDtViewMonth > 11) { cntDtViewMonth = 0; cntDtViewYear++; }
+  renderCntDtPopover();
+}
+function cntDtPickDay(day) {
+  cntDtSelDay = day;
+  renderCntDtPopover();
+}
+function cntDtTimeChanged() {
+  const h12 = parseInt(document.getElementById('cntDtHour').value);
+  const m = parseInt(document.getElementById('cntDtMinute').value);
+  const ampm = document.getElementById('cntDtAmpm').value;
+  let h24 = h12 % 12;
+  if (ampm === 'PM') h24 += 12;
+  cntDtSelHour = h24;
+  cntDtSelMinute = m;
+}
+function renderCntDtPopover() {
+  const pop = document.getElementById('cntDtPopover');
+  if (!pop) return;
+  const year = cntDtViewYear, month = cntDtViewMonth;
+  const firstDow = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const daysInPrevMonth = new Date(year, month, 0).getDate();
+  const today = new Date();
+
+  let cells = '';
+  for (let i = 0; i < firstDow; i++) cells += `<div class="cnt-dt-day muted">${daysInPrevMonth - firstDow + i + 1}</div>`;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const isToday = today.getFullYear() === year && today.getMonth() === month && today.getDate() === d;
+    const isSel = d === cntDtSelDay;
+    cells += `<div class="cnt-dt-day${isToday ? ' today' : ''}${isSel ? ' selected' : ''}" onclick="cntDtPickDay(${d})">${d}</div>`;
+  }
+  const totalCells = firstDow + daysInMonth;
+  const trailing = (7 - (totalCells % 7)) % 7;
+  for (let i = 1; i <= trailing; i++) cells += `<div class="cnt-dt-day muted">${i}</div>`;
+
+  const hour12 = (cntDtSelHour % 12) || 12;
+  const ampm = cntDtSelHour >= 12 ? 'PM' : 'AM';
+  const hourOpts = Array.from({ length: 12 }, (_, i) => i + 1).map(h => `<option value="${h}"${h === hour12 ? ' selected' : ''}>${h}</option>`).join('');
+  const minOpts = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55].map(m => `<option value="${m}"${m === cntDtSelMinute ? ' selected' : ''}>${String(m).padStart(2, '0')}</option>`).join('');
+
+  pop.innerHTML = `
+    <div class="cnt-dt-cal-head">
+      <button type="button" onclick="cntDtChangeMonth(-1)" aria-label="Previous month">‹</button>
+      <span>${new Date(year, month, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</span>
+      <button type="button" onclick="cntDtChangeMonth(1)" aria-label="Next month">›</button>
+    </div>
+    <div class="cnt-dt-cal-grid">
+      <div class="cnt-dt-dow">Su</div><div class="cnt-dt-dow">Mo</div><div class="cnt-dt-dow">Tu</div><div class="cnt-dt-dow">We</div><div class="cnt-dt-dow">Th</div><div class="cnt-dt-dow">Fr</div><div class="cnt-dt-dow">Sa</div>
+      ${cells}
+    </div>
+    <div class="cnt-dt-time-row">
+      <select id="cntDtHour" class="field-select" onchange="cntDtTimeChanged()">${hourOpts}</select>
+      <select id="cntDtMinute" class="field-select" onchange="cntDtTimeChanged()">${minOpts}</select>
+      <select id="cntDtAmpm" class="field-select" onchange="cntDtTimeChanged()"><option${ampm === 'AM' ? ' selected' : ''}>AM</option><option${ampm === 'PM' ? ' selected' : ''}>PM</option></select>
+    </div>
+    <div class="cnt-dt-actions">
+      <button type="button" class="btn btn-ghost btn-sm" onclick="closeCntDtPopover()">Cancel</button>
+      <button type="button" class="btn btn-primary btn-sm" onclick="cntDtApply()">Apply</button>
+    </div>`;
+}
+function cntDtApply() {
+  if (cntDtSelDay === null) { showToast('Pick a day.', 'warning'); return; }
+  const chosen = new Date(cntDtViewYear, cntDtViewMonth, cntDtSelDay, cntDtSelHour, cntDtSelMinute);
+  if (cntDtPickerTarget === 'start') {
+    document.getElementById('cntNewTaskDue').value = dateToDatetimeLocalString(chosen);
+    // Keep whatever duration was already set so Ends shifts along with the
+    // new start; default to 30 min the first time a start is ever picked.
+    if (!document.getElementById('cntNewTaskDuration').value) {
+      document.getElementById('cntNewTaskDuration').value = 30;
+    }
+  } else {
+    const start = cntTaskStartDate();
+    const diffMin = Math.round((chosen.getTime() - start.getTime()) / 60000);
+    if (diffMin < 5) { showToast('End time needs to be at least 5 minutes after the start.', 'warning'); return; }
+    document.getElementById('cntNewTaskDuration').value = diffMin;
+  }
+  closeCntDtPopover();
+  cntTaskRefreshDtDisplay();
+}
+
 async function addClientTask() {
   const titleEl = document.getElementById('cntNewTaskTitle');
   const title = titleEl.value.trim();
@@ -12819,6 +13063,7 @@ async function addClientTask() {
   const assigneeEmail = document.getElementById('cntNewTaskAssignee').value;
   const assignee = TEAM_MEMBERS.find(m => m.email === assigneeEmail);
   const due = document.getElementById('cntNewTaskDue').value || '';
+  const durationVal = document.getElementById('cntNewTaskDuration').value;
   const reminderVal = document.getElementById('cntNewTaskReminder').value;
   const recurrence = document.getElementById('cntNewTaskRecurrence').value || null;
   const recurrenceN = document.getElementById('cntNewTaskRecurrenceN').value;
@@ -12834,6 +13079,7 @@ async function addClientTask() {
     created_by_email: u ? u.email : '',
     created_by_name: u ? u.name : 'Guest',
     due_date: due,
+    duration_minutes: durationVal ? parseInt(durationVal) : null,
     reminder_minutes: reminderVal === '' ? null : parseInt(reminderVal),
     recurrence: recurrence || null,
     recurrence_custom_n: recurrence === 'custom' ? (parseInt(recurrenceN) || 1) : null,
@@ -12853,7 +13099,7 @@ async function addClientTask() {
   }
 
   titleEl.value = '';
-  document.getElementById('cntNewTaskDue').value = '';
+  resetCntTaskDtFields();
   document.getElementById('cntNewTaskReminder').value = '';
   document.getElementById('cntNewTaskRecurrence').value = '';
   toggleCustomRecurrenceFields();
@@ -18732,6 +18978,11 @@ const AI_AGENT_TOOLS = [
     },
   },
   {
+    name: 'list_reminders',
+    description: 'List the current user\'s own upcoming personal reminders (title, time, linked client if any) — read-only. Use this whenever the user asks what reminders they have coming up, whether something was actually set, or to check before creating a possible duplicate. Only ever returns the current user\'s own reminders, same as the Hub\'s notification system.',
+    input_schema: { type: 'object', properties: {} },
+  },
+  {
     name: 'create_onboarding',
     description: 'Start tracking a new client through onboarding — before they exist as a real client anywhere else in the Hub. Does NOT create a real client record; that only happens later via activate_onboarding_as_client, typically once the record reaches the last stage of its pipeline. Every stage in the pipeline gets its own checklist automatically. This changes data — the user will be asked to confirm first.',
     input_schema: {
@@ -19520,6 +19771,21 @@ async function executeAiTool(name, input) {
       const reminder = await createReminder(title, input.remind_at, input.client_name || null, ownerEmail);
       if (!reminder) return { error: 'Could not save the reminder — please try again.' };
       return { ok: true, title, remind_at: input.remind_at, owner: ownerEmail };
+    }
+    case 'list_reminders': {
+      const u = getCurrentUser();
+      if (!u || !u.email) return { error: 'Could not determine the current user.' };
+      let upcoming = [];
+      try {
+        upcoming = await sbSelect('reminders', `owner_email=eq.${encodeURIComponent(u.email)}&delivered=eq.false&order=remind_at.asc`);
+      } catch(e) {
+        return { error: 'Could not load reminders — please try again.' };
+      }
+      if (upcoming.length === 0) return { ok: true, reminders: [], message: 'No upcoming reminders.' };
+      return {
+        ok: true,
+        reminders: upcoming.map(r => ({ title: r.title, remind_at: r.remind_at, client_name: r.client_name || null })),
+      };
     }
     case 'create_onboarding': {
       if (!requirePermission('edit')) return { error: 'This account doesn\'t have permission to start onboarding records.' };
