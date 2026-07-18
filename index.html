@@ -946,6 +946,98 @@ body.ai-panel-open .main {
 .onboarding-health-legend div { display: flex; align-items: center; gap: 6px; }
 .onboarding-health-legend .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
 
+/* ─── Ledger (2026-07-18) ────────────────────────────────────────────── */
+.ledger-smartpaste-zone {
+  min-height: 64px; display: flex; align-items: center; padding: var(--space-3) var(--space-4);
+  border: 1px dashed var(--border); font-size: 13px; color: var(--text2); cursor: text;
+  transition: border-color var(--transition-base), background var(--transition-base); margin-bottom: var(--space-4);
+}
+.ledger-smartpaste-zone:empty::before { content: attr(data-placeholder); color: var(--text3); }
+.ledger-smartpaste-zone:focus { outline: none; border-color: var(--orange); background: var(--orange-dim); }
+.ledger-smartpaste-zone.parsing { border-color: var(--orange); background: var(--orange-dim); opacity: .7; pointer-events: none; }
+.ledger-board { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; align-items: start; overflow-x: auto; padding-bottom: 8px; }
+@media (max-width: 1400px) { .ledger-board { grid-template-columns: repeat(3, minmax(220px, 1fr)); } }
+.ledger-column { background: var(--gradient-card); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-3); min-width: 220px; }
+.ledger-column-hd { display: flex; align-items: center; gap: 6px; margin-bottom: var(--space-3); padding-bottom: var(--space-2); border-bottom: 2px solid var(--stage-color, var(--border)); flex-wrap: wrap; }
+.ledger-column-hd .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--stage-color, var(--orange)); box-shadow: 0 0 5px var(--stage-color, var(--orange)); flex-shrink: 0; }
+.ledger-column-title { font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: var(--text); flex: 1; }
+.ledger-column-count { font-family: var(--font-mono); font-size: 10px; color: var(--text3); background: var(--bg3); padding: 1px 6px; border-radius: 10px; }
+.ledger-column-total { width: 100%; font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--stage-color, var(--orange)); }
+.ledger-column-cards { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; min-height: 20px; }
+.ledger-card {
+  background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 9px 11px; cursor: pointer;
+  transition: border-color var(--transition-base), transform var(--transition-fast);
+}
+.ledger-card:hover { border-color: var(--stage-color, var(--orange)); transform: translateY(-1px); }
+.ledger-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; margin-bottom: 3px; }
+.ledger-card-name { font-size: 11.5px; font-weight: 700; color: var(--text); line-height: 1.3; }
+.ledger-card-menu { color: var(--text3); flex-shrink: 0; background: none; border: none; cursor: pointer; padding: 0 2px; }
+.ledger-card-amount { font-family: var(--font-mono); font-size: 15px; font-weight: 800; color: var(--stage-color, var(--orange)); margin-bottom: 3px; }
+.ledger-card-desc { font-size: 10.5px; color: var(--text3); margin-bottom: 4px; }
+.ledger-card-due { font-size: 9.5px; color: var(--text3); display: flex; align-items: center; gap: 3px; }
+.ledger-card-smart-tag { font-size: 8.5px; font-weight: 700; text-transform: uppercase; color: var(--orange2); background: var(--orange-dim); padding: 1px 5px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px; margin-top: 4px; }
+.ledger-add-btn { width: 100%; background: none; border: 1px dashed var(--border); color: var(--text3); font-size: 11px; padding: 6px; border-radius: var(--radius-xs); cursor: pointer; }
+.ledger-add-btn:hover { border-color: var(--orange); color: var(--orange); }
+.ledger-sidebar-right { width: 280px; flex-shrink: 0; display: flex; flex-direction: column; gap: 16px; position: sticky; top: 16px; }
+@media (max-width: 1500px) { .ledger-layout { flex-wrap: wrap; } .ledger-sidebar-right { width: 100%; position: static; } }
+.ledger-bottom-row { display: grid; grid-template-columns: 1.6fr 1fr 1fr; gap: 16px; align-items: start; margin: 20px 0; }
+@media (max-width: 1300px) { .ledger-bottom-row { grid-template-columns: 1fr; } }
+
+.ledger-rec-item { padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 11.5px; }
+.ledger-rec-item:last-child { border-bottom: none; }
+.ledger-rec-title { font-weight: 700; color: var(--text); margin-bottom: 2px; }
+.ledger-rec-sub { color: var(--text3); font-size: 10.5px; margin-bottom: 5px; }
+.ledger-rec-btn { font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: var(--radius-xs); border: none; background: linear-gradient(90deg, var(--orange), var(--orange2)); color: #fff; cursor: pointer; }
+
+.ledger-billing-item { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--border); cursor: pointer; }
+.ledger-billing-item:last-child { border-bottom: none; }
+.ledger-billing-name { font-size: 11px; font-weight: 700; color: var(--text); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ledger-billing-ytd { font-size: 10.5px; font-family: var(--font-mono); color: var(--text2); flex-shrink: 0; }
+.ledger-risk-pill { font-size: 8.5px; font-weight: 800; text-transform: uppercase; padding: 2px 6px; border-radius: 5px; flex-shrink: 0; }
+.ledger-risk-pill.low { background: rgba(34,197,94,.15); color: var(--green); }
+.ledger-risk-pill.med { background: rgba(245,158,11,.15); color: var(--yellow); }
+.ledger-risk-pill.high { background: rgba(239,68,68,.15); color: var(--red); }
+
+.ledger-ytd-num { font-size: 30px; font-weight: 800; color: var(--orange); font-family: var(--font-mono); line-height: 1; margin-top: 4px; }
+.ledger-ytd-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
+
+.ledger-tracker-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 6px; }
+.ledger-tracker-dow { font-size: 8.5px; color: var(--text3); text-align: center; text-transform: uppercase; }
+.ledger-tracker-day {
+  aspect-ratio: 1; border-radius: 5px; display: flex; align-items: center; justify-content: center;
+  font-size: 9px; color: var(--text3); background: var(--bg3); border: 1px solid var(--border); position: relative;
+}
+.ledger-tracker-day.has-activity { color: var(--text); font-weight: 700; }
+.ledger-tracker-day .pulse-dot { position: absolute; bottom: 2px; width: 4px; height: 4px; border-radius: 50%; box-shadow: 0 0 4px currentColor; }
+.ledger-tracker-legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 10px; font-size: 10px; color: var(--text3); }
+.ledger-tracker-legend > div { display: flex; align-items: center; gap: 5px; }
+.ledger-tracker-legend .dot { width: 7px; height: 7px; border-radius: 50%; }
+.ledger-layout { display: flex; gap: 16px; align-items: flex-start; }
+.ledger-sidebar { width: 300px; flex-shrink: 0; display: flex; flex-direction: column; gap: 16px; position: sticky; top: 16px; }
+.ledger-main { flex: 1; min-width: 0; }
+@media (max-width: 1200px) { .ledger-layout { flex-direction: column; } .ledger-sidebar { width: 100%; position: static; } }
+.ledger-inbox-item { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--border); cursor: pointer; }
+.ledger-inbox-item:last-child { border-bottom: none; }
+.ledger-inbox-item:hover .ledger-inbox-name { color: var(--orange); }
+.ledger-inbox-icon { flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%; background: var(--bg3); display: flex; align-items: center; justify-content: center; color: var(--text2); }
+.ledger-inbox-body { flex: 1; min-width: 0; }
+.ledger-inbox-name { font-size: 11.5px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ledger-inbox-sub { font-size: 10px; color: var(--text3); }
+.ledger-inbox-amount { font-size: 11px; font-family: var(--font-mono); font-weight: 700; color: var(--text2); flex-shrink: 0; }
+.ledger-inbox-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 5px currentColor; }
+.ledger-unresolved-item { display: flex; align-items: center; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--border); cursor: pointer; }
+.ledger-unresolved-item:last-child { border-bottom: none; }
+.ledger-unresolved-item:hover .ledger-unresolved-name { color: var(--orange); }
+.ledger-unresolved-body { flex: 1; min-width: 0; }
+.ledger-unresolved-name { font-size: 11.5px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ledger-unresolved-desc { font-size: 10px; color: var(--text3); }
+.ledger-unresolved-right { text-align: right; flex-shrink: 0; }
+.ledger-unresolved-amount { font-size: 11px; font-family: var(--font-mono); font-weight: 700; color: var(--text2); }
+.ledger-unresolved-due { font-size: 9.5px; margin-top: 1px; }
+.ledger-unresolved-due.overdue { color: var(--red); font-weight: 700; }
+.ledger-unresolved-due.soon { color: var(--yellow); }
+
+
 .tbl-scroll {
   max-height: 460px;
   overflow-y: auto;
@@ -2758,6 +2850,10 @@ select.wfb-field-input { padding-right: 26px; }
           <span class="icon" data-icon="clipboard"></span> Collections
           <span class="badge red" id="navCollectionsBadge" style="display:none">0</span>
         </div>
+        <div class="nav-item" onclick="showPage('ledger')">
+          <span class="icon" data-icon="note"></span> Ledger
+          <span class="badge" id="navLedgerBadge" style="display:none">0</span>
+        </div>
       </div>
     </div>
   </div>
@@ -4531,6 +4627,152 @@ select.wfb-field-input { padding-right: 26px; }
   <!-- ═══════════════════════════════════════════════════════════════════
        PAGE: COLLECTIONS — Outstanding Balances & Card Fails
   ════════════════════════════════════════════════════════════════════════ -->
+  <!-- ═══════════════════════════════════════════════════════════════════
+       PAGE: LEDGER — billing reconciliation
+  ════════════════════════════════════════════════════════════════════════ -->
+  <div class="page" id="page-ledger">
+    <div class="kpi-row">
+      <div class="kpi kpi-theme-orange">
+        <div class="kpi-icon"><span class="icon" data-icon="dollar" data-icon-size="16"></span></div>
+        <div class="kpi-val orange" id="kpi-ledger-total">$0.00</div>
+        <div class="kpi-lbl">Total Impact</div>
+        <div class="kpi-sub" id="kpi-ledger-total-sub">This month</div>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 130 100 C 150 95, 160 80, 172 75 C 184 70, 190 50, 200 45 C 212 39, 220 20, 232 12"/><circle cx="172" cy="75"/><circle cx="200" cy="45"/><circle cx="232" cy="12" r="3"/><circle r="3"><animateMotion dur="2.6s" repeatCount="indefinite" path="M 130 100 C 150 95, 160 80, 172 75 C 184 70, 190 50, 200 45 C 212 39, 220 20, 232 12"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.9;1" dur="2.6s" repeatCount="indefinite"/></circle></svg>
+      </div>
+      <div class="kpi kpi-theme-blue">
+        <div class="kpi-icon"><span class="icon" data-icon="target" data-icon-size="16"></span></div>
+        <div class="kpi-val" id="kpi-ledger-charges">$0.00</div>
+        <div class="kpi-lbl">Charges to Bill</div>
+        <div class="kpi-sub" id="kpi-ledger-charges-sub">0 items</div>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><line class="bar bar-grow" x1="150" y1="105" x2="150" y2="80" style="animation-delay:0s"/><line class="bar bar-grow" x1="170" y1="105" x2="170" y2="60" style="animation-delay:.15s"/><line class="bar bar-grow" x1="190" y1="105" x2="190" y2="70" style="animation-delay:.3s"/><line class="bar bar-grow" x1="210" y1="105" x2="210" y2="40" style="animation-delay:.45s"/><line class="bar bar-grow" x1="230" y1="105" x2="230" y2="20" style="animation-delay:.6s"/></svg>
+      </div>
+      <div class="kpi kpi-theme-purple">
+        <div class="kpi-icon"><span class="icon" data-icon="clock" data-icon-size="16"></span></div>
+        <div class="kpi-val" id="kpi-ledger-notcharged">$0.00</div>
+        <div class="kpi-lbl">Not Charged Yet</div>
+        <div class="kpi-sub" id="kpi-ledger-notcharged-sub">0 items</div>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><circle class="ring" cx="188" cy="55" r="24"/><circle class="ring pulse-1" cx="188" cy="55" r="24"/><circle class="ring" cx="220" cy="55" r="24"/><circle class="ring pulse-2" cx="220" cy="55" r="24"/><circle cx="204" cy="55" r="2.5"/></svg>
+      </div>
+      <div class="kpi kpi-theme-orange">
+        <div class="kpi-icon"><span class="icon" data-icon="alert" data-icon-size="16"></span></div>
+        <div class="kpi-val orange" id="kpi-ledger-overage">$0.00</div>
+        <div class="kpi-lbl">Overage Questions</div>
+        <div class="kpi-sub" id="kpi-ledger-overage-sub">0 items</div>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><circle class="ring" cx="205" cy="60" r="10"/><circle class="ring pulse-1" cx="205" cy="60" r="10"/><circle class="ring pulse-2" cx="205" cy="60" r="10"/><circle cx="205" cy="60" r="3"/></svg>
+      </div>
+      <div class="kpi kpi-theme-red">
+        <div class="kpi-icon"><span class="icon" data-icon="package" data-icon-size="16"></span></div>
+        <div class="kpi-val red" id="kpi-ledger-taxes">$0.00</div>
+        <div class="kpi-lbl">Taxes</div>
+        <div class="kpi-sub" id="kpi-ledger-taxes-sub">0 items</div>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><polyline points="128,68 152,68 162,42 173,96 184,58 194,68 232,68"/><circle r="3"><animateMotion dur="2.2s" repeatCount="indefinite" path="M128,68 L152,68 L162,42 L173,96 L184,58 L194,68 L232,68"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.9;1" dur="2.2s" repeatCount="indefinite"/></circle></svg>
+      </div>
+      <div class="kpi kpi-theme-green">
+        <div class="kpi-icon"><span class="icon" data-icon="check" data-icon-size="16"></span></div>
+        <div class="kpi-val green" id="kpi-ledger-recouped">$0.00</div>
+        <div class="kpi-lbl">Recouped</div>
+        <div class="kpi-sub" id="kpi-ledger-recouped-sub">0 items</div>
+        <svg class="kpi-comet kpi-gauge" viewBox="0 0 120 120" aria-hidden="true">
+          <circle class="ring" cx="60" cy="60" r="46" stroke-dasharray="289" stroke-dashoffset="72"/>
+          <circle class="gauge-fill" id="kpi-ledger-recouped-arc" cx="60" cy="60" r="46" stroke-dasharray="0 289" stroke-dashoffset="72" transform="rotate(-90 60 60)"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="ai-insights-banner" id="ledgerNirvanaBanner">
+      <div class="ai-insights-icon"><span class="icon" data-icon="sparkle" data-icon-size="14"></span></div>
+      <div style="flex:1;min-width:0">
+        <div class="ai-insights-label">AI Summary</div>
+        <div class="ai-insights-text" id="ledgerNirvanaText">Looking at the ledger…</div>
+      </div>
+      <button class="ai-insights-refresh" id="ledgerNirvanaRefreshBtn" onclick="loadLedgerNirvanaInsight()" title="Get a new insight" aria-label="Get a new insight">↻</button>
+    </div>
+
+    <div class="ledger-layout">
+      <div class="ledger-sidebar">
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title" style="font-size:13px">Inbox & Imported Notes</div><div class="card-sub" id="ledgerInboxSub">0</div></div>
+          </div>
+          <div id="ledgerInboxList"></div>
+          <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:8px" onclick="showAllLedgerInbox()">View all imported <span class="icon" data-icon="chevronRight" data-icon-size="12"></span></button>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title" style="font-size:13px">Unresolved Items</div><div class="card-sub" id="ledgerUnresolvedSub">0</div></div>
+          </div>
+          <div id="ledgerUnresolvedList"></div>
+          <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:8px" onclick="showAllLedgerUnresolved()">View all unresolved <span class="icon" data-icon="chevronRight" data-icon-size="12"></span></button>
+        </div>
+      </div>
+
+      <div class="ledger-main">
+        <div class="card ledger-smartpaste-zone" id="ledgerSmartPasteZone" contenteditable="true" data-placeholder="Paste anything here — an email, a spreadsheet row, a quick note — and Nirvana will fill in the record for you." onpaste="handleLedgerSmartPaste(event)"></div>
+
+        <div class="card-header" style="margin-bottom:var(--space-3)">
+          <div><div class="card-title">Reconciliation Board</div><div class="card-sub" id="ledgerBoardSub">0 records</div></div>
+          <button class="btn btn-primary btn-sm" onclick="openAddLedgerModal('charges_to_bill')">＋ Add Record</button>
+        </div>
+        <div id="ledgerFilterBar" style="display:none;align-items:center;gap:10px;margin-bottom:10px;padding:6px 10px;background:var(--orange-dim);border-radius:var(--radius-sm);font-size:11px;color:var(--orange2)">
+          <span></span>
+          <button class="btn btn-ghost btn-sm" style="margin-left:auto;padding:2px 8px" onclick="clearLedgerBoardFilter()">Clear ✕</button>
+        </div>
+        <div class="ledger-board" id="ledgerBoard"></div>
+      </div>
+
+      <div class="ledger-sidebar-right">
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title" style="font-size:13px"><span class="icon" data-icon="sparkle" data-icon-size="12"></span> AI Recommendations</div></div>
+          </div>
+          <div id="ledgerRecommendations"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title" style="font-size:13px">Client Billing Profiles</div></div>
+          </div>
+          <div id="ledgerBillingProfiles"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title" style="font-size:13px">Billing Health Score</div></div>
+          </div>
+          <div id="ledgerHealthScore"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ledger-bottom-row">
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title" id="ledgerTrackerTitle">Monthly Record Tracker</div></div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <button class="row-action-btn" onclick="changeLedgerTrackerMonth(-1)" aria-label="Previous month">‹</button>
+            <button class="row-action-btn" onclick="changeLedgerTrackerMonth(1)" aria-label="Next month">›</button>
+          </div>
+        </div>
+        <div id="ledgerMonthlyTracker"></div>
+        <div class="ledger-tracker-legend">
+          <div><span class="dot" style="background:var(--green)"></span> Recouped</div>
+          <div><span class="dot" style="background:var(--blue)"></span> Charge Activity</div>
+          <div><span class="dot" style="background:var(--yellow)"></span> Overage Question</div>
+          <div><span class="dot" style="background:var(--bg4)"></span> No Activity</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div><div class="card-title" style="font-size:13px">Year to Date Impact</div></div></div>
+        <div class="ledger-ytd-num" id="ledgerYtdImpact">$0.00</div>
+        <div class="ledger-ytd-sub" id="ledgerYtdSub">Total non-standard billings</div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div><div class="card-title" style="font-size:13px">Top Categories YTD</div></div></div>
+        <div id="ledgerTopCategories"></div>
+      </div>
+    </div>
+
+    <div class="page-footer">The HUB · Niche Inc. · Ledger · v1.0 · Confidential</div>
+  </div>
+
   <div class="page" id="page-collections">
     <div class="card" style="margin-bottom:var(--space-5);padding:var(--space-3) var(--space-4)">
       <div style="font-size:var(--font-xs);color:var(--text3);margin-bottom:var(--space-2);letter-spacing:.5px;text-transform:uppercase;font-weight:700" data-i18n="collections_viewing">Viewing</div>
@@ -4857,6 +5099,48 @@ select.wfb-field-input { padding-right: 26px; }
   </div>
 
 </div><!-- end .main -->
+
+<!-- LEDGER ENTRY MODAL -->
+<div class="modal-overlay" id="ledgerEntryModal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="ledgerEntryModalTitle">
+    <h3 id="ledgerEntryModalTitle"><span class="icon" data-icon="dollar" data-icon-size="14"></span> <span id="ledgerEntryModalTitleText">Add Record</span></h3>
+    <div id="ledgerSmartPasteFlag" style="display:none;margin-bottom:10px" class="ledger-card-smart-tag"><span class="icon" data-icon="sparkle" data-icon-size="10"></span> Filled by Nirvana from pasted text — double-check before saving</div>
+    <input type="hidden" id="ledgerEntryId">
+    <label class="field-label" for="ledgerEntryClient">Client / Business Name</label>
+    <input type="text" id="ledgerEntryClient" class="field-input" placeholder="e.g. Unique Home Design & Remodeling">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div>
+        <label class="field-label" for="ledgerEntryAmount">Amount ($)</label>
+        <input type="number" id="ledgerEntryAmount" class="field-input" step="0.01" min="0" placeholder="0.00">
+      </div>
+      <div>
+        <label class="field-label" for="ledgerEntryCategory">Category</label>
+        <select id="ledgerEntryCategory" class="field-input">
+          <option value="charges_to_bill">Charges to Bill</option>
+          <option value="not_charged_yet">Not Charged Yet</option>
+          <option value="overage_question">Overage Question</option>
+          <option value="taxes">Taxes</option>
+          <option value="recouped">Recouped</option>
+        </select>
+      </div>
+    </div>
+    <label class="field-label" for="ledgerEntryDesc">Description</label>
+    <input type="text" id="ledgerEntryDesc" class="field-input" placeholder="e.g. Upgrade package, AdSpend over prorate">
+    <label class="field-label" for="ledgerEntryDue">Due Date (optional)</label>
+    <input type="date" id="ledgerEntryDue" class="field-input">
+    <div id="ledgerRawPasteWrap" style="display:none">
+      <label class="field-label">Original pasted text</label>
+      <textarea id="ledgerRawPasteText" class="field-input" rows="3" readonly style="font-size:11px;color:var(--text3)"></textarea>
+    </div>
+    <div class="modal-actions" style="justify-content:space-between">
+      <button class="btn btn-ghost" id="ledgerDeleteBtn" onclick="deleteLedgerEntry()" style="color:var(--red);display:none"><span class="icon" data-icon="trash" data-icon-size="13"></span> Delete</button>
+      <div style="display:flex;gap:8px;margin-left:auto">
+        <button class="btn btn-ghost" onclick="closeLedgerEntryModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveLedgerEntry()">Save Record</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- REMOVE PRODUCT CONFIRMATION MODAL -->
 <div class="modal-overlay" id="removeProductModal">
@@ -5462,6 +5746,7 @@ const pageMeta = {
   products:   { title: 'Manage Products',      sub: 'Add, remove, and configure your product catalog' },
   adspend:    { title: 'Ad Spend Management', sub: 'Business-by-business budget, promo status, and recommendations' },
   collections:{ title: 'Collections',              sub: 'Outstanding balances and card fails, with status and notes' },
+  ledger:{ title: 'Ledger',                          sub: 'Billing reconciliation — charges, overages, taxes, and recoups' },
   settings:   { title: 'Settings',             sub: 'Manage Hub-wide settings, integrations, and your team' },
   onboarding: { title: 'Onboarding',           sub: 'Track new clients from contract signature through go-live' },
 };
@@ -6889,6 +7174,7 @@ function rebuildAll() {
   rebuildClientsDirectory(); // All Clients — unified directory across every portfolio
   if (typeof rebuildAdSpendPage === 'function') rebuildAdSpendPage();
   if (typeof rebuildCollectionsPage === 'function') rebuildCollectionsPage();
+  if (typeof rebuildLedgerPage === 'function') rebuildLedgerPage();
   if (typeof rebuildWorkflowsPage === 'function') rebuildWorkflowsPage();
   if (typeof rebuildKnowledgePage === 'function') rebuildKnowledgePage();
   if (typeof rebuildChatWidgetPage === 'function') rebuildChatWidgetPage();
@@ -11310,6 +11596,529 @@ async function loadCollectionsAccounts() {
   }
   populateCollectionsControls();
   rebuildCollectionsPage();
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// LEDGER — billing reconciliation (2026-07-18)
+// ═══════════════════════════════════════════════════════════════════════
+const LEDGER_CACHE_KEY = 'csh_ledger_entries_v1';
+let LEDGER_ENTRIES = [];
+const LEDGER_CATEGORIES = [
+  { key: 'charges_to_bill',  label: 'Charges to Bill',    color: 'var(--orange)' },
+  { key: 'not_charged_yet',  label: 'Not Charged Yet',    color: 'var(--purple)' },
+  { key: 'overage_question', label: 'Overage Questions',  color: 'var(--yellow)' },
+  { key: 'taxes',            label: 'Taxes',              color: 'var(--red)' },
+  { key: 'recouped',         label: 'Recouped',           color: 'var(--green)' },
+];
+function ledgerCategoryMeta(key) { return LEDGER_CATEGORIES.find(c => c.key === key) || LEDGER_CATEGORIES[0]; }
+
+async function loadLedgerEntries() {
+  try {
+    LEDGER_ENTRIES = await sbSelect('ledger_entries', 'order=created_at.desc');
+    localStorage.setItem(LEDGER_CACHE_KEY, JSON.stringify(LEDGER_ENTRIES));
+  } catch(e) {
+    console.warn('ledger_entries table unavailable, using local cache:', e.message);
+    try { LEDGER_ENTRIES = JSON.parse(localStorage.getItem(LEDGER_CACHE_KEY) || '[]'); }
+    catch(e2) { LEDGER_ENTRIES = []; }
+  }
+}
+
+async function rebuildLedgerPage() {
+  await loadLedgerEntries();
+  const totals = {};
+  LEDGER_CATEGORIES.forEach(c => { totals[c.key] = { sum: 0, count: 0 }; });
+  let grandTotal = 0;
+  LEDGER_ENTRIES.forEach(e => {
+    const cat = totals[e.category] ? e.category : 'charges_to_bill';
+    totals[cat].sum += (e.amount || 0);
+    totals[cat].count++;
+    grandTotal += (e.amount || 0);
+  });
+  const fmt = (n) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  set('kpi-ledger-total', fmt(grandTotal));
+  set('kpi-ledger-total-sub', `${LEDGER_ENTRIES.length} record${LEDGER_ENTRIES.length === 1 ? '' : 's'}`);
+  set('kpi-ledger-charges', fmt(totals.charges_to_bill.sum));
+  set('kpi-ledger-charges-sub', `${totals.charges_to_bill.count} items`);
+  set('kpi-ledger-notcharged', fmt(totals.not_charged_yet.sum));
+  set('kpi-ledger-notcharged-sub', `${totals.not_charged_yet.count} items`);
+  set('kpi-ledger-overage', fmt(totals.overage_question.sum));
+  set('kpi-ledger-overage-sub', `${totals.overage_question.count} items`);
+  set('kpi-ledger-taxes', fmt(totals.taxes.sum));
+  set('kpi-ledger-taxes-sub', `${totals.taxes.count} items`);
+  set('kpi-ledger-recouped', fmt(totals.recouped.sum));
+  set('kpi-ledger-recouped-sub', `${totals.recouped.count} items`);
+  const recoupedArc = document.getElementById('kpi-ledger-recouped-arc');
+  if (recoupedArc) {
+    const pct = grandTotal ? (totals.recouped.sum / grandTotal * 100) : 0;
+    recoupedArc.setAttribute('stroke-dasharray', `${(Math.max(0, Math.min(100, pct)) / 100 * 289).toFixed(1)} 289`);
+  }
+  const sub = document.getElementById('ledgerBoardSub');
+  if (sub) sub.textContent = `${LEDGER_ENTRIES.length} record${LEDGER_ENTRIES.length === 1 ? '' : 's'}`;
+  const navBadge = document.getElementById('navLedgerBadge');
+  if (navBadge) { const openCount = totals.overage_question.count; navBadge.style.display = openCount ? '' : 'none'; navBadge.textContent = openCount; }
+
+  renderLedgerBoard();
+  renderLedgerInbox();
+  renderLedgerUnresolved();
+  renderLedgerRecommendations();
+  renderLedgerBillingProfiles();
+  renderLedgerHealthScore();
+  renderLedgerMonthlyTracker();
+  renderLedgerYtdAndCategories();
+  loadLedgerNirvanaInsight();
+}
+
+let ledgerBoardFilter = 'all'; // all | imported | unresolved
+function renderLedgerBoard() {
+  const wrap = document.getElementById('ledgerBoard');
+  if (!wrap) return;
+  const filterBar = document.getElementById('ledgerFilterBar');
+  if (filterBar) {
+    const labels = { imported: 'Showing: Smart Paste imports only', unresolved: 'Showing: Unresolved items only' };
+    if (ledgerBoardFilter === 'all') { filterBar.style.display = 'none'; }
+    else { filterBar.style.display = 'flex'; filterBar.querySelector('span').textContent = labels[ledgerBoardFilter]; }
+  }
+  wrap.innerHTML = LEDGER_CATEGORIES.map(cat => {
+    let entries = LEDGER_ENTRIES.filter(e => e.category === cat.key);
+    if (ledgerBoardFilter === 'imported') entries = entries.filter(e => e.source === 'smart_paste');
+    if (ledgerBoardFilter === 'unresolved') entries = cat.key === 'recouped' ? [] : entries;
+    const total = entries.reduce((s, e) => s + (e.amount || 0), 0);
+    const cardsHtml = entries.map(e => `
+      <div class="ledger-card" style="--stage-color:${cat.color}" onclick="openEditLedgerModal('${e.id}')">
+        <div class="ledger-card-top">
+          <span class="ledger-card-name">${escAttr(e.client_name)}</span>
+        </div>
+        <div class="ledger-card-amount">$${(e.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+        ${e.description ? `<div class="ledger-card-desc">${escAttr(e.description)}</div>` : ''}
+        ${e.due_date ? `<div class="ledger-card-due"><span class="icon" data-icon="calendar" data-icon-size="10"></span> Due ${fmtDate(e.due_date)}</div>` : ''}
+        ${e.source === 'smart_paste' ? `<div class="ledger-card-smart-tag"><span class="icon" data-icon="sparkle" data-icon-size="9"></span> Smart Paste</div>` : ''}
+      </div>`).join('') || `<div style="color:var(--text3);font-size:11px;text-align:center;padding:12px 0">Nothing here</div>`;
+    return `<div class="ledger-column">
+      <div class="ledger-column-hd" style="--stage-color:${cat.color}">
+        <span class="dot"></span><span class="ledger-column-title">${escAttr(cat.label)}</span><span class="ledger-column-count">${entries.length}</span>
+        <span class="ledger-column-total">$${total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+      </div>
+      <div class="ledger-column-cards">${cardsHtml}</div>
+      <button class="ledger-add-btn" onclick="openAddLedgerModal('${cat.key}')">+ Add Record</button>
+    </div>`;
+  }).join('');
+}
+function showAllLedgerInbox() {
+  ledgerBoardFilter = 'imported';
+  renderLedgerBoard();
+  document.getElementById('ledgerBoard').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+function showAllLedgerUnresolved() {
+  ledgerBoardFilter = 'unresolved';
+  renderLedgerBoard();
+  document.getElementById('ledgerBoard').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+function clearLedgerBoardFilter() {
+  ledgerBoardFilter = 'all';
+  renderLedgerBoard();
+}
+
+// Inbox & Imported Notes -- real feed of Smart Paste imports, most recent
+// first. This is the genuine "import" mechanism in the Hub (there's no
+// separate email/CSV import pipeline), so this sidebar reflects exactly
+// what Smart Paste has actually brought in.
+function renderLedgerInbox() {
+  const wrap = document.getElementById('ledgerInboxList');
+  const sub = document.getElementById('ledgerInboxSub');
+  if (!wrap) return;
+  const imported = LEDGER_ENTRIES.filter(e => e.source === 'smart_paste').sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  if (sub) sub.textContent = imported.length;
+  wrap.innerHTML = imported.length
+    ? imported.slice(0, 6).map(e => {
+        const cat = ledgerCategoryMeta(e.category);
+        return `<div class="ledger-inbox-item" onclick="openEditLedgerModal('${e.id}')">
+          <span class="ledger-inbox-dot" style="background:${cat.color};color:${cat.color}"></span>
+          <div class="ledger-inbox-body">
+            <div class="ledger-inbox-name">${escAttr(e.client_name)}</div>
+            <div class="ledger-inbox-sub">${fmtNoteTime(e.created_at)}</div>
+          </div>
+          <span class="ledger-inbox-amount">$${(e.amount || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })}</span>
+        </div>`;
+      }).join('')
+    : `<div class="spotlight-empty-line">No Smart Paste imports yet.</div>`;
+}
+
+// Unresolved Items -- everything not yet Recouped, sorted by urgency (past
+// due first, then soonest due, then no-due-date last).
+function renderLedgerUnresolved() {
+  const wrap = document.getElementById('ledgerUnresolvedList');
+  const sub = document.getElementById('ledgerUnresolvedSub');
+  if (!wrap) return;
+  const now = Date.now();
+  const unresolved = LEDGER_ENTRIES
+    .filter(e => e.category !== 'recouped')
+    .map(e => {
+      const dueTs = e.due_date ? new Date(e.due_date).getTime() : Infinity;
+      return { e, dueTs, overdue: e.due_date ? dueTs < now : false };
+    })
+    .sort((a, b) => a.dueTs - b.dueTs);
+  if (sub) sub.textContent = unresolved.length;
+  wrap.innerHTML = unresolved.length
+    ? unresolved.slice(0, 6).map(({ e, overdue, dueTs }) => {
+        const daysDiff = e.due_date ? Math.round((dueTs - now) / 86400000) : null;
+        let dueLabel = '', dueClass = '';
+        if (e.due_date) {
+          if (overdue) { dueLabel = 'Overdue'; dueClass = 'overdue'; }
+          else if (daysDiff <= 5) { dueLabel = `Due ${daysDiff}d`; dueClass = 'soon'; }
+          else { dueLabel = `Due ${fmtDate(e.due_date)}`; }
+        }
+        return `<div class="ledger-unresolved-item" onclick="openEditLedgerModal('${e.id}')">
+          <div class="ledger-unresolved-body">
+            <div class="ledger-unresolved-name">${escAttr(e.client_name)}</div>
+            <div class="ledger-unresolved-desc">${escAttr(e.description || ledgerCategoryMeta(e.category).label)}</div>
+          </div>
+          <div class="ledger-unresolved-right">
+            <div class="ledger-unresolved-amount">$${(e.amount || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })}</div>
+            ${dueLabel ? `<div class="ledger-unresolved-due ${dueClass}">${dueLabel}</div>` : ''}
+          </div>
+        </div>`;
+      }).join('')
+    : `<div class="spotlight-empty-line">Nothing unresolved right now.</div>`;
+}
+
+// AI Recommendations -- real signal-based (same approach as Onboarding's
+// Next Best Actions): concrete counts and dollar totals per action, not a
+// live AI call on every render.
+function renderLedgerRecommendations() {
+  const wrap = document.getElementById('ledgerRecommendations');
+  if (!wrap) return;
+  const now = Date.now();
+  const byCat = {};
+  LEDGER_CATEGORIES.forEach(c => { byCat[c.key] = LEDGER_ENTRIES.filter(e => e.category === c.key); });
+  const recs = [];
+  if (byCat.charges_to_bill.length) {
+    const total = byCat.charges_to_bill.reduce((s, e) => s + (e.amount || 0), 0);
+    recs.push({ title: `Schedule ${byCat.charges_to_bill.length} charge${byCat.charges_to_bill.length === 1 ? '' : 's'}`, sub: `Total $${total.toFixed(2)}`, btn: 'Schedule Now', filter: 'charges_to_bill' });
+  }
+  if (byCat.overage_question.length) {
+    const total = byCat.overage_question.reduce((s, e) => s + (e.amount || 0), 0);
+    recs.push({ title: `Follow up on ${byCat.overage_question.length} overage item${byCat.overage_question.length === 1 ? '' : 's'}`, sub: `Total $${total.toFixed(2)}`, btn: 'Review Now', filter: 'overage_question' });
+  }
+  if (byCat.taxes.length) {
+    const total = byCat.taxes.reduce((s, e) => s + (e.amount || 0), 0);
+    recs.push({ title: `Apply taxes to ${byCat.taxes.length} item${byCat.taxes.length === 1 ? '' : 's'}`, sub: `Total $${total.toFixed(2)}`, btn: 'Apply Taxes', filter: 'taxes' });
+  }
+  const readyToResolve = byCat.not_charged_yet.filter(e => e.due_date && new Date(e.due_date).getTime() < now);
+  if (readyToResolve.length) {
+    const total = readyToResolve.reduce((s, e) => s + (e.amount || 0), 0);
+    recs.push({ title: `${readyToResolve.length} item${readyToResolve.length === 1 ? '' : 's'} past due, ready to review`, sub: `Total $${total.toFixed(2)}`, btn: 'Review', filter: 'not_charged_yet' });
+  }
+  wrap.innerHTML = recs.length
+    ? recs.map(r => `<div class="ledger-rec-item">
+        <div class="ledger-rec-title">${escAttr(r.title)}</div>
+        <div class="ledger-rec-sub">${escAttr(r.sub)}</div>
+        <button class="ledger-rec-btn" onclick="filterLedgerBoardByCategory('${r.filter}')">${escAttr(r.btn)}</button>
+      </div>`).join('')
+    : `<div class="spotlight-empty-line">Nothing needs attention right now.</div>`;
+}
+function filterLedgerBoardByCategory(catKey) {
+  document.getElementById('ledgerBoard').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// Client Billing Profiles -- grouped from real ledger entries. Risk is a
+// real signal (overdue + overage item count for that client), not
+// fabricated payment-terms data the Hub doesn't actually track.
+function renderLedgerBillingProfiles() {
+  const wrap = document.getElementById('ledgerBillingProfiles');
+  if (!wrap) return;
+  const now = Date.now();
+  const byClient = {};
+  LEDGER_ENTRIES.forEach(e => {
+    if (!byClient[e.client_name]) byClient[e.client_name] = { name: e.client_name, ytd: 0, overdueCount: 0, overageCount: 0 };
+    byClient[e.client_name].ytd += (e.amount || 0);
+    if (e.due_date && new Date(e.due_date).getTime() < now && e.category !== 'recouped') byClient[e.client_name].overdueCount++;
+    if (e.category === 'overage_question') byClient[e.client_name].overageCount++;
+  });
+  const profiles = Object.values(byClient).sort((a, b) => b.ytd - a.ytd).slice(0, 6);
+  wrap.innerHTML = profiles.length
+    ? profiles.map(p => {
+        const riskScore = p.overdueCount + p.overageCount;
+        const risk = riskScore >= 2 ? 'high' : riskScore === 1 ? 'med' : 'low';
+        return `<div class="ledger-billing-item" onclick="filterLedgerBoardByClient('${escOnclickArg(p.name)}')">
+          <span class="ledger-billing-name" title="${escAttr(p.name)}">${escAttr(p.name)}</span>
+          <span class="ledger-billing-ytd">$${p.ytd.toLocaleString('en-US', { maximumFractionDigits: 0 })}</span>
+          <span class="ledger-risk-pill ${risk}">${risk}</span>
+        </div>`;
+      }).join('')
+    : `<div class="spotlight-empty-line">No billing activity yet.</div>`;
+}
+function filterLedgerBoardByClient(name) {
+  document.getElementById('ledgerBoard').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// Billing Health Score -- real, computed from the actual overdue/unresolved
+// ratio across all entries, same scoring shape as Onboarding's Pipeline
+// Health for consistency across the Hub.
+function renderLedgerHealthScore() {
+  const wrap = document.getElementById('ledgerHealthScore');
+  if (!wrap) return;
+  const now = Date.now();
+  const total = LEDGER_ENTRIES.length;
+  const problems = LEDGER_ENTRIES.filter(e => e.category !== 'recouped' && ((e.due_date && new Date(e.due_date).getTime() < now) || e.category === 'overage_question')).length;
+  const pct = total ? Math.round((1 - problems / total) * 100) : 100;
+  const label = pct >= 80 ? 'Good' : pct >= 50 ? 'Fair' : 'Poor';
+  const color = pct >= 80 ? 'var(--green)' : pct >= 50 ? 'var(--yellow)' : 'var(--red)';
+  const circumference = 2 * Math.PI * 30;
+  wrap.innerHTML = `
+    <div class="onboarding-health-wrap">
+      <div class="onboarding-health-ring-wrap">
+        <svg width="76" height="76" viewBox="0 0 76 76">
+          <circle cx="38" cy="38" r="30" fill="none" stroke="var(--border)" stroke-width="7"/>
+          <circle cx="38" cy="38" r="30" fill="none" stroke="${color}" stroke-width="7" stroke-linecap="round"
+            stroke-dasharray="${(pct / 100 * circumference).toFixed(1)} ${circumference.toFixed(1)}"
+            transform="rotate(-90 38 38)" style="filter:drop-shadow(0 0 5px ${color});transition:stroke-dasharray var(--transition-slower)"/>
+        </svg>
+        <div class="onboarding-health-num"><span class="num">${pct}</span><span class="lbl">${label}</span></div>
+      </div>
+      <div style="font-size:11px;color:var(--text3);line-height:1.5">
+        ${problems} of ${total} record${total === 1 ? '' : 's'} overdue or flagged.<br>Higher is healthier.
+      </div>
+    </div>`;
+}
+
+// Monthly Record Tracker -- real calendar heatmap from actual created_at
+// timestamps, not a mockup grid.
+let ledgerTrackerMonth = new Date();
+function changeLedgerTrackerMonth(delta) {
+  ledgerTrackerMonth = new Date(ledgerTrackerMonth.getFullYear(), ledgerTrackerMonth.getMonth() + delta, 1);
+  renderLedgerMonthlyTracker();
+}
+function renderLedgerMonthlyTracker() {
+  const wrap = document.getElementById('ledgerMonthlyTracker');
+  const titleEl = document.getElementById('ledgerTrackerTitle');
+  if (!wrap) return;
+  const year = ledgerTrackerMonth.getFullYear(), month = ledgerTrackerMonth.getMonth();
+  if (titleEl) titleEl.textContent = `${ledgerTrackerMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} Record Tracker`;
+  const firstDow = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const today = new Date();
+
+  // For each day, find entries created that day and pick a representative
+  // color: recouped > overage question > any other activity > none.
+  const dayColor = (d) => {
+    const dayEntries = LEDGER_ENTRIES.filter(e => {
+      const c = new Date(e.created_at);
+      return c.getFullYear() === year && c.getMonth() === month && c.getDate() === d;
+    });
+    if (!dayEntries.length) return null;
+    if (dayEntries.some(e => e.category === 'recouped')) return 'var(--green)';
+    if (dayEntries.some(e => e.category === 'overage_question')) return 'var(--yellow)';
+    return 'var(--blue)';
+  };
+
+  let html = ['Su','Mo','Tu','We','Th','Fr','Sa'].map(d => `<div class="ledger-tracker-dow">${d}</div>`).join('');
+  for (let i = 0; i < firstDow; i++) html += `<div></div>`;
+  for (let d = 1; d <= daysInMonth; d++) {
+    const color = dayColor(d);
+    const isToday = today.getFullYear() === year && today.getMonth() === month && today.getDate() === d;
+    html += `<div class="ledger-tracker-day${color ? ' has-activity' : ''}" style="${isToday ? 'border-color:var(--orange)' : ''}">${d}${color ? `<span class="pulse-dot" style="background:${color};color:${color}"></span>` : ''}</div>`;
+  }
+  wrap.innerHTML = `<div class="ledger-tracker-grid">${html}</div>`;
+}
+
+// Year to Date Impact + Top Categories -- same numbers as the KPI row,
+// reframed for the full year and ranked, not fabricated separately.
+function renderLedgerYtdAndCategories() {
+  const yearStart = new Date(new Date().getFullYear(), 0, 1).getTime();
+  const ytdEntries = LEDGER_ENTRIES.filter(e => new Date(e.created_at).getTime() >= yearStart);
+  const ytdTotal = ytdEntries.reduce((s, e) => s + (e.amount || 0), 0);
+  const totalEl = document.getElementById('ledgerYtdImpact');
+  if (totalEl) totalEl.textContent = '$' + ytdTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const subEl = document.getElementById('ledgerYtdSub');
+  if (subEl) subEl.textContent = `${ytdEntries.length} record${ytdEntries.length === 1 ? '' : 's'} this year`;
+
+  const wrap = document.getElementById('ledgerTopCategories');
+  if (!wrap) return;
+  const ranked = LEDGER_CATEGORIES.map(c => ({ c, total: ytdEntries.filter(e => e.category === c.key).reduce((s, e) => s + (e.amount || 0), 0) }))
+    .filter(r => r.total > 0)
+    .sort((a, b) => b.total - a.total);
+  const maxTotal = ranked[0] ? ranked[0].total : 1;
+  wrap.innerHTML = ranked.length
+    ? ranked.map(r => {
+        const pct = ytdTotal ? Math.round(r.total / ytdTotal * 100) : 0;
+        const barPct = maxTotal ? Math.round(r.total / maxTotal * 100) : 0;
+        return `<div class="opp-radar-row">
+          <span class="opp-radar-label" style="width:100px" title="${escAttr(r.c.label)}">${escAttr(r.c.label)}</span>
+          <div class="opp-radar-bar-track"><div class="opp-radar-bar-fill" style="width:${barPct}%;background:linear-gradient(90deg, ${r.c.color}, ${r.c.color})"></div></div>
+          <span class="opp-radar-count">${pct}%</span>
+        </div>`;
+      }).join('')
+    : `<div class="spotlight-empty-line">No activity yet this year.</div>`;
+}
+
+function openAddLedgerModal(category) {
+  document.getElementById('ledgerEntryModalTitleText').textContent = 'Add Record';
+  document.getElementById('ledgerEntryId').value = '';
+  document.getElementById('ledgerEntryClient').value = '';
+  document.getElementById('ledgerEntryAmount').value = '';
+  document.getElementById('ledgerEntryCategory').value = category || 'charges_to_bill';
+  document.getElementById('ledgerEntryDesc').value = '';
+  document.getElementById('ledgerEntryDue').value = '';
+  document.getElementById('ledgerDeleteBtn').style.display = 'none';
+  document.getElementById('ledgerSmartPasteFlag').style.display = 'none';
+  document.getElementById('ledgerRawPasteWrap').style.display = 'none';
+  document.getElementById('ledgerEntryModal').classList.add('open');
+}
+
+function openEditLedgerModal(id) {
+  const e = LEDGER_ENTRIES.find(x => x.id === id);
+  if (!e) return;
+  document.getElementById('ledgerEntryModalTitleText').textContent = 'Edit Record';
+  document.getElementById('ledgerEntryId').value = e.id;
+  document.getElementById('ledgerEntryClient').value = e.client_name || '';
+  document.getElementById('ledgerEntryAmount').value = e.amount || '';
+  document.getElementById('ledgerEntryCategory').value = e.category || 'charges_to_bill';
+  document.getElementById('ledgerEntryDesc').value = e.description || '';
+  document.getElementById('ledgerEntryDue').value = e.due_date || '';
+  document.getElementById('ledgerDeleteBtn').style.display = '';
+  const smartFlag = document.getElementById('ledgerSmartPasteFlag');
+  const rawWrap = document.getElementById('ledgerRawPasteWrap');
+  if (e.source === 'smart_paste' && e.raw_paste) {
+    smartFlag.style.display = '';
+    rawWrap.style.display = '';
+    document.getElementById('ledgerRawPasteText').value = e.raw_paste;
+  } else {
+    smartFlag.style.display = 'none';
+    rawWrap.style.display = 'none';
+  }
+  document.getElementById('ledgerEntryModal').classList.add('open');
+}
+
+function closeLedgerEntryModal() {
+  document.getElementById('ledgerEntryModal').classList.remove('open');
+}
+
+async function saveLedgerEntry() {
+  const id = document.getElementById('ledgerEntryId').value;
+  const clientName = document.getElementById('ledgerEntryClient').value.trim();
+  if (!clientName) { showToast('Enter a client or business name.', 'warning'); return; }
+  const amount = parseFloat(document.getElementById('ledgerEntryAmount').value) || 0;
+  const category = document.getElementById('ledgerEntryCategory').value;
+  const description = document.getElementById('ledgerEntryDesc').value.trim();
+  const dueDate = document.getElementById('ledgerEntryDue').value || null;
+  const u = getCurrentUser();
+  const now = new Date().toISOString();
+
+  if (id) {
+    const existing = LEDGER_ENTRIES.find(x => x.id === id);
+    const patch = { client_name: clientName, amount, category, description, due_date: dueDate, updated_at: now };
+    Object.assign(existing, patch);
+    try { await sbPatch('ledger_entries', `id=eq.${id}`, patch); }
+    catch(e) { showToast('Could not save: ' + e.message, 'error'); return; }
+  } else {
+    const record = {
+      id: (crypto.randomUUID ? crypto.randomUUID() : 'l_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8)),
+      client_name: clientName, amount, category, description, due_date: dueDate,
+      source: (window.__ledgerPendingSource || 'manual'), raw_paste: window.__ledgerPendingRawPaste || null,
+      created_by: u ? u.name : 'Guest', created_at: now, updated_at: now,
+    };
+    LEDGER_ENTRIES.unshift(record);
+    try { await sbUpsert('ledger_entries', record); }
+    catch(e) { showToast('Could not save: ' + e.message, 'error'); return; }
+  }
+  window.__ledgerPendingSource = null;
+  window.__ledgerPendingRawPaste = null;
+  closeLedgerEntryModal();
+  rebuildLedgerPage();
+  showToast('Record saved.', 'success');
+}
+
+async function deleteLedgerEntry() {
+  const id = document.getElementById('ledgerEntryId').value;
+  if (!id) return;
+  const ok = await showConfirmDialog('Delete this ledger record? This can\'t be undone.', { danger: true, confirmLabel: 'Delete' });
+  if (!ok) return;
+  LEDGER_ENTRIES = LEDGER_ENTRIES.filter(x => x.id !== id);
+  try { await sbDelete('ledger_entries', `id=eq.${id}`); } catch(e) { showToast('Could not delete: ' + e.message, 'error'); }
+  closeLedgerEntryModal();
+  rebuildLedgerPage();
+}
+
+// Smart Paste -- Nirvana extracts client name, amount, category, and due
+// date from whatever raw text gets pasted (an email, a spreadsheet row, a
+// quick note), then opens the normal Add Record modal pre-filled so a
+// person always reviews/confirms before it's actually saved -- money
+// amounts are exactly the kind of thing that shouldn't get silently
+// auto-committed from an AI guess.
+async function handleLedgerSmartPaste(event) {
+  event.preventDefault();
+  const text = (event.clipboardData || window.clipboardData).getData('text/plain');
+  const zone = document.getElementById('ledgerSmartPasteZone');
+  if (!text || !text.trim()) return;
+  zone.classList.add('parsing');
+  zone.textContent = 'Nirvana is reading that…';
+  try {
+    const catList = LEDGER_CATEGORIES.map(c => c.key).join(', ');
+    const raw = await quickAiCompletion(
+      'You are Nirvana, extracting a structured billing/reconciliation record from pasted text for a marketing agency. Respond with ONLY raw JSON, no markdown fences, no explanation.',
+      `Extract one billing record from this pasted text. Respond with exactly this JSON shape:\n{"client_name": string, "amount": number, "category": one of [${catList}], "description": string, "due_date": "YYYY-MM-DD" or null}\n\nCategory meanings: charges_to_bill = needs to be billed; not_charged_yet = known charge not yet applied; overage_question = needs research/clarification; taxes = a tax line item; recouped = already recovered/collected. If unsure of a field, use a sensible default (amount 0, category "charges_to_bill", description "", due_date null) rather than failing.\n\nPasted text:\n"""\n${text}\n"""`
+    );
+    const cleaned = (raw || '').replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(cleaned);
+    window.__ledgerPendingSource = 'smart_paste';
+    window.__ledgerPendingRawPaste = text;
+    openAddLedgerModal(LEDGER_CATEGORIES.some(c => c.key === parsed.category) ? parsed.category : 'charges_to_bill');
+    document.getElementById('ledgerEntryClient').value = parsed.client_name || '';
+    document.getElementById('ledgerEntryAmount').value = parsed.amount || '';
+    document.getElementById('ledgerEntryDesc').value = parsed.description || '';
+    document.getElementById('ledgerEntryDue').value = parsed.due_date || '';
+    document.getElementById('ledgerSmartPasteFlag').style.display = '';
+    document.getElementById('ledgerRawPasteWrap').style.display = '';
+    document.getElementById('ledgerRawPasteText').value = text;
+  } catch(e) {
+    showToast('Nirvana couldn\'t confidently parse that — try Add Record instead.', 'warning');
+  } finally {
+    zone.classList.remove('parsing');
+    zone.textContent = '';
+  }
+}
+
+// AI Summary banner -- same anti-repeat pattern used on Home/SMB/Command
+// Board (tells the model what it already said, gives it a rotating angle),
+// otherwise identical numbers on refresh just produce the same sentence.
+let lastLedgerNirvanaInsight = null;
+const LEDGER_NIRVANA_ANGLES = [
+  'the single biggest non-standard charge this month',
+  'overage questions that need research before they can be billed',
+  'how much has been recouped vs. is still outstanding',
+  'clients with the most reconciliation activity this month',
+  'taxes that still need to be applied',
+];
+async function loadLedgerNirvanaInsight() {
+  const textEl = document.getElementById('ledgerNirvanaText');
+  const btn = document.getElementById('ledgerNirvanaRefreshBtn');
+  if (!textEl) return;
+  if (btn) btn.disabled = true;
+  textEl.textContent = 'Looking at the ledger…';
+  const byCat = {};
+  LEDGER_CATEGORIES.forEach(c => { byCat[c.key] = LEDGER_ENTRIES.filter(e => e.category === c.key); });
+  const grandTotal = LEDGER_ENTRIES.reduce((s, e) => s + (e.amount || 0), 0);
+  const fallback = LEDGER_ENTRIES.length
+    ? `$${grandTotal.toFixed(2)} in total non-standard billing activity across ${LEDGER_ENTRIES.length} records.`
+    : 'No ledger records yet — paste in a charge or add one manually to get started.';
+  try {
+    const angle = LEDGER_NIRVANA_ANGLES[Math.floor(Math.random() * LEDGER_NIRVANA_ANGLES.length)];
+    let userText = LEDGER_CATEGORIES.map(c => `${c.label}: $${byCat[c.key].reduce((s, e) => s + (e.amount || 0), 0).toFixed(2)} (${byCat[c.key].length} items)`).join('\n');
+    userText += `\n\nLead with this angle if it's genuinely relevant: ${angle}.`;
+    if (lastLedgerNirvanaInsight) userText += `\n\nYou already said this last time -- give a genuinely different insight now: "${lastLedgerNirvanaInsight}"`;
+    const insight = await quickAiCompletion(
+      'You are Nirvana, a concise billing/reconciliation advisor for a home-services marketing agency. Give ONE punchy, specific sentence (max 24 words) highlighting a useful thing to focus on in the ledger. No greeting, no filler.',
+      userText
+    );
+    const finalText = (insight || '').trim() || fallback;
+    textEl.textContent = finalText;
+    lastLedgerNirvanaInsight = finalText;
+  } catch(e) {
+    textEl.textContent = fallback;
+  } finally {
+    if (btn) btn.disabled = false;
+  }
 }
 
 async function persistCollectionsAccount(a) {
@@ -21200,6 +22009,7 @@ const MODAL_CLOSE_FUNCTIONS = {
   editClientModal: () => closeEditClientModal(),
   workflowModal: () => closeWorkflowModal(),
   reminderModal: () => closeAddReminderModal(),
+  ledgerEntryModal: () => closeLedgerEntryModal(),
   addOnboardingModal: () => closeAddOnboardingModal(),
   viewOnboardingModal: () => closeViewOnboardingModal(),
   wfbSaveModal: () => closeWfbSaveModal(),
