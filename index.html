@@ -900,7 +900,51 @@ body.ai-panel-open .main {
 .onboarding-card:hover { border-color: var(--stage-color, var(--orange)); transform: translateY(-1px); }
 .onboarding-card.dragging { opacity: .4; }
 .onboarding-card-name { font-weight: 700; font-size: var(--font-sm); color: var(--text); margin-bottom: 2px; }
-.onboarding-card-meta { font-size: var(--font-2xs); color: var(--text3); }
+.onboarding-card-meta { font-size: var(--font-2xs); color: var(--text3); margin-bottom: 6px; }
+.onboarding-risk-badge {
+  display: inline-flex; align-items: center; gap: 4px; font-size: 9px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: .03em; background: rgba(239,68,68,.15); color: var(--red); padding: 2px 7px; border-radius: 5px; margin-bottom: 6px;
+}
+.onboarding-progress-row { display: flex; align-items: center; gap: 7px; margin-bottom: 8px; }
+.onboarding-progress-track { flex: 1; height: 5px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+.onboarding-progress-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--stage-color, var(--orange)), var(--orange2)); box-shadow: 0 0 6px var(--stage-color, var(--orange)); transition: width var(--transition-slower); }
+.onboarding-progress-pct { font-size: 9.5px; font-family: var(--font-mono); color: var(--text3); flex-shrink: 0; width: 30px; text-align: right; }
+.onboarding-card-footer { display: flex; align-items: center; gap: 8px; font-size: 10px; color: var(--text3); }
+.onboarding-owner-avatar {
+  width: 18px; height: 18px; border-radius: 50%; background: var(--bg4); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center; font-size: 8.5px; font-weight: 700; color: var(--text2); flex-shrink: 0;
+}
+.onboarding-card-footer .footer-stat { display: flex; align-items: center; gap: 3px; }
+.onboarding-waiting-select {
+  margin-left: auto; font-size: 9.5px; background: var(--bg3); border: 1px solid var(--border); color: var(--text2);
+  border-radius: 5px; padding: 2px 4px; max-width: 92px;
+}
+.onboarding-waiting-select.set-client { border-color: var(--purple); color: var(--purple); }
+.onboarding-waiting-select.set-team { border-color: var(--blue); color: var(--blue); }
+
+.onboarding-layout { display: flex; gap: 16px; align-items: flex-start; }
+.onboarding-main { flex: 1; min-width: 0; }
+.onboarding-sidebar { width: 300px; flex-shrink: 0; display: flex; flex-direction: column; gap: 16px; position: sticky; top: 16px; }
+@media (max-width: 1200px) { .onboarding-layout { flex-direction: column; } .onboarding-sidebar { width: 100%; position: static; } }
+.onboarding-action-item { padding: 9px 0; border-bottom: 1px solid var(--border); }
+.onboarding-action-item:last-child { border-bottom: none; }
+.onboarding-action-title { font-size: 12px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+.onboarding-action-sub { font-size: 10.5px; color: var(--text3); margin-bottom: 6px; }
+.onboarding-action-btn { font-size: 10.5px; font-weight: 700; color: var(--orange2); background: none; border: none; cursor: pointer; padding: 0; display: flex; align-items: center; gap: 3px; }
+.onboarding-action-btn:hover { text-decoration: underline; }
+.onboarding-risk-item { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid var(--border); cursor: pointer; }
+.onboarding-risk-item:last-child { border-bottom: none; }
+.onboarding-risk-item:hover .onboarding-risk-name { color: var(--orange); }
+.onboarding-risk-name { font-size: 11.5px; font-weight: 700; color: var(--text); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.onboarding-risk-days { font-size: 10px; color: var(--text3); flex-shrink: 0; }
+.onboarding-health-wrap { display: flex; align-items: center; gap: 14px; }
+.onboarding-health-ring-wrap { position: relative; width: 76px; height: 76px; flex-shrink: 0; }
+.onboarding-health-num { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.onboarding-health-num .num { font-size: 20px; font-weight: 800; color: var(--text); line-height: 1; }
+.onboarding-health-num .lbl { font-size: 8px; color: var(--text3); text-transform: uppercase; }
+.onboarding-health-legend { font-size: 11px; color: var(--text2); display: flex; flex-direction: column; gap: 5px; }
+.onboarding-health-legend div { display: flex; align-items: center; gap: 6px; }
+.onboarding-health-legend .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
 
 .tbl-scroll {
   max-height: 460px;
@@ -4734,15 +4778,81 @@ select.wfb-field-input { padding-right: 26px; }
   </div>
 
   <div class="page" id="page-onboarding">
-    <div class="card-header" style="margin-bottom:var(--space-4)">
-      <div><div class="card-title" data-i18n="onboarding_pipeline_title">Onboarding Pipeline</div><div class="card-sub" id="onboardingCountSub">0 in progress</div></div>
-      <div style="display:flex;gap:var(--space-2);align-items:center">
-        <select id="onboardingPipelineSelect" class="field-input" style="height:36px;margin-bottom:0;width:auto" onchange="switchOnboardingPipeline(this.value)"></select>
-        <button class="btn btn-sm" onclick="openManagePipelinesModal()" title="Create or edit pipelines"><span class="icon" data-icon="settings" data-icon-size="14"></span> <span data-i18n="onboarding_pipelines_btn">Pipelines</span></button>
-        <button class="btn btn-primary btn-sm" onclick="openAddOnboardingModal()">＋ <span data-i18n="onboarding_new_btn">New Onboarding</span></button>
+    <div class="kpi-row">
+      <div class="kpi kpi-theme-blue">
+        <div class="kpi-icon"><span class="icon" data-icon="compass" data-icon-size="16"></span></div>
+        <div class="kpi-val" id="kpi-onboarding-inprogress">0</div>
+        <div class="kpi-lbl">In Progress</div>
+        <div class="kpi-sub" id="kpi-onboarding-inprogress-sub">—</div>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 130 100 C 150 95, 160 80, 172 75 C 184 70, 190 50, 200 45 C 212 39, 220 20, 232 12"/><circle cx="172" cy="75"/><circle cx="200" cy="45"/><circle cx="232" cy="12" r="3"/><circle r="3"><animateMotion dur="2.6s" repeatCount="indefinite" path="M 130 100 C 150 95, 160 80, 172 75 C 184 70, 190 50, 200 45 C 212 39, 220 20, 232 12"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.9;1" dur="2.6s" repeatCount="indefinite"/></circle></svg>
+      </div>
+      <div class="kpi kpi-theme-orange">
+        <div class="kpi-icon"><span class="icon" data-icon="alert" data-icon-size="16"></span></div>
+        <div class="kpi-val orange" id="kpi-onboarding-atrisk">0</div>
+        <div class="kpi-lbl">At Risk</div>
+        <div class="kpi-sub" id="kpi-onboarding-atrisk-sub">No activity in 7+ days</div>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><circle class="ring" cx="205" cy="60" r="10"/><circle class="ring pulse-1" cx="205" cy="60" r="10"/><circle class="ring pulse-2" cx="205" cy="60" r="10"/><circle cx="205" cy="60" r="3"/></svg>
+      </div>
+      <div class="kpi kpi-theme-purple">
+        <div class="kpi-icon"><span class="icon" data-icon="user" data-icon-size="16"></span></div>
+        <div class="kpi-val" id="kpi-onboarding-waiting">0</div>
+        <div class="kpi-lbl">Waiting on Client</div>
+        <div class="kpi-sub" id="kpi-onboarding-waiting-sub">—</div>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><circle class="ring" cx="188" cy="55" r="24"/><circle class="ring pulse-1" cx="188" cy="55" r="24"/><circle class="ring" cx="220" cy="55" r="24"/><circle class="ring pulse-2" cx="220" cy="55" r="24"/><circle cx="204" cy="55" r="2.5"/></svg>
+      </div>
+      <div class="kpi kpi-theme-blue">
+        <div class="kpi-icon"><span class="icon" data-icon="check" data-icon-size="16"></span></div>
+        <div class="kpi-val" id="kpi-onboarding-qa">0</div>
+        <div class="kpi-lbl">QA Review</div>
+        <div class="kpi-sub" id="kpi-onboarding-qa-sub">Of active pipeline</div>
+        <svg class="kpi-comet kpi-gauge" viewBox="0 0 120 120" aria-hidden="true">
+          <circle class="ring" cx="60" cy="60" r="46" stroke-dasharray="289" stroke-dashoffset="72"/>
+          <circle class="gauge-fill" id="kpi-onboarding-qa-arc" cx="60" cy="60" r="46" stroke-dasharray="0 289" stroke-dashoffset="72" transform="rotate(-90 60 60)"/>
+        </svg>
+      </div>
+      <div class="kpi kpi-theme-green">
+        <div class="kpi-icon"><span class="icon" data-icon="check" data-icon-size="16"></span></div>
+        <div class="kpi-val green" id="kpi-onboarding-live">0</div>
+        <div class="kpi-lbl">Live This Week</div>
+        <div class="kpi-sub" id="kpi-onboarding-live-sub">Went live in the last 7 days</div>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 130 100 C 150 95, 160 80, 172 75 C 184 70, 190 50, 200 45 C 212 39, 220 20, 232 12"/><circle cx="172" cy="75"/><circle cx="200" cy="45"/><circle cx="232" cy="12" r="3"/><circle r="3"><animateMotion dur="2.6s" repeatCount="indefinite" path="M 130 100 C 150 95, 160 80, 172 75 C 184 70, 190 50, 200 45 C 212 39, 220 20, 232 12"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.9;1" dur="2.6s" repeatCount="indefinite"/></circle></svg>
       </div>
     </div>
-    <div id="onboardingBoard" style="display:flex;gap:var(--space-3);overflow-x:auto;padding-bottom:var(--space-3)"></div>
+    <div class="onboarding-layout">
+      <div class="onboarding-main">
+        <div class="card-header" style="margin-bottom:var(--space-4)">
+          <div><div class="card-title" data-i18n="onboarding_pipeline_title">Onboarding Pipeline</div><div class="card-sub" id="onboardingCountSub">0 in progress</div></div>
+          <div style="display:flex;gap:var(--space-2);align-items:center">
+            <select id="onboardingPipelineSelect" class="field-input" style="height:36px;margin-bottom:0;width:auto" onchange="switchOnboardingPipeline(this.value)"></select>
+            <button class="btn btn-sm" onclick="openManagePipelinesModal()" title="Create or edit pipelines"><span class="icon" data-icon="settings" data-icon-size="14"></span> <span data-i18n="onboarding_pipelines_btn">Pipelines</span></button>
+            <button class="btn btn-primary btn-sm" onclick="openAddOnboardingModal()">＋ <span data-i18n="onboarding_new_btn">New Onboarding</span></button>
+          </div>
+        </div>
+        <div id="onboardingBoard" style="display:flex;gap:var(--space-3);overflow-x:auto;padding-bottom:var(--space-3)"></div>
+      </div>
+
+      <div class="onboarding-sidebar">
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title" style="font-size:13px"><span class="icon" data-icon="sparkle" data-icon-size="13"></span> Next Best Actions</div></div>
+          </div>
+          <div id="onboardingNextActions"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title" style="font-size:13px"><span class="icon" data-icon="alert" data-icon-size="13"></span> At Risk</div></div>
+          </div>
+          <div id="onboardingAtRiskList"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title" style="font-size:13px">Pipeline Health</div></div>
+          </div>
+          <div id="onboardingHealthGauge"></div>
+          <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:10px" onclick="askNirvanaAboutOnboarding()"><span class="icon" data-icon="sparkle" data-icon-size="12"></span> View Full Insights</button>
+        </div>
+      </div>
+    </div>
     <div class="page-footer">The HUB · Niche Inc. · Onboarding</div>
   </div>
 
@@ -12332,6 +12442,129 @@ async function saveNewOnboardingRecord() {
   showToast(`Started onboarding for "${businessName}".`, 'success');
 }
 
+// Every number here comes from real fields (stage, updated_at, went_live_at,
+// waiting_on) -- no fabricated call-dates or due-dates, since those aren't
+// actually tracked per onboarding record.
+function rebuildOnboardingKPIs(pipelineRecords, stages) {
+  const liveStage = stages.find(s => /live/i.test(s.label));
+  const qaStage = stages.find(s => /qa/i.test(s.label));
+  const activeRecords = pipelineRecords.filter(r => !liveStage || r.stage !== liveStage.stage_key);
+  const now = Date.now();
+
+  const inProgress = activeRecords.length;
+  const atRisk = activeRecords.filter(r => (now - new Date(r.updated_at || r.created_at).getTime()) > 7 * 86400000).length;
+  const waiting = activeRecords.filter(r => r.waiting_on === 'client').length;
+  const qaCount = qaStage ? pipelineRecords.filter(r => r.stage === qaStage.stage_key).length : 0;
+  const oneWeekAgo = now - 7 * 86400000;
+  const liveThisWeek = pipelineRecords.filter(r => r.went_live_at && new Date(r.went_live_at).getTime() >= oneWeekAgo).length;
+
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+  set('kpi-onboarding-inprogress', inProgress);
+  set('kpi-onboarding-inprogress-sub', `${pipelineRecords.length} total in this pipeline`);
+  set('kpi-onboarding-atrisk', atRisk);
+  set('kpi-onboarding-waiting', waiting);
+  set('kpi-onboarding-waiting-sub', inProgress ? `${Math.round(waiting / inProgress * 100)}% of active` : '—');
+  set('kpi-onboarding-qa', qaCount);
+  set('kpi-onboarding-live', liveThisWeek);
+
+  const qaArc = document.getElementById('kpi-onboarding-qa-arc');
+  if (qaArc) {
+    const pct = pipelineRecords.length ? (qaCount / pipelineRecords.length * 100) : 0;
+    qaArc.setAttribute('stroke-dasharray', `${(Math.max(0, Math.min(100, pct)) / 100 * 289).toFixed(1)} 289`);
+  }
+}
+
+// Real, signal-based suggestions computed from actual record data -- not a
+// live AI call on every board refresh (too slow/costly to run per render).
+// The "View Full Insights" button below still opens Nirvana for a real
+// conversational take when someone wants to go deeper.
+function renderOnboardingNextActions(pipelineRecords, allChecklist, allNotes) {
+  const wrap = document.getElementById('onboardingNextActions');
+  if (!wrap) return;
+  const now = Date.now();
+  const actions = [];
+  pipelineRecords.forEach(r => {
+    const daysSince = Math.floor((now - new Date(r.updated_at || r.created_at).getTime()) / 86400000);
+    const checklist = allChecklist.filter(c => c.onboarding_id === r.id);
+    if (daysSince > 7) {
+      actions.push({ priority: daysSince > 14 ? 2 : 1, title: `Follow up with ${r.business_name}`, sub: `No activity in ${daysSince} days`, id: r.id });
+    } else if (checklist.length === 0) {
+      actions.push({ priority: 0, title: `Start ${r.business_name}'s checklist`, sub: `No checklist items added yet`, id: r.id });
+    } else if (r.waiting_on === 'client' && daysSince > 3) {
+      actions.push({ priority: 1, title: `Nudge ${r.business_name}`, sub: `Waiting on client for ${daysSince}+ days`, id: r.id });
+    }
+  });
+  actions.sort((a, b) => b.priority - a.priority);
+  const top = actions.slice(0, 4);
+  wrap.innerHTML = top.length
+    ? top.map(a => `<div class="onboarding-action-item">
+        <div class="onboarding-action-title">${escAttr(a.title)}</div>
+        <div class="onboarding-action-sub">${escAttr(a.sub)}</div>
+        <button class="onboarding-action-btn" onclick="openViewOnboardingModal('${a.id}')">Review <span class="icon" data-icon="chevronRight" data-icon-size="11"></span></button>
+      </div>`).join('')
+    : `<div class="spotlight-empty-line">Nothing urgent right now.</div>`;
+}
+
+function renderOnboardingAtRiskList(pipelineRecords) {
+  const wrap = document.getElementById('onboardingAtRiskList');
+  if (!wrap) return;
+  const now = Date.now();
+  const atRisk = pipelineRecords
+    .map(r => ({ r, days: Math.floor((now - new Date(r.updated_at || r.created_at).getTime()) / 86400000) }))
+    .filter(x => x.days > 7)
+    .sort((a, b) => b.days - a.days)
+    .slice(0, 6);
+  wrap.innerHTML = atRisk.length
+    ? atRisk.map(({ r, days }) => `<div class="onboarding-risk-item" onclick="openViewOnboardingModal('${r.id}')">
+        <span class="onboarding-risk-name">${escAttr(r.business_name)}</span>
+        <span class="onboarding-risk-days">${days}d</span>
+      </div>`).join('')
+    : `<div class="spotlight-empty-line">Nothing at risk right now.</div>`;
+}
+
+function renderOnboardingHealthGauge(pipelineRecords, stages) {
+  const wrap = document.getElementById('onboardingHealthGauge');
+  if (!wrap) return;
+  const liveStage = stages.find(s => /live/i.test(s.label));
+  const activeRecords = pipelineRecords.filter(r => !liveStage || r.stage !== liveStage.stage_key);
+  const now = Date.now();
+  let onTrack = 0, atRisk = 0, delayed = 0;
+  activeRecords.forEach(r => {
+    const days = (now - new Date(r.updated_at || r.created_at).getTime()) / 86400000;
+    if (days > 14) delayed++;
+    else if (days > 7) atRisk++;
+    else onTrack++;
+  });
+  const total = activeRecords.length;
+  const pct = total ? Math.round(onTrack / total * 100) : 100;
+  const label = pct >= 80 ? 'Good' : pct >= 50 ? 'Fair' : 'Poor';
+  const color = pct >= 80 ? 'var(--green)' : pct >= 50 ? 'var(--yellow)' : 'var(--red)';
+  const circumference = 2 * Math.PI * 30;
+  wrap.innerHTML = `
+    <div class="onboarding-health-wrap">
+      <div class="onboarding-health-ring-wrap">
+        <svg width="76" height="76" viewBox="0 0 76 76">
+          <circle cx="38" cy="38" r="30" fill="none" stroke="var(--border)" stroke-width="7"/>
+          <circle cx="38" cy="38" r="30" fill="none" stroke="${color}" stroke-width="7" stroke-linecap="round"
+            stroke-dasharray="${(pct / 100 * circumference).toFixed(1)} ${circumference.toFixed(1)}"
+            transform="rotate(-90 38 38)" style="filter:drop-shadow(0 0 5px ${color});transition:stroke-dasharray var(--transition-slower)"/>
+        </svg>
+        <div class="onboarding-health-num"><span class="num">${pct}</span><span class="lbl">${label}</span></div>
+      </div>
+      <div class="onboarding-health-legend">
+        <div><span class="dot" style="background:var(--green)"></span> On Track <b style="margin-left:auto">${onTrack}</b></div>
+        <div><span class="dot" style="background:var(--yellow)"></span> At Risk <b style="margin-left:auto">${atRisk}</b></div>
+        <div><span class="dot" style="background:var(--red)"></span> Delayed <b style="margin-left:auto">${delayed}</b></div>
+      </div>
+    </div>`;
+}
+
+function askNirvanaAboutOnboarding() {
+  const panel = document.getElementById('aiAgentPanel');
+  if (panel && panel.style.display === 'none') toggleAiAgentPanel();
+  sendAiAgentQuickMessage('Looking at the onboarding pipeline, which accounts need the most attention right now, and what should I do about them?');
+}
+
 async function rebuildOnboardingPage() {
   await loadOnboardingRecords();
   await loadOnboardingPipelines();
@@ -12347,6 +12580,7 @@ async function rebuildOnboardingPage() {
   if (badge) badge.textContent = ONBOARDING_RECORDS.length;
   if (!wrap) return;
   const stages = getPipelineStages(currentOnboardingPipelineId);
+  rebuildOnboardingKPIs(pipelineRecords, stages);
   if (stages.length === 0) {
     wrap.innerHTML = `<div style="width:100%">${emptyStateHTML({ icon: hubIcon('settings', 28), title: t('es_no_pipeline'), sub: t('es_no_pipeline_sub') })}</div>`;
     return;
@@ -12358,18 +12592,58 @@ async function rebuildOnboardingPage() {
     // across it, even though .empty-state itself already centers its own
     // content correctly once it actually has the full width to do it in.
     wrap.innerHTML = `<div style="width:100%">${emptyStateHTML({ icon: hubIcon('compass', 28), title: t('es_no_onboarding_progress'), sub: t('es_no_onboarding_progress_sub') })}</div>`;
+    renderOnboardingNextActions([], [], []);
+    renderOnboardingAtRiskList([]);
+    renderOnboardingHealthGauge([], stages);
     return;
   }
+
+  // Bulk-fetch checklist items + notes for every card shown at once, rather
+  // than only lazy-loading them per-record when the detail modal opens --
+  // that's what makes a real progress % and notes count possible on the
+  // board view itself, matching what's actually tracked per record.
+  const idList = pipelineRecords.map(r => r.id).join(',');
+  let allChecklist = [], allNotes = [];
+  if (idList) {
+    try { allChecklist = await sbSelect('onboarding_checklist_items', `onboarding_id=in.(${idList})`); } catch(e) { console.warn('checklist bulk load failed:', e.message); }
+    try { allNotes = await sbSelect('onboarding_notes', `onboarding_id=in.(${idList})`); } catch(e) { console.warn('notes bulk load failed:', e.message); }
+  }
+  const nowTs = Date.now();
+  renderOnboardingNextActions(pipelineRecords, allChecklist, allNotes);
+  renderOnboardingAtRiskList(pipelineRecords);
+  renderOnboardingHealthGauge(pipelineRecords, stages);
+
   wrap.innerHTML = stages.map(({ stage_key, label, icon, color }) => {
     const records = pipelineRecords.filter(r => r.stage === stage_key);
-    const cards = records.map(r => `
+    const cards = records.map(r => {
+      const checklist = allChecklist.filter(c => c.onboarding_id === r.id);
+      const doneCount = checklist.filter(c => c.done).length;
+      const pct = checklist.length ? Math.round(doneCount / checklist.length * 100) : 0;
+      const notesCount = allNotes.filter(n => n.onboarding_id === r.id).length;
+      const isAtRisk = (nowTs - new Date(r.updated_at || r.created_at).getTime()) > 7 * 86400000;
+      const initials = (r.created_by || '?').split(' ').map(w => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
+      const waitingClass = r.waiting_on === 'client' ? 'set-client' : r.waiting_on === 'team' ? 'set-team' : '';
+      return `
       <div class="onboarding-card" draggable="true" ondragstart="onboardingCardDragStart(event, '${r.id}')" ondragend="onboardingCardDragEnd(event)" style="--stage-color:${color || 'var(--orange)'}" onclick="openViewOnboardingModal('${r.id}')" tabindex="0" role="button" aria-label="View ${escAttr(r.business_name)}'s onboarding">
         <div class="onboarding-card-name">${escAttr(r.business_name)}</div>
         <div class="onboarding-card-meta">
           <span class="portfolio-chip chip-${r.portfolio}">${escAttr(PORTFOLIO_LABELS[r.portfolio] || r.portfolio)}</span>
           ${r.organization ? ' · ' + escAttr(r.organization) : ''}
         </div>
-      </div>`).join('') || '<div style="color:var(--text3);font-size:var(--font-xs);text-align:center;padding:var(--space-3) 0">Nothing here</div>';
+        ${isAtRisk ? `<div class="onboarding-risk-badge"><span class="icon" data-icon="alert" data-icon-size="10"></span> At Risk</div>` : ''}
+        ${checklist.length ? `<div class="onboarding-progress-row"><div class="onboarding-progress-track"><div class="onboarding-progress-fill" style="width:${pct}%"></div></div><span class="onboarding-progress-pct">${pct}%</span></div>` : ''}
+        <div class="onboarding-card-footer">
+          <span class="onboarding-owner-avatar" title="Started by ${escAttr(r.created_by || 'Unknown')}">${escAttr(initials || '?')}</span>
+          <span class="footer-stat" title="Notes"><span class="icon" data-icon="note" data-icon-size="11"></span> ${notesCount}</span>
+          ${checklist.length ? `<span class="footer-stat" title="Checklist"><span class="icon" data-icon="check" data-icon-size="11"></span> ${doneCount}/${checklist.length}</span>` : ''}
+          <select class="onboarding-waiting-select ${waitingClass}" onclick="event.stopPropagation()" onchange="event.stopPropagation();setOnboardingWaitingOn('${r.id}', this.value)" title="Who's this waiting on?">
+            <option value="" ${!r.waiting_on ? 'selected' : ''}>—</option>
+            <option value="client" ${r.waiting_on === 'client' ? 'selected' : ''}>Client</option>
+            <option value="team" ${r.waiting_on === 'team' ? 'selected' : ''}>Us</option>
+          </select>
+        </div>
+      </div>`;
+    }).join('') || '<div style="color:var(--text3);font-size:var(--font-xs);text-align:center;padding:var(--space-3) 0">Nothing here</div>';
     return `
       <div class="onboarding-column" data-stage="${stage_key}" ondragover="onboardingColumnDragOver(event)" ondragleave="onboardingColumnDragLeave(event)" ondrop="onboardingColumnDrop(event, '${stage_key}')">
         <div class="onboarding-column-hd">
@@ -12846,6 +13120,23 @@ async function setOnboardingStage(id, newStage) {
   let products = [];
   try { products = await sbSelect('onboarding_products', `onboarding_id=eq.${id}`); } catch(e) {}
   renderOnboardingDetail(r, products);
+  rebuildOnboardingPage();
+}
+
+// Persists the Waiting on Client/Us selector on the card directly -- no
+// need to open the detail modal just to flip this one field.
+async function setOnboardingWaitingOn(id, value) {
+  const r = ONBOARDING_RECORDS.find(x => x.id === id);
+  if (!r) return;
+  const prev = r.waiting_on;
+  r.waiting_on = value || null;
+  try {
+    await sbPatch('onboarding_records', `id=eq.${id}`, { waiting_on: r.waiting_on });
+  } catch(e) {
+    r.waiting_on = prev;
+    showToast('Could not save: ' + e.message, 'error');
+    return;
+  }
   rebuildOnboardingPage();
 }
 
