@@ -5876,7 +5876,7 @@ function showPage(id) {
   if (id === 'settings') renderGoogleCalendarStatus();
   if (id === 'onboarding') rebuildOnboardingPage();
   if (id === 'chatwidget' && typeof rebuildChatWidgetPage === 'function') rebuildChatWidgetPage();
-  if (id !== 'chatwidget') { stopCwListPolling(); stopCwConversationPolling(); }
+  if (id !== 'chatwidget') { stopCwConversationPolling(); }
 
   closeMobileNav();
   const profileMenu = document.getElementById('profileMenu');
@@ -20144,8 +20144,6 @@ async function rebuildChatWidgetPage() {
   }
   renderCwWidgetSelector();
   await reloadCwConversationsForActiveWidget();
-  const pageEl = document.getElementById('page-chatwidget');
-  if (pageEl && pageEl.classList.contains('active')) startCwListPolling();
 }
 
 function renderCwWidgetSelector() {
@@ -20484,7 +20482,7 @@ function rebuildCwHeaderStats() {
   // there -- a quiet, ambient cue that something needs a look, distinct
   // from the tab's own active/selected state.
   const newTabBtn = document.querySelector('#cwFilterTabs .cw-filter-tab[data-val="exploring"]');
-  if (newTabBtn) newTabBtn.classList.toggle('has-new', counts.exploring > 0);
+  if (newTabBtn) newTabBtn.classList.toggle('has-new', cwUnseenNewCount() > 0);
   if (!wrap) return;
   const total = CW_CONVERSATIONS.length;
   wrap.innerHTML = `
@@ -20530,9 +20528,33 @@ function cwResolutionCounts() {
   return counts;
 }
 
+// "New" should mean a lead nobody on the team has looked at yet -- not the
+// same thing as the AI's own "exploring" resolution, which can sit
+// unresolved indefinitely if nobody moves it forward. Tracked locally per
+// browser (a lightweight seen-marker, not a formal read-receipt system)
+// so opening a conversation once is enough to quiet the glow for it, even
+// though its underlying resolution stays "exploring" until someone
+// actually books/transfers/resolves it.
+const CW_SEEN_KEY = 'csh_cw_seen_conversations_v1';
+function cwGetSeenSet() {
+  try { return new Set(JSON.parse(localStorage.getItem(CW_SEEN_KEY) || '[]')); } catch(e) { return new Set(); }
+}
+function cwMarkConvSeen(id) {
+  const seen = cwGetSeenSet();
+  if (seen.has(id)) return;
+  seen.add(id);
+  try { localStorage.setItem(CW_SEEN_KEY, JSON.stringify([...seen])); } catch(e) {}
+}
+function cwUnseenNewCount() {
+  const seen = cwGetSeenSet();
+  return CW_CONVERSATIONS.filter(c => c.resolution === 'exploring' && !seen.has(c.id)).length;
+}
+
 async function openChatWidgetConversation(id) {
   cwActiveConversationId = id;
+  cwMarkConvSeen(id);
   rebuildChatWidgetInbox();
+  rebuildCwHeaderStats();
   const c = CW_CONVERSATIONS.find(x => x.id === id);
   const detail = document.getElementById('cwConvDetail');
   if (!c || !detail) return;
@@ -20662,15 +20684,12 @@ async function pollCwConversationOnce(convId) {
 // so it never runs pointlessly in the background.
 let cwListPollTimer = null;
 function startCwListPolling() {
-  stopCwListPolling();
+  if (cwListPollTimer) return; // already running -- runs continuously for the life of the session, no need to restart on navigation
   cwListPollTimer = setInterval(pollCwListOnce, 5000);
-}
-function stopCwListPolling() {
-  if (cwListPollTimer) { clearInterval(cwListPollTimer); cwListPollTimer = null; }
 }
 async function pollCwListOnce() {
   const pageEl = document.getElementById('page-chatwidget');
-  if (!pageEl || !pageEl.classList.contains('active') || !cwActiveWidgetId) { stopCwListPolling(); return; }
+  if (!pageEl || !pageEl.classList.contains('active') || !cwActiveWidgetId) return; // just skip this tick -- the interval itself keeps running
   let fresh;
   try { fresh = await sbSelect('widget_conversations', `widget_id=eq.${cwActiveWidgetId}&order=updated_at.desc`); }
   catch(e) { return; }
@@ -23884,6 +23903,7 @@ async function bootApp() {
     if (pill) { pill.innerHTML = '<span class="dot" style="background:var(--red)"></span> Database offline · using cache'; pill.style.color = 'var(--red)'; }
   }
   startCwGlobalPendingPolling();
+  startCwListPolling();
 
   // These eight loads each fetch their own table(s) into their own state and
   // don't read from one another, so they run concurrently instead of one
