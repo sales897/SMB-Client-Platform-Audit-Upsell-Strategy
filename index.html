@@ -12918,13 +12918,19 @@ let CW_GLOBAL_PENDING_COUNT = 0;
 let cwGlobalPendingTimer = null;
 async function refreshCwGlobalPendingCount() {
   try {
-    const all = await sbSelect('widget_conversations', 'select=id,resolution');
-    // "Pending" here means the same thing the green New-tab glow means:
-    // exploring leads nobody's opened yet, plus transfer requests -- not
-    // just "still exploring" forever, or the bell would stay stuck at a
-    // number that never reflects work someone already did.
+    const all = await sbSelect('widget_conversations', 'select=id,resolution,handled_by');
+    // "Pending" combines two signals: a durable, server-side one (has a
+    // human actually claimed this, via Assign Human or replying directly?)
+    // and a lightweight local one (has anyone glanced at it in this
+    // browser?). The durable signal matters most for transfer requests --
+    // relying on local "seen" tracking alone would leave a conversation a
+    // teammate already handled on a different device still showing as
+    // pending here.
     const seen = cwGetSeenSet();
-    CW_GLOBAL_PENDING_COUNT = all.filter(c => c.resolution === 'transfer' || (c.resolution === 'exploring' && !seen.has(c.id))).length;
+    CW_GLOBAL_PENDING_COUNT = all.filter(c => {
+      if (c.resolution === 'transfer' && c.handled_by === 'human') return false;
+      return (c.resolution === 'exploring' || c.resolution === 'transfer') && !seen.has(c.id);
+    }).length;
   } catch(e) { /* leave count as-is on failure */ }
   const navBadge = document.getElementById('navChatWidgetBadge');
   if (navBadge) {
@@ -14319,7 +14325,10 @@ function renderNotifChatPendingBanner() {
 // Tasks modal on click, giving the actual context the notification is for.
 function handleNotificationClick(id) {
   const n = NOTIFICATIONS.find(x => x.id === id);
-  markNotificationRead(id);
+  // Clicking a notification means you've looked at whatever it's about --
+  // no reason to make someone separately mark it read and then delete it
+  // too, so this removes it outright rather than just dimming it.
+  deleteNotification(id);
   if (n && n.client_name) {
     toggleNotificationPanel();
     openClientNotesTasksModal(n.client_name);
