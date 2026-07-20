@@ -181,6 +181,19 @@ export default async (req) => {
     body: JSON.stringify({ id: genId("msg"), conversation_id: convId, role: "lead", content: message, created_at: new Date().toISOString() }),
   });
 
+  // 4b. If a human has already taken this conversation over, the AI must
+  //     never jump back in -- just store the visitor's message (done
+  //     above) and stop here. The Hub's Inbox + widget-poll.mjs handle
+  //     delivering the actual human reply back to the visitor. Without
+  //     this check, "Assign Human" in the Hub only changed a database
+  //     label while the AI kept auto-replying to every new message.
+  if (conversation.handled_by === "human") {
+    return new Response(
+      JSON.stringify({ conversation_id: convId, reply: null, handled_by: "human", resolution: conversation.resolution }),
+      { status: 200, headers: { ...CORS_HEADERS, "Content-Type": "application/json" } }
+    );
+  }
+
   // 5. Check whether this widget has a calendar connected -- only offer
   //    real booking if it does, so the AI never promises something it
   //    can't actually do.
@@ -388,10 +401,15 @@ After each reply, call update_lead_status with your current read on this lead: a
 
   if (!replyText) replyText = "Thanks for reaching out! Let me get someone from our team to follow up with you.";
 
-  // 7. Save the assistant's reply.
+  // 7. Save the assistant's reply. Its id is returned to the client so it
+  //    can skip this exact message if polling (widget-poll.mjs) also picks
+  //    it up in the same window -- otherwise a poll that was already
+  //    in-flight when this reply was saved can re-deliver the identical
+  //    message a second time right after it was shown directly.
+  const assistantMsgId = genId("msg");
   await fetch(`${SUPABASE_URL}/rest/v1/widget_messages`, {
     method: "POST", headers: sbWriteHeaders,
-    body: JSON.stringify({ id: genId("msg"), conversation_id: convId, role: "assistant", content: replyText, created_at: new Date().toISOString() }),
+    body: JSON.stringify({ id: assistantMsgId, conversation_id: convId, role: "assistant", content: replyText, created_at: new Date().toISOString() }),
   });
 
   // 8. Update the conversation record with whatever the AI now knows,
@@ -415,7 +433,7 @@ After each reply, call update_lead_status with your current read on this lead: a
   });
 
   return new Response(
-    JSON.stringify({ conversation_id: convId, reply: replyText, resolution: convPatch.resolution || conversation.resolution }),
+    JSON.stringify({ conversation_id: convId, reply: replyText, message_id: assistantMsgId, resolution: convPatch.resolution || conversation.resolution, handled_by: conversation.handled_by || "ai" }),
     { status: 200, headers: { ...CORS_HEADERS, "Content-Type": "application/json" } }
   );
 };

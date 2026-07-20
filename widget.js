@@ -41,6 +41,7 @@
   let pollTimer = null;
   let lastSeenAt = null; // ISO timestamp of the newest message already shown -- polling only asks for messages after this
   let handledByHuman = false;
+  const shownMessageIds = new Set(); // guards against polling re-delivering a message already shown directly
 
   async function fetchWidgetConfig() {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/chat_widgets?id=eq.${encodeURIComponent(WIDGET_ID)}&select=*`, {
@@ -185,7 +186,20 @@
         if (!res.ok) throw new Error(data.error || 'Something went wrong.');
         conversationId = data.conversation_id;
         try { localStorage.setItem(STORAGE_KEY, conversationId); } catch (e) {}
-        appendMessage('assistant', data.reply || "Sorry, I didn't catch that — could you try again?");
+        if (data.handled_by === 'human') {
+          // A team member already has this conversation -- the AI
+          // deliberately did not generate a reply. Show the connected
+          // banner and let polling deliver the human's actual reply,
+          // rather than showing a confusing fallback error message.
+          if (!handledByHuman) {
+            handledByHuman = true;
+            statusBanner.textContent = "You're now connected with a team member.";
+            statusBanner.classList.add('show');
+          }
+        } else {
+          if (data.message_id) shownMessageIds.add(data.message_id);
+          appendMessage('assistant', data.reply || "Sorry, I didn't catch that — could you try again?");
+        }
         lastSeenAt = new Date().toISOString();
         if (!pollTimer) startPolling();
       } catch (e) {
@@ -217,8 +231,9 @@
         const res = await fetch(`${POLL_ENDPOINT}?${params.toString()}`);
         if (!res.ok) return;
         const data = await res.json();
-        const newMessages = (data.messages || []).filter((m) => m.role !== 'lead'); // never echo the visitor's own messages back at them
+        const newMessages = (data.messages || []).filter((m) => m.role !== 'lead' && !shownMessageIds.has(m.id)); // never echo the visitor's own messages back, and never re-show one already displayed directly
         newMessages.forEach((m) => {
+          shownMessageIds.add(m.id);
           appendMessage(m.role, m.content, m.role === 'human' ? 'Team member' : null);
           lastSeenAt = m.created_at;
         });
