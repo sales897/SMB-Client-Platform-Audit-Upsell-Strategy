@@ -2789,26 +2789,26 @@ select.wfb-field-input { padding-right: 26px; }
       <div class="nav-dropdown-menu">
         <div class="nav-item" onclick="showPage('clients')">
           <span class="icon" data-icon="users"></span> All Clients
-          <span class="badge" id="navClientsBadge">0</span>
+          <span class="badge" id="navClientsBadge" style="display:none">0</span>
         </div>
         <div class="nav-item" onclick="showPage('smb')">
           <span class="icon" data-icon="chart"></span> SMB Dashboard
-          <span class="badge" id="navSmbBadge">63</span>
+          <span class="badge" id="navSmbBadge" style="display:none">0</span>
         </div>
         <div class="nav-item" onclick="showPage('whitelabel')">
           <span class="icon" data-icon="tag"></span> White Label
-          <span class="badge green" id="navWhitelabelBadge">12</span>
+          <span class="badge green" id="navWhitelabelBadge" style="display:none">0</span>
         </div>
         <div class="nav-item" onclick="showPage('support')">
           <span class="icon" data-icon="chart"></span> Support Dashboard
-          <span class="badge red" id="navSupportBadge">8</span>
+          <span class="badge red" id="navSupportBadge" style="display:none">0</span>
         </div>
       </div>
     </div>
 
     <div class="nav-item" onclick="showPage('onboarding')">
       <span class="icon" data-icon="compass"></span> <span data-i18n="nav_onboarding">Onboarding</span>
-      <span class="badge" id="navOnboardingBadge">0</span>
+      <span class="badge" id="navOnboardingBadge" style="display:none">0</span>
     </div>
 
     <div class="nav-dropdown" onmouseleave="closeNavDropdown(this)">
@@ -2816,7 +2816,7 @@ select.wfb-field-input { padding-right: 26px; }
       <div class="nav-dropdown-menu">
         <div class="nav-item" onclick="showPage('voice')">
           <span class="icon" data-icon="mic"></span> Voice Agent
-          <span class="badge red" id="navVoiceBadge">0</span>
+          <span class="badge red" id="navVoiceBadge" style="display:none">0</span>
         </div>
         <div class="nav-item" onclick="showPage('textagent')">
           <span class="icon" data-icon="chat"></span> Text Agent
@@ -2853,7 +2853,7 @@ select.wfb-field-input { padding-right: 26px; }
       <div class="nav-dropdown-menu">
         <div class="nav-item" onclick="showPage('adspend')">
           <span class="icon" data-icon="dollar"></span> Ad Spend Management
-          <span class="badge" id="navAdSpendBadge">0</span>
+          <span class="badge" id="navAdSpendBadge" style="display:none">0</span>
         </div>
         <div class="nav-item" onclick="showPage('collections')">
           <span class="icon" data-icon="clipboard"></span> Collections
@@ -7235,6 +7235,28 @@ function rebuildPortfolio(pk) {
   console.log(`✅ ${PORTFOLIOS[pk].name} rebuilt — ${getClients(pk).length} clients, ${getCatalog(pk).length} products`);
 }
 
+// Nav badges should reflect real, actionable "needs attention" counts, not
+// raw totals -- a badge showing a client count or adoption number looks the
+// same as one showing something urgent, which is misleading. Hidden
+// entirely at zero, same pattern as Collections/Ledger/Chat Widget.
+function refreshPortfolioAndOnboardingNavBadges() {
+  const setBadge = (id, count) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (count > 0) { el.style.display = ''; el.textContent = count; }
+    else el.style.display = 'none';
+  };
+  setBadge('navClientsBadge', getAtRiskClients('all').length);
+  setBadge('navSmbBadge', getAtRiskClients('smb').length);
+  setBadge('navWhitelabelBadge', getAtRiskClients('whitelabel').length);
+  setBadge('navSupportBadge', getAtRiskClients('support').length);
+  // Onboarding: same 7-day-stale definition already used for the At Risk
+  // list on the Onboarding page itself, not just a raw record count.
+  const nowTs = Date.now();
+  const staleOnboarding = ONBOARDING_RECORDS.filter(r => (nowTs - new Date(r.updated_at || r.created_at).getTime()) > 7 * 86400000).length;
+  setBadge('navOnboardingBadge', staleOnboarding);
+}
+
 function rebuildAll() {
   ['smb', 'whitelabel', 'support'].forEach(rebuildPortfolio);
   rebuildUpsellCards();   // SMB-only report page
@@ -7250,6 +7272,7 @@ function rebuildAll() {
   if (typeof rebuildWorkflowsPage === 'function') rebuildWorkflowsPage();
   if (typeof rebuildKnowledgePage === 'function') rebuildKnowledgePage();
   if (typeof rebuildChatWidgetPage === 'function') rebuildChatWidgetPage();
+  refreshPortfolioAndOnboardingNavBadges();
   refreshNavBadges(); // final guaranteed pass — always correct, never a cached/stale number
 }
 
@@ -7749,7 +7772,8 @@ function rebuildVoicePage() {
 
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
   set('va-using', using.length);
-  set('navVoiceBadge', using.length);
+  const voiceBadge = document.getElementById('navVoiceBadge');
+  if (voiceBadge) { if (flagged.length > 0) { voiceBadge.style.display = ''; voiceBadge.textContent = flagged.length; } else voiceBadge.style.display = 'none'; }
   set('va-using-pct', `${pct}% of all clients`);
   set('va-not-using', notUsing.length);
   set('va-adoption-pct', `${pct}%`);
@@ -11319,7 +11343,9 @@ function rebuildAdSpendPage() {
   set('as-promo', AD_SPEND_BUSINESSES.filter(b => b.promo === 'Yes').length);
   set('as-using', AD_SPEND_BUSINESSES.filter(b => b.promo === 'Already Using').length);
   set('asCountSub', `${AD_SPEND_BUSINESSES.length} business${AD_SPEND_BUSINESSES.length === 1 ? '' : 'es'}`);
-  set('navAdSpendBadge', AD_SPEND_BUSINESSES.length);
+  const adSpendPending = AD_SPEND_BUSINESSES.filter(b => b.promo === 'Yes').length;
+  const adSpendBadge = document.getElementById('navAdSpendBadge');
+  if (adSpendBadge) { if (adSpendPending > 0) { adSpendBadge.style.display = ''; adSpendBadge.textContent = adSpendPending; } else adSpendBadge.style.display = 'none'; }
 
   // View is open to everyone; the add form is only useful for Super user/Admin
   const addCard = document.getElementById('asAddCard');
@@ -12892,11 +12918,19 @@ let CW_GLOBAL_PENDING_COUNT = 0;
 let cwGlobalPendingTimer = null;
 async function refreshCwGlobalPendingCount() {
   try {
-    const all = await sbSelect('widget_conversations', 'select=resolution');
-    CW_GLOBAL_PENDING_COUNT = all.filter(c => c.resolution === 'exploring' || c.resolution === 'transfer').length;
+    const all = await sbSelect('widget_conversations', 'select=id,resolution');
+    // "Pending" here means the same thing the green New-tab glow means:
+    // exploring leads nobody's opened yet, plus transfer requests -- not
+    // just "still exploring" forever, or the bell would stay stuck at a
+    // number that never reflects work someone already did.
+    const seen = cwGetSeenSet();
+    CW_GLOBAL_PENDING_COUNT = all.filter(c => c.resolution === 'transfer' || (c.resolution === 'exploring' && !seen.has(c.id))).length;
   } catch(e) { /* leave count as-is on failure */ }
   const navBadge = document.getElementById('navChatWidgetBadge');
-  if (navBadge) navBadge.textContent = CW_GLOBAL_PENDING_COUNT;
+  if (navBadge) {
+    if (CW_GLOBAL_PENDING_COUNT > 0) { navBadge.style.display = ''; navBadge.textContent = CW_GLOBAL_PENDING_COUNT; }
+    else navBadge.style.display = 'none';
+  }
   renderNotificationBell();
 }
 function startCwGlobalPendingPolling() {
@@ -13564,7 +13598,11 @@ async function rebuildOnboardingPage() {
   const sub = document.getElementById('onboardingCountSub');
   if (sub) sub.textContent = `${pipelineRecords.length} ${t('onboarding_in_progress')}`;
   const badge = document.getElementById('navOnboardingBadge');
-  if (badge) badge.textContent = ONBOARDING_RECORDS.length;
+  if (badge) {
+    const nowTs = Date.now();
+    const stale = ONBOARDING_RECORDS.filter(r => (nowTs - new Date(r.updated_at || r.created_at).getTime()) > 7 * 86400000).length;
+    if (stale > 0) { badge.style.display = ''; badge.textContent = stale; } else badge.style.display = 'none';
+  }
   if (!wrap) return;
   const stages = getPipelineStages(currentOnboardingPipelineId);
   rebuildOnboardingKPIs(pipelineRecords, stages);
@@ -20467,12 +20505,10 @@ function renderCwAiInsight(totalLeads, contactRate, apptRate, minutesSaved) {
 // selected -- so switching widgets doesn't visually "lose" leads waiting
 // on a different one.
 async function refreshCwNavBadgeAcrossAllWidgets() {
-  const badge = document.getElementById('navChatWidgetBadge');
-  if (!badge) return;
-  try {
-    const all = await sbSelect('widget_conversations', 'select=resolution');
-    badge.textContent = all.filter(c => c.resolution === 'exploring' || c.resolution === 'transfer').length;
-  } catch(e) { /* leave badge as-is on failure */ }
+  // Delegates to the single source of truth for this badge (also used by
+  // the always-on global poller) so there's only one definition of
+  // "pending" to keep correct, instead of two drifting apart.
+  await refreshCwGlobalPendingCount();
 }
 
 async function switchChatWidget(widgetId) {
@@ -20601,6 +20637,7 @@ async function openChatWidgetConversation(id) {
   cwMarkConvSeen(id);
   rebuildChatWidgetInbox();
   rebuildCwHeaderStats();
+  refreshCwGlobalPendingCount();
   const c = CW_CONVERSATIONS.find(x => x.id === id);
   const detail = document.getElementById('cwConvDetail');
   if (!c || !detail) return;
