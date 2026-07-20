@@ -1914,9 +1914,16 @@ tr.pg-hidden-row { display: none; }
   box-shadow: var(--shadow); padding: 10px;
 }
 .notif-panel-header { display: flex; justify-content: space-between; align-items: center; padding: 6px 8px 10px; border-bottom: 1px solid var(--border); margin-bottom: 6px; font-size: 13px; font-weight: 700; color: var(--text); }
-.notif-item { padding: 10px 8px; border-radius: var(--radius-sm); cursor: pointer; margin-bottom: 4px; transition: background var(--transition-base); }
+.notif-item { padding: 10px 8px; border-radius: var(--radius-sm); cursor: pointer; margin-bottom: 4px; transition: background var(--transition-base); display: flex; align-items: flex-start; gap: 6px; }
 .notif-item:hover { background: var(--bg3); }
 .notif-item.unread { background: rgba(226,84,31,.08); border-left: 3px solid var(--orange); }
+.notif-item > div:first-child { flex: 1; min-width: 0; }
+.notif-unread-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--orange); flex-shrink: 0; box-shadow: 0 0 5px var(--orange); }
+.notif-delete-btn { flex-shrink: 0; background: none; border: none; color: var(--text3); cursor: pointer; padding: 4px; border-radius: 5px; opacity: .5; transition: all var(--transition-base); }
+.notif-item:hover .notif-delete-btn { opacity: 1; }
+.notif-delete-btn:hover { background: var(--bg4); color: var(--red); }
+.notif-cw-banner { display: flex; align-items: center; gap: 8px; padding: 9px 10px; margin: 0 0 8px; border-radius: var(--radius-sm); background: rgba(226,84,31,.1); border: 1px solid rgba(226,84,31,.3); color: var(--orange2); font-size: var(--font-xs); font-weight: 600; cursor: pointer; transition: background var(--transition-base); }
+.notif-cw-banner:hover { background: rgba(226,84,31,.16); }
 .notif-msg { font-size: 12px; color: var(--text); line-height: 1.4; margin-bottom: 3px; }
 .notif-client { font-size: var(--font-2xs); color: var(--orange); font-weight: 700; margin-bottom: 3px; }
 .notif-time { font-size: var(--font-2xs); color: var(--text3); }
@@ -2864,7 +2871,6 @@ select.wfb-field-input { padding-right: 26px; }
     <div class="user-badge" id="userBadge" onclick="toggleProfileMenu()" title="Account">
       <div style="position:relative;display:flex">
         <span class="user-avatar" id="userAvatar">?</span>
-        <span class="notif-badge" id="userBadgeNotifBadge" style="display:none">0</span>
       </div>
       <span id="userBadgeName">Guest</span>
       <span class="role-pill user" id="userBadgeRole">User</span>
@@ -2899,10 +2905,6 @@ select.wfb-field-input { padding-right: 26px; }
         <span class="pref-switch" id="moneyToggleBtn"><span class="pref-switch-thumb"></span></span>
       </div>
       <div class="profile-menu-divider"></div>
-      <div class="profile-menu-item" id="notifBellBtn" onclick="toggleProfileMenu();toggleNotificationPanel()">
-        <span class="icon bell-glow" data-icon="bell" data-icon-size="15"></span> <span style="flex:1" data-i18n="pref_notifications">Notifications</span>
-        <span class="notif-badge" id="notifBadge" style="display:none;position:static">0</span>
-      </div>
       <div class="profile-menu-item nav-item" onclick="showPage('settings')">
         <span class="icon" data-icon="settings" data-icon-size="15"></span> <span data-i18n="pref_settings">Settings</span>
       </div>
@@ -3089,8 +3091,12 @@ select.wfb-field-input { padding-right: 26px; }
 <div class="notif-panel" id="notificationPanel" style="display:none">
   <div class="notif-panel-header">
     <span><span class="icon" data-icon="bell" data-icon-size="13"></span> <span data-i18n="pref_notifications">Notifications</span></span>
-    <a href="#" onclick="markAllNotificationsRead(event)" style="font-size:11px;color:var(--orange);text-decoration:none" data-i18n="mark_all_read">Mark all read</a>
+    <span style="display:flex;gap:10px;align-items:center">
+      <a href="#" onclick="markAllNotificationsRead(event)" style="font-size:11px;color:var(--orange);text-decoration:none" data-i18n="mark_all_read">Mark all read</a>
+      <a href="#" onclick="clearAllNotifications(event)" style="font-size:11px;color:var(--text3);text-decoration:none">Clear all</a>
+    </span>
   </div>
+  <div id="notifChatPendingBanner"></div>
   <div id="notificationList"></div>
 </div>
 
@@ -13125,13 +13131,11 @@ async function createNotification(recipientEmail, type, message, clientName) {
 
 function renderNotificationBell() {
   const badge = document.getElementById('notifBadge');
-  const avatarBadge = document.getElementById('userBadgeNotifBadge');
   // Combines real unread notifications with live Chat Widget items needing
   // attention (new leads + transfer requests), so the bell reflects
   // everything pending across the Hub, not just formal notification rows.
   const unread = NOTIFICATIONS.filter(n => !n.read).length + CW_GLOBAL_PENDING_COUNT;
   if (badge) { badge.style.display = unread > 0 ? '' : 'none'; badge.textContent = unread; }
-  if (avatarBadge) { avatarBadge.style.display = unread > 0 ? '' : 'none'; avatarBadge.textContent = unread; }
   // Bell glow: yellow at rest, red (with a subtle pulse) while anything is
   // unread, back to yellow the moment everything's read.
   document.querySelectorAll('.bell-glow').forEach(el => el.classList.toggle('unread', unread > 0));
@@ -14226,12 +14230,13 @@ function toggleNotificationPanel() {
 }
 document.addEventListener('click', (e) => {
   const panel = document.getElementById('notificationPanel');
-  const bellBtn = document.getElementById('notifBellBtn');
+  const bellBtn = document.getElementById('topbarBellBtn');
   if (!panel || panel.style.display === 'none') return;
   if (!panel.contains(e.target) && bellBtn && !bellBtn.contains(e.target)) panel.style.display = 'none';
 });
 
 function renderNotificationList() {
+  renderNotifChatPendingBanner();
   const wrap = document.getElementById('notificationList');
   if (!wrap) return;
   if (NOTIFICATIONS.length === 0) {
@@ -14239,11 +14244,34 @@ function renderNotificationList() {
     return;
   }
   wrap.innerHTML = NOTIFICATIONS.map(n => `
-    <div class="notif-item ${n.read ? '' : 'unread'}" onclick="handleNotificationClick('${n.id}')">
-      ${n.client_name ? `<div class="notif-client"><span class="icon" data-icon="folder" data-icon-size="14"></span> ${escAttr(n.client_name)}</div>` : ''}
-      <div class="notif-msg">${escAttr(n.message)}</div>
-      <div class="notif-time">${fmtNoteTime(n.created_at)}</div>
+    <div class="notif-item ${n.read ? '' : 'unread'}">
+      <div onclick="handleNotificationClick('${n.id}')" style="cursor:pointer">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span class="notif-unread-dot" style="visibility:${n.read ? 'hidden' : 'visible'}"></span>
+          ${n.client_name ? `<div class="notif-client"><span class="icon" data-icon="folder" data-icon-size="14"></span> ${escAttr(n.client_name)}</div>` : ''}
+        </div>
+        <div class="notif-msg">${escAttr(n.message)}</div>
+        <div class="notif-time">${fmtNoteTime(n.created_at)}${n.read ? ' · Read' : ''}</div>
+      </div>
+      <button class="notif-delete-btn" onclick="event.stopPropagation();deleteNotification('${n.id}')" title="Remove" aria-label="Remove"><span class="icon" data-icon="close" data-icon-size="11"></span></button>
     </div>`).join('');
+}
+
+// A pending chat lead isn't a dismissible notification -- it only clears by
+// actually being attended to (opened, booked, transferred, resolved), so
+// it gets its own persistent banner rather than living in the "mark
+// read"/"clear" list below, which would otherwise make "clear all" lie
+// about what's actually still pending.
+function renderNotifChatPendingBanner() {
+  const wrap = document.getElementById('notifChatPendingBanner');
+  if (!wrap) return;
+  if (!CW_GLOBAL_PENDING_COUNT) { wrap.innerHTML = ''; return; }
+  wrap.innerHTML = `
+    <div class="notif-cw-banner" onclick="toggleNotificationPanel();showPage('chatwidget');">
+      <span class="icon" data-icon="chat" data-icon-size="14"></span>
+      <span style="flex:1">${CW_GLOBAL_PENDING_COUNT} chat lead${CW_GLOBAL_PENDING_COUNT === 1 ? '' : 's'} need${CW_GLOBAL_PENDING_COUNT === 1 ? 's' : ''} attention</span>
+      <span style="color:var(--text3);font-size:var(--font-2xs)">View Inbox →</span>
+    </div>`;
 }
 
 // Notifications always carried client_name (createNotification's 4th
@@ -14277,6 +14305,24 @@ async function markAllNotificationsRead(e) {
   try { await Promise.all(unread.map(n => sbUpsert('notifications', n))); } catch(e2) {}
   renderNotificationBell();
   renderNotificationList();
+}
+
+async function deleteNotification(id) {
+  NOTIFICATIONS = NOTIFICATIONS.filter(n => n.id !== id);
+  renderNotificationBell();
+  renderNotificationList();
+  try { await sbDelete('notifications', `id=eq.${id}`); } catch(e) {}
+}
+
+async function clearAllNotifications(e) {
+  if (e) e.preventDefault();
+  if (NOTIFICATIONS.length === 0) return;
+  const u = getCurrentUser();
+  const ids = NOTIFICATIONS.map(n => n.id);
+  NOTIFICATIONS = [];
+  renderNotificationBell();
+  renderNotificationList();
+  try { await sbDelete('notifications', `recipient_email=eq.${encodeURIComponent(u ? u.email : '')}&id=in.(${ids.join(',')})`); } catch(e2) {}
 }
 
 // ─── REALTIME PUSH — notifications land instantly instead of waiting for a
