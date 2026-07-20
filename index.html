@@ -24041,12 +24041,15 @@ async function bootApp() {
 // ════════════════════════════════════════════════════════════════════════
 (async function initAuthListener() {
   showInitialSkeletons();
-  // Load white-label branding before the login screen's logo gets set, so a
-  // custom logo/name shows immediately rather than only after signing in.
-  await loadOrgSettings();
+  // Show the default logo on the login screen immediately (synchronous,
+  // always available from the embedded image already in the page) --
+  // don't gate this on the org-settings network call, or the login logo
+  // sits broken/empty for however long that fetch takes. Branding then
+  // overrides it with a custom logo/name once (if) it loads.
   const topNavLogoImg = document.querySelector('.top-nav-logo img');
   const loginLogoImg = document.getElementById('loginLogoImg');
   if (topNavLogoImg && loginLogoImg) loginLogoImg.src = topNavLogoImg.src;
+  await loadOrgSettings();
   let hasBootedApp = false;
   supabaseClient.auth.onAuthStateChange((event, session) => {
     if (session) {
