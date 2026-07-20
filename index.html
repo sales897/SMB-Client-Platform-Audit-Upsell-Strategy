@@ -2239,6 +2239,8 @@ tr.pg-hidden-row { display: none; }
 .cw-filter-tabs { display: flex; gap: 4px; margin-bottom: 10px; background: var(--bg2); border-radius: var(--radius-sm); padding: 3px; }
 .cw-filter-tab { flex: 1; background: none; border: none; padding: 6px; font-size: var(--font-2xs); font-weight: 700; color: var(--text3); border-radius: var(--radius-xs); cursor: pointer; transition: all var(--transition-base); }
 .cw-filter-tab.active { background: linear-gradient(90deg, var(--orange), var(--orange2)); color: #fff; box-shadow: 0 0 10px rgba(226,84,31,.4); }
+.cw-filter-tab.has-new:not(.active) { box-shadow: inset 0 0 0 1.5px var(--green), 0 0 8px rgba(34,197,94,.5); color: var(--green); animation: cwNewTabPulse 2.2s ease-in-out infinite; }
+@keyframes cwNewTabPulse { 0%, 100% { box-shadow: inset 0 0 0 1.5px var(--green), 0 0 6px rgba(34,197,94,.35); } 50% { box-shadow: inset 0 0 0 1.5px var(--green), 0 0 12px rgba(34,197,94,.7); } }
 .cw-conv-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
 .cw-conv-item { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--space-3); cursor: pointer; transition: border-color var(--transition-base), box-shadow var(--transition-base); }
 .cw-conv-item:hover { border-color: var(--orange); }
@@ -5873,6 +5875,8 @@ function showPage(id) {
   if (id === 'textagent') rebuildTextAgentPage();
   if (id === 'settings') renderGoogleCalendarStatus();
   if (id === 'onboarding') rebuildOnboardingPage();
+  if (id === 'chatwidget' && typeof rebuildChatWidgetPage === 'function') rebuildChatWidgetPage();
+  if (id !== 'chatwidget') { stopCwListPolling(); stopCwConversationPolling(); }
 
   closeMobileNav();
   const profileMenu = document.getElementById('profileMenu');
@@ -9882,7 +9886,7 @@ async function sbSelect(table, params = '') {
   while (true) {
     const sep = params ? '&' : '';
     const url = `${API}/${table}?${params}${sep}limit=${pageSize}&offset=${offset}`;
-    const res = await fetch(url, { headers: SB_HEADERS });
+    const res = await fetch(url, { headers: SB_HEADERS, cache: 'no-store' });
     if (!res.ok) throw new Error(`Supabase GET ${table} failed: ${res.status}`);
     const page = await res.json();
     allRows = allRows.concat(page);
@@ -12874,6 +12878,26 @@ let CLIENT_NOTES = [];
 let CLIENT_TASKS = [];
 let CLIENT_CONTACTS = []; // one row per client: { id, client_name, contact_name, title, email, phone, updated_at }
 let NOTIFICATIONS = [];
+// Live count of Chat Widget conversations needing attention (new + transfer
+// requests) across every widget, refreshed on its own interval regardless
+// of which page is open -- so the bell reflects it even when nobody's
+// sitting on the Chat Widget page watching it.
+let CW_GLOBAL_PENDING_COUNT = 0;
+let cwGlobalPendingTimer = null;
+async function refreshCwGlobalPendingCount() {
+  try {
+    const all = await sbSelect('widget_conversations', 'select=resolution');
+    CW_GLOBAL_PENDING_COUNT = all.filter(c => c.resolution === 'exploring' || c.resolution === 'transfer').length;
+  } catch(e) { /* leave count as-is on failure */ }
+  const navBadge = document.getElementById('navChatWidgetBadge');
+  if (navBadge) navBadge.textContent = CW_GLOBAL_PENDING_COUNT;
+  renderNotificationBell();
+}
+function startCwGlobalPendingPolling() {
+  if (cwGlobalPendingTimer) return;
+  refreshCwGlobalPendingCount();
+  cwGlobalPendingTimer = setInterval(refreshCwGlobalPendingCount, 20000);
+}
 let REMINDERS = []; // personal reminders for the CURRENT user only — owner-scoped by RLS, unlike most other cached arrays here
 let ONBOARDING_RECORDS = []; // pre-client onboarding pipeline — team-wide, not personal
 let cntActiveClientName = null;
@@ -13102,7 +13126,10 @@ async function createNotification(recipientEmail, type, message, clientName) {
 function renderNotificationBell() {
   const badge = document.getElementById('notifBadge');
   const avatarBadge = document.getElementById('userBadgeNotifBadge');
-  const unread = NOTIFICATIONS.filter(n => !n.read).length;
+  // Combines real unread notifications with live Chat Widget items needing
+  // attention (new leads + transfer requests), so the bell reflects
+  // everything pending across the Hub, not just formal notification rows.
+  const unread = NOTIFICATIONS.filter(n => !n.read).length + CW_GLOBAL_PENDING_COUNT;
   if (badge) { badge.style.display = unread > 0 ? '' : 'none'; badge.textContent = unread; }
   if (avatarBadge) { avatarBadge.style.display = unread > 0 ? '' : 'none'; avatarBadge.textContent = unread; }
   // Bell glow: yellow at rest, red (with a subtle pulse) while anything is
@@ -20117,6 +20144,8 @@ async function rebuildChatWidgetPage() {
   }
   renderCwWidgetSelector();
   await reloadCwConversationsForActiveWidget();
+  const pageEl = document.getElementById('page-chatwidget');
+  if (pageEl && pageEl.classList.contains('active')) startCwListPolling();
 }
 
 function renderCwWidgetSelector() {
@@ -20141,6 +20170,7 @@ async function reloadCwConversationsForActiveWidget() {
   await refreshCwNavBadgeAcrossAllWidgets();
   cwActiveConversationId = null;
   rebuildChatWidgetInbox();
+  rebuildCwHeaderStats();
   rebuildCwOverview();
   const detail = document.getElementById('cwConvDetail');
   if (detail) detail.innerHTML = `<div class="cw-empty-detail" id="cwEmptyDetailIcon">${cwIcon('chat', 40)}</div>`;
@@ -20449,8 +20479,13 @@ async function createNewChatWidget() {
 
 function rebuildCwHeaderStats() {
   const wrap = document.getElementById('cwHeaderStats');
-  if (!wrap) return;
   const counts = cwResolutionCounts();
+  // Green glow on the "New" tab whenever there's an unattended lead sitting
+  // there -- a quiet, ambient cue that something needs a look, distinct
+  // from the tab's own active/selected state.
+  const newTabBtn = document.querySelector('#cwFilterTabs .cw-filter-tab[data-val="exploring"]');
+  if (newTabBtn) newTabBtn.classList.toggle('has-new', counts.exploring > 0);
+  if (!wrap) return;
   const total = CW_CONVERSATIONS.length;
   wrap.innerHTML = `
     <div class="cw-stat"><div class="cw-stat-num">${total}</div><div class="cw-stat-lbl">Total Leads</div></div>
@@ -20617,6 +20652,32 @@ async function pollCwConversationOnce(convId) {
     }
   } catch(e) {}
   generateCwSmartReplies(convId);
+}
+
+// ─── Live polling for the conversation LIST itself ─────────────────────────
+// pollCwConversationOnce() above only refreshes an already-open thread --
+// without this, a brand-new conversation, or a preview/badge update on one
+// you haven't opened yet, would only ever show up after a manual page
+// refresh. Self-stops the moment the Chat Widget page isn't the active page,
+// so it never runs pointlessly in the background.
+let cwListPollTimer = null;
+function startCwListPolling() {
+  stopCwListPolling();
+  cwListPollTimer = setInterval(pollCwListOnce, 5000);
+}
+function stopCwListPolling() {
+  if (cwListPollTimer) { clearInterval(cwListPollTimer); cwListPollTimer = null; }
+}
+async function pollCwListOnce() {
+  const pageEl = document.getElementById('page-chatwidget');
+  if (!pageEl || !pageEl.classList.contains('active') || !cwActiveWidgetId) { stopCwListPolling(); return; }
+  let fresh;
+  try { fresh = await sbSelect('widget_conversations', `widget_id=eq.${cwActiveWidgetId}&order=updated_at.desc`); }
+  catch(e) { return; }
+  CW_CONVERSATIONS = fresh;
+  rebuildChatWidgetInbox();
+  rebuildCwHeaderStats();
+  refreshCwGlobalPendingCount();
 }
 
 async function sendCwHumanReply(convId) {
@@ -23822,6 +23883,7 @@ async function bootApp() {
     const pill = document.getElementById('dataSourcePill');
     if (pill) { pill.innerHTML = '<span class="dot" style="background:var(--red)"></span> Database offline · using cache'; pill.style.color = 'var(--red)'; }
   }
+  startCwGlobalPendingPolling();
 
   // These eight loads each fetch their own table(s) into their own state and
   // don't read from one another, so they run concurrently instead of one
