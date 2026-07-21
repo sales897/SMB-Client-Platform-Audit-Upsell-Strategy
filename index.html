@@ -970,7 +970,7 @@ body.ai-panel-open .main {
 
 /* ─── Ledger (2026-07-18) ────────────────────────────────────────────── */
 .ledger-smartpaste-zone {
-  min-height: 64px; display: flex; align-items: center; padding: var(--space-3) var(--space-4);
+  min-height: 64px; display: flex; flex-direction: column; justify-content: center; align-items: stretch; padding: var(--space-3) var(--space-4);
   border: 1px dashed var(--border); font-size: 13px; color: var(--text2); cursor: text;
   transition: border-color var(--transition-base), background var(--transition-base); margin-bottom: var(--space-4);
 }
@@ -5246,7 +5246,7 @@ select.wfb-field-input { padding-right: 26px; }
 
     <div id="bulkReconcileStepPaste">
       <p style="font-size:12px;color:var(--text3);margin-bottom:12px">Paste text or drop a file below — Nirvana will do the rest.</p>
-      <div id="bulkReconcileDropZone" class="ledger-smartpaste-zone" style="min-height:180px" ondrop="handleBulkReconcileDrop(event)" ondragover="event.preventDefault()" ondragenter="this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" contenteditable="true" data-placeholder="Paste the reconciliation note here, or drag a .txt file onto this box…"></div>
+      <div id="bulkReconcileDropZone" class="ledger-smartpaste-zone" style="min-height:180px" ondrop="handleBulkReconcileDrop(event)" ondragover="event.preventDefault()" ondragenter="this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" onpaste="handleBulkReconcileZonePaste(event)" contenteditable="true" data-placeholder="Paste the reconciliation note here, or drag a .txt file onto this box…"></div>
       <input type="file" id="bulkReconcileFileInput" accept=".txt" style="display:none" onchange="handleBulkReconcileFileInput(event)">
       <div class="modal-actions" style="justify-content:space-between">
         <button class="btn btn-ghost" onclick="document.getElementById('bulkReconcileFileInput').click()"><span class="icon" data-icon="folder" data-icon-size="13"></span> Upload .txt File</button>
@@ -12488,6 +12488,17 @@ function handleBulkReconcileDrop(event) {
   const file = event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0];
   if (!file) return;
   readBulkReconcileFile(file);
+}
+function handleBulkReconcileZonePaste(event) {
+  // Without this, a direct paste falls through to the browser's default
+  // contenteditable behavior, which wraps each line of multi-line clipboard
+  // text in its own <div> with no real newline characters between them --
+  // .textContent would then silently lose every line break between
+  // businesses. Preventing default and inserting the plain text directly
+  // keeps this in exact sync with the file-drop path above.
+  event.preventDefault();
+  const text = (event.clipboardData || window.clipboardData).getData('text/plain');
+  document.getElementById('bulkReconcileDropZone').textContent = text;
 }
 function handleBulkReconcileFileInput(event) {
   const file = event.target.files && event.target.files[0];
