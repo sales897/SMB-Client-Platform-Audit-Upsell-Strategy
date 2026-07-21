@@ -7258,6 +7258,11 @@ function initHubGrid(gridId, storageKey) {
     staticGrid: true,
     animate: true,
     resizable: { handles: 'e, se, s, sw, w, nw, n, ne' },
+    // Without this, dragging a card while editing can swallow a click on
+    // its own remove (×) button -- the drag library sees the mousedown
+    // first and starts treating it as a (very short) drag rather than
+    // letting the button's click handler ever fire.
+    draggable: { cancel: '.hub-card-remove-btn, button, input, select, textarea, a' },
   }, el);
   HUB_GRIDS[gridId] = grid;
 
@@ -7345,6 +7350,8 @@ function toggleHubGridEdit(gridId, btnEl) {
       removeBtn.title = 'Remove this card';
       removeBtn.setAttribute('aria-label', 'Remove this card');
       removeBtn.onclick = (e) => { e.stopPropagation(); removeHubGridCard(gridId, item.getAttribute('gs-id')); };
+      removeBtn.onmousedown = (e) => e.stopPropagation();
+      removeBtn.onpointerdown = (e) => e.stopPropagation();
       item.appendChild(removeBtn);
     } else if (!editing && removeBtn) {
       removeBtn.remove();
