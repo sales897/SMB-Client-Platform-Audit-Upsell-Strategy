@@ -58,7 +58,10 @@ async function refreshWidgetGoogleToken(refreshToken, clientSecret) {
     }),
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.error_description || data.error || "Google token refresh failed");
+  if (!res.ok) {
+    console.error("[widget-chat] token refresh error:", res.status, JSON.stringify(data));
+    throw new Error(data.error_description || data.error || "Google token refresh failed (status " + res.status + ")");
+  }
   return data.access_token;
 }
 
@@ -73,7 +76,10 @@ async function bookOnWidgetCalendar(accessToken, { summary, description, startIS
     body: JSON.stringify({ timeMin: startISO, timeMax: endISO, items: [{ id: "primary" }] }),
   });
   const fbData = await fbRes.json();
-  if (!fbRes.ok) throw new Error("Could not check calendar availability.");
+  if (!fbRes.ok) {
+    console.error("[widget-chat] freeBusy API error:", fbRes.status, JSON.stringify(fbData));
+    throw new Error("Could not check calendar availability: " + (fbData.error && fbData.error.message ? fbData.error.message : fbRes.status));
+  }
   const busy = (fbData.calendars && fbData.calendars.primary && fbData.calendars.primary.busy) || [];
   if (busy.length > 0) {
     return { booked: false, reason: "That time slot is no longer available -- it was just booked or blocked." };
@@ -90,7 +96,10 @@ async function bookOnWidgetCalendar(accessToken, { summary, description, startIS
     }),
   });
   const evData = await evRes.json();
-  if (!evRes.ok) throw new Error((evData.error && evData.error.message) || "Could not create the calendar event.");
+  if (!evRes.ok) {
+    console.error("[widget-chat] events.insert API error:", evRes.status, JSON.stringify(evData));
+    throw new Error((evData.error && evData.error.message) || "Could not create the calendar event (status " + evRes.status + ").");
+  }
   return { booked: true, eventId: evData.id, htmlLink: evData.htmlLink };
 }
 
@@ -368,13 +377,18 @@ After each reply, call update_lead_status with your current read on this lead: a
 
     // Execute the real booking against Google Calendar.
     const clientSecret = Netlify.env.get("GOOGLE_OAUTH_CLIENT_SECRET");
+    console.log("[widget-chat] booking attempt, raw start_iso from model:", bookBlock.input.start_iso, "service:", bookBlock.input.service);
     try {
+      if (!clientSecret) throw new Error("GOOGLE_OAUTH_CLIENT_SECRET is not configured on the server.");
       const accessToken = await refreshWidgetGoogleToken(calendarToken, clientSecret);
       const startISO = bookBlock.input.start_iso;
+      const parsedStart = new Date(startISO);
+      if (isNaN(parsedStart.getTime())) throw new Error("Model returned an unparseable start_iso: " + startISO);
       const durationMs = (widget.service_duration_minutes || 60) * 60000;
-      const endISO = new Date(new Date(startISO).getTime() + durationMs).toISOString();
+      const endISO = new Date(parsedStart.getTime() + durationMs).toISOString();
       bookedStartISO = startISO;
       bookedService = bookBlock.input.service || null;
+      console.log("[widget-chat] checking freebusy for", startISO, "to", endISO);
       bookingResult = await bookOnWidgetCalendar(accessToken, {
         summary: `${bookBlock.input.service || "Appointment"} — ${conversation.lead_name || "New lead"}`,
         description: `Booked via chat widget. Lead: ${conversation.lead_name || "unknown"}, ${conversation.lead_email || ""} ${conversation.lead_phone || ""}`.trim(),
@@ -382,7 +396,9 @@ After each reply, call update_lead_status with your current read on this lead: a
         endISO,
         attendeeEmail: conversation.lead_email || (statusUpdate && statusUpdate.email) || undefined,
       });
+      console.log("[widget-chat] booking result:", JSON.stringify(bookingResult));
     } catch (e) {
+      console.error("[widget-chat] booking FAILED:", e.message, e.stack);
       bookingResult = { booked: false, reason: e.message };
     }
 
