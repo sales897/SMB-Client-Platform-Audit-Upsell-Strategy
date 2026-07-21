@@ -710,7 +710,7 @@ body.ai-panel-open .main {
 .hub-grid.editing .grid-stack-item:hover .grid-stack-item-content { outline-color: rgba(226,84,31,.4); border-radius: var(--radius); }
 .hub-grid-toolbar { display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 10px; }
 .hub-card-remove-btn {
-  position: absolute; top: -9px; right: -9px; width: 22px; height: 22px; border-radius: 50%;
+  position: absolute; top: -9px; right: 14px; width: 22px; height: 22px; border-radius: 50%;
   background: var(--bg4); border: 1px solid var(--border); color: var(--text2);
   font-size: 15px; line-height: 1; cursor: pointer; z-index: 9999;
   display: flex; align-items: center; justify-content: center; transition: all var(--transition-base);
@@ -7365,7 +7365,7 @@ function toggleHubGridEdit(gridId, btnEl) {
       removeBtn.innerHTML = '×';
       removeBtn.title = 'Remove this card';
       removeBtn.setAttribute('aria-label', 'Remove this card');
-      removeBtn.onclick = (e) => { e.stopPropagation(); removeHubGridCard(gridId, item.getAttribute('gs-id')); };
+      removeBtn.onclick = (e) => { e.stopPropagation(); showToast('Remove clicked — processing…', 'info'); removeHubGridCard(gridId, item.getAttribute('gs-id')); };
       removeBtn.onmousedown = (e) => e.stopPropagation();
       removeBtn.onpointerdown = (e) => e.stopPropagation();
       item.appendChild(removeBtn);
