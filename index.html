@@ -991,6 +991,16 @@ body.ai-panel-open .main {
   display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--blue); background: rgba(59,130,246,.1);
   border: 1px solid rgba(59,130,246,.3); border-radius: var(--radius-xs); padding: 6px 10px; margin-bottom: 8px; cursor: pointer;
 }
+.bulk-recon-newclient { margin-bottom: 8px; }
+.bulk-recon-newclient-toggle {
+  display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--orange2); background: var(--orange-dim);
+  border: 1px solid rgba(226,84,31,.3); border-radius: var(--radius-xs); padding: 6px 10px; cursor: pointer; width: fit-content;
+}
+.bulk-recon-newclient-portfolios { display: flex; gap: 8px; margin-top: 6px; padding-left: 4px; }
+.bulk-recon-newclient-portfolio-chip {
+  display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text2);
+  background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-pill); padding: 4px 10px; cursor: pointer;
+}
 .bulk-recon-lineitems { display: flex; flex-direction: column; gap: 6px; }
 .bulk-recon-lineitem { display: flex; align-items: center; gap: 8px; }
 .ledger-board { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; align-items: start; overflow-x: auto; padding-bottom: 8px; }
@@ -12512,6 +12522,35 @@ function readBulkReconcileFile(file) {
   reader.readAsText(file);
 }
 
+// Recovers as many complete objects as possible from a JSON array string
+// that may have been truncated mid-generation (e.g. a very long
+// reconciliation note pushing the AI's response past its length limit).
+// Tracks string/escape state so quotes and braces inside description text
+// don't confuse the brace counting, and only keeps objects that close
+// cleanly -- an incomplete trailing object is simply dropped, not guessed at.
+function recoverTruncatedJsonArray(str) {
+  const results = [];
+  let depth = 0, inString = false, escaped = false, objStart = -1;
+  for (let i = 0; i < str.length; i++) {
+    const ch = str[i];
+    if (inString) {
+      if (escaped) { escaped = false; }
+      else if (ch === '\\') { escaped = true; }
+      else if (ch === '"') { inString = false; }
+      continue;
+    }
+    if (ch === '"') { inString = true; continue; }
+    if (ch === '{') { if (depth === 0) objStart = i; depth++; }
+    else if (ch === '}') {
+      depth--;
+      if (depth === 0 && objStart !== -1) {
+        try { results.push(JSON.parse(str.slice(objStart, i + 1))); } catch (e) {}
+        objStart = -1;
+      }
+    }
+  }
+  return results;
+}
 async function parseBulkReconcileText() {
   const text = document.getElementById('bulkReconcileDropZone').textContent.trim();
   if (!text) { showToast('Paste or drop the reconciliation note first.', 'warning'); return; }
@@ -12540,7 +12579,16 @@ ${text}
 """`
     );
     const cleaned = (raw || '').replace(/```json|```/g, '').trim();
-    const parsed = JSON.parse(cleaned);
+    let parsed, wasTruncated = false;
+    try {
+      parsed = JSON.parse(cleaned);
+    } catch (parseErr) {
+      // A very long note can push the AI's response past its length limit,
+      // cutting it off mid-string -- rather than losing every business to
+      // one incomplete tail, recover whichever ones finished completely.
+      parsed = recoverTruncatedJsonArray(cleaned);
+      wasTruncated = true;
+    }
     if (!Array.isArray(parsed) || parsed.length === 0) throw new Error('Nothing recognizable came back.');
     BULK_RECONCILE_PARSED = parsed.map(biz => {
       const match = findBestClientMatch(biz.business_name);
@@ -12551,6 +12599,8 @@ ${text}
         match_score: match.score,
         needs_collections: !!biz.needs_collections,
         collections_note: biz.collections_note || '',
+        create_as_new_client: false,
+        new_client_portfolios: [],
         line_items: (Array.isArray(biz.line_items) ? biz.line_items : []).map(li => ({
           included: true,
           amount: Number(li.amount) || 0,
@@ -12562,6 +12612,9 @@ ${text}
     renderBulkReconcileReview();
     document.getElementById('bulkReconcileStepPaste').style.display = 'none';
     document.getElementById('bulkReconcileStepReview').style.display = '';
+    if (wasTruncated) {
+      showToast(`The note was too long for one pass — Nirvana fully parsed ${BULK_RECONCILE_PARSED.length} business${BULK_RECONCILE_PARSED.length === 1 ? '' : 'es'} before getting cut off. Paste the remainder separately to catch the rest.`, 'warning');
+    }
   } catch (e) {
     showToast('Nirvana couldn\'t confidently parse that: ' + e.message, 'error');
   } finally {
@@ -12602,6 +12655,20 @@ function renderBulkReconcileReview() {
           ${clientOptionsHTML.replace(`value="${escAttr(biz.matched_client_name || '')}"`, `value="${escAttr(biz.matched_client_name || '')}" selected`)}
         </select>
       </div>
+      ${!biz.matched_client_name ? `
+      <div class="bulk-recon-newclient">
+        <label class="bulk-recon-newclient-toggle">
+          <input type="checkbox" ${biz.create_as_new_client ? 'checked' : ''} onchange="toggleBulkReconcileNewClient(${i}, this.checked)">
+          <span class="icon" data-icon="plus" data-icon-size="12"></span> Not in the Hub yet — create "${escAttr(biz.business_name)}" as a new client
+        </label>
+        <div id="bulkReconcileNewClientPortfolios-${i}" class="bulk-recon-newclient-portfolios" style="display:${biz.create_as_new_client ? '' : 'none'}">
+          ${Object.keys(PORTFOLIO_LABELS).map(pk => `
+            <label class="bulk-recon-newclient-portfolio-chip">
+              <input type="checkbox" ${(biz.new_client_portfolios || []).includes(pk) ? 'checked' : ''} onchange="toggleBulkReconcileNewClientPortfolio(${i}, '${pk}', this.checked)">
+              ${PORTFOLIO_LABELS[pk]}
+            </label>`).join('')}
+        </div>
+      </div>` : ''}
       ${biz.needs_collections ? `
       <label class="bulk-recon-collections-flag">
         <input type="checkbox" checked id="bulkReconcileCollections-${i}">
@@ -12634,6 +12701,26 @@ function updateBulkReconcileLineItem(i, j, field, value) {
 function updateBulkReconcileMatch(i, clientName) {
   BULK_RECONCILE_PARSED[i].matched_client_name = clientName || null;
   BULK_RECONCILE_PARSED[i].match_confidence = clientName ? 'exact' : 'none';
+  if (clientName) {
+    // A real client is now linked -- creating a new one is no longer relevant.
+    BULK_RECONCILE_PARSED[i].create_as_new_client = false;
+    BULK_RECONCILE_PARSED[i].new_client_portfolios = [];
+  }
+  renderBulkReconcileReview();
+}
+function toggleBulkReconcileNewClient(i, checked) {
+  BULK_RECONCILE_PARSED[i].create_as_new_client = checked;
+  const panel = document.getElementById(`bulkReconcileNewClientPortfolios-${i}`);
+  if (panel) panel.style.display = checked ? '' : 'none';
+}
+function toggleBulkReconcileNewClientPortfolio(i, pk, checked) {
+  const biz = BULK_RECONCILE_PARSED[i];
+  if (!biz.new_client_portfolios) biz.new_client_portfolios = [];
+  if (checked) {
+    if (!biz.new_client_portfolios.includes(pk)) biz.new_client_portfolios.push(pk);
+  } else {
+    biz.new_client_portfolios = biz.new_client_portfolios.filter(p => p !== pk);
+  }
 }
 
 async function commitBulkReconcileImport() {
@@ -12642,6 +12729,38 @@ async function commitBulkReconcileImport() {
   const u = getCurrentUser();
   const genId = () => (crypto.randomUUID ? crypto.randomUUID() : 'br_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8));
   btn.disabled = true;
+
+  // Create any new client records first, so the ledger/collections entries
+  // below can link to a real client instead of just a raw business name.
+  // Mirrors saveNewClient()'s own push-then-persist pattern exactly, including
+  // its case-insensitive dedup check, rather than introducing a second way
+  // clients get created in this app.
+  let newClientCount = 0;
+  const touchedPortfolios = new Set();
+  for (const biz of BULK_RECONCILE_PARSED) {
+    if (!biz.create_as_new_client || !biz.new_client_portfolios || !biz.new_client_portfolios.length) continue;
+    const norm = biz.business_name.trim().toLowerCase();
+    biz.new_client_portfolios.forEach(pk => {
+      const existing = getClients(pk).find(c => (c.name || '').trim().toLowerCase() === norm);
+      if (existing) return;
+      getClients(pk).push({ name: biz.business_name, org: undefined, cellNotes: '' });
+      touchedPortfolios.add(pk);
+      newClientCount++;
+    });
+    // Once created, this business should link to the client by its real name
+    // going forward, same as any other matched business.
+    biz.matched_client_name = biz.business_name;
+  }
+  if (touchedPortfolios.size) {
+    for (const pk of touchedPortfolios) await saveClientsToSupabase(pk).catch(e => console.warn('New client save failed:', e.message));
+    rebuildAll();
+    for (const biz of BULK_RECONCILE_PARSED) {
+      if (biz.matched_client_name === biz.business_name && biz.new_client_portfolios && biz.new_client_portfolios.length) {
+        fireClientAddedWorkflows(biz.business_name, biz.new_client_portfolios).catch(e => console.warn('client_added workflow check failed:', e.message));
+      }
+    }
+  }
+
   let ledgerCount = 0, collectionsCount = 0, errors = 0;
   for (const biz of BULK_RECONCILE_PARSED) {
     // A business with no confirmed match still gets its data saved under
@@ -12673,9 +12792,9 @@ async function commitBulkReconcileImport() {
       } catch (e) { errors++; console.warn('Collections import row failed:', e.message); }
     }
   }
-  statusEl.textContent = `Imported ${ledgerCount} Ledger record${ledgerCount === 1 ? '' : 's'}${collectionsCount ? `, ${collectionsCount} Collections flag${collectionsCount === 1 ? '' : 's'}` : ''}${errors ? `, ${errors} failed` : ''}.`;
+  statusEl.textContent = `${newClientCount ? `Created ${newClientCount} new client${newClientCount === 1 ? '' : 's'}. ` : ''}Imported ${ledgerCount} Ledger record${ledgerCount === 1 ? '' : 's'}${collectionsCount ? `, ${collectionsCount} Collections flag${collectionsCount === 1 ? '' : 's'}` : ''}${errors ? `, ${errors} failed` : ''}.`;
   btn.disabled = false;
-  showToast(`Bulk import complete: ${ledgerCount} Ledger record${ledgerCount === 1 ? '' : 's'} added.`, errors ? 'warning' : 'success');
+  showToast(`Bulk import complete: ${newClientCount ? `${newClientCount} new client${newClientCount === 1 ? '' : 's'}, ` : ''}${ledgerCount} Ledger record${ledgerCount === 1 ? '' : 's'} added.`, errors ? 'warning' : 'success');
   rebuildLedgerPage();
   if (collectionsCount && typeof loadCollectionsAccounts === 'function') loadCollectionsAccounts();
   setTimeout(closeBulkReconcileModal, 1200);
