@@ -974,7 +974,7 @@ body.ai-panel-open .main {
   border: 1px dashed var(--border); font-size: 13px; color: var(--text2); cursor: text;
   transition: border-color var(--transition-base), background var(--transition-base); margin-bottom: var(--space-4);
 }
-.ledger-smartpaste-zone:empty::before { content: attr(data-placeholder); color: var(--text3); }
+.ledger-smartpaste-zone:empty::before { content: attr(data-placeholder); color: var(--text3); display: block; width: 100%; }
 .ledger-smartpaste-zone:focus { outline: none; border-color: var(--orange); background: var(--orange-dim); }
 .ledger-smartpaste-zone.parsing { border-color: var(--orange); background: var(--orange-dim); opacity: .7; pointer-events: none; }
 .ledger-smartpaste-zone.dragover { border-color: var(--green); background: rgba(34,197,94,.08); }
@@ -5698,6 +5698,23 @@ select.wfb-field-input { padding-right: 26px; }
 // doesn't actually distinguish "logged in" from "not yet".
 let hubHasBooted = false;
 
+// Safety net for a whole class of stale-layout bug, not just one symptom:
+// the custom Google Fonts (Bricolage Grotesque, JetBrains Mono) load
+// asynchronously, after first paint. Anything laid out before that swap --
+// especially flex items sized from generated ::before/::after content, which
+// don't stretch to fill their container by default -- can get its size
+// measured once against fallback-font metrics and never recalculated, even
+// after the real font swaps in. Root-caused via the Ledger Smart Paste zone
+// (2026-07-20): its placeholder text got stuck rendering in a narrow,
+// wrapped column despite the box around it being the correct full width,
+// and only ever corrected itself when a manual window resize forced a fresh
+// layout pass. Forcing one reflow here, once, right after fonts finish
+// loading, means nothing has to wait on a person happening to resize their
+// window to un-stick it.
+if (document.fonts && document.fonts.ready) {
+  document.fonts.ready.then(() => { void document.body.offsetHeight; });
+}
+
 // Global SVG line-icon system (2026-07-15, Hub-wide icon pass). Extends the
 // Chat Widget's icon set (CW_ICONS, defined later, stays untouched) to
 // cover the rest of the Hub -- nav, profile menu, common actions -- via a
@@ -10274,6 +10291,15 @@ async function fetchGoogleConnectedAccount() {
     if (googleConnectedAccountEmail) localStorage.setItem(GCAL_ACCOUNT_CACHE_KEY, googleConnectedAccountEmail);
   } catch(e) {
     console.warn('Could not confirm connected Google account:', e.message);
+    // Stops what would otherwise be an infinite retry loop: renderGoogleCalendarStatus()
+    // re-calls this function every time it sees "connected" (cached token) but no
+    // confirmed email, and this failing left the email unset forever. The token
+    // genuinely didn't work here, so clear it -- isGoogleCalendarConnected() will now
+    // correctly report disconnected, and the UI offers a real reconnect instead.
+    googleAccessToken = null;
+    googleTokenExpiresAt = 0;
+    localStorage.removeItem(GCAL_TOKEN_CACHE_KEY);
+    localStorage.removeItem(GCAL_ACCOUNT_CACHE_KEY);
   }
   renderGoogleCalendarStatus();
 }
@@ -10339,7 +10365,7 @@ function initGoogleCalendarClient() {
   // a refresh token when consent is freshly re-confirmed.
   googleTokenClient = google.accounts.oauth2.initCodeClient({
     client_id: GOOGLE_CALENDAR_CLIENT_ID,
-    scope: 'https://www.googleapis.com/auth/calendar.events',
+    scope: 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/calendar.readonly',
     ux_mode: 'popup',
     access_type: 'offline',
     prompt: 'consent',
@@ -15449,7 +15475,7 @@ function migrateOldCollectionsNotes() {
   COLLECTIONS_ACCOUNTS.forEach(a => {
     if (!a.notes || !a.notes.length) return;
     a.notes.forEach(oldNote => {
-      const already = CLIENT_NOTES.some(n => n.client_name === a.name && n.text === oldNote.text && n.created_at === oldNote.ts);
+      const already = CLIENT_NOTES.some(n => n.client_name === a.name && n.text === oldNote.text);
       if (already) return;
       const note = {
         id: (crypto.randomUUID ? crypto.randomUUID() : 'n_' + Date.now() + Math.random().toString(16).slice(2)),
@@ -15459,7 +15485,6 @@ function migrateOldCollectionsNotes() {
         text: oldNote.text,
         tagged_emails: [],
         created_at: oldNote.ts || new Date().toISOString(),
-        system: !!oldNote.system,
       };
       CLIENT_NOTES.push(note);
       sbUpsert('client_notes', note).catch(e => console.warn('Could not migrate a note:', e.message));
