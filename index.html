@@ -2463,8 +2463,13 @@ tr.pg-hidden-row { display: none; }
    originated leads/messages instead of phone calls.
    ═══════════════════════════════════════════════════════════════════════ */
 .cw-toplevel-tabs { display: flex; gap: 4px; background: var(--bg2); border-radius: var(--radius-pill); padding: 4px; margin: 0 var(--space-4); }
-.cw-toplevel-tab { background: none; border: none; padding: 8px 20px; font-size: var(--font-sm); font-weight: 700; color: var(--text3); border-radius: var(--radius-pill); cursor: pointer; transition: all var(--transition-base); }
+.cw-toplevel-tab { background: none; border: none; padding: 8px 20px; font-size: var(--font-sm); font-weight: 700; color: var(--text3); border-radius: var(--radius-pill); cursor: pointer; transition: all var(--transition-base); position: relative; }
 .cw-toplevel-tab.active { background: linear-gradient(90deg, var(--orange), var(--orange2)); color: #fff; box-shadow: 0 0 14px rgba(226,84,31,.45); }
+.cw-toplevel-tab.has-pending:not(.active) { box-shadow: inset 0 0 0 1.5px var(--green), 0 0 8px rgba(34,197,94,.5); color: var(--green); animation: cwNewTabPulse 2.2s ease-in-out infinite; }
+.cw-inbox-tab-badge {
+  display: inline-flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 5px;
+  border-radius: 999px; background: var(--green); color: #05130a; font-size: 10.5px; font-weight: 800; margin-left: 5px; vertical-align: middle;
+}
 .cw-overview-pane { flex: 1; overflow-y: auto; padding-right: 4px; }
 .cw-kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3); margin-bottom: var(--space-3); }
 .cw-kpi-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-3) var(--space-4); display: flex; align-items: center; gap: 12px; position: relative; overflow: hidden; }
@@ -4215,7 +4220,7 @@ select.wfb-field-input { padding-right: 26px; }
       </div>
       <div class="cw-toplevel-tabs" id="cwToplevelTabs">
         <button class="cw-toplevel-tab active" data-val="overview" onclick="setCwToplevelTab('overview')">Overview</button>
-        <button class="cw-toplevel-tab" data-val="inbox" onclick="setCwToplevelTab('inbox')">Inbox</button>
+        <button class="cw-toplevel-tab" data-val="inbox" onclick="setCwToplevelTab('inbox')">Inbox <span class="cw-inbox-tab-badge" id="cwInboxTabBadge" style="display:none">0</span></button>
       </div>
       <button class="cw-glow-btn" onclick="openCwConfigDrawer()"><span id="cwConfigBtnIcon"></span> Configure</button>
     </div>
@@ -10343,7 +10348,7 @@ function connectWidgetCalendar(widgetId) {
   }
   const client = google.accounts.oauth2.initCodeClient({
     client_id: GOOGLE_CALENDAR_CLIENT_ID,
-    scope: 'https://www.googleapis.com/auth/calendar.events',
+    scope: 'https://www.googleapis.com/auth/calendar',
     ux_mode: 'popup',
     access_type: 'offline',
     prompt: 'consent',
@@ -13146,6 +13151,10 @@ async function refreshCwGlobalPendingCount() {
     if (CW_GLOBAL_PENDING_COUNT > 0) { navBadge.style.display = ''; navBadge.textContent = CW_GLOBAL_PENDING_COUNT; }
     else navBadge.style.display = 'none';
   }
+  const inboxTabBadge = document.getElementById('cwInboxTabBadge');
+  const inboxTabBtn = document.querySelector('.cw-toplevel-tab[data-val="inbox"]');
+  if (inboxTabBadge) { if (CW_GLOBAL_PENDING_COUNT > 0) { inboxTabBadge.style.display = ''; inboxTabBadge.textContent = CW_GLOBAL_PENDING_COUNT; } else inboxTabBadge.style.display = 'none'; }
+  if (inboxTabBtn) inboxTabBtn.classList.toggle('has-pending', CW_GLOBAL_PENDING_COUNT > 0);
   renderNotificationBell();
 }
 function startCwGlobalPendingPolling() {
