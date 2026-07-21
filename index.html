@@ -3110,6 +3110,8 @@ select.wfb-field-input { padding-right: 26px; }
       <div class="topbar-sub" id="topbarSub">Your daily snapshot across the Hub</div>
     </div>
     <div class="topbar-right">
+      <button class="btn btn-ghost btn-sm" id="topbarResetLayoutBtn" style="display:none" title="Reset back to the default layout"><span class="icon" data-icon="refresh" data-icon-size="13"></span> Reset Layout</button>
+      <button class="btn btn-ghost btn-sm hub-edit-layout-btn" id="topbarEditLayoutBtn" style="display:none"><span class="icon" data-icon="edit" data-icon-size="13"></span> Edit Layout</button>
       <label class="upload-btn" id="uploadBtnLabel" title="Uploads into the currently open dashboard" style="display:none">
         📁 Upload File
         <input type="file" id="fileUpload" accept=".xlsx,.xls,.csv" onchange="handleFileUpload(event)">
@@ -3124,10 +3126,6 @@ select.wfb-field-input { padding-right: 26px; }
        PAGE 0: ALL CLIENTS — unified directory
   ════════════════════════════════════════════════════════════════════════ -->
   <div class="page" id="page-clients">
-    <div class="hub-grid-toolbar">
-      <button class="btn btn-ghost btn-sm" onclick="resetHubGridLayout('grid-clients', 'hub_grid_clients_v3')" title="Reset back to the default layout"><span class="icon" data-icon="refresh" data-icon-size="13"></span> Reset Layout</button>
-      <button class="btn btn-ghost btn-sm hub-edit-layout-btn" onclick="toggleHubGridEdit('grid-clients', this)"><span class="icon" data-icon="edit" data-icon-size="13"></span> Edit Layout</button>
-    </div>
     <div class="hub-grid grid-stack" id="grid-clients">
       <div class="grid-stack-item" gs-id="cl-kpi-total" gs-x="0" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
       <div class="kpi kpi-theme-orange"><div class="kpi-icon"><span class="icon" data-icon="users" data-icon-size="16"></span></div><div class="kpi-val orange" id="cl-total">0</div><div class="kpi-lbl" data-i18n="cl_unique_clients">Unique Clients</div><div class="kpi-sub" data-i18n="cl_across_portfolios">Across all portfolios</div>
@@ -3286,10 +3284,6 @@ select.wfb-field-input { padding-right: 26px; }
   ════════════════════════════════════════════════════════════════════════ -->
   <div class="page" id="page-smb">
 
-    <div class="hub-grid-toolbar">
-      <button class="btn btn-ghost btn-sm" onclick="resetHubGridLayout('grid-smb', 'hub_grid_smb_v3')" title="Reset back to the default layout"><span class="icon" data-icon="refresh" data-icon-size="13"></span> Reset Layout</button>
-      <button class="btn btn-ghost btn-sm hub-edit-layout-btn" onclick="toggleHubGridEdit('grid-smb', this)"><span class="icon" data-icon="edit" data-icon-size="13"></span> Edit Layout</button>
-    </div>
     <div class="hub-grid grid-stack" id="grid-smb">
 
     <!-- KPIs -->
@@ -3485,10 +3479,6 @@ select.wfb-field-input { padding-right: 26px; }
   ════════════════════════════════════════════════════════════════════════ -->
   <div class="page" id="page-whitelabel">
 
-    <div class="hub-grid-toolbar">
-      <button class="btn btn-ghost btn-sm" onclick="resetHubGridLayout('grid-whitelabel', 'hub_grid_whitelabel_v3')" title="Reset back to the default layout"><span class="icon" data-icon="refresh" data-icon-size="13"></span> Reset Layout</button>
-      <button class="btn btn-ghost btn-sm hub-edit-layout-btn" onclick="toggleHubGridEdit('grid-whitelabel', this)"><span class="icon" data-icon="edit" data-icon-size="13"></span> Edit Layout</button>
-    </div>
     <div class="hub-grid grid-stack" id="grid-whitelabel">
 
     <!-- KPIs -->
@@ -3821,10 +3811,6 @@ select.wfb-field-input { padding-right: 26px; }
   ════════════════════════════════════════════════════════════════════════ -->
   <div class="page" id="page-support">
 
-    <div class="hub-grid-toolbar">
-      <button class="btn btn-ghost btn-sm" onclick="resetHubGridLayout('grid-support', 'hub_grid_support_v3')" title="Reset back to the default layout"><span class="icon" data-icon="refresh" data-icon-size="13"></span> Reset Layout</button>
-      <button class="btn btn-ghost btn-sm hub-edit-layout-btn" onclick="toggleHubGridEdit('grid-support', this)"><span class="icon" data-icon="edit" data-icon-size="13"></span> Edit Layout</button>
-    </div>
     <div class="hub-grid grid-stack" id="grid-support">
 
     <!-- KPIs -->
@@ -5876,6 +5862,26 @@ function showPage(id) {
     if (sheetsBtn) sheetsBtn.style.display = 'none';
   }
 
+  // Reset/Edit Layout now live in the shared topbar (next to Upload/Connect
+  // Sheets) instead of their own row per page -- removes the big empty gap
+  // that row used to leave above every grid dashboard. Re-wired to target
+  // whichever grid-having page is currently open.
+  const resetBtn = document.getElementById('topbarResetLayoutBtn');
+  const editBtn = document.getElementById('topbarEditLayoutBtn');
+  if (gridEl) {
+    const storageKey = 'hub_grid_' + id + '_v3';
+    if (resetBtn) { resetBtn.style.display = ''; resetBtn.onclick = () => resetHubGridLayout('grid-' + id, storageKey); }
+    if (editBtn) {
+      editBtn.style.display = '';
+      editBtn.classList.remove('active');
+      editBtn.innerHTML = '<span class="icon" data-icon="edit" data-icon-size="13"></span> Edit Layout';
+      editBtn.onclick = () => toggleHubGridEdit('grid-' + id, editBtn);
+    }
+  } else {
+    if (resetBtn) resetBtn.style.display = 'none';
+    if (editBtn) editBtn.style.display = 'none';
+  }
+
   if (id === 'home') rebuildHomePage();
   if (id === 'voice') rebuildVoicePage();
   if (id === 'textagent') rebuildTextAgentPage();
@@ -7181,8 +7187,25 @@ function initHubGrid(gridId, storageKey) {
   // correct card by identity, regardless of what order they're in.
   let saved = null;
   try { saved = JSON.parse(localStorage.getItem(storageKey) || 'null'); } catch(e) {}
-  if (saved && Array.isArray(saved) && saved.length && saved.every(item => item.id)) {
+  // Defends against a corrupted saved layout ever being trusted blindly --
+  // if any entry's coordinates couldn't possibly be valid on a 12-column
+  // grid (negative, non-numeric, or overflowing past column 12), the whole
+  // saved layout is treated as corrupt and the default positions already
+  // in the HTML are used instead, rather than rendering a scattered mess.
+  const isSaneLayout = saved && Array.isArray(saved) && saved.length && saved.every(item =>
+    item.id &&
+    Number.isFinite(item.x) && item.x >= 0 &&
+    Number.isFinite(item.y) && item.y >= 0 &&
+    Number.isFinite(item.w) && item.w >= 1 && item.w <= 12 &&
+    Number.isFinite(item.h) && item.h >= 1 &&
+    (item.x + item.w) <= 12
+  );
+  if (isSaneLayout) {
     grid.load(saved);
+  } else if (saved) {
+    // Had *something* saved, but it didn't pass the sanity check -- clear
+    // it so a stale corrupt value doesn't keep getting retried forever.
+    try { localStorage.removeItem(storageKey); } catch(e) {}
   }
 
   grid.on('change', () => {
@@ -7217,7 +7240,18 @@ function toggleHubGridEdit(gridId, btnEl) {
 }
 function resetHubGridLayout(gridId, storageKey) {
   try { localStorage.removeItem(storageKey); } catch(e) {}
-  location.reload();
+  const grid = HUB_GRIDS[gridId];
+  const el = document.getElementById(gridId);
+  if (!grid || !el) { location.reload(); return; } // fallback for the rare case the grid isn't actually initialized yet
+  // Tear down and re-init just this one grid instead of reloading the
+  // whole Hub -- `false` keeps the actual card DOM/content in place, only
+  // removing GridStack's own positioning/listeners, so charts, live data,
+  // and everything else on the page stays exactly as it was.
+  grid.destroy(false);
+  delete HUB_GRIDS[gridId];
+  const fresh = initHubGrid(gridId, storageKey);
+  if (fresh && typeof fresh.onParentResize === 'function') fresh.onParentResize();
+  showToast('Layout reset to default.', 'success');
 }
 
 function rebuildPortfolio(pk) {
