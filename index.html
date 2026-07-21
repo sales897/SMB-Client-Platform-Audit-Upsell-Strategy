@@ -7166,7 +7166,13 @@ function initHubGrid(gridId, storageKey) {
   if (!el || typeof GridStack === 'undefined') return null;
   if (HUB_GRIDS[gridId]) return HUB_GRIDS[gridId]; // already initialized (e.g. revisiting the page)
   const grid = GridStack.init({
-    column: 12,
+    // The Command Board's KPI row is 5 cards at width 2 (=10), not 6 like
+    // the other portfolio pages (=12) -- using 12 columns there left an
+    // unfilled 2-column gap on the right, sitting awkwardly above the AI
+    // Insights sidebar. Matching the column count to what's actually there
+    // makes the row fill the full width with no code change to the cards
+    // themselves.
+    column: gridId === 'grid-clients' ? 10 : 12,
     cellHeight: 70,
     margin: 12,
     float: true,
