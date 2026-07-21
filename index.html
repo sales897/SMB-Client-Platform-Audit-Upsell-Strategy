@@ -7293,7 +7293,7 @@ function initHubGrid(gridId, storageKey) {
   // correct card by identity, regardless of what order they're in.
   let saved = null;
   try { saved = JSON.parse(localStorage.getItem(storageKey) || 'null'); } catch(e) {}
-  console.log('[HubGrid]', gridId, 'loaded from storage:', saved);
+  console.log('[HubGrid]', gridId, 'loaded from storage:', JSON.stringify(saved, null, 2));
   // Defends against a corrupted saved layout ever being trusted blindly --
   // if any entry's coordinates couldn't possibly be valid on a 12-column
   // grid (negative, non-numeric, or overflowing past column 12), the whole
@@ -7308,6 +7308,18 @@ function initHubGrid(gridId, storageKey) {
     (item.x + item.w) <= 12
   );
   console.log('[HubGrid]', gridId, 'isSaneLayout:', isSaneLayout);
+  if (saved && Array.isArray(saved)) {
+    saved.forEach((item, i) => {
+      const reasons = [];
+      if (!item.id) reasons.push('missing id');
+      if (!Number.isFinite(item.x) || item.x < 0) reasons.push('bad x=' + item.x);
+      if (!Number.isFinite(item.y) || item.y < 0) reasons.push('bad y=' + item.y);
+      if (!Number.isFinite(item.w) || item.w < 1 || item.w > 12) reasons.push('bad w=' + item.w);
+      if (!Number.isFinite(item.h) || item.h < 1) reasons.push('bad h=' + item.h);
+      if (Number.isFinite(item.x) && Number.isFinite(item.w) && (item.x + item.w) > 12) reasons.push('x+w overflow (' + item.x + '+' + item.w + ')');
+      if (reasons.length) console.warn('[HubGrid]', gridId, 'item', i, 'FAILED:', reasons.join(', '), item);
+    });
+  }
   if (isSaneLayout) {
     grid.load(saved);
   } else if (saved) {
