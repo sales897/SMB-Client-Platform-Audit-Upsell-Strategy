@@ -7195,6 +7195,7 @@ async function loadAiInsightsBanner() {
 // additive -- nothing breaks if GridStack fails to load from the CDN, the
 // page just behaves as a normal static layout.
 const HUB_GRIDS = {};
+const HUB_GRID_SAVE_FNS = {}; // { gridId: () => void } -- lets remove/restore explicitly persist positions immediately, since removeWidget()/addWidget() don't reliably fire GridStack's own 'change' event the way dragging does
 const HUB_GRID_REMOVED_NODES = {}; // { gridId: { gsId: detachedDomNode } } -- cards removed while editing, kept in memory (not destroyed) so "+ Add Card" can bring them back
 function hubGridHiddenKey(gridId) { return 'hub_grid_hidden_' + gridId + '_v1'; }
 function getHubGridHiddenIds(gridId) {
@@ -7225,6 +7226,7 @@ function removeHubGridCard(gridId, gsId) {
     if (el.isConnected) el.remove();
     saveHubGridHiddenIds(gridId);
     renderHubGridAddMenu(gridId);
+    if (HUB_GRID_SAVE_FNS[gridId]) HUB_GRID_SAVE_FNS[gridId]();
     showToast('Card removed — use "+ Add Card" to bring it back.', 'success');
   } catch (err) {
     showToast('Could not remove that card: ' + err.message, 'error');
@@ -7239,6 +7241,7 @@ function restoreHubGridCard(gridId, gsId) {
   delete stash[gsId];
   saveHubGridHiddenIds(gridId);
   renderHubGridAddMenu(gridId);
+  if (HUB_GRID_SAVE_FNS[gridId]) HUB_GRID_SAVE_FNS[gridId]();
 }
 function renderHubGridAddMenu(gridId) {
   const menu = document.getElementById('hubGridAddCardMenu');
@@ -7311,9 +7314,11 @@ function initHubGrid(gridId, storageKey) {
     try { localStorage.removeItem(storageKey); } catch(e) {}
   }
 
-  grid.on('change', () => {
+  function saveHubGridPositions() {
     try { localStorage.setItem(storageKey, JSON.stringify(grid.save(false))); } catch(e) {}
-  });
+  }
+  grid.on('change', saveHubGridPositions);
+  HUB_GRID_SAVE_FNS[gridId] = saveHubGridPositions;
 
   // Re-apply any cards the user removed in a previous session -- otherwise
   // a "deleted" card would silently reappear on every reload.
