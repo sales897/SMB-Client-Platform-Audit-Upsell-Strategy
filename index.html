@@ -977,6 +977,22 @@ body.ai-panel-open .main {
 .ledger-smartpaste-zone:empty::before { content: attr(data-placeholder); color: var(--text3); }
 .ledger-smartpaste-zone:focus { outline: none; border-color: var(--orange); background: var(--orange-dim); }
 .ledger-smartpaste-zone.parsing { border-color: var(--orange); background: var(--orange-dim); opacity: .7; pointer-events: none; }
+.ledger-smartpaste-zone.dragover { border-color: var(--green); background: rgba(34,197,94,.08); }
+
+.bulk-recon-biz { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; margin-bottom: 10px; }
+.bulk-recon-biz-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; }
+.bulk-recon-biz-name { font-weight: 700; font-size: 13px; color: var(--text); }
+.bulk-recon-badge { font-size: 10.5px; font-weight: 700; padding: 3px 8px; border-radius: 999px; }
+.bulk-recon-badge.exact { background: rgba(34,197,94,.15); color: var(--green); }
+.bulk-recon-badge.close { background: rgba(245,158,11,.15); color: var(--yellow); }
+.bulk-recon-badge.none { background: rgba(239,68,68,.15); color: var(--red); }
+.bulk-recon-match-picker { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.bulk-recon-collections-flag {
+  display: flex; align-items: center; gap: 6px; font-size: 11.5px; color: var(--blue); background: rgba(59,130,246,.1);
+  border: 1px solid rgba(59,130,246,.3); border-radius: var(--radius-xs); padding: 6px 10px; margin-bottom: 8px; cursor: pointer;
+}
+.bulk-recon-lineitems { display: flex; flex-direction: column; gap: 6px; }
+.bulk-recon-lineitem { display: flex; align-items: center; gap: 8px; }
 .ledger-board { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; align-items: start; overflow-x: auto; padding-bottom: 8px; }
 @media (max-width: 1400px) { .ledger-board { grid-template-columns: repeat(3, minmax(220px, 1fr)); } }
 .ledger-column { background: var(--gradient-card); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-3); min-width: 220px; }
@@ -1754,17 +1770,8 @@ tr.pg-hidden-row { display: none; }
    stack, which was letting the other modal's backdrop swallow the clicks
    meant for this dialog's Confirm/Cancel buttons. */
 #confirmDialogModal { z-index: 6000; }
-.modal {
-  background: var(--bg2); border: 1px solid var(--border);
-  border-radius: var(--radius-lg); padding: var(--space-6); width: 480px; max-width: 95vw;
-  box-shadow: var(--shadow-lg);
-  /* Previously unconstrained -- a sufficiently tall modal (Add Client, with
-     its portfolio checkboxes, 10-item product list, and Smart Paste contact
-     block) could grow past the viewport with no way to scroll to it at all,
-     since .modal-overlay itself doesn't scroll. Now the modal caps its own
-     height and scrolls internally instead. */
-  max-height: 90vh; overflow-y: auto;
-}
+.modal { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: var(--space-6); width: 480px; max-width: 95vw; box-shadow: var(--shadow-lg); max-height: 90vh; overflow-y: auto; }
+.modal-wide { width: 920px; }
 .modal h3 { font-size: var(--font-lg); font-weight: 800; color: var(--text); margin-bottom: 6px; }
 .modal p { font-size: var(--font-base); color: var(--text3); margin-bottom: var(--space-5); line-height: 1.6; }
 .modal input {
@@ -4731,7 +4738,10 @@ select.wfb-field-input { padding-right: 26px; }
 
         <div class="card-header" style="margin-bottom:var(--space-3)">
           <div><div class="card-title">Reconciliation Board</div><div class="card-sub" id="ledgerBoardSub">0 records</div></div>
-          <button class="btn btn-primary btn-sm" onclick="openAddLedgerModal('charges_to_bill')">＋ Add Record</button>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm" onclick="openBulkReconcileModal()"><span class="icon" data-icon="sparkle" data-icon-size="13"></span> Bulk Reconcile Import</button>
+            <button class="btn btn-primary btn-sm" onclick="openAddLedgerModal('charges_to_bill')">＋ Add Record</button>
+          </div>
         </div>
         <div id="ledgerFilterBar" style="display:none;align-items:center;gap:10px;margin-bottom:10px;padding:6px 10px;background:var(--orange-dim);border-radius:var(--radius-sm);font-size:11px;color:var(--orange2)">
           <span></span>
@@ -5221,10 +5231,40 @@ select.wfb-field-input { padding-right: 26px; }
         <button class="btn btn-primary" onclick="saveLedgerEntry()">Save Record</button>
       </div>
     </div>
-  </div>
 </div>
 
-<!-- REMOVE PRODUCT CONFIRMATION MODAL -->
+<!-- BULK RECONCILE IMPORT MODAL -->
+<div class="modal-overlay" id="bulkReconcileModal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="bulkReconcileModalTitle" style="max-width:900px;width:92vw">
+    <h3 id="bulkReconcileModalTitle"><span class="icon" data-icon="sparkle" data-icon-size="14"></span> Bulk Reconcile Import</h3>
+
+    <div id="bulkReconcileStepPaste">
+      <p style="font-size:12px;color:var(--text3);margin-bottom:12px">Paste the full monthly reconciliation note (like the CFO's Slack message), or drop a .txt file below. Nirvana will split it out by business, match each one against real clients in the Hub, and let you review everything before anything is actually saved.</p>
+      <div id="bulkReconcileDropZone" class="ledger-smartpaste-zone" style="min-height:180px" ondrop="handleBulkReconcileDrop(event)" ondragover="event.preventDefault()" ondragenter="this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" contenteditable="true" data-placeholder="Paste the reconciliation note here, or drag a .txt file onto this box…"></div>
+      <input type="file" id="bulkReconcileFileInput" accept=".txt" style="display:none" onchange="handleBulkReconcileFileInput(event)">
+      <div class="modal-actions" style="justify-content:space-between">
+        <button class="btn btn-ghost" onclick="document.getElementById('bulkReconcileFileInput').click()"><span class="icon" data-icon="folder" data-icon-size="13"></span> Upload .txt File</button>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost" onclick="closeBulkReconcileModal()">Cancel</button>
+          <button class="btn btn-primary" id="bulkReconcileParseBtn" onclick="parseBulkReconcileText()"><span class="icon" data-icon="sparkle" data-icon-size="13"></span> Parse with Nirvana</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="bulkReconcileStepReview" style="display:none">
+      <div id="bulkReconcileSummary" style="font-size:12px;color:var(--text3);margin-bottom:12px"></div>
+      <div id="bulkReconcileReviewList" style="max-height:55vh;overflow-y:auto;padding-right:4px"></div>
+      <div class="modal-actions" style="justify-content:space-between">
+        <button class="btn btn-ghost" onclick="backToBulkReconcilePaste()">‹ Back</button>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span id="bulkReconcileCommitStatus" style="font-size:11px;color:var(--text3)"></span>
+          <button class="btn btn-ghost" onclick="closeBulkReconcileModal()">Cancel</button>
+          <button class="btn btn-primary" id="bulkReconcileCommitBtn" onclick="commitBulkReconcileImport()">Import Selected</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 <div class="modal-overlay" id="removeProductModal">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="removeProductModalTitle">
     <h3 id="removeProductModalTitle"><span class="icon" data-icon="trash" data-icon-size="13"></span> <span data-i18n="rp_title">Remove Product</span></h3>
@@ -12347,6 +12387,255 @@ function renderLedgerYtdAndCategories() {
         </div>`;
       }).join('')
     : `<div class="spotlight-empty-line">No activity yet this year.</div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// BULK RECONCILE IMPORT — parses a whole monthly reconciliation note (many
+// businesses at once) instead of one record at a time, matches each
+// business against real clients already in the Hub, and routes each line
+// item to the right Financial section (Ledger for billing line items,
+// Collections for card-fail/payment-status flags) after a human review
+// step -- nothing ever gets saved without a person confirming it first.
+// ═══════════════════════════════════════════════════════════════════════
+function levenshteinDistance(a, b) {
+  const m = a.length, n = b.length;
+  const dp = Array.from({ length: m + 1 }, () => new Array(n + 1).fill(0));
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      dp[i][j] = a[i - 1] === b[j - 1] ? dp[i - 1][j - 1] : 1 + Math.min(dp[i - 1][j - 1], dp[i - 1][j], dp[i][j - 1]);
+    }
+  }
+  return dp[m][n];
+}
+function normalizeBusinessName(s) {
+  return (s || '').toLowerCase().replace(/[^a-z0-9 ]/g, ' ').replace(/\b(llc|inc|incorporated|corp|co|ltd|the)\b/g, ' ').replace(/\s+/g, ' ').trim();
+}
+function nameSimilarity(a, b) {
+  const na = normalizeBusinessName(a), nb = normalizeBusinessName(b);
+  if (!na || !nb) return 0;
+  if (na === nb) return 1;
+  if (na.includes(nb) || nb.includes(na)) return 0.9;
+  const dist = levenshteinDistance(na, nb);
+  const maxLen = Math.max(na.length, nb.length);
+  return maxLen ? 1 - dist / maxLen : 0;
+}
+// Matches against every real client across all three portfolios -- a
+// business mentioned in a Yelp billing note could be in any of them.
+function findBestClientMatch(businessName) {
+  const allClients = [...getClients('smb'), ...getClients('whitelabel'), ...getClients('support')];
+  let best = null, bestScore = 0;
+  allClients.forEach(c => {
+    const score = nameSimilarity(businessName, c.name);
+    if (score > bestScore) { bestScore = score; best = c; }
+  });
+  if (bestScore >= 0.92) return { client: best, confidence: 'exact', score: bestScore };
+  if (bestScore >= 0.55) return { client: best, confidence: 'close', score: bestScore };
+  return { client: null, confidence: 'none', score: bestScore };
+}
+
+let BULK_RECONCILE_PARSED = [];
+function openBulkReconcileModal() {
+  document.getElementById('bulkReconcileModal').classList.add('open');
+  document.getElementById('bulkReconcileStepPaste').style.display = '';
+  document.getElementById('bulkReconcileStepReview').style.display = 'none';
+  document.getElementById('bulkReconcileDropZone').textContent = '';
+  BULK_RECONCILE_PARSED = [];
+}
+function closeBulkReconcileModal() {
+  document.getElementById('bulkReconcileModal').classList.remove('open');
+}
+function backToBulkReconcilePaste() {
+  document.getElementById('bulkReconcileStepPaste').style.display = '';
+  document.getElementById('bulkReconcileStepReview').style.display = 'none';
+}
+function handleBulkReconcileDrop(event) {
+  event.preventDefault();
+  document.getElementById('bulkReconcileDropZone').classList.remove('dragover');
+  const file = event.dataTransfer && event.dataTransfer.files && event.dataTransfer.files[0];
+  if (!file) return;
+  readBulkReconcileFile(file);
+}
+function handleBulkReconcileFileInput(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+  readBulkReconcileFile(file);
+}
+function readBulkReconcileFile(file) {
+  const reader = new FileReader();
+  reader.onload = () => { document.getElementById('bulkReconcileDropZone').textContent = reader.result; };
+  reader.onerror = () => showToast('Could not read that file.', 'error');
+  reader.readAsText(file);
+}
+
+async function parseBulkReconcileText() {
+  const text = document.getElementById('bulkReconcileDropZone').textContent.trim();
+  if (!text) { showToast('Paste or drop the reconciliation note first.', 'warning'); return; }
+  const btn = document.getElementById('bulkReconcileParseBtn');
+  btn.disabled = true;
+  btn.textContent = 'Nirvana is reading that…';
+  try {
+    const catList = LEDGER_CATEGORIES.map(c => c.key).join(', ');
+    const raw = await quickAiCompletion(
+      'You are Nirvana, extracting structured billing reconciliation data for a marketing agency, from a monthly note (often pasted from Slack/a CFO summary) that lists one business per line. Respond with ONLY a raw JSON array, no markdown fences, no explanation, no commentary.',
+      `Parse this reconciliation note. It typically has ONE BUSINESS PER LINE, in the format "Business Name: details". Extract every business mentioned and, for each, every distinct dollar amount as its own line item -- never drop or merge details, and never invent amounts that aren't there.
+
+CRITICAL RULES:
+- If a line says something like "Total is $110.64 - $28.55 taxes, $23.86 additional spend, $58.23 Upgrade package", the "Total" is just the SUM of the amounts listed after it -- do NOT create a line item for the total itself, only for each individual amount after the dash.
+- If a line has just one plain amount with no breakdown (e.g. "$120 Upgrade Package not charged for"), create exactly one line item for it.
+- Assign each line item a category from this exact list: ${catList}. Category guide: "not charged for" / "Verified license not charge for" -> not_charged_yet. "taxes" / "Sales tax" -> taxes. "Additional Upgrade Package charges" / "additional spend" / "Ad Spend over budget or prorate" that reads as a known amount to bill -> charges_to_bill. Anything phrased as an open question, or where the note asks "where do we sit" or similar uncertainty -> overage_question. Explicit "recouped" mentions -> recouped.
+- If the note for a business mentions a failed/non-working card, a turned-off account, or another payment-status problem, set needs_collections to true and collections_note to a short (under 20 words) paraphrase of that issue -- this is separate from the dollar line items, which should still be extracted normally alongside it.
+- Preserve any free-text question or note that doesn't have its own dollar amount as a line item with amount 0 and category "overage_question", so nothing written gets silently dropped.
+
+Respond with exactly this JSON shape, one object per business:
+[{"business_name": string, "line_items": [{"amount": number, "category": string, "description": string}], "needs_collections": boolean, "collections_note": string or null}]
+
+Reconciliation note:
+"""
+${text}
+"""`
+    );
+    const cleaned = (raw || '').replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(cleaned);
+    if (!Array.isArray(parsed) || parsed.length === 0) throw new Error('Nothing recognizable came back.');
+    BULK_RECONCILE_PARSED = parsed.map(biz => {
+      const match = findBestClientMatch(biz.business_name);
+      return {
+        business_name: biz.business_name,
+        matched_client_name: match.client ? match.client.name : null,
+        match_confidence: match.confidence,
+        match_score: match.score,
+        needs_collections: !!biz.needs_collections,
+        collections_note: biz.collections_note || '',
+        line_items: (Array.isArray(biz.line_items) ? biz.line_items : []).map(li => ({
+          included: true,
+          amount: Number(li.amount) || 0,
+          category: LEDGER_CATEGORIES.some(c => c.key === li.category) ? li.category : 'overage_question',
+          description: li.description || '',
+        })),
+      };
+    });
+    renderBulkReconcileReview();
+    document.getElementById('bulkReconcileStepPaste').style.display = 'none';
+    document.getElementById('bulkReconcileStepReview').style.display = '';
+  } catch (e) {
+    showToast('Nirvana couldn\'t confidently parse that: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<span class="icon" data-icon="sparkle" data-icon-size="13"></span> Parse with Nirvana';
+  }
+}
+
+function renderBulkReconcileReview() {
+  const total = BULK_RECONCILE_PARSED.length;
+  const exact = BULK_RECONCILE_PARSED.filter(b => b.match_confidence === 'exact').length;
+  const close = BULK_RECONCILE_PARSED.filter(b => b.match_confidence === 'close').length;
+  const none = BULK_RECONCILE_PARSED.filter(b => b.match_confidence === 'none').length;
+  document.getElementById('bulkReconcileSummary').innerHTML =
+    `Found <b>${total}</b> business${total === 1 ? '' : 'es'} — <span style="color:var(--green)">${exact} matched</span>, <span style="color:var(--yellow)">${close} possible match${close === 1 ? '' : 'es'} to confirm</span>, <span style="color:var(--red)">${none} no record found</span>. Review everything below before importing — nothing is saved yet.`;
+
+  const allClients = [...getClients('smb'), ...getClients('whitelabel'), ...getClients('support')];
+  const clientOptionsHTML = allClients.map(c => `<option value="${escAttr(c.name)}">${escAttr(c.name)}</option>`).join('');
+
+  const wrap = document.getElementById('bulkReconcileReviewList');
+  wrap.innerHTML = BULK_RECONCILE_PARSED.map((biz, i) => {
+    const badge = biz.match_confidence === 'exact'
+      ? `<span class="bulk-recon-badge exact">✓ Matched: ${escAttr(biz.matched_client_name)}</span>`
+      : biz.match_confidence === 'close'
+      ? `<span class="bulk-recon-badge close">? Possible match: ${escAttr(biz.matched_client_name)} — confirm below</span>`
+      : `<span class="bulk-recon-badge none">⚠ No record found — new business?</span>`;
+    return `
+    <div class="bulk-recon-biz" data-biz-idx="${i}">
+      <div class="bulk-recon-biz-header">
+        <input type="checkbox" checked onchange="toggleBulkReconcileBiz(${i}, this.checked)">
+        <div class="bulk-recon-biz-name">${escAttr(biz.business_name)}</div>
+        ${badge}
+      </div>
+      <div class="bulk-recon-match-picker">
+        <label class="field-label" style="margin:0">Link to client:</label>
+        <select class="field-input" style="font-size:12px;padding:5px 8px" onchange="updateBulkReconcileMatch(${i}, this.value)">
+          <option value="">— No match / treat as new business —</option>
+          ${clientOptionsHTML.replace(`value="${escAttr(biz.matched_client_name || '')}"`, `value="${escAttr(biz.matched_client_name || '')}" selected`)}
+        </select>
+      </div>
+      ${biz.needs_collections ? `
+      <label class="bulk-recon-collections-flag">
+        <input type="checkbox" checked id="bulkReconcileCollections-${i}">
+        <span class="icon" data-icon="card" data-icon-size="12"></span> Also flag in Collections (Card Fail): ${escAttr(biz.collections_note)}
+      </label>` : ''}
+      <div class="bulk-recon-lineitems">
+        ${biz.line_items.map((li, j) => `
+          <div class="bulk-recon-lineitem">
+            <input type="checkbox" checked onchange="toggleBulkReconcileLineItem(${i},${j},this.checked)">
+            <span style="color:var(--text3)">$</span>
+            <input type="number" step="0.01" value="${li.amount}" class="field-input" style="width:90px;padding:4px 6px;font-size:12px" oninput="updateBulkReconcileLineItem(${i},${j},'amount',this.value)">
+            <select class="field-input" style="width:150px;padding:4px 6px;font-size:12px" onchange="updateBulkReconcileLineItem(${i},${j},'category',this.value)">
+              ${LEDGER_CATEGORIES.map(c => `<option value="${c.key}" ${c.key === li.category ? 'selected' : ''}>${escAttr(c.label)}</option>`).join('')}
+            </select>
+            <input type="text" value="${escAttr(li.description)}" class="field-input" style="flex:1;padding:4px 6px;font-size:12px" oninput="updateBulkReconcileLineItem(${i},${j},'description',this.value)">
+          </div>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleBulkReconcileBiz(i, checked) {
+  BULK_RECONCILE_PARSED[i].line_items.forEach(li => li.included = checked);
+  document.querySelectorAll(`[data-biz-idx="${i}"] .bulk-recon-lineitem input[type="checkbox"]`).forEach(cb => { cb.checked = checked; });
+}
+function toggleBulkReconcileLineItem(i, j, checked) { BULK_RECONCILE_PARSED[i].line_items[j].included = checked; }
+function updateBulkReconcileLineItem(i, j, field, value) {
+  BULK_RECONCILE_PARSED[i].line_items[j][field] = field === 'amount' ? (Number(value) || 0) : value;
+}
+function updateBulkReconcileMatch(i, clientName) {
+  BULK_RECONCILE_PARSED[i].matched_client_name = clientName || null;
+  BULK_RECONCILE_PARSED[i].match_confidence = clientName ? 'exact' : 'none';
+}
+
+async function commitBulkReconcileImport() {
+  const statusEl = document.getElementById('bulkReconcileCommitStatus');
+  const btn = document.getElementById('bulkReconcileCommitBtn');
+  const u = getCurrentUser();
+  const genId = () => (crypto.randomUUID ? crypto.randomUUID() : 'br_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8));
+  btn.disabled = true;
+  let ledgerCount = 0, collectionsCount = 0, errors = 0;
+  for (const biz of BULK_RECONCILE_PARSED) {
+    // A business with no confirmed match still gets its data saved under
+    // the raw name it was written as -- the whole point of this feature
+    // is that nothing gets silently dropped just because a client record
+    // doesn't exist yet, only clearly flagged for follow-up.
+    const clientName = biz.matched_client_name || biz.business_name;
+    for (const li of biz.line_items) {
+      if (!li.included) continue;
+      const record = {
+        id: genId(), client_name: clientName, amount: li.amount, category: li.category,
+        description: li.description, source: 'bulk_reconcile_import', created_by: u ? u.name : 'Guest',
+        created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+      };
+      try {
+        LEDGER_ENTRIES.unshift(record);
+        await sbUpsert('ledger_entries', record);
+        ledgerCount++;
+      } catch (e) { errors++; console.warn('Ledger import row failed:', e.message); }
+    }
+    const collectionsCb = document.getElementById(`bulkReconcileCollections-${BULK_RECONCILE_PARSED.indexOf(biz)}`);
+    if (biz.needs_collections && collectionsCb && collectionsCb.checked) {
+      try {
+        await sbUpsert('collections_accounts', {
+          id: genId(), type: 'cardfail', name: clientName, amount: biz.line_items.reduce((s, li) => s + (li.included ? li.amount : 0), 0),
+          status: 'pending', notes: [biz.collections_note], record_date: new Date().toISOString().slice(0, 10),
+        });
+        collectionsCount++;
+      } catch (e) { errors++; console.warn('Collections import row failed:', e.message); }
+    }
+  }
+  statusEl.textContent = `Imported ${ledgerCount} Ledger record${ledgerCount === 1 ? '' : 's'}${collectionsCount ? `, ${collectionsCount} Collections flag${collectionsCount === 1 ? '' : 's'}` : ''}${errors ? `, ${errors} failed` : ''}.`;
+  btn.disabled = false;
+  showToast(`Bulk import complete: ${ledgerCount} Ledger record${ledgerCount === 1 ? '' : 's'} added.`, errors ? 'warning' : 'success');
+  rebuildLedgerPage();
+  if (collectionsCount && typeof loadCollectionsAccounts === 'function') loadCollectionsAccounts();
+  setTimeout(closeBulkReconcileModal, 1200);
 }
 
 function openAddLedgerModal(category) {
