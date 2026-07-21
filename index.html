@@ -1774,7 +1774,7 @@ tr.pg-hidden-row { display: none; }
 .modal-wide { width: 920px; }
 .modal h3 { font-size: var(--font-lg); font-weight: 800; color: var(--text); margin-bottom: 6px; }
 .modal p { font-size: var(--font-base); color: var(--text3); margin-bottom: var(--space-5); line-height: 1.6; }
-.modal input {
+.modal input:not([type="checkbox"]):not([type="radio"]) {
   width: 100%; padding: var(--space-3) var(--space-3);
   background: var(--bg3); border: 1px solid var(--border);
   border-radius: var(--radius-sm); color: var(--text); font-size: 13px; outline: none;
