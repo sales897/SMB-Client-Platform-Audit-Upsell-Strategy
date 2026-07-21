@@ -2996,6 +2996,18 @@ select.wfb-field-input { padding-right: 26px; }
   </div>
 </div>
 
+<div class="modal-overlay" id="clientChangesModal">
+  <div class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="clientChangesTitle">
+    <h3 id="clientChangesTitle"><span class="icon" data-icon="edit" data-icon-size="16"></span> Confirm changes to <span id="clientChangesClientName"></span></h3>
+    <p style="font-size:12px;color:var(--text3);margin-bottom:12px">This client already exists in the Hub. Review what would change below — uncheck anything you don't want applied.</p>
+    <div id="clientChangesList" style="display:flex;flex-direction:column;gap:8px;max-height:50vh;overflow-y:auto;margin-bottom:16px"></div>
+    <div class="modal-btns">
+      <button class="btn btn-ghost" id="clientChangesCancelBtn">Cancel</button>
+      <button class="btn btn-primary" id="clientChangesConfirmBtn">Apply Selected Changes</button>
+    </div>
+  </div>
+</div>
+
 <!-- CLIENT NOTES & TASKS MODAL -->
 <div class="modal-overlay" id="clientNotesTasksModal">
   <div class="modal xwide" role="dialog" aria-modal="true" aria-labelledby="cntTitle">
@@ -9036,6 +9048,74 @@ function showTextPromptDialog(opts = {}) {
   });
 }
 
+// Shows a diff of proposed field changes for an existing client, each with
+// its own checkbox (checked by default) so specific changes can be rejected
+// individually rather than all-or-nothing. Resolves with the accepted
+// subset of `changes` on Confirm, or null on Cancel -- null means "apply
+// nothing", not "apply everything", so every call site must check for it.
+// changes: [{ field, label, oldValue, newValue }]
+function confirmClientFieldChanges(clientName, changes) {
+  return new Promise((resolve) => {
+    const modal = document.getElementById('clientChangesModal');
+    const nameEl = document.getElementById('clientChangesClientName');
+    const listEl = document.getElementById('clientChangesList');
+    const confirmBtn = document.getElementById('clientChangesConfirmBtn');
+    const cancelBtn = document.getElementById('clientChangesCancelBtn');
+    nameEl.textContent = `"${clientName}"`;
+    listEl.innerHTML = changes.map((c, i) => `
+      <label style="display:flex;align-items:flex-start;gap:8px;padding:8px 10px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;font-size:12px">
+        <input type="checkbox" checked data-change-idx="${i}" style="margin-top:2px">
+        <span><b>${escAttr(c.label)}</b>: <span style="color:var(--text3);text-decoration:line-through">${escAttr(c.oldValue || '(empty)')}</span> → <span style="color:var(--green)">${escAttr(c.newValue || '(empty)')}</span></span>
+      </label>`).join('');
+    modal.classList.add('open');
+
+    function cleanup(result) {
+      modal.classList.remove('open');
+      confirmBtn.removeEventListener('click', onConfirm);
+      cancelBtn.removeEventListener('click', onCancel);
+      resolve(result);
+    }
+    function onConfirm() {
+      const accepted = changes.filter((c, i) => {
+        const cb = listEl.querySelector(`input[data-change-idx="${i}"]`);
+        return cb ? cb.checked : true;
+      });
+      cleanup(accepted);
+    }
+    function onCancel() { cleanup(null); }
+    confirmBtn.addEventListener('click', onConfirm);
+    cancelBtn.addEventListener('click', onCancel);
+  });
+}
+
+// Hidden audit trail (2026-07-21): every create or field-level update to a
+// client, from any entry point in the Hub, logs one row here. Fire-and-forget
+// on purpose -- a logging failure should never block the actual save the
+// person is waiting on, it only ever gets a console warning.
+async function logClientActivity({ clientName, source, action, fieldName, oldValue, newValue }) {
+  const u = getCurrentUser();
+  try {
+    await sbUpsert('client_activity_log', {
+      id: (crypto.randomUUID ? crypto.randomUUID() : 'cal_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8)),
+      client_name: clientName,
+      source: source || 'manual_edit',
+      action: action || 'field_changed',
+      field_name: fieldName || null,
+      old_value: (oldValue === undefined || oldValue === null) ? null : String(oldValue),
+      new_value: (newValue === undefined || newValue === null) ? null : String(newValue),
+      changed_by: u ? u.name : 'System',
+    });
+  } catch (e) { console.warn('Could not log client activity:', e.message); }
+}
+// Pulls the full audit trail for one client, most recent first -- the
+// "hidden" side of the hidden audit log, surfaced on demand rather than
+// shown by default anywhere.
+async function getClientActivityHistory(clientName) {
+  try {
+    return await sbSelect('client_activity_log', `client_name=eq.${encodeURIComponent(clientName)}&order=created_at.desc`);
+  } catch (e) { console.warn('Could not load client activity history:', e.message); return []; }
+}
+
 // ─── ESCAPE-TO-CLOSE FOR MODALS ────────────────────────────────────────────
 // One global listener rather than a handler on every modal — finds whichever
 // modal (if any) is currently open and closes it the same way its own
@@ -9075,6 +9155,12 @@ document.addEventListener('keydown', (e) => {
       // real Cancel button so the pending showTextPromptDialog() promise
       // resolves (null) instead of hanging forever.
       const cancelBtn = document.getElementById('textPromptCancelBtn');
+      if (cancelBtn) cancelBtn.click();
+      return;
+    }
+    if (openOverlay.id === 'clientChangesModal') {
+      // Same reasoning again -- resolves the pending confirmClientFieldChanges() promise (null).
+      const cancelBtn = document.getElementById('clientChangesCancelBtn');
       if (cancelBtn) cancelBtn.click();
       return;
     }
@@ -12005,6 +12091,7 @@ function applyAdSpendImport() {
 
   dups.forEach(d => {
     if (d.action === 'replace') {
+      logClientActivity({ clientName: d.existing.name, source: 'ad_spend_csv_import', action: 'field_changed', fieldName: 'bulk_replace', oldValue: JSON.stringify({ budget: d.existing.budget, watermark: d.existing.watermark, addons: d.existing.addons }), newValue: JSON.stringify({ budget: d.incoming.budget, watermark: d.incoming.watermark, addons: d.incoming.addons }) });
       Object.assign(d.existing, { budget: d.incoming.budget, watermark: d.incoming.watermark, addons: d.incoming.addons, startDate: d.incoming.startDate, promo: d.incoming.promo, recs: d.incoming.recs || d.existing.recs });
       persistAdSpendBusiness(d.existing);
       replaced++;
@@ -12012,6 +12099,7 @@ function applyAdSpendImport() {
       const rec = { id: (crypto.randomUUID ? crypto.randomUUID() : 'b_' + Date.now() + Math.random().toString(16).slice(2)), ...d.incoming };
       AD_SPEND_BUSINESSES.push(rec);
       persistAdSpendBusiness(rec);
+      logClientActivity({ clientName: rec.name, source: 'ad_spend_csv_import', action: 'created', newValue: `Added as a new record in Ad Spend Management (kept alongside a similarly-named existing entry from "${fileName}")` });
       keptBoth++;
     } else skipped++;
   });
@@ -12020,6 +12108,7 @@ function applyAdSpendImport() {
     const rec = { id: (crypto.randomUUID ? crypto.randomUUID() : 'b_' + Date.now() + Math.random().toString(16).slice(2)), ...r };
     AD_SPEND_BUSINESSES.push(rec);
     persistAdSpendBusiness(rec);
+    logClientActivity({ clientName: rec.name, source: 'ad_spend_csv_import', action: 'created', newValue: `Created in Ad Spend Management from "${fileName}"` });
     added++;
   });
 
@@ -12757,6 +12846,10 @@ async function commitBulkReconcileImport() {
     for (const biz of BULK_RECONCILE_PARSED) {
       if (biz.matched_client_name === biz.business_name && biz.new_client_portfolios && biz.new_client_portfolios.length) {
         fireClientAddedWorkflows(biz.business_name, biz.new_client_portfolios).catch(e => console.warn('client_added workflow check failed:', e.message));
+        logClientActivity({
+          clientName: biz.business_name, source: 'bulk_reconcile_import', action: 'created',
+          newValue: `Created in ${biz.new_client_portfolios.map(pk => PORTFOLIO_LABELS[pk]).join(', ')}`,
+        });
       }
     }
   }
@@ -13522,6 +13615,7 @@ function applyCollectionsImport() {
 
   dups.forEach(d => {
     if (d.action === 'replace') {
+      logClientActivity({ clientName: d.existing.name, source: 'collections_csv_import', action: 'field_changed', fieldName: 'bulk_replace', oldValue: JSON.stringify({ amount: d.existing.amount, status: d.existing.status }), newValue: JSON.stringify({ amount: d.incoming.amount, status: d.incoming.status || d.existing.status }) });
       d.existing.amount = d.incoming.amount;
       d.existing.date = d.incoming.date;
       if (d.incoming.resolvedDate) d.existing.resolvedDate = d.incoming.resolvedDate;
@@ -13534,6 +13628,7 @@ function applyCollectionsImport() {
       const rec = { id: (crypto.randomUUID ? crypto.randomUUID() : 'c_' + Date.now() + Math.random().toString(16).slice(2)), type, name: d.incoming.name, amount: d.incoming.amount, date: d.incoming.date, resolvedDate: d.incoming.resolvedDate || '', status: d.incoming.status || 'pending', notes: [] };
       COLLECTIONS_ACCOUNTS.push(rec);
       persistCollectionsAccount(rec);
+      logClientActivity({ clientName: rec.name, source: 'collections_csv_import', action: 'created', newValue: `Added as a new Collections record (kept alongside a similarly-named existing entry from "${fileName}")` });
       keptBoth++;
     } else skipped++;
   });
@@ -13542,6 +13637,7 @@ function applyCollectionsImport() {
     const rec = { id: (crypto.randomUUID ? crypto.randomUUID() : 'c_' + Date.now() + Math.random().toString(16).slice(2)), type, name: r.name, amount: r.amount, date: r.date, resolvedDate: r.resolvedDate || '', status: r.status || 'pending', notes: [] };
     COLLECTIONS_ACCOUNTS.push(rec);
     persistCollectionsAccount(rec);
+    logClientActivity({ clientName: rec.name, source: 'collections_csv_import', action: 'created', newValue: `Created in Collections from "${fileName}"` });
     added++;
   });
 
@@ -14492,10 +14588,17 @@ async function createNewPipelineFromModal() {
 // or {error}, not UI side effects like toasts/modal-closing -- callers
 // decide how to present the result.
 async function doActivateOnboardingAsClient(r) {
-  const norm = r.business_name.trim().toLowerCase();
-  const existingClient = getClients(r.portfolio).find(c => (c.name || '').trim().toLowerCase() === norm);
-  if (existingClient) {
+  // Fuzzy match (same thresholds as everywhere else) instead of exact-string-only.
+  let best = null, bestScore = 0;
+  getClients(r.portfolio).forEach(c => { const score = nameSimilarity(r.business_name, c.name); if (score > bestScore) { bestScore = score; best = c; } });
+  if (bestScore >= 0.92) {
     return { error: `"${r.business_name}" already exists as a client in ${PORTFOLIO_LABELS[r.portfolio]} — not creating a duplicate.` };
+  }
+  if (bestScore >= 0.55) {
+    return {
+      error: `"${r.business_name}" closely matches an existing ${PORTFOLIO_LABELS[r.portfolio]} client "${best.name}" — not creating a duplicate.`,
+      note: `Ask the user whether this onboarding record is actually the same business as "${best.name}" (in which case link it there manually) or a genuinely different one that just has a similar name.`,
+    };
   }
 
   let products = [];
@@ -14508,6 +14611,7 @@ async function doActivateOnboardingAsClient(r) {
   rebuildAll();
   saveClientsToSupabase(r.portfolio).catch(e => console.warn('Save failed:', e));
   fireClientAddedWorkflows(r.business_name, [r.portfolio]).catch(e => console.warn('client_added workflow check failed:', e.message));
+  logClientActivity({ clientName: r.business_name, source: 'onboarding_activation', action: 'created', newValue: `Created in ${PORTFOLIO_LABELS[r.portfolio]} (graduated from onboarding)` });
 
   r.status = 'completed';
   r.converted_client_name = r.business_name;
@@ -16862,11 +16966,20 @@ function applyImport() {
   let replaced = 0, skipped = 0, added = 0, keptBoth = 0;
 
   dups.forEach(d => {
-    if (d.action === 'replace') { clients[d.existingIndex] = d.incoming; replaced++; }
-    else if (d.action === 'both') { clients.push(d.incoming); keptBoth++; }
+    if (d.action === 'replace') {
+      logClientActivity({ clientName: d.incoming.name, source: 'csv_import', action: 'field_changed', fieldName: 'bulk_replace', oldValue: JSON.stringify(clients[d.existingIndex]), newValue: JSON.stringify(d.incoming) });
+      clients[d.existingIndex] = d.incoming; replaced++;
+    }
+    else if (d.action === 'both') {
+      logClientActivity({ clientName: d.incoming.name, source: 'csv_import', action: 'created', newValue: `Added as a new record in ${PORTFOLIOS[pk].name} (kept alongside an existing similarly-named client from "${fileName}")` });
+      clients.push(d.incoming); keptBoth++;
+    }
     else skipped++;
   });
-  brandNew.forEach(c => { clients.push(c); added++; });
+  brandNew.forEach(c => {
+    logClientActivity({ clientName: c.name, source: 'csv_import', action: 'created', newValue: `Created in ${PORTFOLIOS[pk].name} from "${fileName}"` });
+    clients.push(c); added++;
+  });
 
   PORTFOLIOS[pk].clients = clients;
   clearSheetsUrl(pk);
@@ -17936,55 +18049,121 @@ async function saveNewClient() {
   const selectedPks = Object.keys(PORTFOLIO_CHECKBOX_IDS).filter(pk => (document.getElementById(PORTFOLIO_CHECKBOX_IDS[pk]) || {}).checked);
   if (selectedPks.length === 0) { showToast('Please select at least one portfolio.', 'warning'); return; }
   const org = document.getElementById('acOrg').value.trim();
-  const norm = name.toLowerCase();
 
-  const addedTo = [];
-  const skippedFrom = [];
+  // Per-portfolio fuzzy match (same nameSimilarity + 0.55 "close" threshold
+  // as findBestClientMatch) instead of the old exact-string-only check --
+  // catches near-duplicates ("Adaptive Living Renovation" vs "...Renovations")
+  // that used to silently create a second record instead of updating the real one.
+  const toCreate = [];   // portfolios with no existing match -- nothing to conflict with
+  const toUpdate = [];   // { pk, client, changes } -- existing match with real field differences
   selectedPks.forEach(pk => {
-    const existing = getClients(pk).find(c => (c.name || '').trim().toLowerCase() === norm);
-    if (existing) { skippedFrom.push(PORTFOLIO_LABELS[pk]); return; }
-    const client = { name, org: org || undefined, cellNotes: '' };
+    const desiredProducts = {};
+    getProdKeys(pk).forEach(k => { const cb = document.getElementById(`acp-${pk}-${k}`); desiredProducts[k] = cb ? cb.checked : false; });
+    let best = null, bestScore = 0;
+    getClients(pk).forEach(c => { const score = nameSimilarity(name, c.name); if (score > bestScore) { bestScore = score; best = c; } });
+    if (bestScore < 0.55 || !best) { toCreate.push({ pk, org, products: desiredProducts }); return; }
+    const changes = [];
+    if ((best.org || '') !== (org || '')) changes.push({ field: 'org', label: 'Organization', oldValue: best.org || '', newValue: org || '', __pk: pk });
     getProdKeys(pk).forEach(k => {
-      const cb = document.getElementById(`acp-${pk}-${k}`);
-      client[k] = cb ? cb.checked : false;
+      if (!!best[k] !== !!desiredProducts[k]) {
+        const label = (getCatalog(pk).find(p => p.key === k) || {}).label || k;
+        changes.push({ field: k, label, oldValue: best[k] ? 'Yes' : 'No', newValue: desiredProducts[k] ? 'Yes' : 'No', __pk: pk });
+      }
     });
-    PORTFOLIOS[pk].clients.push(client);
-    addedTo.push(pk);
+    if (changes.length) toUpdate.push({ pk, client: best, changes });
   });
 
-  if (addedTo.length === 0) {
-    showToast(`"${name}" already exists in ${skippedFrom.join(', ')} — nothing added.`, 'warning');
-    return;
-  }
-
-  // Contact info is keyed by client name, not portfolio, so it applies regardless of which portfolio(s) were just added
+  // Contact info is keyed by client name, not portfolio -- diffed the same way
   const contact_name = document.getElementById('acContactName').value.trim();
   const title = document.getElementById('acContactTitle').value.trim();
   const email = document.getElementById('acContactEmail').value.trim();
   const phone = document.getElementById('acContactPhone').value.trim();
-  if (contact_name || title || email || phone) {
-    let contact = getClientContact(name);
-    if (!contact) {
+  const hasContactInput = contact_name || title || email || phone;
+  const existingContact = getClientContact(name);
+  const contactChanges = [];
+  if (hasContactInput && existingContact) {
+    const fields = [['contact_name', 'Contact Name', contact_name], ['title', 'Title', title], ['email', 'Email', email], ['phone', 'Phone', phone]];
+    fields.forEach(([field, label, newValue]) => {
+      if ((existingContact[field] || '') !== (newValue || '')) contactChanges.push({ field, label, oldValue: existingContact[field] || '', newValue: newValue || '', __contact: true });
+    });
+  }
+
+  if (toCreate.length === 0 && toUpdate.length === 0 && contactChanges.length === 0) {
+    showToast(`"${name}" already matches what's on file everywhere selected — nothing to change.`, 'info');
+    return;
+  }
+
+  // Anything that would overwrite existing data pauses for explicit
+  // confirmation, field by field -- brand-new creates never need this,
+  // since there's nothing on file yet to conflict with.
+  const allChangesForConfirm = [...toUpdate.flatMap(u => u.changes), ...contactChanges];
+  let acceptedChanges = null;
+  if (allChangesForConfirm.length) {
+    acceptedChanges = await confirmClientFieldChanges(name, allChangesForConfirm);
+    if (acceptedChanges === null) { showToast('No changes applied.', 'info'); return; }
+  }
+  const acceptedKeys = new Set((acceptedChanges || []).map(c => `${c.__pk || ''}|${c.__contact ? 'contact' : ''}|${c.field}`));
+  const wasAccepted = (c) => !allChangesForConfirm.length || acceptedKeys.has(`${c.__pk || ''}|${c.__contact ? 'contact' : ''}|${c.field}`);
+
+  const addedTo = [];
+  const updatedPortfolios = new Set();
+  let contactWasUpdated = false;
+
+  toCreate.forEach(({ pk, org: o, products }) => {
+    const client = { name, org: o || undefined, cellNotes: '' };
+    Object.assign(client, products);
+    PORTFOLIOS[pk].clients.push(client);
+    addedTo.push(pk);
+  });
+
+  toUpdate.forEach(({ pk, client, changes }) => {
+    changes.forEach(c => {
+      if (!wasAccepted(c)) return;
+      if (c.field === 'org') client.org = c.newValue;
+      else client[c.field] = c.newValue === 'Yes';
+      updatedPortfolios.add(pk);
+      logClientActivity({ clientName: name, source: 'add_client_modal', action: 'field_changed', fieldName: `${PORTFOLIO_LABELS[pk]}: ${c.label}`, oldValue: c.oldValue, newValue: c.newValue });
+    });
+  });
+
+  if (hasContactInput) {
+    let contact = existingContact;
+    const isNewContact = !contact;
+    if (isNewContact) {
       contact = { id: (crypto.randomUUID ? crypto.randomUUID() : 'contact_' + Date.now()), client_name: name };
       CLIENT_CONTACTS.push(contact);
     }
-    contact.contact_name = contact_name;
-    contact.title = title;
-    contact.email = email;
-    contact.phone = phone;
-    contact.updated_at = new Date().toISOString();
-    localStorage.setItem(CLIENT_CONTACTS_CACHE_KEY, JSON.stringify(CLIENT_CONTACTS));
-    try { await sbUpsert('client_contacts', contact); } catch(e) { console.warn('Could not save contact info:', e.message); }
+    let anyApplied = isNewContact;
+    [['contact_name', contact_name], ['title', title], ['email', email], ['phone', phone]].forEach(([field, newValue]) => {
+      if (isNewContact) { contact[field] = newValue; return; }
+      const change = contactChanges.find(c => c.field === field);
+      if (!change || !wasAccepted(change)) return; // no real difference, or rejected in the confirm dialog
+      contact[field] = newValue;
+      logClientActivity({ clientName: name, source: 'add_client_modal', action: 'field_changed', fieldName: change.label, oldValue: change.oldValue, newValue: change.newValue });
+      anyApplied = true;
+    });
+    if (anyApplied) {
+      contactWasUpdated = true;
+      contact.updated_at = new Date().toISOString();
+      localStorage.setItem(CLIENT_CONTACTS_CACHE_KEY, JSON.stringify(CLIENT_CONTACTS));
+      try { await sbUpsert('client_contacts', contact); } catch(e) { console.warn('Could not save contact info:', e.message); }
+    }
   }
 
   closeAddClientModal();
   rebuildAll();
-  addedTo.forEach(pk => saveClientsToSupabase(pk).catch(e => console.warn('Save failed:', e)));
-  fireClientAddedWorkflows(name, addedTo).catch(e => console.warn('client_added workflow check failed:', e.message));
+  const touchedPortfolios = new Set([...addedTo, ...updatedPortfolios]);
+  touchedPortfolios.forEach(pk => saveClientsToSupabase(pk).catch(e => console.warn('Save failed:', e)));
+  if (addedTo.length) {
+    fireClientAddedWorkflows(name, addedTo).catch(e => console.warn('client_added workflow check failed:', e.message));
+    addedTo.forEach(pk => logClientActivity({ clientName: name, source: 'add_client_modal', action: 'created', newValue: `Created in ${PORTFOLIO_LABELS[pk]}` }));
+  }
 
-  let msg = `Added "${name}" to ${addedTo.map(pk => PORTFOLIO_LABELS[pk]).join(', ')} · Saved`;
-  if (skippedFrom.length) msg += ` (already existed in ${skippedFrom.join(', ')}, skipped)`;
-  showUploadFeedback(msg, false);
+  const parts = [];
+  if (addedTo.length) parts.push(`added to ${addedTo.map(pk => PORTFOLIO_LABELS[pk]).join(', ')}`);
+  if (updatedPortfolios.size) parts.push(`updated in ${[...updatedPortfolios].map(pk => PORTFOLIO_LABELS[pk]).join(', ')}`);
+  if (contactWasUpdated && !updatedPortfolios.size) parts.push('contact info updated');
+  showUploadFeedback(`"${name}" — ${parts.join('; ')} · Saved`, false);
 }
 
 let editingClientName = null;
@@ -22644,6 +22823,11 @@ const AI_AGENT_TOOLS = [
     input_schema: { type: 'object', properties: { client_name: { type: 'string' } }, required: ['client_name'] },
   },
   {
+    name: 'get_client_activity_history',
+    description: 'Get the real audit trail of what has actually changed for a specific client — every time this client was created or had a field (org, product flags, contact info) updated anywhere in the Hub, who changed it, when, and the old value vs the new value. Use this whenever asked "what changed for [client] recently," "who updated [client]," "when was this created," or similar questions about a client\'s actual change history — never guess or infer this from notes/tasks, this tool has the real record.',
+    input_schema: { type: 'object', properties: { client_name: { type: 'string' }, limit: { type: 'integer', description: 'Max number of most-recent entries to return. Defaults to 20.' } }, required: ['client_name'] },
+  },
+  {
     name: 'get_at_risk_clients',
     description: 'Get every client scoring below a health threshold (default 60/100), sorted worst-first, each with the specific reasons driving their score. This is the holistic "which accounts are actually at risk" view — combining engagement + task backlog + billing friction into one signal, rather than checking just one of those in isolation. Use this whenever asked "which accounts are at risk," "who needs attention," or similar.',
     input_schema: {
@@ -23013,7 +23197,7 @@ function closeAnyOpenPopup() {
   const overlays = document.querySelectorAll('.modal-overlay.open');
   let closed = 0;
   overlays.forEach(el => {
-    if (el.id === 'wfbBranchModal' || el.id === 'confirmDialogModal' || el.id === 'textPromptModal') return;
+    if (el.id === 'wfbBranchModal' || el.id === 'confirmDialogModal' || el.id === 'textPromptModal' || el.id === 'clientChangesModal') return;
     const closer = MODAL_CLOSE_FUNCTIONS[el.id];
     if (closer) closer();
     else el.classList.remove('open'); // not individually mapped -- still closes visually
@@ -23242,6 +23426,23 @@ async function executeAiTool(name, input) {
       const entry = aiFindMergedClient(input.client_name);
       if (!entry) return { error: 'Client not found' };
       return { client_name: entry.displayName, ...getClientHealthForOne(entry.displayName) };
+    }
+    case 'get_client_activity_history': {
+      const entry = aiFindMergedClient(input.client_name);
+      if (!entry) return { error: 'Client not found' };
+      let history = [];
+      try { history = await getClientActivityHistory(entry.displayName); } catch(e) { return { error: 'Could not load activity history: ' + e.message }; }
+      const limit = Number.isFinite(input.limit) ? input.limit : 20;
+      if (history.length === 0) return { client_name: entry.displayName, activity: [], note: 'No logged activity yet for this client — it may predate this audit trail, or nothing has been created/changed for it since this feature launched.' };
+      return {
+        client_name: entry.displayName,
+        total_entries: history.length,
+        activity: history.slice(0, limit).map(h => ({
+          when: h.created_at, source: h.source, action: h.action,
+          field: h.field_name || undefined, old_value: h.old_value || undefined, new_value: h.new_value || undefined,
+          changed_by: h.changed_by,
+        })),
+      };
     }
     case 'get_at_risk_clients': {
       const results = getAtRiskClients(input.portfolio, input.max_score);
@@ -23477,18 +23678,32 @@ async function executeAiTool(name, input) {
       if (!name) return { error: 'A client name is required.' };
       const pks = Array.isArray(input.portfolios) ? input.portfolios.filter(pk => ['smb', 'whitelabel', 'support'].includes(pk)) : [];
       if (pks.length === 0) return { error: 'At least one valid portfolio (smb, whitelabel, or support) is required — ask the user which portfolio(s) if they haven\'t said.' };
-      const norm = name.toLowerCase();
       const addedTo = [], skippedFrom = [];
+      const closeMatchNotes = [];
       pks.forEach(pk => {
-        const existing = getClients(pk).find(c => (c.name || '').trim().toLowerCase() === norm);
-        if (existing) { skippedFrom.push(PORTFOLIO_LABELS[pk]); return; }
+        // Fuzzy match (same nameSimilarity + thresholds as everywhere else in
+        // the Hub) instead of exact-string-only -- catches near-duplicates
+        // ("Acme Inc" vs "Acme, Inc.") that used to silently create a second
+        // record. Never auto-creates a literal duplicate on any match >= 0.55;
+        // a close (not exact) match still gets flagged via `note` for Nirvana
+        // to relay, rather than an agentic tool call popping a confirm modal.
+        let best = null, bestScore = 0;
+        getClients(pk).forEach(c => { const score = nameSimilarity(name, c.name); if (score > bestScore) { bestScore = score; best = c; } });
+        if (bestScore >= 0.92) { skippedFrom.push(PORTFOLIO_LABELS[pk]); return; }
+        if (bestScore >= 0.55) {
+          closeMatchNotes.push(`"${name}" closely matches an existing ${PORTFOLIO_LABELS[pk]} client "${best.name}" — skipped there rather than risk a duplicate. Ask the user whether they meant to update "${best.name}" instead.`);
+          return;
+        }
         const client = { name, org: (input.org || '').trim() || undefined, cellNotes: '' };
         const productsUsing = new Set((Array.isArray(input.products_in_use) ? input.products_in_use : []).map(k => String(k).toLowerCase()));
         getProdKeys(pk).forEach(k => { client[k] = productsUsing.has(k.toLowerCase()); });
         PORTFOLIOS[pk].clients.push(client);
         addedTo.push(pk);
       });
-      if (addedTo.length === 0) return { error: `"${name}" already exists in ${skippedFrom.join(', ')} — nothing added.` };
+      if (addedTo.length === 0) {
+        const reason = skippedFrom.length ? `already exists in ${skippedFrom.join(', ')}` : 'no portfolio was actually eligible to create it in';
+        return { error: `"${name}" ${reason} — nothing added.`, note: closeMatchNotes.length ? closeMatchNotes.join(' ') : undefined };
+      }
 
       let contactSaved = false;
       const contact_name = (input.contact_name || '').trim();
@@ -23514,6 +23729,7 @@ async function executeAiTool(name, input) {
       rebuildAll();
       addedTo.forEach(pk => saveClientsToSupabase(pk).catch(e => console.warn('Save failed:', e)));
       const triggeredWorkflows = await fireClientAddedWorkflows(name, addedTo).catch(e => { console.warn('client_added workflow check failed:', e.message); return []; });
+      addedTo.forEach(pk => logClientActivity({ clientName: name, source: 'nirvana_create_client', action: 'created', newValue: `Created in ${PORTFOLIO_LABELS[pk]}` }));
 
       return {
         ok: true, name,
@@ -23521,6 +23737,7 @@ async function executeAiTool(name, input) {
         skipped: skippedFrom.length ? skippedFrom : undefined,
         contact_saved: contactSaved,
         workflows_triggered: triggeredWorkflows.length ? triggeredWorkflows : undefined,
+        note: closeMatchNotes.length ? closeMatchNotes.join(' ') : undefined,
       };
     }
     case 'update_client_contact': {
@@ -23535,7 +23752,12 @@ async function executeAiTool(name, input) {
         contact = { id: (crypto.randomUUID ? crypto.randomUUID() : 'contact_' + Date.now()), client_name: entry.displayName };
         CLIENT_CONTACTS.push(contact);
       }
-      providedKeys.forEach(k => { contact[fieldMap[k]] = String(input[k]).trim(); });
+      providedKeys.forEach(k => {
+        const oldValue = contact[fieldMap[k]] || '';
+        const newValue = String(input[k]).trim();
+        contact[fieldMap[k]] = newValue;
+        if (oldValue !== newValue) logClientActivity({ clientName: entry.displayName, source: 'nirvana_update_contact', action: 'field_changed', fieldName: fieldMap[k], oldValue, newValue });
+      });
       contact.updated_at = new Date().toISOString();
       localStorage.setItem(CLIENT_CONTACTS_CACHE_KEY, JSON.stringify(CLIENT_CONTACTS));
       try { await sbUpsert('client_contacts', contact); } catch(e) { console.warn('Could not save contact info:', e.message); }
@@ -24491,7 +24713,7 @@ async function runAiAgentTurn(toolTagForNextText) {
   const u = getCurrentUser();
   const systemPrompt = `${currentLanguage === 'es' ? 'IMPORTANT: The Hub is currently set to Spanish (MX). Respond to the user ENTIRELY in Spanish (Mexican Spanish), including this entire conversation, regardless of what language they write in — unless they explicitly ask you to switch to English. Data values, client names, and product names stay as-is; everything you write around them is in Spanish.\n\n' : ''}Current date and time: ${new Date().toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })}. This is read directly from the user's own device clock, so it already reflects their real timezone — treat it as ground truth. For ANY relative time request ("in 15 minutes", "tomorrow at 9am", "next Monday"), compute the exact resulting date/time yourself from this reference. Never ask the user what time it is or guess at a timestamp — the real current time is always right here.
 
-You are Nirvana, the AI Agent inside ${ORG_SETTINGS.company_name}'s ${ORG_SETTINGS.product_name} — "${ORG_SETTINGS.product_name}" — helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the ${ORG_SETTINGS.portfolio_labels.smb}, ${ORG_SETTINGS.portfolio_labels.whitelabel}, and ${ORG_SETTINGS.portfolio_labels.support} portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. Whenever a request would affect MORE THAN ONE client (e.g. "create a follow-up task for every client that hasn't been touched in 30 days," or a list of specific client names), always use bulk_create_tasks or bulk_add_note instead of calling create_task/add_note in a loop — looping individual calls would force a separate confirmation click per client, while the bulk tools show one confirmation with the full affected list. Workflows can trigger on six things — "inactivity" (no note in N days), "schedule" (recurring cadence, for one client or a whole portfolio), "client_added" (fires the moment a new client is created), "task_due_soon" (reminds before an existing task's due date), "kpi_drop" (a SuccessOS score went down — team-level, not tied to one client), or "collections_status" (an account entered a specific Collections status) — and can take four actions when they fire: create a task (optionally with a real due date/time), just send a notification with no task, log an audit-trail note with no task or notification, or have you draft the actual task content yourself instead of using fixed text. If someone describes an automation idea in plain English, translate it into the right trigger type, action type, and fields yourself rather than making them fill out a form. For questions about company policy, procedures, "how do we...", or what the website/docs say, search the Knowledge Base — it contains SOPs, docs, and website content the team has fed in, separate from live client data. You can read and explain every chart in the Hub: get_portfolio_summary explains a portfolio's Product Adoption Rate and Products Per Client charts, get_product_adoption explains the Voice Agent / Text Agent charts, get_collections_summary explains the Collections breakdown (always separated into Outstanding Balances vs Card Fails, each with its own status breakdown — never collapse these into one number), get_adspend_summary explains Ad Spend's promo/budget breakdown, and get_kpi_summary explains the SuccessOS scores. When someone asks you to break down, interpret, or explain any data or chart, always call the specific tool that has that breakdown built in rather than answering from a vaguer or more general tool — if a user asks for a split by category/status/type, that split should already be in the tool result; use it. Prefer the data tools above for explaining charts — they're faster and more precise. Only use view_chart when the question is genuinely about the chart's visual appearance itself (e.g. "does this look right," "what do you see," "describe this chart visually") — calling it will switch the user's screen to that chart's page, so mention that you're pulling it up. Whenever asked to check for discrepancies, duplicates, mismatches, or whether numbers add up anywhere in the Hub (including client counts, Collections, Ad Spend, or the Knowledge Base), always call audit_data_integrity rather than speculating about possible causes — it actually reconciles the numbers and reports genuine findings, so use what it returns instead of guessing at explanations like "could be duplicates" or "could be stale data." A daily briefing already gets shown automatically once per day when the chat is first opened — if asked for a summary, rundown, or "what should I focus on" at any other point, use get_daily_briefing to pull the same live data fresh rather than referencing whatever was shown earlier, since it may be out of date by then. Whenever asked "which accounts are at risk," "who needs attention," or how healthy a specific client is, use get_at_risk_clients or get_client_health rather than checking just one signal (like Collections alone, or note recency alone) — those tools already combine engagement, task backlog, and billing friction into one score with a transparent breakdown of exactly why, which is a more honest answer than picking one factor and guessing at the rest. When summarizing data, only use the real numbers/content returned by tools — never estimate or make things up. If a tool returns an error (e.g. client not found, or nothing in the knowledge base matches), tell the user plainly rather than guessing. If a tool result includes a "note" field, don't ignore it — mention what it says (for example, a client match that only worked after ignoring punctuation/spacing differences) rather than presenting the result as a clean, unqualified match. When presenting a list of businesses or clients that genuinely don't exist yet in the Hub and could be created (for example, orphaned Ad Spend/Collections entries with no matching client record), format it as a markdown table and put a line reading exactly \`[[selectable:create_client]]\` on its own line immediately before that table — this renders the list with checkboxes so the user can pick specific ones to create instead of you needing to ask about each individually. Only use this marker for that specific "these could be created as clients" scenario — never on ordinary reporting tables (KPI trends, budget breakdowns, adoption rates, etc.), since a "create as clients" action button wouldn't make sense there. If a message says the user selected specific businesses to create as clients, treat that as them already having committed to creating those specific ones — don't re-confirm each one individually, just ask which portfolio(s) each should go into (per the existing rule: never guess a portfolio) and then create them. Onboarding records are a SEPARATE, EARLIER concept from clients — an onboarding record represents a business before it's a real client anywhere else in the Hub, tracked through six stages (Contract Signed, Kickoff Call Scheduled, Kickoff Call Completed, Setup In Progress, QA / Internal Review, Live) with its own checklist and notes. Don't confuse create_onboarding with create_client, or an onboarding record's business_name with an actual client_name — they're different things until activate_onboarding_as_client is explicitly used to graduate one into the other, which typically only makes sense once a record has reached the Live stage. The embeddable Chat Widget is a completely separate AI conversation from you — it runs on a client's own website, talking to anonymous visitors, with its own agent name/personality/instructions per widget. You have no live access into those conversations as they happen, but get_chat_widget_summary lets you check on lead activity after the fact (volume, resolution breakdown, recent leads) whenever asked about chat widget leads or website chat activity.`;
+You are Nirvana, the AI Agent inside ${ORG_SETTINGS.company_name}'s ${ORG_SETTINGS.product_name} — "${ORG_SETTINGS.product_name}" — helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the ${ORG_SETTINGS.portfolio_labels.smb}, ${ORG_SETTINGS.portfolio_labels.whitelabel}, and ${ORG_SETTINGS.portfolio_labels.support} portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. Whenever a request would affect MORE THAN ONE client (e.g. "create a follow-up task for every client that hasn't been touched in 30 days," or a list of specific client names), always use bulk_create_tasks or bulk_add_note instead of calling create_task/add_note in a loop — looping individual calls would force a separate confirmation click per client, while the bulk tools show one confirmation with the full affected list. Workflows can trigger on six things — "inactivity" (no note in N days), "schedule" (recurring cadence, for one client or a whole portfolio), "client_added" (fires the moment a new client is created), "task_due_soon" (reminds before an existing task's due date), "kpi_drop" (a SuccessOS score went down — team-level, not tied to one client), or "collections_status" (an account entered a specific Collections status) — and can take four actions when they fire: create a task (optionally with a real due date/time), just send a notification with no task, log an audit-trail note with no task or notification, or have you draft the actual task content yourself instead of using fixed text. If someone describes an automation idea in plain English, translate it into the right trigger type, action type, and fields yourself rather than making them fill out a form. For questions about company policy, procedures, "how do we...", or what the website/docs say, search the Knowledge Base — it contains SOPs, docs, and website content the team has fed in, separate from live client data. You can read and explain every chart in the Hub: get_portfolio_summary explains a portfolio's Product Adoption Rate and Products Per Client charts, get_product_adoption explains the Voice Agent / Text Agent charts, get_collections_summary explains the Collections breakdown (always separated into Outstanding Balances vs Card Fails, each with its own status breakdown — never collapse these into one number), get_adspend_summary explains Ad Spend's promo/budget breakdown, and get_kpi_summary explains the SuccessOS scores. When someone asks you to break down, interpret, or explain any data or chart, always call the specific tool that has that breakdown built in rather than answering from a vaguer or more general tool — if a user asks for a split by category/status/type, that split should already be in the tool result; use it. Prefer the data tools above for explaining charts — they're faster and more precise. Only use view_chart when the question is genuinely about the chart's visual appearance itself (e.g. "does this look right," "what do you see," "describe this chart visually") — calling it will switch the user's screen to that chart's page, so mention that you're pulling it up. Whenever asked to check for discrepancies, duplicates, mismatches, or whether numbers add up anywhere in the Hub (including client counts, Collections, Ad Spend, or the Knowledge Base), always call audit_data_integrity rather than speculating about possible causes — it actually reconciles the numbers and reports genuine findings, so use what it returns instead of guessing at explanations like "could be duplicates" or "could be stale data." A daily briefing already gets shown automatically once per day when the chat is first opened — if asked for a summary, rundown, or "what should I focus on" at any other point, use get_daily_briefing to pull the same live data fresh rather than referencing whatever was shown earlier, since it may be out of date by then. Whenever asked "which accounts are at risk," "who needs attention," or how healthy a specific client is, use get_at_risk_clients or get_client_health rather than checking just one signal (like Collections alone, or note recency alone) — those tools already combine engagement, task backlog, and billing friction into one score with a transparent breakdown of exactly why, which is a more honest answer than picking one factor and guessing at the rest. Whenever asked what's changed for a specific client recently, who created or updated a client record, or when a client was actually added to the Hub, use get_client_activity_history — it's the real, logged audit trail (every creation and every field-level change, from every entry point in the Hub: Bulk Reconcile Import, CSV imports, Add Client, onboarding graduation, or your own create_client/update_client_contact calls), not something to infer from notes or guess at. When summarizing data, only use the real numbers/content returned by tools — never estimate or make things up. If a tool returns an error (e.g. client not found, or nothing in the knowledge base matches), tell the user plainly rather than guessing. If a tool result includes a "note" field, don't ignore it — mention what it says (for example, a client match that only worked after ignoring punctuation/spacing differences) rather than presenting the result as a clean, unqualified match. When presenting a list of businesses or clients that genuinely don't exist yet in the Hub and could be created (for example, orphaned Ad Spend/Collections entries with no matching client record), format it as a markdown table and put a line reading exactly \`[[selectable:create_client]]\` on its own line immediately before that table — this renders the list with checkboxes so the user can pick specific ones to create instead of you needing to ask about each individually. Only use this marker for that specific "these could be created as clients" scenario — never on ordinary reporting tables (KPI trends, budget breakdowns, adoption rates, etc.), since a "create as clients" action button wouldn't make sense there. If a message says the user selected specific businesses to create as clients, treat that as them already having committed to creating those specific ones — don't re-confirm each one individually, just ask which portfolio(s) each should go into (per the existing rule: never guess a portfolio) and then create them. Onboarding records are a SEPARATE, EARLIER concept from clients — an onboarding record represents a business before it's a real client anywhere else in the Hub, tracked through six stages (Contract Signed, Kickoff Call Scheduled, Kickoff Call Completed, Setup In Progress, QA / Internal Review, Live) with its own checklist and notes. Don't confuse create_onboarding with create_client, or an onboarding record's business_name with an actual client_name — they're different things until activate_onboarding_as_client is explicitly used to graduate one into the other, which typically only makes sense once a record has reached the Live stage. The embeddable Chat Widget is a completely separate AI conversation from you — it runs on a client's own website, talking to anonymous visitors, with its own agent name/personality/instructions per widget. You have no live access into those conversations as they happen, but get_chat_widget_summary lets you check on lead activity after the fact (volume, resolution breakdown, recent leads) whenever asked about chat widget leads or website chat activity.`;
 
   let streamBubble = null;
   const onTextDelta = (fullTextSoFar) => {
