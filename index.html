@@ -544,14 +544,16 @@ body.ai-panel-open .main {
 
 /* ─── Client Portfolio Command Board (2026-07-17) ────────────────────────── */
 .cmdboard-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: var(--space-4); }
-.cmdboard-layout { display: grid; grid-template-columns: 250px 1fr 280px; gap: 16px; align-items: start; }
-@media (max-width: 1200px) { .cmdboard-layout { grid-template-columns: 1fr; } }
+.cmdboard-outer { display: flex; gap: 16px; align-items: flex-start; }
+.cmdboard-content-col { flex: 1; min-width: 0; }
+.cmdboard-layout { display: grid; grid-template-columns: 250px 1fr; gap: 16px; align-items: start; }
+@media (max-width: 1200px) { .cmdboard-layout { grid-template-columns: 1fr; } .cmdboard-outer { flex-direction: column; } }
 .cmdboard-sidebar-left, .cmdboard-sidebar-right {
   background: var(--gradient-card); border: 1px solid var(--border); border-radius: var(--radius);
   padding: var(--space-4); display: flex; flex-direction: column; gap: 4px;
 }
-.cmdboard-sidebar-right { position: sticky; top: 16px; }
-@media (max-width: 1200px) { .cmdboard-sidebar-right { position: static; } }
+.cmdboard-sidebar-right { position: sticky; top: 16px; width: 280px; flex-shrink: 0; }
+@media (max-width: 1200px) { .cmdboard-sidebar-right { position: static; width: 100%; } }
 .cmdboard-section { margin-bottom: var(--space-4); }
 .cmdboard-section:last-child { margin-bottom: 0; }
 .cmdboard-section-hd { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--text3); margin-bottom: 8px; }
@@ -707,6 +709,25 @@ body.ai-panel-open .main {
 .hub-grid.editing .grid-stack-item-content { outline: 1px dashed transparent; transition: outline-color var(--transition-base); }
 .hub-grid.editing .grid-stack-item:hover .grid-stack-item-content { outline-color: rgba(226,84,31,.4); border-radius: var(--radius); }
 .hub-grid-toolbar { display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 10px; }
+.hub-card-remove-btn {
+  position: absolute; top: 6px; right: 6px; width: 22px; height: 22px; border-radius: 50%;
+  background: var(--bg4); border: 1px solid var(--border); color: var(--text2);
+  font-size: 15px; line-height: 1; cursor: pointer; z-index: 30;
+  display: flex; align-items: center; justify-content: center; transition: all var(--transition-base);
+}
+.hub-card-remove-btn:hover { background: var(--red); border-color: var(--red); color: #fff; }
+.grid-stack-item { position: relative; }
+.hub-add-card-menu {
+  position: absolute; top: calc(100% + 6px); right: 0; min-width: 200px; max-width: 260px;
+  background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg); padding: 6px; z-index: 100;
+}
+.hub-add-card-item {
+  padding: 8px 10px; border-radius: var(--radius-xs); cursor: pointer; font-size: 12.5px;
+  color: var(--text2); display: flex; align-items: center; gap: 7px; transition: background var(--transition-base);
+}
+.hub-add-card-item:hover { background: var(--bg3); color: var(--text); }
+.hub-add-card-empty { padding: 10px; font-size: 12px; color: var(--text3); text-align: center; }
 .hub-edit-layout-btn.active { background: linear-gradient(90deg, var(--orange), var(--orange2)); color: #fff; border-color: transparent; }
 @media (max-width: 1300px) { .mc-bottom-row { grid-template-columns: 1fr; } }
 .next-move-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border); }
@@ -3110,6 +3131,10 @@ select.wfb-field-input { padding-right: 26px; }
       <div class="topbar-sub" id="topbarSub">Your daily snapshot across the Hub</div>
     </div>
     <div class="topbar-right">
+      <div id="hubGridAddCardWrap" style="display:none;position:relative">
+        <button class="btn btn-ghost btn-sm" id="hubGridAddCardBtn" style="display:none" onclick="toggleHubGridAddCardMenu()"><span class="icon" data-icon="plus" data-icon-size="13"></span> Add Card</button>
+        <div id="hubGridAddCardMenu" class="hub-add-card-menu" style="display:none"></div>
+      </div>
       <button class="btn btn-ghost btn-sm" id="topbarResetLayoutBtn" style="display:none" title="Reset back to the default layout"><span class="icon" data-icon="refresh" data-icon-size="13"></span> Reset Layout</button>
       <button class="btn btn-ghost btn-sm hub-edit-layout-btn" id="topbarEditLayoutBtn" style="display:none"><span class="icon" data-icon="edit" data-icon-size="13"></span> Edit Layout</button>
       <button class="export-csv-btn" id="topbarClientsExportBtn" onclick="exportAllClientsTable()" title="Download the currently visible rows as a CSV file" style="display:none"><span class="icon" data-icon="download" data-icon-size="12"></span> Export CSV</button>
@@ -3128,6 +3153,8 @@ select.wfb-field-input { padding-right: 26px; }
        PAGE 0: ALL CLIENTS — unified directory
   ════════════════════════════════════════════════════════════════════════ -->
   <div class="page" id="page-clients">
+    <div class="cmdboard-outer">
+    <div class="cmdboard-content-col">
     <div class="ai-insights-banner" id="clDirNirvanaBanner" style="margin-bottom:var(--space-4)">
       <div class="ai-insights-icon"><span class="icon" data-icon="sparkle" data-icon-size="14"></span></div>
       <div style="flex:1;min-width:0">
@@ -3230,13 +3257,15 @@ select.wfb-field-input { padding-right: 26px; }
           </div>
         </div>
       </div>
+    </div>
+    </div>
 
-      <div class="cmdboard-sidebar-right">
-        <div class="cmdboard-section-hd">AI Insights <span class="cmdboard-beta">BETA</span></div>
-        <div id="clDirAiInsights"></div>
-        <div class="cmdboard-section-hd" style="margin-top:14px">Recently Updated Clients</div>
-        <div id="clDirRecentActivity"></div>
-      </div>
+    <div class="cmdboard-sidebar-right">
+      <div class="cmdboard-section-hd">AI Insights <span class="cmdboard-beta">BETA</span></div>
+      <div id="clDirAiInsights"></div>
+      <div class="cmdboard-section-hd" style="margin-top:14px">Recently Updated Clients</div>
+      <div id="clDirRecentActivity"></div>
+    </div>
     </div>
 
     <div class="cmdboard-bottombar">
@@ -7161,6 +7190,62 @@ async function loadAiInsightsBanner() {
 // additive -- nothing breaks if GridStack fails to load from the CDN, the
 // page just behaves as a normal static layout.
 const HUB_GRIDS = {};
+const HUB_GRID_REMOVED_NODES = {}; // { gridId: { gsId: detachedDomNode } } -- cards removed while editing, kept in memory (not destroyed) so "+ Add Card" can bring them back
+function hubGridHiddenKey(gridId) { return 'hub_grid_hidden_' + gridId + '_v1'; }
+function getHubGridHiddenIds(gridId) {
+  try { return JSON.parse(localStorage.getItem(hubGridHiddenKey(gridId)) || '[]'); } catch(e) { return []; }
+}
+function saveHubGridHiddenIds(gridId) {
+  const ids = Object.keys(HUB_GRID_REMOVED_NODES[gridId] || {});
+  try { localStorage.setItem(hubGridHiddenKey(gridId), JSON.stringify(ids)); } catch(e) {}
+}
+// Extracts a human-readable name for the "+ Add Card" picker -- KPI cards
+// use .kpi-lbl, other card types fall back to .card-title, then the raw
+// gs-id as a last resort so the picker never shows a blank entry.
+function hubCardLabel(el) {
+  const lbl = el.querySelector('.kpi-lbl, .card-title');
+  return (lbl ? lbl.textContent.trim() : null) || el.getAttribute('gs-id') || 'Card';
+}
+function removeHubGridCard(gridId, gsId) {
+  const grid = HUB_GRIDS[gridId];
+  const el = document.querySelector(`#${gridId} > .grid-stack-item[gs-id="${gsId}"]`);
+  if (!grid || !el) return;
+  if (!HUB_GRID_REMOVED_NODES[gridId]) HUB_GRID_REMOVED_NODES[gridId] = {};
+  HUB_GRID_REMOVED_NODES[gridId][gsId] = el;
+  grid.removeWidget(el, false); // false = detach from the grid, keep the DOM node itself so it can be restored later
+  saveHubGridHiddenIds(gridId);
+  renderHubGridAddMenu(gridId);
+}
+function restoreHubGridCard(gridId, gsId) {
+  const grid = HUB_GRIDS[gridId];
+  const stash = HUB_GRID_REMOVED_NODES[gridId];
+  const el = stash && stash[gsId];
+  if (!grid || !el) return;
+  grid.addWidget(el);
+  delete stash[gsId];
+  saveHubGridHiddenIds(gridId);
+  renderHubGridAddMenu(gridId);
+}
+function renderHubGridAddMenu(gridId) {
+  const menu = document.getElementById('hubGridAddCardMenu');
+  const btn = document.getElementById('hubGridAddCardBtn');
+  if (!menu || !btn) return;
+  const stash = HUB_GRID_REMOVED_NODES[gridId] || {};
+  const ids = Object.keys(stash);
+  btn.style.display = ids.length ? '' : 'none';
+  menu.innerHTML = ids.map(id => `<div class="hub-add-card-item" onclick="restoreHubGridCard('${gridId}','${id}')"><span class="icon" data-icon="plus" data-icon-size="11"></span> ${escAttr(hubCardLabel(stash[id]))}</div>`).join('')
+    || `<div class="hub-add-card-empty">Nothing hidden right now</div>`;
+}
+function toggleHubGridAddCardMenu() {
+  const menu = document.getElementById('hubGridAddCardMenu');
+  if (menu) menu.style.display = menu.style.display === 'none' ? '' : 'none';
+}
+document.addEventListener('click', (e) => {
+  const wrap = document.getElementById('hubGridAddCardWrap');
+  const menu = document.getElementById('hubGridAddCardMenu');
+  if (!wrap || !menu || menu.style.display === 'none') return;
+  if (!wrap.contains(e.target)) menu.style.display = 'none';
+});
 function initHubGrid(gridId, storageKey) {
   const el = document.getElementById(gridId);
   if (!el || typeof GridStack === 'undefined') return null;
@@ -7211,6 +7296,17 @@ function initHubGrid(gridId, storageKey) {
     try { localStorage.setItem(storageKey, JSON.stringify(grid.save(false))); } catch(e) {}
   });
 
+  // Re-apply any cards the user removed in a previous session -- otherwise
+  // a "deleted" card would silently reappear on every reload.
+  const hiddenIds = getHubGridHiddenIds(gridId);
+  hiddenIds.forEach(gsId => {
+    const el = document.querySelector(`#${gridId} > .grid-stack-item[gs-id="${gsId}"]`);
+    if (!el) return;
+    if (!HUB_GRID_REMOVED_NODES[gridId]) HUB_GRID_REMOVED_NODES[gridId] = {};
+    HUB_GRID_REMOVED_NODES[gridId][gsId] = el;
+    grid.removeWidget(el, false);
+  });
+
   // Chart.js canvases don't reliably notice a GridStack-driven resize on
   // their own -- this is what actually makes charts follow a card being
   // resized, live, instead of staying the old size until the next full
@@ -7236,11 +7332,45 @@ function toggleHubGridEdit(gridId, btnEl) {
   btnEl.innerHTML = editing
     ? '<span class="icon" data-icon="check" data-icon-size="13"></span> Done Editing'
     : '<span class="icon" data-icon="edit" data-icon-size="13"></span> Edit Layout';
+
+  // Remove (×) buttons only exist while actively editing -- injected/torn
+  // down here rather than baked into every card's static HTML, so this
+  // works for every grid page without touching each card individually.
+  el.querySelectorAll(':scope > .grid-stack-item').forEach(item => {
+    let removeBtn = item.querySelector(':scope > .hub-card-remove-btn');
+    if (editing && !removeBtn) {
+      removeBtn = document.createElement('button');
+      removeBtn.className = 'hub-card-remove-btn';
+      removeBtn.innerHTML = '×';
+      removeBtn.title = 'Remove this card';
+      removeBtn.setAttribute('aria-label', 'Remove this card');
+      removeBtn.onclick = (e) => { e.stopPropagation(); removeHubGridCard(gridId, item.getAttribute('gs-id')); };
+      item.appendChild(removeBtn);
+    } else if (!editing && removeBtn) {
+      removeBtn.remove();
+    }
+  });
+
+  const addCardWrap = document.getElementById('hubGridAddCardWrap');
+  if (addCardWrap) {
+    addCardWrap.style.display = editing ? '' : 'none';
+    addCardWrap.dataset.gridId = gridId;
+  }
+  if (editing) renderHubGridAddMenu(gridId);
+  else { const menu = document.getElementById('hubGridAddCardMenu'); if (menu) menu.style.display = 'none'; }
 }
 function resetHubGridLayout(gridId, storageKey) {
   try { localStorage.removeItem(storageKey); } catch(e) {}
-  const grid = HUB_GRIDS[gridId];
+  try { localStorage.removeItem(hubGridHiddenKey(gridId)); } catch(e) {}
   const el = document.getElementById(gridId);
+  // Re-attach any cards removed via "×" back into the grid's DOM before
+  // tearing it down -- they were only detached, not destroyed, but the
+  // fresh GridStack.init() below only picks up whatever's actually a
+  // child of the container at that moment.
+  const removedStash = HUB_GRID_REMOVED_NODES[gridId];
+  if (removedStash && el) Object.values(removedStash).forEach(node => el.appendChild(node));
+  delete HUB_GRID_REMOVED_NODES[gridId];
+  const grid = HUB_GRIDS[gridId];
   if (!grid || !el) { location.reload(); return; } // fallback for the rare case the grid isn't actually initialized yet
   // Tear down and re-init just this one grid instead of reloading the
   // whole Hub -- `false` keeps the actual card DOM/content in place, only
