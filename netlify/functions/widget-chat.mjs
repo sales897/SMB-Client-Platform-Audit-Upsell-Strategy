@@ -84,7 +84,12 @@ async function bookOnWidgetCalendar(accessToken, { summary, description, startIS
   if (busy.length > 0) {
     return { booked: false, reason: "That time slot is no longer available -- it was just booked or blocked." };
   }
-  const evRes = await fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events", {
+  // sendUpdates=all tells Google to actually email the attendee (the lead)
+  // a real calendar invite the moment this event is created -- without
+  // this, the appointment exists on the calendar but the lead never
+  // hears about it from Google at all, only from whatever Nirvana says
+  // in the chat itself.
+  const evRes = await fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events?sendUpdates=all", {
     method: "POST",
     headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -237,8 +242,11 @@ export default async (req) => {
   const hours = widget.business_hours || {};
   const hoursLines = Object.entries(hours).map(([day, h]) => `${day}: ${h.enabled ? `${h.open}-${h.close}` : "closed"}`).join(", ");
 
+  const existingBookingNote = conversation.appointment_at
+    ? ` IMPORTANT: This conversation already has a CONFIRMED appointment -- ${new Date(conversation.appointment_at).toLocaleString("en-US", { timeZone: widget.timezone || "America/Los_Angeles", weekday: "long", month: "long", day: "numeric", hour: "numeric", minute: "2-digit" })} for ${conversation.appointment_service || "their appointment"}. Do NOT call book_appointment again for this same conversation unless the visitor is explicitly asking to reschedule or book something additional -- an unrelated follow-up question (like asking about notifications, confirmations, or anything else) is never a reason to re-book. If asked, just confirm the existing appointment details from memory.`
+    : "";
   const bookingInstructions = canBook
-    ? `You CAN book real appointments on this business's calendar. Business hours (in ${widget.timezone || "America/Los_Angeles"}): ${hoursLines || "not configured"}. Appointments are ${widget.service_duration_minutes || 60} minutes with a ${widget.buffer_time_minutes || 0}-minute buffer, and need at least ${widget.min_notice_hours || 0} hours' notice from right now. The current date/time is ${nowStr} -- compute any relative time the visitor mentions ("tomorrow", "Friday afternoon") from this. Once the visitor agrees on a specific date and time within business hours, call book_appointment with the exact start time. If it comes back unavailable, apologize and ask for another time -- never claim something is booked unless the tool confirms it.`
+    ? `You CAN book real appointments on this business's calendar. Business hours (in ${widget.timezone || "America/Los_Angeles"}): ${hoursLines || "not configured"}. Appointments are ${widget.service_duration_minutes || 60} minutes with a ${widget.buffer_time_minutes || 0}-minute buffer, and need at least ${widget.min_notice_hours || 0} hours' notice from right now. The current date/time is ${nowStr} -- compute any relative time the visitor mentions ("tomorrow", "Friday afternoon") from this. Once the visitor agrees on a specific date and time within business hours, call book_appointment with the exact start time. If it comes back unavailable, apologize and ask for another time -- never claim something is booked unless the tool confirms it. Once a booking is confirmed, mention that they will get an email confirmation/calendar invite too (if you have their email) -- so they know it is real and where to find it later, not just something said in this chat.${existingBookingNote}`
     : `You do NOT have calendar booking available for this widget yet -- if the visitor wants to schedule something, say a team member will follow up to find a time, and set resolution to "transfer".`;
 
   const transferInstructions = widget.transfer_to_human_enabled === false
@@ -289,7 +297,7 @@ export default async (req) => {
 
 ${widget.opening_line ? `Your natural opening line (adapt the wording, don't recite it robotically): "${widget.opening_line}"\n\n` : ""}${stepsBlock}
 
-Naturally collect ${dataToCollect.length ? dataToCollect.join(", ") : "their contact information"} through the conversation -- never as a rigid form, ask for one or two things at a time, in your own words.
+Naturally collect ${dataToCollect.length ? dataToCollect.join(", ") : "their contact information"} through the conversation -- never as a rigid form, ask for one or two things at a time, in your own words.${canBook ? " Email specifically is REQUIRED before you can confirm any appointment (it is how they will receive the calendar invite) -- if you do not have it yet when they are ready to pick a time, ask for it first, before calling book_appointment." : ""}
 
 ${bookingInstructions}
 
@@ -375,31 +383,66 @@ After each reply, call update_lead_status with your current read on this lead: a
 
     if (!bookBlock) break; // no booking attempted this round -- done
 
-    // Execute the real booking against Google Calendar.
-    const clientSecret = Netlify.env.get("GOOGLE_OAUTH_CLIENT_SECRET");
-    console.log("[widget-chat] booking attempt, raw start_iso from model:", bookBlock.input.start_iso, "service:", bookBlock.input.service);
-    try {
-      if (!clientSecret) throw new Error("GOOGLE_OAUTH_CLIENT_SECRET is not configured on the server.");
-      const accessToken = await refreshWidgetGoogleToken(calendarToken, clientSecret);
-      const startISO = bookBlock.input.start_iso;
-      const parsedStart = new Date(startISO);
-      if (isNaN(parsedStart.getTime())) throw new Error("Model returned an unparseable start_iso: " + startISO);
-      const durationMs = (widget.service_duration_minutes || 60) * 60000;
-      const endISO = new Date(parsedStart.getTime() + durationMs).toISOString();
-      bookedStartISO = startISO;
-      bookedService = bookBlock.input.service || null;
-      console.log("[widget-chat] checking freebusy for", startISO, "to", endISO);
-      bookingResult = await bookOnWidgetCalendar(accessToken, {
-        summary: `${bookBlock.input.service || "Appointment"} — ${conversation.lead_name || "New lead"}`,
-        description: `Booked via chat widget. Lead: ${conversation.lead_name || "unknown"}, ${conversation.lead_email || ""} ${conversation.lead_phone || ""}`.trim(),
-        startISO,
-        endISO,
-        attendeeEmail: conversation.lead_email || (statusUpdate && statusUpdate.email) || undefined,
+    // Hard guard: never actually book without an email on file, regardless
+    // of whether the model remembered to ask for one first -- there'd be
+    // no way to send the calendar invite otherwise, and this is cheaper
+    // and more reliable than trusting the prompt alone to enforce it.
+    const knownEmail = conversation.lead_email || (statusUpdate && statusUpdate.email);
+    if (!knownEmail) {
+      console.log("[widget-chat] blocked booking attempt -- no email on file yet");
+      bookingResult = { booked: false, reason: "An email address is needed first so the calendar invite can actually be sent -- ask for it before booking." };
+      workingMessages.push({ role: "assistant", content });
+      workingMessages.push({
+        role: "user",
+        content: [{ type: "tool_result", tool_use_id: bookBlock.id, content: JSON.stringify(bookingResult) }],
       });
-      console.log("[widget-chat] booking result:", JSON.stringify(bookingResult));
-    } catch (e) {
-      console.error("[widget-chat] booking FAILED:", e.message, e.stack);
-      bookingResult = { booked: false, reason: e.message };
+      if (statusBlock) workingMessages[workingMessages.length - 1].content.push({ type: "tool_result", tool_use_id: statusBlock.id, content: "Recorded." });
+      continue; // let the model try again, this time asking for the email first
+    }
+
+    // Hard guard, not just a prompt instruction: if this exact appointment
+    // is already confirmed on this conversation, never hit Google again --
+    // this is what actually stops a re-book attempt from ever reaching the
+    // calendar, regardless of whether the model followed the prompt's
+    // instruction not to re-call this tool. Still falls through to the
+    // normal "feed the result back" step below so the model gets a proper
+    // chance to tell the visitor, rather than silently going quiet.
+    const alreadyBookedTime = conversation.appointment_at ? new Date(conversation.appointment_at).getTime() : NaN;
+    const requestedTime = new Date(bookBlock.input.start_iso).getTime();
+    const isDuplicateOfExisting = !isNaN(alreadyBookedTime) && !isNaN(requestedTime) && alreadyBookedTime === requestedTime;
+
+    if (isDuplicateOfExisting) {
+      console.log("[widget-chat] blocked duplicate booking attempt for already-confirmed appointment:", conversation.appointment_at);
+      bookingResult = { booked: true, already_booked: true, reason: "This exact appointment is already confirmed on the conversation -- no need to book it again." };
+      bookedStartISO = conversation.appointment_at;
+      bookedService = conversation.appointment_service || bookBlock.input.service || null;
+    } else {
+      // Execute the real booking against Google Calendar.
+      const clientSecret = Netlify.env.get("GOOGLE_OAUTH_CLIENT_SECRET");
+      console.log("[widget-chat] booking attempt, raw start_iso from model:", bookBlock.input.start_iso, "service:", bookBlock.input.service);
+      try {
+        if (!clientSecret) throw new Error("GOOGLE_OAUTH_CLIENT_SECRET is not configured on the server.");
+        const accessToken = await refreshWidgetGoogleToken(calendarToken, clientSecret);
+        const startISO = bookBlock.input.start_iso;
+        const parsedStart = new Date(startISO);
+        if (isNaN(parsedStart.getTime())) throw new Error("Model returned an unparseable start_iso: " + startISO);
+        const durationMs = (widget.service_duration_minutes || 60) * 60000;
+        const endISO = new Date(parsedStart.getTime() + durationMs).toISOString();
+        bookedStartISO = startISO;
+        bookedService = bookBlock.input.service || null;
+        console.log("[widget-chat] checking freebusy for", startISO, "to", endISO);
+        bookingResult = await bookOnWidgetCalendar(accessToken, {
+          summary: `${bookBlock.input.service || "Appointment"} — ${conversation.lead_name || "New lead"}`,
+          description: `Booked via chat widget. Lead: ${conversation.lead_name || "unknown"}, ${conversation.lead_email || ""} ${conversation.lead_phone || ""}`.trim(),
+          startISO,
+          endISO,
+          attendeeEmail: conversation.lead_email || (statusUpdate && statusUpdate.email) || undefined,
+        });
+        console.log("[widget-chat] booking result:", JSON.stringify(bookingResult));
+      } catch (e) {
+        console.error("[widget-chat] booking FAILED:", e.message, e.stack);
+        bookingResult = { booked: false, reason: e.message };
+      }
     }
 
     // Feed the real outcome back so the model's NEXT reply is accurate.
