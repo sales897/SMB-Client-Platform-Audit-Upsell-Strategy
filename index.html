@@ -7221,6 +7221,7 @@ function removeHubGridCard(gridId, gsId) {
     grid.removeWidget(el, false); // false = detach from the grid, keep the DOM node itself so it can be restored later
     saveHubGridHiddenIds(gridId);
     renderHubGridAddMenu(gridId);
+    showToast('Card removed — use "+ Add Card" to bring it back.', 'success');
   } catch (err) {
     showToast('Could not remove that card: ' + err.message, 'error');
   }
@@ -7365,7 +7366,7 @@ function toggleHubGridEdit(gridId, btnEl) {
       removeBtn.innerHTML = '×';
       removeBtn.title = 'Remove this card';
       removeBtn.setAttribute('aria-label', 'Remove this card');
-      removeBtn.onclick = (e) => { e.stopPropagation(); showToast('Remove clicked — processing…', 'info'); removeHubGridCard(gridId, item.getAttribute('gs-id')); };
+      removeBtn.onclick = (e) => { e.stopPropagation(); removeHubGridCard(gridId, item.getAttribute('gs-id')); };
       removeBtn.onmousedown = (e) => e.stopPropagation();
       removeBtn.onpointerdown = (e) => e.stopPropagation();
       item.appendChild(removeBtn);
