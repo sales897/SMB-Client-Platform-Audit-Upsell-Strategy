@@ -3112,6 +3112,8 @@ select.wfb-field-input { padding-right: 26px; }
     <div class="topbar-right">
       <button class="btn btn-ghost btn-sm" id="topbarResetLayoutBtn" style="display:none" title="Reset back to the default layout"><span class="icon" data-icon="refresh" data-icon-size="13"></span> Reset Layout</button>
       <button class="btn btn-ghost btn-sm hub-edit-layout-btn" id="topbarEditLayoutBtn" style="display:none"><span class="icon" data-icon="edit" data-icon-size="13"></span> Edit Layout</button>
+      <button class="export-csv-btn" id="topbarClientsExportBtn" onclick="exportAllClientsTable()" title="Download the currently visible rows as a CSV file" style="display:none"><span class="icon" data-icon="download" data-icon-size="12"></span> Export CSV</button>
+      <button class="btn btn-primary btn-sm" id="topbarAddClientBtn" onclick="openAddClientModal()" style="display:none">＋ Add Client</button>
       <label class="upload-btn" id="uploadBtnLabel" title="Uploads into the currently open dashboard" style="display:none">
         📁 Upload File
         <input type="file" id="fileUpload" accept=".xlsx,.xls,.csv" onchange="handleFileUpload(event)">
@@ -3126,6 +3128,14 @@ select.wfb-field-input { padding-right: 26px; }
        PAGE 0: ALL CLIENTS — unified directory
   ════════════════════════════════════════════════════════════════════════ -->
   <div class="page" id="page-clients">
+    <div class="ai-insights-banner" id="clDirNirvanaBanner" style="margin-bottom:var(--space-4)">
+      <div class="ai-insights-icon"><span class="icon" data-icon="sparkle" data-icon-size="14"></span></div>
+      <div style="flex:1;min-width:0">
+        <div class="ai-insights-label">Nirvana's take</div>
+        <div class="ai-insights-text" id="clDirNirvanaText">Looking at the directory…</div>
+      </div>
+      <button class="ai-insights-refresh" id="clDirNirvanaRefreshBtn" onclick="loadClDirNirvanaInsight()" title="Get a new insight" aria-label="Get a new insight">↻</button>
+    </div>
     <div class="hub-grid grid-stack" id="grid-clients">
       <div class="grid-stack-item" gs-id="cl-kpi-total" gs-x="0" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
       <div class="kpi kpi-theme-orange"><div class="kpi-icon"><span class="icon" data-icon="users" data-icon-size="16"></span></div><div class="kpi-val orange" id="cl-total">0</div><div class="kpi-lbl" data-i18n="cl_unique_clients">Unique Clients</div><div class="kpi-sub" data-i18n="cl_across_portfolios">Across all portfolios</div>
@@ -3158,10 +3168,6 @@ select.wfb-field-input { padding-right: 26px; }
         <div class="card-title" style="font-family:var(--font-display);font-size:20px;letter-spacing:.02em">CLIENT PORTFOLIO COMMAND BOARD</div>
         <div class="card-sub">Unified directory across every portfolio</div>
       </div>
-      <div style="display:flex;gap:8px">
-        <button class="export-csv-btn" onclick="exportAllClientsTable()" title="Download the currently visible rows as a CSV file"><span class="icon" data-icon="download" data-icon-size="12"></span> Export CSV</button>
-        <button class="btn btn-primary btn-sm" id="addClientBtn" onclick="openAddClientModal()">＋ Add Client</button>
-      </div>
     </div>
 
     <div class="cmdboard-layout">
@@ -3187,14 +3193,6 @@ select.wfb-field-input { padding-right: 26px; }
       </div>
 
       <div class="cmdboard-main">
-        <div class="ai-insights-banner" id="clDirNirvanaBanner">
-          <div class="ai-insights-icon"><span class="icon" data-icon="sparkle" data-icon-size="14"></span></div>
-          <div style="flex:1;min-width:0">
-            <div class="ai-insights-label">Nirvana's take</div>
-            <div class="ai-insights-text" id="clDirNirvanaText">Looking at the directory…</div>
-          </div>
-          <button class="ai-insights-refresh" id="clDirNirvanaRefreshBtn" onclick="loadClDirNirvanaInsight()" title="Get a new insight" aria-label="Get a new insight">↻</button>
-        </div>
         <div class="cmdboard-toolbar">
           <div>Viewing: <b id="clDirViewingLabel">All Clients</b> · <span class="row-count" id="clientsRowCount">0 clients</span></div>
           <div class="cmdboard-toolbar-right">
@@ -5881,6 +5879,14 @@ function showPage(id) {
     if (resetBtn) resetBtn.style.display = 'none';
     if (editBtn) editBtn.style.display = 'none';
   }
+
+  // Export CSV / Add Client -- specific to the Command Board's own data,
+  // so only shown there, same shared-topbar approach as the layout buttons.
+  const clientsExportBtn = document.getElementById('topbarClientsExportBtn');
+  const addClientTopbarBtn = document.getElementById('topbarAddClientBtn');
+  const onClientsPage = id === 'clients';
+  if (clientsExportBtn) clientsExportBtn.style.display = onClientsPage ? '' : 'none';
+  if (addClientTopbarBtn) addClientTopbarBtn.style.display = onClientsPage ? '' : 'none';
 
   if (id === 'home') rebuildHomePage();
   if (id === 'voice') rebuildVoicePage();
@@ -16793,8 +16799,8 @@ function rebuildClientsDirectory() {
   set('cl-support-count', getClients('support').length);
   set('cl-multi-count', multiCount);
   set('navClientsBadge', allRows.length);
-  const addBtn = document.getElementById('addClientBtn');
-  if (addBtn) addBtn.style.display = canEdit() ? '' : 'none';
+  const addBtn = document.getElementById('topbarAddClientBtn');
+  if (addBtn) addBtn.style.display = (canEdit() && document.getElementById('page-clients').classList.contains('active')) ? '' : 'none';
   populateClientsProductFilter();
   syncClDirSortSelect();
   renderClDirSidebarLists(allRows);
