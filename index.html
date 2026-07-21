@@ -4662,6 +4662,15 @@ select.wfb-field-input { padding-right: 26px; }
        PAGE: LEDGER — billing reconciliation
   ════════════════════════════════════════════════════════════════════════ -->
   <div class="page" id="page-ledger">
+    <div class="ai-insights-banner" id="ledgerNirvanaBanner">
+      <div class="ai-insights-icon"><span class="icon" data-icon="sparkle" data-icon-size="14"></span></div>
+      <div style="flex:1;min-width:0">
+        <div class="ai-insights-label">AI Summary</div>
+        <div class="ai-insights-text" id="ledgerNirvanaText">Looking at the ledger…</div>
+      </div>
+      <button class="ai-insights-refresh" id="ledgerNirvanaRefreshBtn" onclick="loadLedgerNirvanaInsight()" title="Get a new insight" aria-label="Get a new insight">↻</button>
+    </div>
+
     <div class="kpi-row">
       <div class="kpi kpi-theme-orange">
         <div class="kpi-icon"><span class="icon" data-icon="dollar" data-icon-size="16"></span></div>
@@ -4710,14 +4719,6 @@ select.wfb-field-input { padding-right: 26px; }
       </div>
     </div>
 
-    <div class="ai-insights-banner" id="ledgerNirvanaBanner">
-      <div class="ai-insights-icon"><span class="icon" data-icon="sparkle" data-icon-size="14"></span></div>
-      <div style="flex:1;min-width:0">
-        <div class="ai-insights-label">AI Summary</div>
-        <div class="ai-insights-text" id="ledgerNirvanaText">Looking at the ledger…</div>
-      </div>
-      <button class="ai-insights-refresh" id="ledgerNirvanaRefreshBtn" onclick="loadLedgerNirvanaInsight()" title="Get a new insight" aria-label="Get a new insight">↻</button>
-    </div>
 
     <div class="ledger-layout">
       <div class="ledger-sidebar">
