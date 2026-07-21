@@ -7218,7 +7218,11 @@ function removeHubGridCard(gridId, gsId) {
     if (!grid || !el) { showToast('Could not find that card to remove.', 'warning'); return; }
     if (!HUB_GRID_REMOVED_NODES[gridId]) HUB_GRID_REMOVED_NODES[gridId] = {};
     HUB_GRID_REMOVED_NODES[gridId][gsId] = el;
-    grid.removeWidget(el, false); // false = detach from the grid, keep the DOM node itself so it can be restored later
+    grid.removeWidget(el, true); // true = actually detach it from the visible page; the reference we just saved above keeps the real node alive in memory so it can be restored later
+    // Belt-and-suspenders: verify the card actually left the page rather
+    // than trusting GridStack's internals blindly. If it's still attached
+    // for any reason, take it out directly ourselves.
+    if (el.isConnected) el.remove();
     saveHubGridHiddenIds(gridId);
     renderHubGridAddMenu(gridId);
     showToast('Card removed — use "+ Add Card" to bring it back.', 'success');
@@ -7319,7 +7323,8 @@ function initHubGrid(gridId, storageKey) {
     if (!el) return;
     if (!HUB_GRID_REMOVED_NODES[gridId]) HUB_GRID_REMOVED_NODES[gridId] = {};
     HUB_GRID_REMOVED_NODES[gridId][gsId] = el;
-    grid.removeWidget(el, false);
+    grid.removeWidget(el, true);
+    if (el.isConnected) el.remove();
   });
 
   // Chart.js canvases don't reliably notice a GridStack-driven resize on
