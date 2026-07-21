@@ -7325,8 +7325,15 @@ function initHubGrid(gridId, storageKey) {
   // their own -- this is what actually makes charts follow a card being
   // resized, live, instead of staying the old size until the next full
   // data rebuild.
-  grid.on('resize', (event, items) => {
-    (items || []).forEach(item => {
+  grid.on('resize', (event, el) => {
+    // GridStack's 'resize' event actually passes a single element here, not
+    // an array -- treating it as an array (the earlier version of this
+    // code) threw "forEach is not a function" the moment anyone actually
+    // dragged a resize handle. Normalizing to an array handles this
+    // correctly regardless of which shape GridStack hands back.
+    const items = Array.isArray(el) ? el : [el];
+    items.forEach(item => {
+      if (!item) return;
       (item.el || item).querySelectorAll('canvas').forEach(canvas => {
         const chart = (typeof Chart !== 'undefined' && Chart.getChart) ? Chart.getChart(canvas) : null;
         if (chart) chart.resize();
