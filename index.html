@@ -7330,9 +7330,21 @@ function initHubGrid(gridId, storageKey) {
   }
 
   function saveHubGridPositions() {
-    const positions = grid.save(false);
-    console.log('[HubGrid]', gridId, 'saving positions:', positions);
-    try { localStorage.setItem(storageKey, JSON.stringify(positions)); } catch(e) { console.error('[HubGrid] save failed:', e); }
+    // grid.save() was silently omitting w/h from its own output in this
+    // configuration (confirmed via logging -- every saved item had x, y,
+    // id, minW, minH, but no w or h at all), which is why every saved
+    // layout kept failing validation and reverting to defaults. Reading
+    // the positions straight from the DOM attributes GridStack itself
+    // keeps in sync during drag/resize sidesteps that entirely.
+    const items = Array.from(el.querySelectorAll(':scope > .grid-stack-item')).map(item => ({
+      id: item.getAttribute('gs-id'),
+      x: parseInt(item.getAttribute('gs-x'), 10),
+      y: parseInt(item.getAttribute('gs-y'), 10),
+      w: parseInt(item.getAttribute('gs-w'), 10),
+      h: parseInt(item.getAttribute('gs-h'), 10),
+    }));
+    console.log('[HubGrid]', gridId, 'saving positions (read from DOM):', JSON.stringify(items));
+    try { localStorage.setItem(storageKey, JSON.stringify(items)); } catch(e) { console.error('[HubGrid] save failed:', e); }
   }
   grid.on('change', saveHubGridPositions);
   HUB_GRID_SAVE_FNS[gridId] = saveHubGridPositions;
