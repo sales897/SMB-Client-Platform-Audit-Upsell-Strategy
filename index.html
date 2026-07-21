@@ -710,10 +710,11 @@ body.ai-panel-open .main {
 .hub-grid.editing .grid-stack-item:hover .grid-stack-item-content { outline-color: rgba(226,84,31,.4); border-radius: var(--radius); }
 .hub-grid-toolbar { display: flex; justify-content: flex-end; gap: 8px; margin-bottom: 10px; }
 .hub-card-remove-btn {
-  position: absolute; top: 6px; right: 6px; width: 22px; height: 22px; border-radius: 50%;
+  position: absolute; top: -9px; right: -9px; width: 22px; height: 22px; border-radius: 50%;
   background: var(--bg4); border: 1px solid var(--border); color: var(--text2);
-  font-size: 15px; line-height: 1; cursor: pointer; z-index: 30;
+  font-size: 15px; line-height: 1; cursor: pointer; z-index: 9999;
   display: flex; align-items: center; justify-content: center; transition: all var(--transition-base);
+  box-shadow: 0 2px 6px rgba(0,0,0,.4);
 }
 .hub-card-remove-btn:hover { background: var(--red); border-color: var(--red); color: #fff; }
 .grid-stack-item { position: relative; }
@@ -2805,7 +2806,7 @@ select.wfb-field-input { padding-right: 26px; }
       <span class="icon" data-icon="home"></span> <span data-i18n="nav_home">Home</span>
     </div>
 
-    <div class="nav-dropdown" onmouseleave="closeNavDropdown(this)">
+    <div class="nav-dropdown" onmouseenter="openNavDropdown(this)" onmouseleave="closeNavDropdown(this)">
       <div class="nav-item nav-dropdown-trigger" onclick="toggleNavDropdown(this)"><span data-i18n="nav_portfolios">Portfolios</span> <span class="caret">▾</span></div>
       <div class="nav-dropdown-menu">
         <div class="nav-item" onclick="showPage('clients')">
@@ -2832,7 +2833,7 @@ select.wfb-field-input { padding-right: 26px; }
       <span class="badge" id="navOnboardingBadge" style="display:none">0</span>
     </div>
 
-    <div class="nav-dropdown" onmouseleave="closeNavDropdown(this)">
+    <div class="nav-dropdown" onmouseenter="openNavDropdown(this)" onmouseleave="closeNavDropdown(this)">
       <div class="nav-item nav-dropdown-trigger" onclick="toggleNavDropdown(this)"><span data-i18n="nav_performance">Performance</span> <span class="caret">▾</span></div>
       <div class="nav-dropdown-menu">
         <div class="nav-item" onclick="showPage('voice')">
@@ -2845,7 +2846,7 @@ select.wfb-field-input { padding-right: 26px; }
       </div>
     </div>
 
-    <div class="nav-dropdown" onmouseleave="closeNavDropdown(this)">
+    <div class="nav-dropdown" onmouseenter="openNavDropdown(this)" onmouseleave="closeNavDropdown(this)">
       <div class="nav-item nav-dropdown-trigger" onclick="toggleNavDropdown(this)"><span data-i18n="nav_growth_tools">Growth Tools</span> <span class="caret">▾</span></div>
       <div class="nav-dropdown-menu">
         <div class="nav-item" onclick="showPage('upsell')">
@@ -2869,7 +2870,7 @@ select.wfb-field-input { padding-right: 26px; }
       </div>
     </div>
 
-    <div class="nav-dropdown" onmouseleave="closeNavDropdown(this)">
+    <div class="nav-dropdown" onmouseenter="openNavDropdown(this)" onmouseleave="closeNavDropdown(this)">
       <div class="nav-item nav-dropdown-trigger" onclick="toggleNavDropdown(this)"><span data-i18n="nav_finance">Finance</span> <span class="caret">▾</span></div>
       <div class="nav-dropdown-menu">
         <div class="nav-item" onclick="showPage('adspend')">
@@ -5830,6 +5831,10 @@ const pageMeta = {
 // Top-nav dropdowns (Portfolios, Performance, Growth Tools, Finance) --
 // click to open, moving the pointer off the dropdown closes it again. Only
 // one open at a time; clicking elsewhere on the page also closes it.
+function openNavDropdown(dropdownEl) {
+  document.querySelectorAll('.nav-dropdown.open').forEach(d => { if (d !== dropdownEl) d.classList.remove('open'); });
+  dropdownEl.classList.add('open');
+}
 function toggleNavDropdown(triggerEl) {
   const dropdown = triggerEl.closest('.nav-dropdown');
   if (!dropdown) return;
@@ -7207,14 +7212,18 @@ function hubCardLabel(el) {
   return (lbl ? lbl.textContent.trim() : null) || el.getAttribute('gs-id') || 'Card';
 }
 function removeHubGridCard(gridId, gsId) {
-  const grid = HUB_GRIDS[gridId];
-  const el = document.querySelector(`#${gridId} > .grid-stack-item[gs-id="${gsId}"]`);
-  if (!grid || !el) return;
-  if (!HUB_GRID_REMOVED_NODES[gridId]) HUB_GRID_REMOVED_NODES[gridId] = {};
-  HUB_GRID_REMOVED_NODES[gridId][gsId] = el;
-  grid.removeWidget(el, false); // false = detach from the grid, keep the DOM node itself so it can be restored later
-  saveHubGridHiddenIds(gridId);
-  renderHubGridAddMenu(gridId);
+  try {
+    const grid = HUB_GRIDS[gridId];
+    const el = document.querySelector(`#${gridId} > .grid-stack-item[gs-id="${gsId}"]`);
+    if (!grid || !el) { showToast('Could not find that card to remove.', 'warning'); return; }
+    if (!HUB_GRID_REMOVED_NODES[gridId]) HUB_GRID_REMOVED_NODES[gridId] = {};
+    HUB_GRID_REMOVED_NODES[gridId][gsId] = el;
+    grid.removeWidget(el, false); // false = detach from the grid, keep the DOM node itself so it can be restored later
+    saveHubGridHiddenIds(gridId);
+    renderHubGridAddMenu(gridId);
+  } catch (err) {
+    showToast('Could not remove that card: ' + err.message, 'error');
+  }
 }
 function restoreHubGridCard(gridId, gsId) {
   const grid = HUB_GRIDS[gridId];
