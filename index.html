@@ -7634,25 +7634,41 @@ function initHubGrid(gridId, storageKey) {
     Number.isFinite(item.h) && item.h >= 1 &&
     (item.x + item.w) <= 12
   );
-  // A layout can look internally "sane" by the checks above and still be
-  // stale: it was saved before new cards existed in the HTML, so it simply
-  // doesn't mention them at all. grid.load() treats its input as the full
-  // board state and removes any widget not listed in it -- this silently
-  // deleted an entire newly-added row of cards (Smart Filters/Flagged
-  // Review Records/Insights/Activity Feed) for anyone who'd already used
-  // this page before that row was added. Treated the same as corrupt: if
-  // the saved layout doesn't account for every gs-id currently in the DOM,
-  // it's out of date, not safe to trust.
   if (isSaneLayout) {
+    // A layout can be internally "sane" by the checks above and still be
+    // incomplete: it was saved before a newer card existed in the HTML,
+    // so it simply doesn't mention it. grid.load() treats its input as
+    // the full board state and removes any widget not listed in it --
+    // trusting an incomplete layout as-is silently deleted a whole
+    // newly-added row for anyone who'd used the page before it existed
+    // (confirmed bug on Voice Agent). But discarding the ENTIRE saved
+    // layout just because it's missing one new card is just as wrong the
+    // other direction -- it wiped out someone's real, deliberate
+    // customization of the other 13+ cards just because the app grew a
+    // 14th (confirmed on White Label: Oscar's rearranged layout reverted
+    // to defaults the moment wl-kpi-untouched/wl-distribution-chart got
+    // added, even though his positions for every OTHER card were still
+    // perfectly valid). Fix: augment the saved layout with default HTML
+    // positions for whatever current card it doesn't cover, and keep
+    // every position it already has -- covers both failure modes at once.
     const savedIds = new Set(saved.map(item => item.id));
-    const currentIds = Array.from(el.querySelectorAll(':scope > .grid-stack-item')).map(item => item.getAttribute('gs-id'));
-    if (!currentIds.every(id => savedIds.has(id))) isSaneLayout = false;
-  }
-  if (isSaneLayout) {
+    Array.from(el.querySelectorAll(':scope > .grid-stack-item')).forEach(item => {
+      const gsId = item.getAttribute('gs-id');
+      if (gsId && !savedIds.has(gsId)) {
+        saved.push({
+          id: gsId,
+          x: parseInt(item.getAttribute('gs-x'), 10),
+          y: parseInt(item.getAttribute('gs-y'), 10),
+          w: parseInt(item.getAttribute('gs-w'), 10),
+          h: parseInt(item.getAttribute('gs-h'), 10),
+        });
+      }
+    });
     grid.load(saved);
   } else if (saved) {
-    // Had *something* saved, but it didn't pass the sanity check -- clear
-    // it so a stale corrupt value doesn't keep getting retried forever.
+    // Had *something* saved, but it didn't pass the basic structural
+    // sanity check (corrupt coordinates) -- clear it so a bad value
+    // doesn't keep getting retried forever.
     try { localStorage.removeItem(storageKey); } catch(e) {}
   }
 
