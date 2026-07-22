@@ -7598,7 +7598,7 @@ function initHubGrid(gridId, storageKey) {
   // grid (negative, non-numeric, or overflowing past column 12), the whole
   // saved layout is treated as corrupt and the default positions already
   // in the HTML are used instead, rather than rendering a scattered mess.
-  const isSaneLayout = saved && Array.isArray(saved) && saved.length && saved.every(item =>
+  let isSaneLayout = saved && Array.isArray(saved) && saved.length && saved.every(item =>
     item.id &&
     Number.isFinite(item.x) && item.x >= 0 &&
     Number.isFinite(item.y) && item.y >= 0 &&
@@ -7606,6 +7606,20 @@ function initHubGrid(gridId, storageKey) {
     Number.isFinite(item.h) && item.h >= 1 &&
     (item.x + item.w) <= 12
   );
+  // A layout can look internally "sane" by the checks above and still be
+  // stale: it was saved before new cards existed in the HTML, so it simply
+  // doesn't mention them at all. grid.load() treats its input as the full
+  // board state and removes any widget not listed in it -- this silently
+  // deleted an entire newly-added row of cards (Smart Filters/Flagged
+  // Review Records/Insights/Activity Feed) for anyone who'd already used
+  // this page before that row was added. Treated the same as corrupt: if
+  // the saved layout doesn't account for every gs-id currently in the DOM,
+  // it's out of date, not safe to trust.
+  if (isSaneLayout) {
+    const savedIds = new Set(saved.map(item => item.id));
+    const currentIds = Array.from(el.querySelectorAll(':scope > .grid-stack-item')).map(item => item.getAttribute('gs-id'));
+    if (!currentIds.every(id => savedIds.has(id))) isSaneLayout = false;
+  }
   if (isSaneLayout) {
     grid.load(saved);
   } else if (saved) {
