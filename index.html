@@ -3185,6 +3185,9 @@ select.wfb-field-input { padding-right: 26px; }
       <button class="sheets-btn" id="sheetsConnectTopBtn" onclick="openSheetsModal()" title="Connects a sheet into the currently open dashboard" style="display:none">
         📋 Connect Sheets
       </button>
+      <select id="onboardingPipelineSelect" class="field-input" style="display:none;height:36px;margin-bottom:0;width:auto" onchange="switchOnboardingPipeline(this.value)"></select>
+      <button class="btn btn-sm" id="topbarOnboardingPipelinesBtn" onclick="openManagePipelinesModal()" title="Create or edit pipelines" style="display:none"><span class="icon" data-icon="settings" data-icon-size="14"></span> <span data-i18n="onboarding_pipelines_btn">Pipelines</span></button>
+      <button class="btn btn-primary btn-sm" id="topbarNewOnboardingBtn" onclick="openAddOnboardingModal()" style="display:none">＋ <span data-i18n="onboarding_new_btn">New Onboarding</span></button>
     </div>
   </div>
 
@@ -5139,11 +5142,6 @@ select.wfb-field-input { padding-right: 26px; }
   </div>
 
   <div class="page" id="page-onboarding">
-    <div style="display:flex;justify-content:flex-end;gap:var(--space-2);align-items:center;margin-bottom:var(--space-4)">
-      <select id="onboardingPipelineSelect" class="field-input" style="height:36px;margin-bottom:0;width:auto" onchange="switchOnboardingPipeline(this.value)"></select>
-      <button class="btn btn-sm" onclick="openManagePipelinesModal()" title="Create or edit pipelines"><span class="icon" data-icon="settings" data-icon-size="14"></span> <span data-i18n="onboarding_pipelines_btn">Pipelines</span></button>
-      <button class="btn btn-primary btn-sm" onclick="openAddOnboardingModal()">＋ <span data-i18n="onboarding_new_btn">New Onboarding</span></button>
-    </div>
     <div class="kpi-row">
       <div class="kpi kpi-theme-blue">
         <div class="kpi-icon"><span class="icon" data-icon="compass" data-icon-size="16"></span></div>
@@ -6004,6 +6002,16 @@ function showPage(id) {
   const onClientsPage = id === 'clients';
   if (clientsExportBtn) clientsExportBtn.style.display = onClientsPage ? '' : 'none';
   if (addClientTopbarBtn) addClientTopbarBtn.style.display = onClientsPage ? '' : 'none';
+
+  // Onboarding's pipeline picker + Pipelines/New Onboarding buttons -- same
+  // shared-topbar approach, only shown while the Onboarding page is open.
+  const onboardingPipelineSelect = document.getElementById('onboardingPipelineSelect');
+  const onboardingPipelinesBtn = document.getElementById('topbarOnboardingPipelinesBtn');
+  const newOnboardingBtn = document.getElementById('topbarNewOnboardingBtn');
+  const onOnboardingPage = id === 'onboarding';
+  if (onboardingPipelineSelect) onboardingPipelineSelect.style.display = onOnboardingPage ? '' : 'none';
+  if (onboardingPipelinesBtn) onboardingPipelinesBtn.style.display = onOnboardingPage ? '' : 'none';
+  if (newOnboardingBtn) newOnboardingBtn.style.display = onOnboardingPage ? '' : 'none';
 
   if (id === 'home') rebuildHomePage();
   if (id === 'voice') rebuildVoicePage();
