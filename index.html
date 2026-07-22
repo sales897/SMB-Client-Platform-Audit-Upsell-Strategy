@@ -3745,125 +3745,240 @@ select.wfb-field-input { padding-right: 26px; }
        PAGE 3: VOICE AGENT PERFORMANCE
   ════════════════════════════════════════════════════════════════════════ -->
   <div class="page" id="page-voice">
-    <div class="kpi-row">
-      <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="mic" data-icon-size="13"></span></div><div class="kpi-val green" id="va-using">0</div><div class="kpi-lbl" data-i18n="voice_using">Clients with Voice Agent</div><div class="kpi-sub" id="va-using-pct">0% of all clients</div></div>
-      <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="download" data-icon-size="13"></span></div><div class="kpi-val red" id="va-not-using">0</div><div class="kpi-lbl" data-i18n="voice_not_using">Clients NOT on Voice Agent</div><div class="kpi-sub" data-i18n="voice_upsell_targets">Upsell targets</div></div>
-      <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="chart" data-icon-size="16"></span></div><div class="kpi-val orange" id="va-adoption-pct">0%</div><div class="kpi-lbl" data-i18n="voice_adoption_rate">Adoption Rate</div><div class="kpi-sub" data-i18n="voice_across_portfolios">Across SMB, White Label, Support</div></div>
-      <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="alert" data-icon-size="16"></span></div><div class="kpi-val" style="color:var(--yellow)" id="va-flagged">0</div><div class="kpi-lbl" data-i18n="voice_flagged">Flagged for Review</div><div class="kpi-sub" data-i18n="voice_has_note">Have a note attached</div></div>
-    </div>
+    <div class="hub-grid grid-stack" id="grid-voice">
 
-    <div class="card" style="margin-bottom:var(--space-5)">
-      <div class="card-header">
-        <div><div class="card-title" data-i18n="voice_adoption_chart">Voice Agent Adoption by Portfolio</div><div class="card-sub" data-i18n="voice_adoption_chart_sub">How many clients in each portfolio use Voice Agent, vs. don't</div></div>
+    <div class="grid-stack-item" gs-id="va-kpi-using" gs-x="0" gs-y="0" gs-w="3" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
+      <div class="kpi kpi-theme-green">
+        <div class="kpi-icon"><span class="icon" data-icon="mic" data-icon-size="13"></span></div>
+        <div class="kpi-val green" id="va-using">0</div>
+        <div class="kpi-lbl" data-i18n="voice_using">Clients with Voice Agent</div>
+        <div class="kpi-sub" id="va-using-pct">0% of all clients</div>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 130 100 C 150 95, 160 80, 172 75 C 184 70, 190 50, 200 45 C 212 39, 220 20, 232 12"/><circle cx="172" cy="75"/><circle cx="200" cy="45"/><circle cx="232" cy="12" r="3"/><circle r="3"><animateMotion dur="2.6s" repeatCount="indefinite" path="M 130 100 C 150 95, 160 80, 172 75 C 184 70, 190 50, 200 45 C 212 39, 220 20, 232 12"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.9;1" dur="2.6s" repeatCount="indefinite"/></circle></svg>
       </div>
-      <div class="chart-wrap h260"><canvas id="voiceBar"></canvas></div>
-    </div>
+    </div></div>
 
-    <div class="section-hd" style="margin-top:var(--space-2)"><div class="section-num" style="background:var(--yellow)">⚠</div><h2 style="color:var(--yellow)" data-i18n="voice_flagged_section">Clients Flagged for Review</h2></div>
-    <div class="section-div" style="background:linear-gradient(90deg,var(--yellow),transparent)"></div>
-    <div class="card">
-      <div class="card-header">
-        <div><div class="card-title" data-i18n="voice_notes">Voice Agent Notes</div><div class="card-sub" id="va-flagged-sub">Pulled from comments attached to the Voice Agent column during upload</div></div>
+    <div class="grid-stack-item" gs-id="va-kpi-notusing" gs-x="3" gs-y="0" gs-w="3" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
+      <div class="kpi kpi-theme-red">
+        <div class="kpi-icon"><span class="icon" data-icon="download" data-icon-size="13"></span></div>
+        <div class="kpi-val red" id="va-not-using">0</div>
+        <div class="kpi-lbl" data-i18n="voice_not_using">Clients NOT on Voice Agent</div>
+        <div class="kpi-sub" data-i18n="voice_upsell_targets">Upsell targets</div>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><line class="bar bar-grow" x1="150" y1="105" x2="150" y2="80" style="animation-delay:0s"/><line class="bar bar-grow" x1="170" y1="105" x2="170" y2="60" style="animation-delay:.15s"/><line class="bar bar-grow" x1="190" y1="105" x2="190" y2="70" style="animation-delay:.3s"/><line class="bar bar-grow" x1="210" y1="105" x2="210" y2="40" style="animation-delay:.45s"/><line class="bar bar-grow" x1="230" y1="105" x2="230" y2="20" style="animation-delay:.6s"/></svg>
       </div>
-      <div class="table-controls">
-        <input type="text" class="search-box" id="vaFlagSearch" placeholder="Search flagged clients..." data-i18n-placeholder="search_clients" oninput="listPaginationState.vaFlagged=1;debouncedRebuildVoiceAgentFlagged()">
-        <div style="display:flex;gap:var(--space-2);flex-wrap:wrap" id="vaFlagPills">
-          <button class="filter-pill active" onclick="setVoiceAgentPortfolioFilter('all',this)" data-i18n="cl_all_portfolios">All Portfolios</button>
-          <button class="filter-pill" onclick="setVoiceAgentPortfolioFilter('smb',this)"><span class="icon" data-icon="chart" data-icon-size="16"></span> SMB</button>
-          <button class="filter-pill" onclick="setVoiceAgentPortfolioFilter('whitelabel',this)"><span class="icon" data-icon="tag" data-icon-size="14"></span> <span data-i18n="cl_wl_partners_short">White Label</span></button>
-          <button class="filter-pill" onclick="setVoiceAgentPortfolioFilter('support',this)"><span class="icon" data-icon="chart" data-icon-size="16"></span> <span data-i18n="cl_support_clients_short">Support</span></button>
+    </div></div>
+
+    <div class="grid-stack-item" gs-id="va-kpi-adoption" gs-x="6" gs-y="0" gs-w="3" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
+      <div class="kpi kpi-theme-orange">
+        <div class="kpi-icon"><span class="icon" data-icon="chart" data-icon-size="16"></span></div>
+        <div class="kpi-val orange" id="va-adoption-pct">0%</div>
+        <div class="kpi-lbl" data-i18n="voice_adoption_rate">Adoption Rate</div>
+        <div class="kpi-sub" data-i18n="voice_across_portfolios">Across SMB, White Label, Support</div>
+        <svg class="kpi-comet kpi-gauge" viewBox="0 0 120 120" aria-hidden="true">
+          <circle class="ring" cx="60" cy="60" r="46" stroke-dasharray="289" stroke-dashoffset="72"/>
+          <circle class="gauge-fill" id="va-adoption-arc" cx="60" cy="60" r="46" stroke-dasharray="0 289" stroke-dashoffset="72" transform="rotate(-90 60 60)"/>
+        </svg>
+      </div>
+    </div></div>
+
+    <div class="grid-stack-item" gs-id="va-kpi-flagged" gs-x="9" gs-y="0" gs-w="3" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
+      <div class="kpi" style="--kpi-accent:var(--yellow)">
+        <div class="kpi-icon"><span class="icon" data-icon="alert" data-icon-size="16"></span></div>
+        <div class="kpi-val" style="color:var(--yellow)" id="va-flagged">0</div>
+        <div class="kpi-lbl" data-i18n="voice_flagged">Flagged for Review</div>
+        <div class="kpi-sub" data-i18n="voice_has_note">Have a note attached</div>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><circle class="ring" cx="205" cy="60" r="10"/><circle class="ring pulse-1" cx="205" cy="60" r="19"/><circle class="ring pulse-2" cx="205" cy="60" r="28"/><circle cx="205" cy="60" r="3"/></svg>
+      </div>
+    </div></div>
+
+    <div class="grid-stack-item" gs-id="va-adoption-chart" gs-x="0" gs-y="2" gs-w="12" gs-h="7" gs-min-w="5" gs-min-h="4"><div class="grid-stack-item-content">
+      <div class="card" style="width:100%">
+        <div class="card-header">
+          <div><div class="card-title" data-i18n="voice_adoption_chart">Voice Agent Adoption by Portfolio</div><div class="card-sub" data-i18n="voice_adoption_chart_sub">How many clients in each portfolio use Voice Agent, vs. don't</div></div>
+          <button class="vital-ask" onclick="askNirvanaQuick('Looking at Voice Agent adoption by portfolio, what stands out and where should we focus upsell efforts?')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
         </div>
+        <div class="chart-wrap h260"><canvas id="voiceBar"></canvas></div>
       </div>
-      <div id="vaFlaggedList"></div>
+    </div></div>
+
+    <div class="grid-stack-item" gs-id="va-flagged-card" gs-x="0" gs-y="9" gs-w="12" gs-h="7" gs-min-w="5" gs-min-h="4"><div class="grid-stack-item-content">
+      <div class="card" style="width:100%">
+        <div class="card-header">
+          <div><div class="card-title" data-i18n="voice_notes"><span class="icon" data-icon="alert" data-icon-size="14"></span> Voice Agent Notes</div><div class="card-sub" id="va-flagged-sub">Pulled from comments attached to the Voice Agent column during upload</div></div>
+          <button class="vital-ask" onclick="askNirvanaQuick('Which Voice Agent clients are flagged for review right now, and what should we do about them?')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-3);margin-bottom:var(--space-4)">
+          <div style="background:var(--bg3);border-radius:var(--radius-sm);padding:10px 6px;text-align:center">
+            <div style="font-family:var(--font-display);font-size:20px;font-weight:800;color:var(--green)" id="va-flagged-smb">0</div>
+            <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.03em">SMB</div>
+          </div>
+          <div style="background:var(--bg3);border-radius:var(--radius-sm);padding:10px 6px;text-align:center">
+            <div style="font-family:var(--font-display);font-size:20px;font-weight:800;color:var(--purple)" id="va-flagged-whitelabel">0</div>
+            <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.03em">White Label</div>
+          </div>
+          <div style="background:var(--bg3);border-radius:var(--radius-sm);padding:10px 6px;text-align:center">
+            <div style="font-family:var(--font-display);font-size:20px;font-weight:800;color:var(--blue)" id="va-flagged-support">0</div>
+            <div style="font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.03em">Support</div>
+          </div>
+        </div>
+        <div class="table-controls">
+          <input type="text" class="search-box" id="vaFlagSearch" placeholder="Search flagged clients..." data-i18n-placeholder="search_clients" oninput="listPaginationState.vaFlagged=1;debouncedRebuildVoiceAgentFlagged()">
+          <div style="display:flex;gap:var(--space-2);flex-wrap:wrap" id="vaFlagPills">
+            <button class="filter-pill active" onclick="setVoiceAgentPortfolioFilter('all',this)" data-i18n="cl_all_portfolios">All Portfolios</button>
+            <button class="filter-pill" onclick="setVoiceAgentPortfolioFilter('smb',this)"><span class="icon" data-icon="chart" data-icon-size="16"></span> SMB</button>
+            <button class="filter-pill" onclick="setVoiceAgentPortfolioFilter('whitelabel',this)"><span class="icon" data-icon="tag" data-icon-size="14"></span> <span data-i18n="cl_wl_partners_short">White Label</span></button>
+            <button class="filter-pill" onclick="setVoiceAgentPortfolioFilter('support',this)"><span class="icon" data-icon="chart" data-icon-size="16"></span> <span data-i18n="cl_support_clients_short">Support</span></button>
+          </div>
+        </div>
+        <div id="vaFlaggedList"></div>
+      </div>
+    </div></div>
+
     </div>
     <div class="page-footer"><span class="org-brand-inline">The HUB · Niche Inc.</span> · Voice Agent Performance</div>
   </div>
+
 
   <!-- ═══════════════════════════════════════════════════════════════════
        PAGE 4: AD SPEND & REVENUE
   ════════════════════════════════════════════════════════════════════════ -->
   <div class="page" id="page-textagent">
-    <div class="kpi-row">
-      <div class="kpi"><div class="kpi-icon" id="ta-yelp-icon"><span class="icon" data-icon="star" data-icon-size="14"></span></div><div class="kpi-val" id="ta-yelp">0</div><div class="kpi-lbl" data-i18n="ta_using_yelp">Using Yelp</div><div class="kpi-sub" data-i18n="cl_across_portfolios">Across all portfolios</div></div>
-      <div class="kpi"><div class="kpi-icon" id="ta-lsa-icon"><span class="icon" data-icon="search" data-icon-size="14"></span></div><div class="kpi-val" id="ta-lsa">0</div><div class="kpi-lbl" data-i18n="ta_using_lsa">Using Google LSA</div><div class="kpi-sub" data-i18n="cl_across_portfolios">Across all portfolios</div></div>
-      <div class="kpi"><div class="kpi-icon" id="ta-thumbtack-icon"><span class="icon" data-icon="pin" data-icon-size="13"></span></div><div class="kpi-val" id="ta-thumbtack">0</div><div class="kpi-lbl" data-i18n="ta_using_thumbtack">Using Thumbtack</div><div class="kpi-sub" data-i18n="cl_across_portfolios">Across all portfolios</div></div>
-      <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="chart" data-icon-size="16"></span></div><div class="kpi-val orange" id="ta-any">0</div><div class="kpi-lbl" data-i18n="ta_using_atleast_one">Using At Least One</div><div class="kpi-sub" data-i18n="ta_yelp_lsa_thumbtack">Yelp, Google LSA, or Thumbtack</div></div>
-      <div class="kpi"><div class="kpi-icon"><span class="icon" data-icon="alert" data-icon-size="16"></span></div><div class="kpi-val" style="color:var(--yellow)" id="ta-stale">0</div><div class="kpi-lbl" data-i18n="ta_flagged_review">Flagged for Review</div><div class="kpi-sub" data-i18n="ta_stale_leads_sub">Stale leads: 7 days–6 months</div></div>
-    </div>
+    <div class="hub-grid grid-stack" id="grid-textagent">
 
-    <div class="card" style="margin-bottom:var(--space-5)">
-      <div class="card-header">
-        <div><div class="card-title" data-i18n="ta_adoption_chart">Adoption Rate by Product &amp; Portfolio</div><div class="card-sub" data-i18n="ta_adoption_chart_sub">% of each portfolio's clients using each product</div></div>
+    <div class="grid-stack-item" gs-id="ta-kpi-yelp" gs-x="0" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
+      <div class="kpi kpi-theme-blue">
+        <div class="kpi-icon" id="ta-yelp-icon"><span class="icon" data-icon="star" data-icon-size="14"></span></div>
+        <div class="kpi-val" id="ta-yelp">0</div>
+        <div class="kpi-lbl" data-i18n="ta_using_yelp">Using Yelp</div>
+        <div class="kpi-sub" data-i18n="cl_across_portfolios">Across all portfolios</div>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 130 100 C 150 95, 160 80, 172 75 C 184 70, 190 50, 200 45 C 212 39, 220 20, 232 12"/><circle cx="172" cy="75"/><circle cx="200" cy="45"/><circle cx="232" cy="12" r="3"/><circle r="3"><animateMotion dur="2.6s" repeatCount="indefinite" path="M 130 100 C 150 95, 160 80, 172 75 C 184 70, 190 50, 200 45 C 212 39, 220 20, 232 12"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.9;1" dur="2.6s" repeatCount="indefinite"/></circle></svg>
       </div>
-      <div class="chart-wrap h260"><canvas id="textAgentAdoptionChart"></canvas></div>
-    </div>
+    </div></div>
 
-    <div class="card">
-      <div class="card-header">
-        <div><div class="card-title" data-i18n="ta_breakdown_chart">Breakdown by Product &amp; Portfolio</div><div class="card-sub" data-i18n="ta_breakdown_chart_sub">How many clients use each product, split by dashboard — click a number to see who</div></div>
+    <div class="grid-stack-item" gs-id="ta-kpi-lsa" gs-x="2" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
+      <div class="kpi kpi-theme-purple">
+        <div class="kpi-icon" id="ta-lsa-icon"><span class="icon" data-icon="search" data-icon-size="14"></span></div>
+        <div class="kpi-val" id="ta-lsa">0</div>
+        <div class="kpi-lbl" data-i18n="ta_using_lsa">Using Google LSA</div>
+        <div class="kpi-sub" data-i18n="cl_across_portfolios">Across all portfolios</div>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><line x1="148" y1="92" x2="188" y2="52"/><line x1="188" y1="52" x2="226" y2="70"/><line x1="188" y1="52" x2="212" y2="18"/><line x1="148" y1="92" x2="198" y2="102"/><circle class="mesh-node" cx="148" cy="92" r="2.2" style="animation-delay:0s"/><circle class="mesh-node" cx="188" cy="52" r="3" style="animation-delay:.3s"/><circle class="mesh-node" cx="226" cy="70" r="2.2" style="animation-delay:.6s"/><circle class="mesh-node" cx="212" cy="18" r="2.2" style="animation-delay:.9s"/><circle class="mesh-node" cx="198" cy="102" r="2" style="animation-delay:1.2s"/></svg>
       </div>
-      <div style="overflow-x:auto">
-        <table class="pill-rows">
-          <thead><tr>
-            <th style="text-align:left;padding-left:var(--space-3)" data-i18n="th_product">Product</th>
-            <th><span class="icon" data-icon="chart" data-icon-size="16"></span> SMB</th>
-            <th><span class="icon" data-icon="tag" data-icon-size="14"></span> <span data-i18n="cl_wl_partners_short">White Label</span></th>
-            <th><span class="icon" data-icon="chart" data-icon-size="16"></span> <span data-i18n="cl_support_clients_short">Support</span></th>
-            <th data-i18n="th_total">Total</th>
-          </tr></thead>
-          <tbody id="taBreakdownBody"></tbody>
-        </table>
-      </div>
-    </div>
+    </div></div>
 
-    <div class="section-hd" style="margin-top:var(--space-2)"><div class="section-num" style="background:var(--yellow)">⚠</div><h2 style="color:var(--yellow)" data-i18n="ta_stale_section">Flagged for Review — Stale Leads</h2></div>
-    <div class="section-div" style="background:linear-gradient(90deg,var(--yellow),transparent)"></div>
-    <div class="card" style="margin-bottom:var(--space-5)">
-      <div class="card-header">
-        <div><div class="card-title" data-i18n="ta_stale_card_title">Businesses with a Stale Last Lead</div><div class="card-sub" data-i18n="ta_stale_card_sub">Automatically detected from comments mentioning when the last lead was handled — flagged when that's anywhere from 7 days to 6 months ago</div></div>
+    <div class="grid-stack-item" gs-id="ta-kpi-thumbtack" gs-x="4" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
+      <div class="kpi kpi-theme-green">
+        <div class="kpi-icon" id="ta-thumbtack-icon"><span class="icon" data-icon="pin" data-icon-size="13"></span></div>
+        <div class="kpi-val" id="ta-thumbtack">0</div>
+        <div class="kpi-lbl" data-i18n="ta_using_thumbtack">Using Thumbtack</div>
+        <div class="kpi-sub" data-i18n="cl_across_portfolios">Across all portfolios</div>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><line class="bar bar-grow" x1="150" y1="105" x2="150" y2="80" style="animation-delay:0s"/><line class="bar bar-grow" x1="170" y1="105" x2="170" y2="60" style="animation-delay:.15s"/><line class="bar bar-grow" x1="190" y1="105" x2="190" y2="70" style="animation-delay:.3s"/><line class="bar bar-grow" x1="210" y1="105" x2="210" y2="40" style="animation-delay:.45s"/><line class="bar bar-grow" x1="230" y1="105" x2="230" y2="20" style="animation-delay:.6s"/></svg>
       </div>
-      <div class="table-controls">
-        <input type="text" class="search-box" id="taStaleSearch" placeholder="Search clients..." data-i18n-placeholder="search_clients" oninput="debouncedRebuildTextAgentStale()">
-        <div style="display:flex;gap:var(--space-2);flex-wrap:wrap" id="taStalePortfolioPills">
-          <button class="filter-pill active" onclick="setTextAgentStaleFilter('all',this)" data-i18n="cl_all_portfolios">All Portfolios</button>
-          <button class="filter-pill" onclick="setTextAgentStaleFilter('smb',this)"><span class="icon" data-icon="chart" data-icon-size="16"></span> SMB</button>
-          <button class="filter-pill" onclick="setTextAgentStaleFilter('whitelabel',this)"><span class="icon" data-icon="tag" data-icon-size="14"></span> <span data-i18n="cl_wl_partners_short">White Label</span></button>
-          <button class="filter-pill" onclick="setTextAgentStaleFilter('support',this)"><span class="icon" data-icon="chart" data-icon-size="16"></span> <span data-i18n="cl_support_clients_short">Support</span></button>
+    </div></div>
+
+    <div class="grid-stack-item" gs-id="ta-kpi-any" gs-x="6" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
+      <div class="kpi kpi-theme-orange">
+        <div class="kpi-icon"><span class="icon" data-icon="chart" data-icon-size="16"></span></div>
+        <div class="kpi-val orange" id="ta-any">0</div>
+        <div class="kpi-lbl" data-i18n="ta_using_atleast_one">Using At Least One</div>
+        <div class="kpi-sub" data-i18n="ta_yelp_lsa_thumbtack">Yelp, Google LSA, or Thumbtack</div>
+        <svg class="kpi-comet kpi-gauge" viewBox="0 0 120 120" aria-hidden="true">
+          <circle class="ring" cx="60" cy="60" r="46" stroke-dasharray="289" stroke-dashoffset="72"/>
+          <circle class="gauge-fill" id="ta-any-arc" cx="60" cy="60" r="46" stroke-dasharray="0 289" stroke-dashoffset="72" transform="rotate(-90 60 60)"/>
+        </svg>
+      </div>
+    </div></div>
+
+    <div class="grid-stack-item" gs-id="ta-kpi-stale" gs-x="8" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
+      <div class="kpi" style="--kpi-accent:var(--yellow)">
+        <div class="kpi-icon"><span class="icon" data-icon="alert" data-icon-size="16"></span></div>
+        <div class="kpi-val" style="color:var(--yellow)" id="ta-stale">0</div>
+        <div class="kpi-lbl" data-i18n="ta_flagged_review">Flagged for Review</div>
+        <div class="kpi-sub" data-i18n="ta_stale_leads_sub">Stale leads: 7 days–6 months</div>
+        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><circle class="ring" cx="205" cy="60" r="10"/><circle class="ring pulse-1" cx="205" cy="60" r="19"/><circle class="ring pulse-2" cx="205" cy="60" r="28"/><circle cx="205" cy="60" r="3"/></svg>
+      </div>
+    </div></div>
+
+    <div class="grid-stack-item" gs-id="ta-adoption-chart" gs-x="0" gs-y="2" gs-w="12" gs-h="7" gs-min-w="5" gs-min-h="4"><div class="grid-stack-item-content">
+      <div class="card" style="width:100%">
+        <div class="card-header">
+          <div><div class="card-title" data-i18n="ta_adoption_chart">Adoption Rate by Product &amp; Portfolio</div><div class="card-sub" data-i18n="ta_adoption_chart_sub">% of each portfolio's clients using each product</div></div>
+          <button class="vital-ask" onclick="askNirvanaQuick('Looking at Yelp/Google LSA/Thumbtack adoption by portfolio, what stands out and where should we focus?')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
+        </div>
+        <div class="chart-wrap h260"><canvas id="textAgentAdoptionChart"></canvas></div>
+      </div>
+    </div></div>
+
+    <div class="grid-stack-item" gs-id="ta-breakdown-table" gs-x="0" gs-y="9" gs-w="12" gs-h="7" gs-min-w="5" gs-min-h="4"><div class="grid-stack-item-content" style="flex-direction:column;gap:12px">
+      <div class="card" style="width:100%">
+        <div class="card-header">
+          <div><div class="card-title" data-i18n="ta_breakdown_chart">Breakdown by Product &amp; Portfolio</div><div class="card-sub" data-i18n="ta_breakdown_chart_sub">How many clients use each product, split by dashboard — click a number to see who</div></div>
+          <button class="vital-ask" onclick="askNirvanaQuick('Break down Yelp, Google LSA, and Thumbtack adoption by portfolio for me.')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="pill-rows">
+            <thead><tr>
+              <th style="text-align:left;padding-left:var(--space-3)" data-i18n="th_product">Product</th>
+              <th><span class="icon" data-icon="chart" data-icon-size="16"></span> SMB</th>
+              <th><span class="icon" data-icon="tag" data-icon-size="14"></span> <span data-i18n="cl_wl_partners_short">White Label</span></th>
+              <th><span class="icon" data-icon="chart" data-icon-size="16"></span> <span data-i18n="cl_support_clients_short">Support</span></th>
+              <th data-i18n="th_total">Total</th>
+            </tr></thead>
+            <tbody id="taBreakdownBody"></tbody>
+          </table>
         </div>
       </div>
-      <div id="taStaleList"></div>
-    </div>
-
-    <div class="section-hd" style="margin-top:var(--space-2)"><div class="section-num" style="background:var(--blue)"><span class="icon" data-icon="chat" data-icon-size="14"></span></div><h2 style="color:var(--blue)" data-i18n="ta_activity_section">Client Activity &amp; Notes</h2></div>
-    <div class="section-div" style="background:linear-gradient(90deg,var(--blue),transparent)"></div>
-    <div class="card">
-      <div class="card-header">
-        <div><div class="card-title" data-i18n="ta_notes_card_title">Yelp / Google LSA / Thumbtack Notes</div><div class="card-sub" id="ta-notes-sub" data-i18n="ta_notes_card_sub">Pulled from comments attached to these columns during upload, across SMB, White Label, and Support</div></div>
-      </div>
-      <div class="table-controls">
-        <input type="text" class="search-box" id="taNotesSearch" placeholder="Search clients..." data-i18n-placeholder="search_clients" oninput="listPaginationState.taNotes=1;debouncedRebuildTextAgentNotes()">
-        <div style="display:flex;gap:var(--space-2);flex-wrap:wrap" id="taNotesProductPills">
-          <button class="filter-pill active" onclick="setTextAgentProductFilter('all',this)" data-i18n="cl_all_products">All Products</button>
-          <button class="filter-pill" id="taPillYelp" onclick="setTextAgentProductFilter('yelp',this)"><span class="icon" data-icon="star" data-icon-size="14"></span> Yelp</button>
-          <button class="filter-pill" id="taPillLsa" onclick="setTextAgentProductFilter('google_lsa',this)"><span class="icon" data-icon="search" data-icon-size="14"></span> Google LSA</button>
-          <button class="filter-pill" id="taPillThumbtack" onclick="setTextAgentProductFilter('thumbtack',this)"><span class="icon" data-icon="pin" data-icon-size="13"></span> Thumbtack</button>
+      <div class="card" style="width:100%;display:none" id="taClientListCard">
+        <div class="card-header">
+          <div><div class="card-title" id="taClientListTitle">Clients</div><div class="card-sub" id="taClientListSub"></div></div>
+          <button class="btn btn-ghost btn-sm" onclick="closeTextAgentClientList()"><span class="icon" data-icon="close" data-icon-size="12"></span> <span data-i18n="btn_close">Close</span></button>
         </div>
-        <div style="display:flex;gap:var(--space-2);flex-wrap:wrap" id="taNotesPortfolioPills">
-          <button class="filter-pill active" onclick="setTextAgentPortfolioFilter('all',this)" data-i18n="cl_all_portfolios">All Portfolios</button>
-          <button class="filter-pill" onclick="setTextAgentPortfolioFilter('smb',this)"><span class="icon" data-icon="chart" data-icon-size="16"></span> SMB</button>
-          <button class="filter-pill" onclick="setTextAgentPortfolioFilter('whitelabel',this)"><span class="icon" data-icon="tag" data-icon-size="14"></span> <span data-i18n="cl_wl_partners_short">White Label</span></button>
-          <button class="filter-pill" onclick="setTextAgentPortfolioFilter('support',this)"><span class="icon" data-icon="chart" data-icon-size="16"></span> <span data-i18n="cl_support_clients_short">Support</span></button>
-        </div>
+        <div id="taClientList"></div>
       </div>
-      <div id="taNotesList"></div>
-    </div>
+    </div></div>
 
-    <div class="card" style="margin-top:var(--space-5);display:none" id="taClientListCard">
-      <div class="card-header">
-        <div><div class="card-title" id="taClientListTitle">Clients</div><div class="card-sub" id="taClientListSub"></div></div>
-        <button class="btn btn-ghost btn-sm" onclick="closeTextAgentClientList()"><span class="icon" data-icon="close" data-icon-size="12"></span> <span data-i18n="btn_close">Close</span></button>
+    <div class="grid-stack-item" gs-id="ta-stale-card" gs-x="0" gs-y="16" gs-w="12" gs-h="7" gs-min-w="5" gs-min-h="4"><div class="grid-stack-item-content">
+      <div class="card" style="width:100%">
+        <div class="card-header">
+          <div><div class="card-title" style="color:var(--yellow)"><span class="icon" data-icon="alert" data-icon-size="14"></span> <span data-i18n="ta_stale_card_title">Businesses with a Stale Last Lead</span></div><div class="card-sub" data-i18n="ta_stale_card_sub">Automatically detected from comments mentioning when the last lead was handled — flagged when that's anywhere from 7 days to 6 months ago</div></div>
+          <button class="vital-ask" onclick="askNirvanaQuick('Which businesses have a stale last lead on Yelp, Google LSA, or Thumbtack, and what should we do about them?')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
+        </div>
+        <div class="table-controls">
+          <input type="text" class="search-box" id="taStaleSearch" placeholder="Search clients..." data-i18n-placeholder="search_clients" oninput="debouncedRebuildTextAgentStale()">
+          <div style="display:flex;gap:var(--space-2);flex-wrap:wrap" id="taStalePortfolioPills">
+            <button class="filter-pill active" onclick="setTextAgentStaleFilter('all',this)" data-i18n="cl_all_portfolios">All Portfolios</button>
+            <button class="filter-pill" onclick="setTextAgentStaleFilter('smb',this)"><span class="icon" data-icon="chart" data-icon-size="16"></span> SMB</button>
+            <button class="filter-pill" onclick="setTextAgentStaleFilter('whitelabel',this)"><span class="icon" data-icon="tag" data-icon-size="14"></span> <span data-i18n="cl_wl_partners_short">White Label</span></button>
+            <button class="filter-pill" onclick="setTextAgentStaleFilter('support',this)"><span class="icon" data-icon="chart" data-icon-size="16"></span> <span data-i18n="cl_support_clients_short">Support</span></button>
+          </div>
+        </div>
+        <div id="taStaleList"></div>
       </div>
-      <div id="taClientList"></div>
+    </div></div>
+
+    <div class="grid-stack-item" gs-id="ta-notes-card" gs-x="0" gs-y="23" gs-w="12" gs-h="7" gs-min-w="5" gs-min-h="4"><div class="grid-stack-item-content">
+      <div class="card" style="width:100%">
+        <div class="card-header">
+          <div><div class="card-title" style="color:var(--blue)"><span class="icon" data-icon="chat" data-icon-size="14"></span> <span data-i18n="ta_notes_card_title">Yelp / Google LSA / Thumbtack Notes</span></div><div class="card-sub" id="ta-notes-sub" data-i18n="ta_notes_card_sub">Pulled from comments attached to these columns during upload, across SMB, White Label, and Support</div></div>
+          <button class="vital-ask" onclick="askNirvanaQuick('What do the recent Yelp, Google LSA, and Thumbtack client notes say — anything I should follow up on?')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
+        </div>
+        <div class="table-controls">
+          <input type="text" class="search-box" id="taNotesSearch" placeholder="Search clients..." data-i18n-placeholder="search_clients" oninput="listPaginationState.taNotes=1;debouncedRebuildTextAgentNotes()">
+          <div style="display:flex;gap:var(--space-2);flex-wrap:wrap" id="taNotesProductPills">
+            <button class="filter-pill active" onclick="setTextAgentProductFilter('all',this)" data-i18n="cl_all_products">All Products</button>
+            <button class="filter-pill" id="taPillYelp" onclick="setTextAgentProductFilter('yelp',this)"><span class="icon" data-icon="star" data-icon-size="14"></span> Yelp</button>
+            <button class="filter-pill" id="taPillLsa" onclick="setTextAgentProductFilter('google_lsa',this)"><span class="icon" data-icon="search" data-icon-size="14"></span> Google LSA</button>
+            <button class="filter-pill" id="taPillThumbtack" onclick="setTextAgentProductFilter('thumbtack',this)"><span class="icon" data-icon="pin" data-icon-size="13"></span> Thumbtack</button>
+          </div>
+          <div style="display:flex;gap:var(--space-2);flex-wrap:wrap" id="taNotesPortfolioPills">
+            <button class="filter-pill active" onclick="setTextAgentPortfolioFilter('all',this)" data-i18n="cl_all_portfolios">All Portfolios</button>
+            <button class="filter-pill" onclick="setTextAgentPortfolioFilter('smb',this)"><span class="icon" data-icon="chart" data-icon-size="16"></span> SMB</button>
+            <button class="filter-pill" onclick="setTextAgentPortfolioFilter('whitelabel',this)"><span class="icon" data-icon="tag" data-icon-size="14"></span> <span data-i18n="cl_wl_partners_short">White Label</span></button>
+            <button class="filter-pill" onclick="setTextAgentPortfolioFilter('support',this)"><span class="icon" data-icon="chart" data-icon-size="16"></span> <span data-i18n="cl_support_clients_short">Support</span></button>
+          </div>
+        </div>
+        <div id="taNotesList"></div>
+      </div>
+    </div></div>
+
     </div>
     <div class="page-footer"><span class="org-brand-inline">The HUB · Niche Inc.</span> · Yelp / Google LSA / Thumbtack Adoption</div>
   </div>
@@ -8085,6 +8200,14 @@ function rebuildVoicePage() {
   set('va-not-using', notUsing.length);
   set('va-adoption-pct', `${pct}%`);
   set('va-flagged', flagged.length);
+  setGaugeArc(document.getElementById('va-adoption-arc'), pct);
+
+  // Real per-portfolio flagged breakdown (replaces a fabricated "High/Standard
+  // priority" split that isn't backed by any actual field on flagged notes --
+  // this counts the same real `flagged` array by portfolio instead).
+  set('va-flagged-smb', flagged.filter(x => x.pk === 'smb').length);
+  set('va-flagged-whitelabel', flagged.filter(x => x.pk === 'whitelabel').length);
+  set('va-flagged-support', flagged.filter(x => x.pk === 'support').length);
 
   const portfolios = ['smb', 'whitelabel', 'support'];
   const labels = portfolios.map(pk => PORTFOLIOS[pk].name);
@@ -8236,6 +8359,8 @@ function rebuildTextAgentPage() {
   const anyCount = getAllClientsWithPortfolio().filter(x => x.client.yelp || x.client.google_lsa || x.client.thumbtack).length;
   set('ta-any', anyCount);
   set('ta-stale', getTextAgentStaleLeads().length);
+  const totalClientsForPct = portfolios.reduce((n, pk) => n + getClients(pk).length, 0);
+  setGaugeArc(document.getElementById('ta-any-arc'), totalClientsForPct ? Math.round(anyCount / totalClientsForPct * 100) : 0);
 
   const portfolioClientCounts = portfolios.map(pk => getClients(pk).length);
 
@@ -8789,6 +8914,11 @@ function askNirvanaAboutPortfolioChart(pk, topic) {
   if (panel && panel.style.display === 'none') toggleAiAgentPanel();
   const builder = PORTFOLIO_CHART_NIRVANA_PROMPTS[topic];
   if (builder) sendAiAgentQuickMessage(builder(PORTFOLIOS[pk].name));
+}
+function askNirvanaQuick(promptText) {
+  const panel = document.getElementById('aiAgentPanel');
+  if (panel && panel.style.display === 'none') toggleAiAgentPanel();
+  sendAiAgentQuickMessage(promptText);
 }
 
 function rebuildGapBar(pk) {
