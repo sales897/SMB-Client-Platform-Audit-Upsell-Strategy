@@ -7645,23 +7645,32 @@ function initHubGrid(gridId, storageKey) {
     // layout just because it's missing one new card is just as wrong the
     // other direction -- it wiped out someone's real, deliberate
     // customization of the other 13+ cards just because the app grew a
-    // 14th (confirmed on White Label: Oscar's rearranged layout reverted
-    // to defaults the moment wl-kpi-untouched/wl-distribution-chart got
-    // added, even though his positions for every OTHER card were still
-    // perfectly valid). Fix: augment the saved layout with default HTML
+    // 14th (confirmed on White Label). Fix: augment the saved layout with
     // positions for whatever current card it doesn't cover, and keep
-    // every position it already has -- covers both failure modes at once.
+    // every position it already has.
+    //
+    // Critically, a missing card's own raw HTML default position can
+    // collide with a DIFFERENT card's already-saved CUSTOM position --
+    // confirmed exactly on White Label: wl-kpi-untouched's default is
+    // x:10,y:0, but Oscar had dragged "Yelp Adoption" (wl-kpi-top) into
+    // that exact cell, saved at x:10,y:0 too. Blindly re-adding
+    // wl-kpi-untouched at its own default silently recreated that
+    // collision every reload, and GridStack's own collision resolution
+    // was what bumped the customized card back out -- looking exactly
+    // like "my change didn't stick" for that one card specifically, even
+    // though the save/load mechanism itself was working correctly.
+    // Placing any missing card at a genuinely free row below everything
+    // already accounted for (rather than trusting its raw default
+    // coordinates) means it can never collide with a real customization.
     const savedIds = new Set(saved.map(item => item.id));
+    let nextFreeY = saved.reduce((max, item) => Math.max(max, item.y + item.h), 0);
     Array.from(el.querySelectorAll(':scope > .grid-stack-item')).forEach(item => {
       const gsId = item.getAttribute('gs-id');
       if (gsId && !savedIds.has(gsId)) {
-        saved.push({
-          id: gsId,
-          x: parseInt(item.getAttribute('gs-x'), 10),
-          y: parseInt(item.getAttribute('gs-y'), 10),
-          w: parseInt(item.getAttribute('gs-w'), 10),
-          h: parseInt(item.getAttribute('gs-h'), 10),
-        });
+        const w = parseInt(item.getAttribute('gs-w'), 10);
+        const h = parseInt(item.getAttribute('gs-h'), 10);
+        saved.push({ id: gsId, x: 0, y: nextFreeY, w, h });
+        nextFreeY += h;
       }
     });
     grid.load(saved);
