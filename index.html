@@ -7642,6 +7642,12 @@ function resetHubGridLayout(gridId, storageKey) {
   showToast('Layout reset to default.', 'success');
 }
 
+// Shared by rebuildPortfolio() and any other KPI gauge (Voice Agent/Text
+// Agent's Adoption Rate rings) -- promoted out of rebuildPortfolio() after
+// being called from those pages threw an uncaught ReferenceError (it used
+// to be a local const, invisible outside that one function's scope), which
+// silently aborted everything after it, including chart creation.
+function setGaugeArc(el, pct) { if (el) el.setAttribute('stroke-dasharray', `${(Math.max(0, Math.min(100, pct)) / 100 * 289).toFixed(1)} 289`); }
 function rebuildPortfolio(pk) {
   rebuildTableHeaders(pk);
   rebuildFilterPills(pk);
@@ -8640,7 +8646,6 @@ function rebuildKPIs(pk) {
   const topEl = document.getElementById(`kpi-${pk}-top`);
   const topLblEl = document.getElementById(`kpi-${pk}-top-lbl`);
   const topArcEl = document.getElementById(`kpi-${pk}-top-arc`);
-  const setGaugeArc = (el, pct) => { if (el) el.setAttribute('stroke-dasharray', `${(Math.max(0, Math.min(100, pct)) / 100 * 289).toFixed(1)} 289`); };
 
   if (totalEl) totalEl.textContent = total;
   if (prodEl) prodEl.textContent = cat.length;
