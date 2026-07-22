@@ -7656,20 +7656,38 @@ function initHubGrid(gridId, storageKey) {
     try { localStorage.removeItem(storageKey); } catch(e) {}
   }
 
-  function saveHubGridPositions() {
-    // grid.save() was silently omitting w/h from its own output in this
-    // configuration, which is why every saved layout kept failing
-    // validation and reverting to defaults. Reading the positions
-    // straight from the DOM attributes GridStack itself keeps in sync
-    // during drag/resize sidesteps that entirely.
-    const items = Array.from(el.querySelectorAll(':scope > .grid-stack-item')).map(item => ({
-      id: item.getAttribute('gs-id'),
-      x: parseInt(item.getAttribute('gs-x'), 10),
-      y: parseInt(item.getAttribute('gs-y'), 10),
-      w: parseInt(item.getAttribute('gs-w'), 10),
-      h: parseInt(item.getAttribute('gs-h'), 10),
-    }));
-    try { localStorage.setItem(storageKey, JSON.stringify(items)); } catch(e) {}
+  function saveHubGridPositions(event, changedNodes) {
+    // GridStack's own 'change' event payload carries the authoritative,
+    // already-updated x/y/w/h straight from its internal engine state --
+    // reading gs-x/gs-y/gs-w/gs-h HTML attributes back off the DOM instead
+    // (the previous approach) has a documented history in this library of
+    // not being synchronously written the instant a drag/resize settles,
+    // meaning a save could silently capture the PRE-drag position. That
+    // matches exactly what "I moved cards, refreshed, and it reverted"
+    // looks like. Only gs-id (which never changes during a drag) is still
+    // read from the DOM, since that's genuinely stable.
+    let current;
+    try { current = JSON.parse(localStorage.getItem(storageKey) || 'null'); } catch(e) { current = null; }
+    if (!Array.isArray(current) || current.length === 0) {
+      current = Array.from(el.querySelectorAll(':scope > .grid-stack-item')).map(item => ({
+        id: item.getAttribute('gs-id'),
+        x: parseInt(item.getAttribute('gs-x'), 10),
+        y: parseInt(item.getAttribute('gs-y'), 10),
+        w: parseInt(item.getAttribute('gs-w'), 10),
+        h: parseInt(item.getAttribute('gs-h'), 10),
+      }));
+    }
+    const byId = {};
+    current.forEach(it => { if (it.id) byId[it.id] = it; });
+    const nodes = Array.isArray(changedNodes) ? changedNodes : (changedNodes ? [changedNodes] : []);
+    nodes.forEach(node => {
+      const domEl = node.el || node;
+      const gsId = domEl && domEl.getAttribute ? domEl.getAttribute('gs-id') : null;
+      if (gsId && Number.isFinite(node.x) && Number.isFinite(node.y) && Number.isFinite(node.w) && Number.isFinite(node.h)) {
+        byId[gsId] = { id: gsId, x: node.x, y: node.y, w: node.w, h: node.h };
+      }
+    });
+    try { localStorage.setItem(storageKey, JSON.stringify(Object.values(byId))); } catch(e) {}
   }
   grid.on('change', saveHubGridPositions);
   HUB_GRID_SAVE_FNS[gridId] = saveHubGridPositions;
