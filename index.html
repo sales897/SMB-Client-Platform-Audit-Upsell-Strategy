@@ -3848,18 +3848,27 @@ select.wfb-field-input { padding-right: 26px; }
 
     <div class="grid-stack-item" gs-id="va-smart-filters" gs-x="0" gs-y="16" gs-w="3" gs-h="6" gs-min-w="2" gs-min-h="4"><div class="grid-stack-item-content">
       <div class="card" style="width:100%">
-        <div class="card-header"><div class="card-title"><span class="icon" data-icon="filter" data-icon-size="14"></span> Smart Filters</div></div>
+        <div class="card-header">
+          <div class="card-title"><span class="icon" data-icon="filter" data-icon-size="14"></span> Smart Filters</div>
+          <button class="vital-ask" onclick="askNirvanaAboutVoiceAgentFilters()" title="Ask Nirvana about the current filters"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
+        </div>
         <label class="field-label" style="display:block;font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:5px">Portfolio</label>
-        <select class="field-input" style="margin-bottom:14px" onchange="setVoiceAgentSmartFilterPortfolio(this.value)">
+        <select class="field-input" id="vaSmartFilterPortfolio" style="margin-bottom:14px" onchange="setVoiceAgentSmartFilterPortfolio(this.value)">
           <option value="all">All Portfolios</option>
           <option value="smb">SMB</option>
           <option value="whitelabel">White Label</option>
           <option value="support">Support</option>
         </select>
-        <label class="field-label" style="display:block;font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:5px">Date Range</label>
-        <input class="field-input" value="Not wired to filtering yet" disabled style="opacity:.5;cursor:not-allowed" title="Visual placeholder only -- date-scoped filtering isn't built yet">
+        <label class="field-label" style="display:block;font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:5px">Activity Feed Date Range</label>
+        <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
+          <input type="date" class="field-input" id="vaSmartFilterStart" style="margin-bottom:0" onchange="setVoiceAgentSmartFilterDateRange()">
+          <span style="color:var(--text3);font-size:11px">to</span>
+          <input type="date" class="field-input" id="vaSmartFilterEnd" style="margin-bottom:0" onchange="setVoiceAgentSmartFilterDateRange()">
+        </div>
+        <div style="font-size:10px;color:var(--text3);line-height:1.5">Only affects Activity Feed below — KPIs, the chart, and flagged clients reflect current state and aren't retroactively date-filterable (no historical per-client record is stored for those).</div>
       </div>
     </div></div>
+
 
     <div class="grid-stack-item" gs-id="va-flagged-records" gs-x="3" gs-y="16" gs-w="5" gs-h="6" gs-min-w="3" gs-min-h="4"><div class="grid-stack-item-content">
       <div class="card" style="width:100%">
@@ -3959,7 +3968,7 @@ select.wfb-field-input { padding-right: 26px; }
       </div>
     </div></div>
 
-    <div class="grid-stack-item" gs-id="ta-breakdown-table" gs-x="0" gs-y="9" gs-w="12" gs-h="7" gs-min-w="5" gs-min-h="4"><div class="grid-stack-item-content" style="flex-direction:column;gap:12px">
+    <div class="grid-stack-item" gs-id="ta-breakdown-table" gs-x="0" gs-y="9" gs-w="12" gs-h="4" gs-min-w="5" gs-min-h="3"><div class="grid-stack-item-content" style="flex-direction:column;gap:12px">
       <div class="card" style="width:100%">
         <div class="card-header">
           <div><div class="card-title" data-i18n="ta_breakdown_chart">Breakdown by Product &amp; Portfolio</div><div class="card-sub" data-i18n="ta_breakdown_chart_sub">How many clients use each product, split by dashboard — click a number to see who</div></div>
@@ -3987,7 +3996,7 @@ select.wfb-field-input { padding-right: 26px; }
       </div>
     </div></div>
 
-    <div class="grid-stack-item" gs-id="ta-stale-card" gs-x="0" gs-y="16" gs-w="12" gs-h="7" gs-min-w="5" gs-min-h="4"><div class="grid-stack-item-content">
+    <div class="grid-stack-item" gs-id="ta-stale-card" gs-x="0" gs-y="13" gs-w="12" gs-h="7" gs-min-w="5" gs-min-h="4"><div class="grid-stack-item-content">
       <div class="card" style="width:100%">
         <div class="card-header">
           <div><div class="card-title" style="color:var(--yellow)"><span class="icon" data-icon="alert" data-icon-size="14"></span> <span data-i18n="ta_stale_card_title">Businesses with a Stale Last Lead</span></div><div class="card-sub" data-i18n="ta_stale_card_sub">Automatically detected from comments mentioning when the last lead was handled — flagged when that's anywhere from 7 days to 6 months ago</div></div>
@@ -4006,7 +4015,7 @@ select.wfb-field-input { padding-right: 26px; }
       </div>
     </div></div>
 
-    <div class="grid-stack-item" gs-id="ta-notes-card" gs-x="0" gs-y="23" gs-w="12" gs-h="7" gs-min-w="5" gs-min-h="4"><div class="grid-stack-item-content">
+    <div class="grid-stack-item" gs-id="ta-notes-card" gs-x="0" gs-y="20" gs-w="12" gs-h="7" gs-min-w="5" gs-min-h="4"><div class="grid-stack-item-content">
       <div class="card" style="width:100%">
         <div class="card-header">
           <div><div class="card-title" style="color:var(--blue)"><span class="icon" data-icon="chat" data-icon-size="14"></span> <span data-i18n="ta_notes_card_title">Yelp / Google LSA / Thumbtack Notes</span></div><div class="card-sub" id="ta-notes-sub" data-i18n="ta_notes_card_sub">Pulled from comments attached to these columns during upload, across SMB, White Label, and Support</div></div>
@@ -4031,29 +4040,37 @@ select.wfb-field-input { padding-right: 26px; }
       </div>
     </div></div>
 
-    <div class="grid-stack-item" gs-id="ta-smart-filters" gs-x="0" gs-y="30" gs-w="3" gs-h="6" gs-min-w="2" gs-min-h="4"><div class="grid-stack-item-content">
+    <div class="grid-stack-item" gs-id="ta-smart-filters" gs-x="0" gs-y="27" gs-w="3" gs-h="6" gs-min-w="2" gs-min-h="4"><div class="grid-stack-item-content">
       <div class="card" style="width:100%">
-        <div class="card-header"><div class="card-title"><span class="icon" data-icon="filter" data-icon-size="14"></span> Smart Filters</div></div>
+        <div class="card-header">
+          <div class="card-title"><span class="icon" data-icon="filter" data-icon-size="14"></span> Smart Filters</div>
+          <button class="vital-ask" onclick="askNirvanaAboutTextAgentFilters()" title="Ask Nirvana about the current filters"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
+        </div>
         <label style="display:block;font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:5px">Portfolio</label>
-        <select class="field-input" style="margin-bottom:14px" onchange="setTaSmartFilterPortfolio(this.value)">
+        <select class="field-input" id="taSmartFilterPortfolioSelect" style="margin-bottom:14px" onchange="setTaSmartFilterPortfolio(this.value)">
           <option value="all">All Portfolios</option>
           <option value="smb">SMB</option>
           <option value="whitelabel">White Label</option>
           <option value="support">Support</option>
         </select>
         <label style="display:block;font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:5px">Product</label>
-        <select class="field-input" style="margin-bottom:14px" onchange="setTaSmartFilterProduct(this.value)">
+        <select class="field-input" id="taSmartFilterProductSelect" style="margin-bottom:14px" onchange="setTaSmartFilterProduct(this.value)">
           <option value="all">All Products</option>
           <option value="yelp">Yelp</option>
           <option value="google_lsa">Google LSA</option>
           <option value="thumbtack">Thumbtack</option>
         </select>
         <label style="display:block;font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:5px">Date Range</label>
-        <input class="field-input" value="Not wired to filtering yet" disabled style="opacity:.5;cursor:not-allowed" title="Visual placeholder only -- date-scoped filtering isn't built yet">
+        <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
+          <input type="date" class="field-input" id="taSmartFilterStart" style="margin-bottom:0" onchange="setTaSmartFilterDateRange()">
+          <span style="color:var(--text3);font-size:11px">to</span>
+          <input type="date" class="field-input" id="taSmartFilterEnd" style="margin-bottom:0" onchange="setTaSmartFilterDateRange()">
+        </div>
+        <div style="font-size:10px;color:var(--text3);line-height:1.5">Affects Activity Feed and Flagged Review Records (using each lead's real last-handled date). KPIs and the chart reflect current state and aren't retroactively date-filterable.</div>
       </div>
     </div></div>
 
-    <div class="grid-stack-item" gs-id="ta-flagged-records" gs-x="3" gs-y="30" gs-w="5" gs-h="6" gs-min-w="3" gs-min-h="4"><div class="grid-stack-item-content">
+    <div class="grid-stack-item" gs-id="ta-flagged-records" gs-x="3" gs-y="27" gs-w="5" gs-h="6" gs-min-w="3" gs-min-h="4"><div class="grid-stack-item-content">
       <div class="card" style="width:100%">
         <div class="card-header">
           <div><div class="card-title"><span class="icon" data-icon="alert" data-icon-size="14"></span> Flagged Review Records</div><div class="card-sub">Oldest stale leads first</div></div>
@@ -4063,14 +4080,14 @@ select.wfb-field-input { padding-right: 26px; }
       </div>
     </div></div>
 
-    <div class="grid-stack-item" gs-id="ta-insights" gs-x="8" gs-y="30" gs-w="4" gs-h="3" gs-min-w="3" gs-min-h="2"><div class="grid-stack-item-content">
+    <div class="grid-stack-item" gs-id="ta-insights" gs-x="8" gs-y="27" gs-w="4" gs-h="3" gs-min-w="3" gs-min-h="2"><div class="grid-stack-item-content">
       <div class="card" style="width:100%">
         <div class="card-header"><div class="card-title"><span class="icon" data-icon="sparkle" data-icon-size="14"></span> Insights</div></div>
         <div id="ta-insights"></div>
       </div>
     </div></div>
 
-    <div class="grid-stack-item" gs-id="ta-activity-feed" gs-x="8" gs-y="33" gs-w="4" gs-h="3" gs-min-w="3" gs-min-h="2"><div class="grid-stack-item-content">
+    <div class="grid-stack-item" gs-id="ta-activity-feed" gs-x="8" gs-y="30" gs-w="4" gs-h="3" gs-min-w="3" gs-min-h="2"><div class="grid-stack-item-content">
       <div class="card" style="width:100%">
         <div class="card-header"><div class="card-title"><span class="icon" data-icon="chart" data-icon-size="14"></span> Activity Feed</div></div>
         <div id="ta-activity-feed"></div>
@@ -7778,11 +7795,23 @@ async function captureAdoptionSnapshot(page, metricKey, portfolio, count) {
     });
   } catch (e) { console.warn('Could not save adoption snapshot:', e.message); }
 }
-async function getAdoptionTrend(page, metricKey, portfolio) {
+async function getAdoptionTrend(page, metricKey, portfolio, dateRange) {
   try {
     const portfolioFilter = portfolio ? `portfolio=eq.${portfolio}` : 'portfolio=is.null';
     const rows = await sbSelect('product_adoption_snapshots', `page=eq.${page}&metric_key=eq.${metricKey}&${portfolioFilter}&order=snapshot_date.asc`);
     if (!rows || rows.length === 0) return null;
+    if (dateRange && dateRange.start && dateRange.end) {
+      const windowed = rows.filter(r => r.snapshot_date >= dateRange.start && r.snapshot_date <= dateRange.end);
+      if (windowed.length === 0) return { noDataInRange: true };
+      const rangeLatest = windowed[windowed.length - 1];
+      const rangeFirst = windowed[0];
+      return {
+        latest: rangeLatest.count, max: Math.max(...windowed.map(r => r.count)),
+        weekAgo: rangeFirst.count, // reused field: value at the start of the selected window
+        yesterday: windowed.length >= 2 ? windowed[windowed.length - 2].count : null,
+        historyDays: windowed.length, isRanged: true,
+      };
+    }
     const latest = rows[rows.length - 1];
     const max = Math.max(...rows.map(r => r.count));
     const weekAgoDate = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
@@ -7798,13 +7827,16 @@ async function getAdoptionTrend(page, metricKey, portfolio) {
 }
 function describeAdoptionTrend(trend, label) {
   if (!trend) return null;
-  const { latest, max, weekAgo, yesterday, historyDays } = trend;
-  if (historyDays < 2) return { headline: 'Started tracking', detail: `${latest} clients using ${label} today — a real trend needs a few more days of history.` };
-  if (latest >= max && (yesterday == null || latest > yesterday)) return { headline: 'New peak in adoption', detail: `${latest} clients using ${label}` };
-  if (weekAgo != null && latest > weekAgo) return { headline: 'Increase this week', detail: `+${latest - weekAgo} clients using ${label} vs 7 days ago` };
-  if (weekAgo != null && latest < weekAgo) return { headline: 'Decrease this week', detail: `${latest - weekAgo} clients using ${label} vs 7 days ago` };
+  if (trend.noDataInRange) return { headline: 'No history in that range', detail: `No snapshots were captured for ${label} between the selected dates.` };
+  const { latest, max, weekAgo, yesterday, historyDays, isRanged } = trend;
+  if (historyDays < 2) return { headline: 'Started tracking', detail: `${latest} clients using ${label}${isRanged ? ' in this range' : ' today'} — a real trend needs a few more days of history.` };
+  if (!isRanged && latest >= max && (yesterday == null || latest > yesterday)) return { headline: 'New peak in adoption', detail: `${latest} clients using ${label}` };
+  if (isRanged && latest >= max) return { headline: 'Peak within selected range', detail: `${latest} clients using ${label}` };
+  const comparisonLabel = isRanged ? 'vs start of selected range' : 'vs 7 days ago';
+  if (weekAgo != null && latest > weekAgo) return { headline: isRanged ? 'Increase over range' : 'Increase this week', detail: `+${latest - weekAgo} clients using ${label} ${comparisonLabel}` };
+  if (weekAgo != null && latest < weekAgo) return { headline: isRanged ? 'Decrease over range' : 'Decrease this week', detail: `${latest - weekAgo} clients using ${label} ${comparisonLabel}` };
   if (yesterday != null && latest === yesterday) return { headline: 'No change', detail: `${latest} clients using ${label} (steady)` };
-  return { headline: `${label} update`, detail: `${latest} clients today` };
+  return { headline: `${label} update`, detail: `${latest} clients${isRanged ? ' in this range' : ' today'}` };
 }
 function rebuildPortfolio(pk) {
   rebuildTableHeaders(pk);
@@ -8398,15 +8430,11 @@ function rebuildVoicePage() {
   set('va-flagged', flagged.length);
   setGaugeArc(document.getElementById('va-adoption-arc'), pct);
   captureAdoptionSnapshot('voice_agent', 'using', null, using.length);
-  getAdoptionTrend('voice_agent', 'using', null).then(trend => {
-    const entry = describeAdoptionTrend(trend, 'Voice Agent');
-    const el = document.getElementById('va-activity-feed');
-    if (el) {
-      el.innerHTML = entry
-        ? `<div class="activity-feed-item"><div class="activity-feed-headline">${escAttr(entry.headline)}</div><div class="activity-feed-detail">${escAttr(entry.detail)}</div></div>`
-        : `<div style="color:var(--text3);font-size:12px;padding:8px 0">Not enough history yet to show a trend.</div>`;
-    }
-  });
+  const vaStartInput = document.getElementById('vaSmartFilterStart');
+  const vaEndInput = document.getElementById('vaSmartFilterEnd');
+  if (vaStartInput && !vaStartInput.value) vaStartInput.value = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
+  if (vaEndInput && !vaEndInput.value) vaEndInput.value = new Date().toISOString().slice(0, 10);
+  renderVoiceAgentActivityFeed();
 
   // Real per-portfolio flagged breakdown (replaces a fabricated "High/Standard
   // priority" split that isn't backed by any actual field on flagged notes --
@@ -8460,7 +8488,24 @@ function setVoiceAgentPortfolioFilter(pk, btn) {
 }
 
 let voiceAgentSmartFilterPortfolio = 'all';
+let voiceAgentSmartFilterDateRange = null; // { start, end } or null (no range selected -- default trend behavior)
 function setVoiceAgentSmartFilterPortfolio(pk) { voiceAgentSmartFilterPortfolio = pk; renderVoiceAgentFlaggedRecords(); }
+function setVoiceAgentSmartFilterDateRange() {
+  const start = document.getElementById('vaSmartFilterStart').value;
+  const end = document.getElementById('vaSmartFilterEnd').value;
+  voiceAgentSmartFilterDateRange = (start && end) ? { start, end } : null;
+  renderVoiceAgentActivityFeed();
+}
+async function renderVoiceAgentActivityFeed() {
+  const el = document.getElementById('va-activity-feed');
+  if (!el) return;
+  const using = getAllClientsWithPortfolio().filter(x => x.client.voice_agent).length;
+  const trend = await getAdoptionTrend('voice_agent', 'using', null, voiceAgentSmartFilterDateRange);
+  const entry = describeAdoptionTrend(trend, 'Voice Agent');
+  el.innerHTML = entry
+    ? `<div class="activity-feed-item"><div class="activity-feed-headline">${escAttr(entry.headline)}</div><div class="activity-feed-detail">${escAttr(entry.detail)}</div></div>`
+    : `<div style="color:var(--text3);font-size:12px;padding:8px 0">Not enough history yet to show a trend.</div>`;
+}
 function renderVoiceAgentFlaggedRecords() {
   const el = document.getElementById('va-flagged-records');
   if (!el) return;
@@ -8553,15 +8598,42 @@ function getTextAgentStaleLeads() {
 
 let taSmartFilterPortfolio = 'all';
 let taSmartFilterProduct = 'all';
+let taSmartFilterDateRange = null; // { start, end } or null
 function setTaSmartFilterPortfolio(pk) { taSmartFilterPortfolio = pk; renderTextAgentFlaggedRecords(); }
 function setTaSmartFilterProduct(key) { taSmartFilterProduct = key; renderTextAgentFlaggedRecords(); }
+function setTaSmartFilterDateRange() {
+  const start = document.getElementById('taSmartFilterStart').value;
+  const end = document.getElementById('taSmartFilterEnd').value;
+  taSmartFilterDateRange = (start && end) ? { start, end } : null;
+  renderTextAgentFlaggedRecords();
+  renderTextAgentActivityFeed();
+}
+async function renderTextAgentActivityFeed() {
+  const el = document.getElementById('ta-activity-feed');
+  if (!el) return;
+  const entries = await Promise.all(TEXT_AGENT_PRODUCTS.map(p => getAdoptionTrend('text_agent', p.key, null, taSmartFilterDateRange).then(trend => describeAdoptionTrend(trend, p.label))));
+  const real = entries.filter(Boolean);
+  el.innerHTML = real.length
+    ? real.map(entry => `<div class="activity-feed-item"><div class="activity-feed-headline">${escAttr(entry.headline)}</div><div class="activity-feed-detail">${escAttr(entry.detail)}</div></div>`).join('')
+    : `<div style="color:var(--text3);font-size:12px;padding:8px 0">Not enough history yet to show a trend.</div>`;
+}
 function renderTextAgentFlaggedRecords() {
   const el = document.getElementById('ta-flagged-records');
   if (!el) return;
   let stale = getTextAgentStaleLeads().sort((a, b) => b.days - a.days);
   if (taSmartFilterPortfolio !== 'all') stale = stale.filter(x => x.pk === taSmartFilterPortfolio);
   if (taSmartFilterProduct !== 'all') stale = stale.filter(x => x.productKey === taSmartFilterProduct);
-  if (stale.length === 0) { el.innerHTML = `<div style="color:var(--text3);font-size:11.5px;padding:8px 0">Nothing flagged right now.</div>`; return; }
+  if (taSmartFilterDateRange) {
+    // Converts each lead's real "days ago" into an absolute date (today
+    // minus days) so the range filters by when it was actually last
+    // handled, not a fabricated timestamp.
+    const today = new Date();
+    stale = stale.filter(x => {
+      const leadDate = new Date(today.getTime() - x.days * 86400000).toISOString().slice(0, 10);
+      return leadDate >= taSmartFilterDateRange.start && leadDate <= taSmartFilterDateRange.end;
+    });
+  }
+  if (stale.length === 0) { el.innerHTML = `<div style="color:var(--text3);font-size:11.5px;padding:8px 0">Nothing flagged in the current filters.</div>`; return; }
   const top = stale.slice(0, 5);
   el.innerHTML = `<table><tr><th>Client</th><th>Portfolio</th><th>Note</th><th>Age</th></tr>${top.map(x => {
     const meta = TA_PORTFOLIO_META[x.pk];
@@ -8640,14 +8712,11 @@ function rebuildTextAgentPage() {
 
   TEXT_AGENT_PRODUCTS.forEach(p => captureAdoptionSnapshot('text_agent', p.key, null, totals[p.key]));
   captureAdoptionSnapshot('text_agent', 'any', null, anyCount);
-  Promise.all(TEXT_AGENT_PRODUCTS.map(p => getAdoptionTrend('text_agent', p.key, null).then(trend => describeAdoptionTrend(trend, p.label)))).then(entries => {
-    const el = document.getElementById('ta-activity-feed');
-    if (!el) return;
-    const real = entries.filter(Boolean);
-    el.innerHTML = real.length
-      ? real.map(entry => `<div class="activity-feed-item"><div class="activity-feed-headline">${escAttr(entry.headline)}</div><div class="activity-feed-detail">${escAttr(entry.detail)}</div></div>`).join('')
-      : `<div style="color:var(--text3);font-size:12px;padding:8px 0">Not enough history yet to show a trend.</div>`;
-  });
+  const taStartInput = document.getElementById('taSmartFilterStart');
+  const taEndInput = document.getElementById('taSmartFilterEnd');
+  if (taStartInput && !taStartInput.value) taStartInput.value = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
+  if (taEndInput && !taEndInput.value) taEndInput.value = new Date().toISOString().slice(0, 10);
+  renderTextAgentActivityFeed();
 
   const portfolioClientCounts = portfolios.map(pk => getClients(pk).length);
 
@@ -9207,6 +9276,20 @@ function askNirvanaQuick(promptText) {
   const panel = document.getElementById('aiAgentPanel');
   if (panel && panel.style.display === 'none') toggleAiAgentPanel();
   sendAiAgentQuickMessage(promptText);
+}
+function askNirvanaAboutVoiceAgentFilters() {
+  const pk = voiceAgentSmartFilterPortfolio;
+  const pkText = pk === 'all' ? 'all portfolios' : PORTFOLIO_LABELS[pk];
+  const rangeText = voiceAgentSmartFilterDateRange ? ` for the Activity Feed date range ${voiceAgentSmartFilterDateRange.start} to ${voiceAgentSmartFilterDateRange.end}` : '';
+  askNirvanaQuick(`I'm currently looking at Voice Agent filtered to ${pkText}${rangeText}. What stands out here, and what should I do about it?`);
+}
+function askNirvanaAboutTextAgentFilters() {
+  const pk = taSmartFilterPortfolio;
+  const pkText = pk === 'all' ? 'all portfolios' : PORTFOLIO_LABELS[pk];
+  const productMeta = TEXT_AGENT_PRODUCTS.find(p => p.key === taSmartFilterProduct);
+  const productText = taSmartFilterProduct === 'all' ? 'all products' : productMeta.label;
+  const rangeText = taSmartFilterDateRange ? ` for the date range ${taSmartFilterDateRange.start} to ${taSmartFilterDateRange.end}` : '';
+  askNirvanaQuick(`I'm currently looking at Text Agent filtered to ${pkText}, ${productText}${rangeText}. What stands out here, and what should I do about it?`);
 }
 
 function rebuildGapBar(pk) {
@@ -23254,6 +23337,20 @@ const AI_AGENT_TOOLS = [
     input_schema: { type: 'object', properties: { client_name: { type: 'string' }, limit: { type: 'integer', description: 'Max number of most-recent entries to return. Defaults to 20.' } }, required: ['client_name'] },
   },
   {
+    name: 'get_adoption_trend',
+    description: 'Get the real historical adoption trend for Voice Agent or a specific Text Agent product (Yelp/Google LSA/Thumbtack/any), optionally scoped to a specific date range — backed by actual daily snapshots, never estimated or extrapolated from a single current count. Returns the latest count, the peak ever recorded (or within the range if one is given), the count at the comparison baseline (7 days ago by default, or the start of the given range), and how many days of real history exist so far. Use this whenever asked about adoption trends, growth, peaks, or "how has X changed over time" — this is the only tool with genuine longitudinal data; get_portfolio_summary and get_product_adoption only reflect right now.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        page: { type: 'string', enum: ['voice_agent', 'text_agent'] },
+        metric_key: { type: 'string', description: 'For voice_agent, always "using". For text_agent, one of "yelp", "google_lsa", "thumbtack", or "any" (using at least one product).' },
+        start_date: { type: 'string', description: 'Optional, YYYY-MM-DD. Must be paired with end_date if given.' },
+        end_date: { type: 'string', description: 'Optional, YYYY-MM-DD. Must be paired with start_date if given.' },
+      },
+      required: ['page', 'metric_key'],
+    },
+  },
+  {
     name: 'get_at_risk_clients',
     description: 'Get every client scoring below a health threshold (default 60/100), sorted worst-first, each with the specific reasons driving their score. This is the holistic "which accounts are actually at risk" view — combining engagement + task backlog + billing friction into one signal, rather than checking just one of those in isolation. Use this whenever asked "which accounts are at risk," "who needs attention," or similar.',
     input_schema: {
@@ -23868,6 +23965,28 @@ async function executeAiTool(name, input) {
           field: h.field_name || undefined, old_value: h.old_value || undefined, new_value: h.new_value || undefined,
           changed_by: h.changed_by,
         })),
+      };
+    }
+    case 'get_adoption_trend': {
+      const page = input.page;
+      const metricKey = input.metric_key;
+      if (!['voice_agent', 'text_agent'].includes(page)) return { error: 'page must be "voice_agent" or "text_agent".' };
+      const validMetrics = page === 'voice_agent' ? ['using'] : ['yelp', 'google_lsa', 'thumbtack', 'any'];
+      if (!validMetrics.includes(metricKey)) return { error: `metric_key must be one of: ${validMetrics.join(', ')} for ${page}.` };
+      if ((input.start_date && !input.end_date) || (input.end_date && !input.start_date)) return { error: 'start_date and end_date must be given together, or not at all.' };
+      const dateRange = (input.start_date && input.end_date) ? { start: input.start_date, end: input.end_date } : null;
+      let trend;
+      try { trend = await getAdoptionTrend(page, metricKey, null, dateRange); } catch(e) { return { error: 'Could not load adoption trend: ' + e.message }; }
+      if (!trend) return { error: 'No historical snapshots exist yet for this metric — tracking only started recently, check back after a few more days of real usage.' };
+      if (trend.noDataInRange) return { error: `No snapshots were captured for this metric between ${input.start_date} and ${input.end_date}.` };
+      return {
+        page, metric_key: metricKey,
+        date_range: dateRange ? `${dateRange.start} to ${dateRange.end}` : 'all-time (no range specified)',
+        latest_count: trend.latest,
+        peak_count: trend.max,
+        comparison_baseline_count: trend.weekAgo,
+        comparison_baseline_label: dateRange ? 'start of the specified range' : '7 days ago',
+        days_of_history: trend.historyDays,
       };
     }
     case 'get_at_risk_clients': {
@@ -25139,7 +25258,7 @@ async function runAiAgentTurn(toolTagForNextText) {
   const u = getCurrentUser();
   const systemPrompt = `${currentLanguage === 'es' ? 'IMPORTANT: The Hub is currently set to Spanish (MX). Respond to the user ENTIRELY in Spanish (Mexican Spanish), including this entire conversation, regardless of what language they write in — unless they explicitly ask you to switch to English. Data values, client names, and product names stay as-is; everything you write around them is in Spanish.\n\n' : ''}Current date and time: ${new Date().toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })}. This is read directly from the user's own device clock, so it already reflects their real timezone — treat it as ground truth. For ANY relative time request ("in 15 minutes", "tomorrow at 9am", "next Monday"), compute the exact resulting date/time yourself from this reference. Never ask the user what time it is or guess at a timestamp — the real current time is always right here.
 
-You are Nirvana, the AI Agent inside ${ORG_SETTINGS.company_name}'s ${ORG_SETTINGS.product_name} — "${ORG_SETTINGS.product_name}" — helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the ${ORG_SETTINGS.portfolio_labels.smb}, ${ORG_SETTINGS.portfolio_labels.whitelabel}, and ${ORG_SETTINGS.portfolio_labels.support} portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. Whenever a request would affect MORE THAN ONE client (e.g. "create a follow-up task for every client that hasn't been touched in 30 days," or a list of specific client names), always use bulk_create_tasks or bulk_add_note instead of calling create_task/add_note in a loop — looping individual calls would force a separate confirmation click per client, while the bulk tools show one confirmation with the full affected list. Workflows can trigger on six things — "inactivity" (no note in N days), "schedule" (recurring cadence, for one client or a whole portfolio), "client_added" (fires the moment a new client is created), "task_due_soon" (reminds before an existing task's due date), "kpi_drop" (a SuccessOS score went down — team-level, not tied to one client), or "collections_status" (an account entered a specific Collections status) — and can take four actions when they fire: create a task (optionally with a real due date/time), just send a notification with no task, log an audit-trail note with no task or notification, or have you draft the actual task content yourself instead of using fixed text. If someone describes an automation idea in plain English, translate it into the right trigger type, action type, and fields yourself rather than making them fill out a form. For questions about company policy, procedures, "how do we...", or what the website/docs say, search the Knowledge Base — it contains SOPs, docs, and website content the team has fed in, separate from live client data. You can read and explain every chart in the Hub: get_portfolio_summary explains a portfolio's Product Adoption Rate and Products Per Client charts, get_product_adoption explains the Voice Agent / Text Agent charts, get_collections_summary explains the Collections breakdown (always separated into Outstanding Balances vs Card Fails, each with its own status breakdown — never collapse these into one number), get_adspend_summary explains Ad Spend's promo/budget breakdown, and get_kpi_summary explains the SuccessOS scores. When someone asks you to break down, interpret, or explain any data or chart, always call the specific tool that has that breakdown built in rather than answering from a vaguer or more general tool — if a user asks for a split by category/status/type, that split should already be in the tool result; use it. Prefer the data tools above for explaining charts — they're faster and more precise. Only use view_chart when the question is genuinely about the chart's visual appearance itself (e.g. "does this look right," "what do you see," "describe this chart visually") — calling it will switch the user's screen to that chart's page, so mention that you're pulling it up. Whenever asked to check for discrepancies, duplicates, mismatches, or whether numbers add up anywhere in the Hub (including client counts, Collections, Ad Spend, or the Knowledge Base), always call audit_data_integrity rather than speculating about possible causes — it actually reconciles the numbers and reports genuine findings, so use what it returns instead of guessing at explanations like "could be duplicates" or "could be stale data." A daily briefing already gets shown automatically once per day when the chat is first opened — if asked for a summary, rundown, or "what should I focus on" at any other point, use get_daily_briefing to pull the same live data fresh rather than referencing whatever was shown earlier, since it may be out of date by then. Whenever asked "which accounts are at risk," "who needs attention," or how healthy a specific client is, use get_at_risk_clients or get_client_health rather than checking just one signal (like Collections alone, or note recency alone) — those tools already combine engagement, task backlog, and billing friction into one score with a transparent breakdown of exactly why, which is a more honest answer than picking one factor and guessing at the rest. Whenever asked what's changed for a specific client recently, who created or updated a client record, or when a client was actually added to the Hub, use get_client_activity_history — it's the real, logged audit trail (every creation and every field-level change, from every entry point in the Hub: Bulk Reconcile Import, CSV imports, Add Client, onboarding graduation, or your own create_client/update_client_contact calls), not something to infer from notes or guess at. When summarizing data, only use the real numbers/content returned by tools — never estimate or make things up. If a tool returns an error (e.g. client not found, or nothing in the knowledge base matches), tell the user plainly rather than guessing. If a tool result includes a "note" field, don't ignore it — mention what it says (for example, a client match that only worked after ignoring punctuation/spacing differences) rather than presenting the result as a clean, unqualified match. When presenting a list of businesses or clients that genuinely don't exist yet in the Hub and could be created (for example, orphaned Ad Spend/Collections entries with no matching client record), format it as a markdown table and put a line reading exactly \`[[selectable:create_client]]\` on its own line immediately before that table — this renders the list with checkboxes so the user can pick specific ones to create instead of you needing to ask about each individually. Only use this marker for that specific "these could be created as clients" scenario — never on ordinary reporting tables (KPI trends, budget breakdowns, adoption rates, etc.), since a "create as clients" action button wouldn't make sense there. If a message says the user selected specific businesses to create as clients, treat that as them already having committed to creating those specific ones — don't re-confirm each one individually, just ask which portfolio(s) each should go into (per the existing rule: never guess a portfolio) and then create them. Onboarding records are a SEPARATE, EARLIER concept from clients — an onboarding record represents a business before it's a real client anywhere else in the Hub, tracked through six stages (Contract Signed, Kickoff Call Scheduled, Kickoff Call Completed, Setup In Progress, QA / Internal Review, Live) with its own checklist and notes. Don't confuse create_onboarding with create_client, or an onboarding record's business_name with an actual client_name — they're different things until activate_onboarding_as_client is explicitly used to graduate one into the other, which typically only makes sense once a record has reached the Live stage. The embeddable Chat Widget is a completely separate AI conversation from you — it runs on a client's own website, talking to anonymous visitors, with its own agent name/personality/instructions per widget. You have no live access into those conversations as they happen, but get_chat_widget_summary lets you check on lead activity after the fact (volume, resolution breakdown, recent leads) whenever asked about chat widget leads or website chat activity.`;
+You are Nirvana, the AI Agent inside ${ORG_SETTINGS.company_name}'s ${ORG_SETTINGS.product_name} — "${ORG_SETTINGS.product_name}" — helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the ${ORG_SETTINGS.portfolio_labels.smb}, ${ORG_SETTINGS.portfolio_labels.whitelabel}, and ${ORG_SETTINGS.portfolio_labels.support} portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. Whenever a request would affect MORE THAN ONE client (e.g. "create a follow-up task for every client that hasn't been touched in 30 days," or a list of specific client names), always use bulk_create_tasks or bulk_add_note instead of calling create_task/add_note in a loop — looping individual calls would force a separate confirmation click per client, while the bulk tools show one confirmation with the full affected list. Workflows can trigger on six things — "inactivity" (no note in N days), "schedule" (recurring cadence, for one client or a whole portfolio), "client_added" (fires the moment a new client is created), "task_due_soon" (reminds before an existing task's due date), "kpi_drop" (a SuccessOS score went down — team-level, not tied to one client), or "collections_status" (an account entered a specific Collections status) — and can take four actions when they fire: create a task (optionally with a real due date/time), just send a notification with no task, log an audit-trail note with no task or notification, or have you draft the actual task content yourself instead of using fixed text. If someone describes an automation idea in plain English, translate it into the right trigger type, action type, and fields yourself rather than making them fill out a form. For questions about company policy, procedures, "how do we...", or what the website/docs say, search the Knowledge Base — it contains SOPs, docs, and website content the team has fed in, separate from live client data. You can read and explain every chart in the Hub: get_portfolio_summary explains a portfolio's Product Adoption Rate and Products Per Client charts, get_product_adoption explains the Voice Agent / Text Agent charts, get_collections_summary explains the Collections breakdown (always separated into Outstanding Balances vs Card Fails, each with its own status breakdown — never collapse these into one number), get_adspend_summary explains Ad Spend's promo/budget breakdown, and get_kpi_summary explains the SuccessOS scores. When someone asks you to break down, interpret, or explain any data or chart, always call the specific tool that has that breakdown built in rather than answering from a vaguer or more general tool — if a user asks for a split by category/status/type, that split should already be in the tool result; use it. Prefer the data tools above for explaining charts — they're faster and more precise. Only use view_chart when the question is genuinely about the chart's visual appearance itself (e.g. "does this look right," "what do you see," "describe this chart visually") — calling it will switch the user's screen to that chart's page, so mention that you're pulling it up. Whenever asked to check for discrepancies, duplicates, mismatches, or whether numbers add up anywhere in the Hub (including client counts, Collections, Ad Spend, or the Knowledge Base), always call audit_data_integrity rather than speculating about possible causes — it actually reconciles the numbers and reports genuine findings, so use what it returns instead of guessing at explanations like "could be duplicates" or "could be stale data." A daily briefing already gets shown automatically once per day when the chat is first opened — if asked for a summary, rundown, or "what should I focus on" at any other point, use get_daily_briefing to pull the same live data fresh rather than referencing whatever was shown earlier, since it may be out of date by then. Whenever asked "which accounts are at risk," "who needs attention," or how healthy a specific client is, use get_at_risk_clients or get_client_health rather than checking just one signal (like Collections alone, or note recency alone) — those tools already combine engagement, task backlog, and billing friction into one score with a transparent breakdown of exactly why, which is a more honest answer than picking one factor and guessing at the rest. Whenever asked what's changed for a specific client recently, who created or updated a client record, or when a client was actually added to the Hub, use get_client_activity_history — it's the real, logged audit trail (every creation and every field-level change, from every entry point in the Hub: Bulk Reconcile Import, CSV imports, Add Client, onboarding graduation, or your own create_client/update_client_contact calls), not something to infer from notes or guess at. Whenever asked about Voice Agent or Text Agent adoption trends, growth, peaks, or how a metric has changed over time (including for a specific date range someone mentions), use get_adoption_trend — it's backed by real daily snapshots, unlike get_portfolio_summary/get_product_adoption which only reflect the current moment; if a person is looking at a filtered date range on the Voice Agent or Text Agent page, ask what range if they haven't said, rather than assuming it matches what's currently on their screen. When summarizing data, only use the real numbers/content returned by tools — never estimate or make things up. If a tool returns an error (e.g. client not found, or nothing in the knowledge base matches), tell the user plainly rather than guessing. If a tool result includes a "note" field, don't ignore it — mention what it says (for example, a client match that only worked after ignoring punctuation/spacing differences) rather than presenting the result as a clean, unqualified match. When presenting a list of businesses or clients that genuinely don't exist yet in the Hub and could be created (for example, orphaned Ad Spend/Collections entries with no matching client record), format it as a markdown table and put a line reading exactly \`[[selectable:create_client]]\` on its own line immediately before that table — this renders the list with checkboxes so the user can pick specific ones to create instead of you needing to ask about each individually. Only use this marker for that specific "these could be created as clients" scenario — never on ordinary reporting tables (KPI trends, budget breakdowns, adoption rates, etc.), since a "create as clients" action button wouldn't make sense there. If a message says the user selected specific businesses to create as clients, treat that as them already having committed to creating those specific ones — don't re-confirm each one individually, just ask which portfolio(s) each should go into (per the existing rule: never guess a portfolio) and then create them. Onboarding records are a SEPARATE, EARLIER concept from clients — an onboarding record represents a business before it's a real client anywhere else in the Hub, tracked through six stages (Contract Signed, Kickoff Call Scheduled, Kickoff Call Completed, Setup In Progress, QA / Internal Review, Live) with its own checklist and notes. Don't confuse create_onboarding with create_client, or an onboarding record's business_name with an actual client_name — they're different things until activate_onboarding_as_client is explicitly used to graduate one into the other, which typically only makes sense once a record has reached the Live stage. The embeddable Chat Widget is a completely separate AI conversation from you — it runs on a client's own website, talking to anonymous visitors, with its own agent name/personality/instructions per widget. You have no live access into those conversations as they happen, but get_chat_widget_summary lets you check on lead activity after the fact (volume, resolution breakdown, recent leads) whenever asked about chat widget leads or website chat activity.`;
 
   let streamBubble = null;
   const onTextDelta = (fullTextSoFar) => {
