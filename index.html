@@ -2093,6 +2093,11 @@ tr.pg-hidden-row { display: none; }
   margin-bottom: 8px; transition: border-color var(--transition-slow);
 }
 .activity-feed-item:hover { border-color: var(--orange); }
+.insight-item { display: flex; gap: 10px; padding: 9px 0; border-top: 1px solid var(--border); }
+.insight-item:first-child { border-top: none; padding-top: 0; }
+.insight-icon { width: 24px; height: 24px; border-radius: 7px; background: var(--orange-dim); color: var(--orange2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.insight-headline { font-size: 12px; font-weight: 700; color: var(--text); }
+.insight-detail { font-size: 11px; color: var(--text3); margin-top: 2px; }
 .activity-feed-headline { font-size: 12.5px; font-weight: 700; color: var(--text); }
 .activity-feed-detail { font-size: 11px; color: var(--text3); margin-top: 2px; }
 .view-all-records { text-align: center; font-size: 11px; color: var(--orange2); margin-top: 10px; cursor: pointer; }
@@ -3866,11 +3871,14 @@ select.wfb-field-input { padding-right: 26px; }
       </div>
     </div></div>
 
-    <div class="grid-stack-item" gs-id="va-insights-activity" gs-x="8" gs-y="16" gs-w="4" gs-h="6" gs-min-w="3" gs-min-h="4"><div class="grid-stack-item-content" style="flex-direction:column;gap:12px">
+    <div class="grid-stack-item" gs-id="va-insights" gs-x="8" gs-y="16" gs-w="4" gs-h="3" gs-min-w="3" gs-min-h="2"><div class="grid-stack-item-content">
       <div class="card" style="width:100%">
         <div class="card-header"><div class="card-title"><span class="icon" data-icon="sparkle" data-icon-size="14"></span> Insights</div></div>
         <div id="va-insights"></div>
       </div>
+    </div></div>
+
+    <div class="grid-stack-item" gs-id="va-activity-feed" gs-x="8" gs-y="19" gs-w="4" gs-h="3" gs-min-w="3" gs-min-h="2"><div class="grid-stack-item-content">
       <div class="card" style="width:100%">
         <div class="card-header"><div class="card-title"><span class="icon" data-icon="chart" data-icon-size="14"></span> Activity Feed</div></div>
         <div id="va-activity-feed"></div>
@@ -4055,11 +4063,14 @@ select.wfb-field-input { padding-right: 26px; }
       </div>
     </div></div>
 
-    <div class="grid-stack-item" gs-id="ta-insights-activity" gs-x="8" gs-y="30" gs-w="4" gs-h="6" gs-min-w="3" gs-min-h="4"><div class="grid-stack-item-content" style="flex-direction:column;gap:12px">
+    <div class="grid-stack-item" gs-id="ta-insights" gs-x="8" gs-y="30" gs-w="4" gs-h="3" gs-min-w="3" gs-min-h="2"><div class="grid-stack-item-content">
       <div class="card" style="width:100%">
         <div class="card-header"><div class="card-title"><span class="icon" data-icon="sparkle" data-icon-size="14"></span> Insights</div></div>
         <div id="ta-insights"></div>
       </div>
+    </div></div>
+
+    <div class="grid-stack-item" gs-id="ta-activity-feed" gs-x="8" gs-y="33" gs-w="4" gs-h="3" gs-min-w="3" gs-min-h="2"><div class="grid-stack-item-content">
       <div class="card" style="width:100%">
         <div class="card-header"><div class="card-title"><span class="icon" data-icon="chart" data-icon-size="14"></span> Activity Feed</div></div>
         <div id="ta-activity-feed"></div>
