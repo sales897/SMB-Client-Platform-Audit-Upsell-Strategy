@@ -3219,7 +3219,11 @@ select.wfb-field-input { padding-right: 26px; }
         <option value="support">Support</option>
         <option value="">Company-wide</option>
       </select>
+      <input type="file" id="goalsFileUploadInput" accept=".csv,.xlsx,.xls" style="display:none" onchange="handleGoalsFileUpload(event)">
+      <button class="btn btn-sm" id="topbarGoalsUploadBtn" onclick="document.getElementById('goalsFileUploadInput').click()" style="display:none">📁 Upload Goals</button>
       <button class="btn btn-sm" id="topbarGoalsSmartPasteBtn" onclick="openGoalsSmartPasteModal()" style="display:none">✎ Smart Paste</button>
+      <button class="export-csv-btn" id="topbarGoalsExportBtn" onclick="exportGoalsTable()" title="Download the currently visible rows as a CSV file" style="display:none"><span class="icon" data-icon="download" data-icon-size="12"></span> Export CSV</button>
+      <button class="btn btn-sm" id="topbarGoalsCarryForwardBtn" onclick="openCarryForwardModal()" style="display:none">⟳ Copy to Next Month</button>
       <button class="btn btn-primary btn-sm" id="topbarNewGoalBtn" onclick="openAddGoalModal()" style="display:none">＋ New Goal</button>
     </div>
   </div>
@@ -4368,7 +4372,7 @@ select.wfb-field-input { padding-right: 26px; }
         <div><div class="card-title" id="goalsTableTitle">Monthly Goals (0)</div></div>
       </div>
       <div style="overflow-x:auto">
-        <table class="pill-rows">
+        <table class="pill-rows" id="goalsTable">
           <thead><tr>
             <th style="text-align:left;padding-left:var(--space-3)">Goal</th>
             <th style="text-align:left">Owner / Team</th>
@@ -4407,6 +4411,9 @@ select.wfb-field-input { padding-right: 26px; }
     <div class="card" style="margin-top:var(--space-4)">
       <div class="card-header">
         <div><div class="card-title">Goal History</div><div class="card-sub">Real version audit trail</div></div>
+        <select class="field-input" id="goalsHistoryFilter" style="width:auto;margin-bottom:0" onchange="renderGoalsHistoryList()">
+          <option value="">All Goals</option>
+        </select>
       </div>
       <div id="goalsHistoryList" style="max-height:260px;overflow-y:auto"></div>
     </div>
@@ -4534,6 +4541,17 @@ select.wfb-field-input { padding-right: 26px; }
         <input type="date" id="goalDueDate" class="field-input">
       </div>
     </div>
+    <label class="field-label" for="goalStatusOverride">Status <span style="color:var(--text3)">(auto-computed by default from progress vs. pace — override only if you know something the numbers don't show)</span></label>
+    <select id="goalStatusOverride" class="field-input" onchange="document.getElementById('goalStatusOverrideNoteWrap').style.display = this.value ? '' : 'none'">
+      <option value="">Auto-compute (recommended)</option>
+      <option value="on_track">Manually set: On Track</option>
+      <option value="at_risk">Manually set: At Risk</option>
+      <option value="off_track">Manually set: Off Track</option>
+    </select>
+    <div id="goalStatusOverrideNoteWrap" style="display:none">
+      <label class="field-label" for="goalStatusOverrideNote">Why override? <span style="color:var(--text3)">(shown next to the status in the table)</span></label>
+      <input type="text" id="goalStatusOverrideNote" class="field-input" placeholder="e.g. Client relationship risk not reflected in the numbers yet">
+    </div>
     <div id="goalChangeNoteWrap" style="display:none">
       <label class="field-label" for="goalChangeNote">What changed and why? <span style="color:var(--text3)">(optional — shown in Goal History)</span></label>
       <textarea id="goalChangeNote" class="field-input" rows="2" placeholder="e.g. Adjusted target after Q1 actuals came in higher than expected"></textarea>
@@ -4577,6 +4595,18 @@ select.wfb-field-input { padding-right: 26px; }
   </div>
 </div>
 
+<div class="modal-overlay" id="goalsCarryForwardModal">
+  <div class="modal modal-wide" role="dialog" aria-modal="true" aria-labelledby="goalsCarryForwardTitle">
+    <h3 id="goalsCarryForwardTitle"><span class="icon" data-icon="target" data-icon-size="16"></span> Copy Goals to Next Month</h3>
+    <p id="goalsCarryForwardSummary" style="font-size:12px;color:var(--text3);margin-bottom:12px"></p>
+    <div id="goalsCarryForwardList" style="max-height:50vh;overflow-y:auto"></div>
+    <div class="modal-actions" style="justify-content:space-between">
+      <button class="btn btn-ghost" onclick="closeCarryForwardModal()">Cancel</button>
+      <button class="btn btn-primary" id="goalsCarryForwardCommitBtn" onclick="commitCarryForward()">Copy Selected</button>
+    </div>
+    <div id="goalsCarryForwardStatus" style="font-size:11.5px;color:var(--text3);margin-top:8px;text-align:right"></div>
+  </div>
+</div>
 
   <!-- ═══════════════════════════════════════════════════════════════════
        PAGE 7: ACTION PLAN
@@ -6517,12 +6547,18 @@ function showPage(id) {
   // shared-topbar approach, only shown while the Goals page is open.
   const goalsMonthFilterEl = document.getElementById('goalsMonthFilter');
   const goalsPortfolioFilterEl = document.getElementById('goalsPortfolioFilter');
+  const goalsUploadBtn = document.getElementById('topbarGoalsUploadBtn');
   const goalsSmartPasteBtn = document.getElementById('topbarGoalsSmartPasteBtn');
+  const goalsExportBtn = document.getElementById('topbarGoalsExportBtn');
+  const goalsCarryForwardBtn = document.getElementById('topbarGoalsCarryForwardBtn');
   const newGoalBtn = document.getElementById('topbarNewGoalBtn');
   const onGoalsPage = id === 'upsell';
   if (goalsMonthFilterEl) goalsMonthFilterEl.style.display = onGoalsPage ? '' : 'none';
   if (goalsPortfolioFilterEl) goalsPortfolioFilterEl.style.display = onGoalsPage ? '' : 'none';
+  if (goalsUploadBtn) goalsUploadBtn.style.display = onGoalsPage ? '' : 'none';
   if (goalsSmartPasteBtn) goalsSmartPasteBtn.style.display = onGoalsPage ? '' : 'none';
+  if (goalsExportBtn) goalsExportBtn.style.display = onGoalsPage ? '' : 'none';
+  if (goalsCarryForwardBtn) goalsCarryForwardBtn.style.display = onGoalsPage ? '' : 'none';
   if (newGoalBtn) newGoalBtn.style.display = onGoalsPage ? '' : 'none';
 
   if (id === 'home') rebuildHomePage();
@@ -9973,6 +10009,7 @@ const MODAL_CLOSE_FNS = {
   goalModal: closeGoalModal,
   goalsSmartPasteModal: closeGoalsSmartPasteModal,
   goalPeriodModal: closeGoalPeriodModal,
+  goalsCarryForwardModal: closeCarryForwardModal,
   mappingModal: closeMappingModal,
   duplicatesModal: closeDuplicatesModal,
 };
@@ -10138,6 +10175,10 @@ function exportAllClientsTable() {
 }
 function exportAdSpendTable_() {
   exportTableToCSV(document.getElementById('adSpendTable'), `Ad_Spend_Management_${csvDateStamp()}.csv`);
+}
+function exportGoalsTable() {
+  const monthLabel = goalsActiveMonth || new Date().toISOString().slice(0, 7);
+  exportTableToCSV(document.getElementById('goalsTable'), `Goals_${monthLabel}_${csvDateStamp()}.csv`);
 }
 function exportCollectionsTable_() {
   const typeLabel = activeCollectionsType === 'outstanding' ? 'Outstanding' : 'CardFails';
@@ -13429,6 +13470,51 @@ function recoverTruncatedJsonArray(str) {
 let GOALS_SMART_PASTE_PARSED = [];
 let GOALS_SMART_PASTE_EXCLUDED = [];
 
+
+// Converts an array of row-objects (from parseCSV or XLSX.utils.sheet_to_json
+// -- both produce the same shape) into the same tab-separated text a real
+// copy-paste would produce, so file uploads can reuse the exact same,
+// already-tested Smart Paste AI parsing pipeline rather than a separate
+// column-mapping wizard built from scratch for a data shape (goals) that's
+// nothing like the client-row shape the existing wizards are built around.
+function rowsToSmartPasteText(rows) {
+  if (!rows || rows.length === 0) return '';
+  const headers = Object.keys(rows[0]);
+  const lines = [headers.join('\t')];
+  rows.forEach(row => { lines.push(headers.map(h => (row[h] != null ? String(row[h]) : '')).join('\t')); });
+  return lines.join('\n');
+}
+
+function handleGoalsFileUpload(event) {
+  if (!requirePermission('upload')) { event.target.value = ''; return; }
+  const file = event.target.files[0];
+  if (!file) return;
+  const inputEl = event.target;
+  const isCSV = /\.csv$/i.test(file.name);
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    try {
+      let rows;
+      if (isCSV) {
+        rows = parseCSV(ev.target.result);
+      } else {
+        const wb = XLSX.read(ev.target.result, { type: 'binary' });
+        rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '' });
+      }
+      if (!rows || rows.length === 0) throw new Error('No data rows found in this file.');
+      openGoalsSmartPasteModal();
+      document.getElementById('goalsSmartPasteDropzone').textContent = rowsToSmartPasteText(rows);
+      showToast(`Loaded ${rows.length} row${rows.length === 1 ? '' : 's'} from "${file.name}" — review below, then click Parse with Nirvana.`, 'success');
+    } catch (err) {
+      showToast('Could not read that file: ' + err.message, 'error');
+    }
+    inputEl.value = '';
+  };
+  reader.onerror = () => showToast('Could not read that file.', 'error');
+  if (isCSV) reader.readAsText(file);
+  else reader.readAsBinaryString(file);
+}
+
 function openGoalsSmartPasteModal() {
   document.getElementById('goalsSmartPasteDropzone').textContent = '';
   document.getElementById('goalsSmartPasteStepPaste').style.display = '';
@@ -13483,6 +13569,7 @@ async function parseGoalsSmartPasteText() {
       `Parse this monthly goals data. Extract EVERY row as an object in a flat JSON array, including rows that are computed subtotals or totals -- just tag those clearly rather than omitting them, since a human needs to see and confirm what got excluded, not have it silently dropped.
 
 CRITICAL RULES:
+- This text may be scrambled or out of normal reading order -- some sources (like Slack) render small badge/tag elements (e.g. a short "AI" label before a name) with internal positioning that doesn't always copy out in the right place, so a word or short tag can appear detached from its real row, or attached to the wrong one. Use context (dollar amounts, percentages, ranges, and which words look like a channel/goal name vs. a stray fragment) to reconstruct the correct row groupings rather than taking the literal left-to-right order of the raw text at face value. If a short fragment (like a stray "AI") doesn't fit anywhere sensibly, it's fine to fold it back into the nearest goal name it clearly belongs to.
 - A "Subtotal" or "Total" row (e.g. "Subtotal – Retained Revenue", "Total Revenue per month") is a SUM of the real goal rows above it, not a goal itself. Set "is_subtotal_or_total": true for these, and still fill in name/target_value as best you can for display purposes, but they will NOT be imported as real goals.
 - Detect category groupings from section headers or visual separation in the pasted text (e.g. a "Channel" section vs a "KPI" section) and set "category" to a short label for each ("Revenue Channels", "KPIs", etc.) -- if there's genuinely no grouping, use null.
 - Parse a range like "$32,500-$35,000" or "4-6" into target_value (the low end) AND target_value_max (the high end). A single value like "25%+" or "20" has target_value set and target_value_max as null -- the "+" doesn't change the number, just note it's a minimum.
@@ -15004,6 +15091,12 @@ function computeGoalStatus(goal) {
     achievedPct = effectiveTarget > 0 ? goal.current_value / effectiveTarget : 0;
   }
 
+  // Manual override wins outright if set -- but achievedPct is still the
+  // real computed number either way, so the progress bar/% never lies
+  // regardless of whether the status itself was overridden.
+  const validStatuses = ['on_track', 'at_risk', 'off_track'];
+  if (validStatuses.includes(goal.status)) return { status: goal.status, achievedPct, isOverridden: true };
+
   if (achievedPct >= 1) return { status: 'on_track', achievedPct };
   const paceRatio = expectedPct > 0 ? achievedPct / expectedPct : achievedPct;
   if (paceRatio >= 0.9) return { status: 'on_track', achievedPct };
@@ -15140,12 +15233,13 @@ function rebuildGoalsPage() {
         const pctDisplay = Math.round(Math.min(1, g.achievedPct) * 100);
         const barColor = g.status === 'on_track' ? 'var(--green)' : (g.status === 'at_risk' ? 'var(--red)' : 'var(--yellow)');
         const ownerInitials = (g.owner_name || '?').split(/[\s/]+/).map(s => s[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
+        const overrideBadge = g.isOverridden ? `<span title="Manually set${g.status_override_note ? ': ' + escAttr(g.status_override_note) : ''}" style="margin-left:4px;color:var(--text3);cursor:help">✎</span>` : '';
         return `<tr>
           <td>${escAttr(g.name)}</td>
           <td><span class="owner-avatar">${escAttr(ownerInitials)}</span>${escAttr(g.owner_team || g.owner_name || '—')}</td>
           <td>${formatGoalTarget(g)}</td>
           <td>${formatGoalValue(g.current_value, g.metric_type)}<div class="progress-bar"><div class="progress-fill" style="width:${pctDisplay}%;background:${barColor}"></div></div></td>
-          <td style="text-align:center"><span class="status-pill ${meta.cls}">${meta.label}</span></td>
+          <td style="text-align:center"><span class="status-pill ${meta.cls}">${meta.label}</span>${overrideBadge}</td>
           <td style="text-align:center">${g.due_date ? new Date(g.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}</td>
           <td><div class="row-actions"><button class="icon-btn" onclick="showGoalBreakdown('${g.id}')" title="Weekly/Bi-Weekly Breakdown">📊</button><button class="icon-btn" onclick="openEditGoalModal('${g.id}')" title="Edit">✎</button><button class="icon-btn" onclick="deleteGoal('${g.id}')" title="Delete">🗑</button></div></td>
         </tr>`;
@@ -15275,16 +15369,33 @@ function renderGoalsProgressTrendChart(filteredGoalIds) {
 async function renderGoalsHistoryList() {
   const el = document.getElementById('goalsHistoryList');
   if (!el) return;
+
+  // Populate the filter with real goal names from the current month/
+  // portfolio view -- preserves whatever's currently selected rather than
+  // resetting it on every rebuild.
+  const filterEl = document.getElementById('goalsHistoryFilter');
+  const selectedName = filterEl ? filterEl.value : '';
+  if (filterEl) {
+    let currentGoals = GOALS.filter(g => g.month.slice(0, 7) === (goalsActiveMonth || new Date().toISOString().slice(0, 7)));
+    if (goalsActivePortfolio !== 'all') {
+      currentGoals = currentGoals.filter(g => goalsActivePortfolio === '' ? !g.portfolio : g.portfolio === goalsActivePortfolio);
+    }
+    const uniqueNames = Array.from(new Set(currentGoals.map(g => g.name))).sort();
+    filterEl.innerHTML = `<option value="">All Goals</option>` + uniqueNames.map(n => `<option value="${escAttr(n)}" ${n === selectedName ? 'selected' : ''}>${escAttr(n)}</option>`).join('');
+  }
+
   let entries = [];
   try {
-    entries = await sbSelect('goal_activity_log', 'order=created_at.desc&limit=15');
+    entries = selectedName
+      ? await sbSelect('goal_activity_log', `goal_name=eq.${encodeURIComponent(selectedName)}&order=created_at.desc&limit=30`)
+      : await sbSelect('goal_activity_log', 'order=created_at.desc&limit=15');
   } catch (e) {
     console.warn('Could not load goal history:', e.message);
     el.innerHTML = `<div style="color:var(--text3);font-size:11.5px;padding:8px 0">Could not load history.</div>`;
     return;
   }
   if (entries.length === 0) {
-    el.innerHTML = `<div style="color:var(--text3);font-size:11.5px;padding:8px 0">No changes logged yet.</div>`;
+    el.innerHTML = `<div style="color:var(--text3);font-size:11.5px;padding:8px 0">${selectedName ? `No changes logged yet for "${escAttr(selectedName)}".` : 'No changes logged yet.'}</div>`;
     return;
   }
   el.innerHTML = entries.map(e => `
@@ -15399,6 +15510,100 @@ async function deleteGoalPeriod(periodId) {
   showToast('Period deleted.', 'success');
 }
 
+// ─── CARRY FORWARD TO NEXT MONTH ────────────────────────────────────────────
+let GOALS_CARRY_FORWARD_LIST = [];
+function nextMonthOf(monthStr) {
+  const [y, m] = monthStr.split('-').map(Number);
+  const d = new Date(y, m, 1); // JS Date month is 0-indexed, so this is already "next month"
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+function openCarryForwardModal() {
+  const currentMonth = goalsActiveMonth || new Date().toISOString().slice(0, 7);
+  const nextMonth = nextMonthOf(currentMonth);
+  let sourceGoals = GOALS.filter(g => g.month.slice(0, 7) === currentMonth);
+  if (goalsActivePortfolio !== 'all') {
+    sourceGoals = sourceGoals.filter(g => goalsActivePortfolio === '' ? !g.portfolio : g.portfolio === goalsActivePortfolio);
+  }
+  if (sourceGoals.length === 0) {
+    showToast('No goals in the current view to copy forward.', 'warning');
+    return;
+  }
+  const targetMonthGoals = GOALS.filter(g => g.month.slice(0, 7) === nextMonth);
+  GOALS_CARRY_FORWARD_LIST = sourceGoals.map(g => {
+    let bestScore = 0;
+    targetMonthGoals.forEach(t => { const score = nameSimilarity(g.name, t.name); if (score > bestScore) bestScore = score; });
+    const alreadyExists = bestScore >= 0.55;
+    return { sourceGoal: g, included: !alreadyExists, alreadyExists };
+  });
+
+  const currentLabel = new Date(currentMonth + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const nextLabel = new Date(nextMonth + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const skippedCount = GOALS_CARRY_FORWARD_LIST.filter(x => x.alreadyExists).length;
+  document.getElementById('goalsCarryForwardSummary').textContent = `Copying ${GOALS_CARRY_FORWARD_LIST.length} goal${GOALS_CARRY_FORWARD_LIST.length === 1 ? '' : 's'} from ${currentLabel} to ${nextLabel}. Current progress resets to 0 for the new month${skippedCount ? `; ${skippedCount} already ${skippedCount === 1 ? 'exists' : 'exist'} in ${nextLabel} and ${skippedCount === 1 ? 'is' : 'are'} unchecked by default.` : '.'}`;
+
+  const listEl = document.getElementById('goalsCarryForwardList');
+  listEl.innerHTML = GOALS_CARRY_FORWARD_LIST.map((item, i) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--border)">
+      <input type="checkbox" ${item.included ? 'checked' : ''} onchange="toggleCarryForwardRow(${i}, this.checked)">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12.5px;font-weight:600">${escAttr(item.sourceGoal.name)}</div>
+        <div style="font-size:10.5px;color:var(--text3)">${item.sourceGoal.category ? escAttr(item.sourceGoal.category) + ' · ' : ''}${item.sourceGoal.owner_name ? escAttr(item.sourceGoal.owner_name) : 'No owner'}${item.alreadyExists ? ' · <span style="color:var(--yellow)">already exists next month</span>' : ''}</div>
+      </div>
+      <div style="font-size:12.5px;font-weight:700;white-space:nowrap">${formatGoalTarget(item.sourceGoal)}</div>
+    </div>
+  `).join('');
+  document.getElementById('goalsCarryForwardStatus').textContent = '';
+  document.getElementById('goalsCarryForwardModal').classList.add('open');
+}
+function closeCarryForwardModal() { document.getElementById('goalsCarryForwardModal').classList.remove('open'); }
+function toggleCarryForwardRow(i, checked) { GOALS_CARRY_FORWARD_LIST[i].included = checked; }
+
+async function commitCarryForward() {
+  const statusEl = document.getElementById('goalsCarryForwardStatus');
+  const btn = document.getElementById('goalsCarryForwardCommitBtn');
+  const u = getCurrentUser();
+  const currentMonth = goalsActiveMonth || new Date().toISOString().slice(0, 7);
+  const nextMonth = nextMonthOf(currentMonth) + '-01';
+  btn.disabled = true;
+  let copied = 0, errors = 0;
+
+  for (const item of GOALS_CARRY_FORWARD_LIST) {
+    if (!item.included) continue;
+    const g = item.sourceGoal;
+    const record = {
+      id: (crypto.randomUUID ? crypto.randomUUID() : 'goal_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8)),
+      name: g.name, owner_name: g.owner_name, owner_team: g.owner_team, portfolio: g.portfolio,
+      category: g.category, metric_type: g.metric_type, direction: g.direction,
+      target_value: g.target_value, target_value_max: g.target_value_max,
+      current_value: 0, // fresh month, no progress yet -- never carry forward last month's progress
+      month: nextMonth, due_date: null, version: 1,
+      created_by: u ? u.name : 'Guest', created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+    };
+    try {
+      await sbUpsert('goals', record);
+      await sbUpsert('goal_activity_log', {
+        id: (crypto.randomUUID ? crypto.randomUUID() : 'gal_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8)),
+        goal_id: record.id, goal_name: record.name, version: 1,
+        change_note: `Copied forward from ${currentMonth}.`, changed_by: u ? u.name : 'Guest',
+      });
+      GOALS.unshift(record);
+      copied++;
+    } catch (e) {
+      console.warn('Could not copy goal forward:', g.name, e.message);
+      errors++;
+    }
+    statusEl.textContent = `Copying… ${copied + errors} of ${GOALS_CARRY_FORWARD_LIST.filter(x => x.included).length}`;
+  }
+
+  localStorage.setItem(GOALS_CACHE_KEY, JSON.stringify(GOALS));
+  statusEl.textContent = `Copied ${copied} goal${copied === 1 ? '' : 's'}${errors ? `, ${errors} failed` : ''}.`;
+  btn.disabled = false;
+  showToast(`${copied} goal${copied === 1 ? '' : 's'} copied to next month.`, errors ? 'warning' : 'success');
+  populateGoalsMonthFilter();
+  rebuildGoalsPage();
+  setTimeout(closeCarryForwardModal, 1200);
+}
+
 function openAddGoalModal() {
   document.getElementById('goalId').value = '';
   document.getElementById('goalName').value = '';
@@ -15413,6 +15618,9 @@ function openAddGoalModal() {
   document.getElementById('goalCurrentValue').value = '';
   document.getElementById('goalMonth').value = goalsActiveMonth || new Date().toISOString().slice(0, 7);
   document.getElementById('goalDueDate').value = '';
+  document.getElementById('goalStatusOverride').value = '';
+  document.getElementById('goalStatusOverrideNote').value = '';
+  document.getElementById('goalStatusOverrideNoteWrap').style.display = 'none';
   document.getElementById('goalChangeNote').value = '';
   document.getElementById('goalChangeNoteWrap').style.display = 'none';
   document.getElementById('goalModalTitle').innerHTML = '<span class="icon" data-icon="target" data-icon-size="16"></span> New Goal';
@@ -15434,6 +15642,10 @@ function openEditGoalModal(id) {
   document.getElementById('goalCurrentValue').value = g.current_value;
   document.getElementById('goalMonth').value = g.month.slice(0, 7);
   document.getElementById('goalDueDate').value = g.due_date || '';
+  const hasOverride = ['on_track', 'at_risk', 'off_track'].includes(g.status);
+  document.getElementById('goalStatusOverride').value = hasOverride ? g.status : '';
+  document.getElementById('goalStatusOverrideNote').value = g.status_override_note || '';
+  document.getElementById('goalStatusOverrideNoteWrap').style.display = hasOverride ? '' : 'none';
   document.getElementById('goalChangeNote').value = '';
   document.getElementById('goalChangeNoteWrap').style.display = '';
   document.getElementById('goalModalTitle').innerHTML = '<span class="icon" data-icon="target" data-icon-size="16"></span> Edit Goal';
@@ -15465,6 +15677,8 @@ async function saveGoal() {
     current_value: Number(document.getElementById('goalCurrentValue').value) || 0,
     month: monthInput + '-01',
     due_date: document.getElementById('goalDueDate').value || null,
+    status: document.getElementById('goalStatusOverride').value || null,
+    status_override_note: document.getElementById('goalStatusOverride').value ? (document.getElementById('goalStatusOverrideNote').value.trim() || null) : null,
     version: isEdit ? (existing.version || 1) + 1 : 1,
     created_by: existing ? existing.created_by : (u ? u.name : 'Guest'),
     created_at: existing ? existing.created_at : new Date().toISOString(),
@@ -24588,6 +24802,23 @@ const AI_AGENT_TOOLS = [
     },
   },
   {
+    name: 'update_goal_period',
+    description: 'Set or create a specific weekly or bi-weekly period entry for a goal -- its target and/or actual value for that exact date range. Use this whenever asked to set a specific week/period\'s numbers, e.g. "set the actual for the week of May 5th to $820,000 for Expand Enterprise Pipeline." If a period already covering that start date exists, this updates it (only the fields given change -- the other stays as-is); otherwise a new period is created. This changes data — the user will be asked to confirm first.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        goal_name: { type: 'string' },
+        month: { type: 'string', description: 'YYYY-MM. Defaults to the current month if omitted.' },
+        period_type: { type: 'string', enum: ['weekly', 'biweekly'] },
+        period_start: { type: 'string', description: 'YYYY-MM-DD, the exact start date of the period.' },
+        period_end: { type: 'string', description: 'YYYY-MM-DD. Optional -- if omitted, computed as 6 days after start for weekly, 13 days after for bi-weekly.' },
+        target_value: { type: 'number', description: 'Optional -- omit to leave the existing target unchanged (or 0 if this is a brand-new period).' },
+        actual_value: { type: 'number', description: 'Optional -- omit to leave the existing actual unchanged (or 0 if this is a brand-new period).' },
+      },
+      required: ['goal_name', 'period_type', 'period_start'],
+    },
+  },
+  {
     name: 'create_reminder',
     description: 'Set a personal reminder for the current user (or, if they explicitly name someone else, for that teammate instead) — a lightweight, time-specific nudge, distinct from a task. Only the owner ever sees it or gets notified about it; it is not a shared Hub-wide record like a task or note. Delivered as a notification once the reminder time arrives — may take up to a minute after the exact time to actually appear, not instant to the second. This changes data — the user will be asked to confirm before it is actually saved.',
     input_schema: {
@@ -24733,7 +24964,7 @@ const AI_AGENT_TOOLS = [
   },
 ];
 
-const AI_ACTION_TOOLS = ['add_note', 'create_task', 'log_kpi_score', 'create_workflow', 'update_workflow', 'delete_workflow', 'bulk_create_tasks', 'bulk_add_note', 'create_client', 'update_client_contact', 'create_reminder', 'create_onboarding', 'update_onboarding_stage', 'add_onboarding_note', 'activate_onboarding_as_client', 'delete_onboarding', 'add_onboarding_checklist_item', 'remove_onboarding_checklist_item', 'create_onboarding_pipeline', 'merge_duplicate_clients', 'create_goal', 'update_goal_progress']; // tools that change data — always confirmed
+const AI_ACTION_TOOLS = ['add_note', 'create_task', 'log_kpi_score', 'create_workflow', 'update_workflow', 'delete_workflow', 'bulk_create_tasks', 'bulk_add_note', 'create_client', 'update_client_contact', 'create_reminder', 'create_onboarding', 'update_onboarding_stage', 'add_onboarding_note', 'activate_onboarding_as_client', 'delete_onboarding', 'add_onboarding_checklist_item', 'remove_onboarding_checklist_item', 'create_onboarding_pipeline', 'merge_duplicate_clients', 'create_goal', 'update_goal_progress', 'update_goal_period']; // tools that change data — always confirmed
 
 // Strips everything except letters/digits, so "1-800 Water Damage" and
 // "1800 Water Damage" (or "Chung, DDS" vs "Chung DDS") compare equal. Used
@@ -25205,6 +25436,41 @@ async function executeAiTool(name, input) {
       if (typeof rebuildGoalsPage === 'function') rebuildGoalsPage();
       const info = computeGoalStatus(best);
       return { ok: true, name: best.name, new_progress: formatGoalValue(best.current_value, best.metric_type), status: info.status };
+    }
+    case 'update_goal_period': {
+      if (!requirePermission('edit')) return { error: 'This account doesn\'t have permission to update goals.' };
+      if (!['weekly', 'biweekly'].includes(input.period_type)) return { error: 'period_type must be "weekly" or "biweekly".' };
+      const month = (input.month || new Date().toISOString().slice(0, 7)) + '-01';
+      const monthGoals = GOALS.filter(g => g.month === month);
+      let best = null, bestScore = 0;
+      monthGoals.forEach(g => { const score = nameSimilarity(input.goal_name, g.name); if (score > bestScore) { bestScore = score; best = g; } });
+      if (!best || bestScore < 0.55) return { error: `No goal matching "${input.goal_name}" found for ${month.slice(0, 7)}.` };
+      if (input.target_value == null && input.actual_value == null) return { error: 'At least one of target_value or actual_value must be given.' };
+
+      const existing = GOAL_PERIODS.find(p => p.goal_id === best.id && p.period_type === input.period_type && p.period_start === input.period_start);
+      const defaultDays = input.period_type === 'biweekly' ? 13 : 6;
+      const periodEnd = input.period_end || new Date(new Date(input.period_start).getTime() + defaultDays * 86400000).toISOString().slice(0, 10);
+      const record = {
+        id: existing ? existing.id : (crypto.randomUUID ? crypto.randomUUID() : 'gp_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8)),
+        goal_id: best.id, period_type: input.period_type,
+        period_start: input.period_start, period_end: periodEnd,
+        target_value: input.target_value != null ? Number(input.target_value) : (existing ? existing.target_value : 0),
+        actual_value: input.actual_value != null ? Number(input.actual_value) : (existing ? existing.actual_value : 0),
+        updated_at: new Date().toISOString(),
+      };
+      try { await sbUpsert('goal_period_breakdown', record); } catch (e) { return { error: 'Could not save period: ' + e.message }; }
+      const idx = GOAL_PERIODS.findIndex(p => p.id === record.id);
+      if (idx >= 0) GOAL_PERIODS[idx] = record; else GOAL_PERIODS.push(record);
+      localStorage.setItem(GOAL_PERIODS_CACHE_KEY, JSON.stringify(GOAL_PERIODS));
+      if (typeof rebuildGoalsPage === 'function') rebuildGoalsPage();
+      if (typeof goalsBreakdownActiveGoalId !== 'undefined' && goalsBreakdownActiveGoalId === best.id && typeof renderGoalsBreakdownTable === 'function') renderGoalsBreakdownTable();
+      return {
+        ok: true, goal_name: best.name, period_type: record.period_type,
+        period: `${record.period_start} to ${record.period_end}`,
+        target: formatGoalValue(record.target_value, best.metric_type),
+        actual: formatGoalValue(record.actual_value, best.metric_type),
+        was_new_period: !existing,
+      };
     }
     case 'get_at_risk_clients': {
       const results = getAtRiskClients(input.portfolio, input.max_score);
@@ -26475,7 +26741,7 @@ async function runAiAgentTurn(toolTagForNextText) {
   const u = getCurrentUser();
   const systemPrompt = `${currentLanguage === 'es' ? 'IMPORTANT: The Hub is currently set to Spanish (MX). Respond to the user ENTIRELY in Spanish (Mexican Spanish), including this entire conversation, regardless of what language they write in — unless they explicitly ask you to switch to English. Data values, client names, and product names stay as-is; everything you write around them is in Spanish.\n\n' : ''}Current date and time: ${new Date().toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })}. This is read directly from the user's own device clock, so it already reflects their real timezone — treat it as ground truth. For ANY relative time request ("in 15 minutes", "tomorrow at 9am", "next Monday"), compute the exact resulting date/time yourself from this reference. Never ask the user what time it is or guess at a timestamp — the real current time is always right here.
 
-You are Nirvana, the AI Agent inside ${ORG_SETTINGS.company_name}'s ${ORG_SETTINGS.product_name} — "${ORG_SETTINGS.product_name}" — helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the ${ORG_SETTINGS.portfolio_labels.smb}, ${ORG_SETTINGS.portfolio_labels.whitelabel}, and ${ORG_SETTINGS.portfolio_labels.support} portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. Whenever a request would affect MORE THAN ONE client (e.g. "create a follow-up task for every client that hasn't been touched in 30 days," or a list of specific client names), always use bulk_create_tasks or bulk_add_note instead of calling create_task/add_note in a loop — looping individual calls would force a separate confirmation click per client, while the bulk tools show one confirmation with the full affected list. Workflows can trigger on six things — "inactivity" (no note in N days), "schedule" (recurring cadence, for one client or a whole portfolio), "client_added" (fires the moment a new client is created), "task_due_soon" (reminds before an existing task's due date), "kpi_drop" (a SuccessOS score went down — team-level, not tied to one client), or "collections_status" (an account entered a specific Collections status) — and can take four actions when they fire: create a task (optionally with a real due date/time), just send a notification with no task, log an audit-trail note with no task or notification, or have you draft the actual task content yourself instead of using fixed text. If someone describes an automation idea in plain English, translate it into the right trigger type, action type, and fields yourself rather than making them fill out a form. For questions about company policy, procedures, "how do we...", or what the website/docs say, search the Knowledge Base — it contains SOPs, docs, and website content the team has fed in, separate from live client data. You can read and explain every chart in the Hub: get_portfolio_summary explains a portfolio's Product Adoption Rate and Products Per Client charts, get_product_adoption explains the Voice Agent / Text Agent charts, get_collections_summary explains the Collections breakdown (always separated into Outstanding Balances vs Card Fails, each with its own status breakdown — never collapse these into one number), get_adspend_summary explains Ad Spend's promo/budget breakdown, and get_kpi_summary explains the SuccessOS scores. When someone asks you to break down, interpret, or explain any data or chart, always call the specific tool that has that breakdown built in rather than answering from a vaguer or more general tool — if a user asks for a split by category/status/type, that split should already be in the tool result; use it. Prefer the data tools above for explaining charts — they're faster and more precise. Only use view_chart when the question is genuinely about the chart's visual appearance itself (e.g. "does this look right," "what do you see," "describe this chart visually") — calling it will switch the user's screen to that chart's page, so mention that you're pulling it up. Whenever asked to check for discrepancies, duplicates, mismatches, or whether numbers add up anywhere in the Hub (including client counts, Collections, Ad Spend, or the Knowledge Base), always call audit_data_integrity rather than speculating about possible causes — it actually reconciles the numbers and reports genuine findings, so use what it returns instead of guessing at explanations like "could be duplicates" or "could be stale data." A daily briefing already gets shown automatically once per day when the chat is first opened — if asked for a summary, rundown, or "what should I focus on" at any other point, use get_daily_briefing to pull the same live data fresh rather than referencing whatever was shown earlier, since it may be out of date by then. Whenever asked "which accounts are at risk," "who needs attention," or how healthy a specific client is, use get_at_risk_clients or get_client_health rather than checking just one signal (like Collections alone, or note recency alone) — those tools already combine engagement, task backlog, and billing friction into one score with a transparent breakdown of exactly why, which is a more honest answer than picking one factor and guessing at the rest. Whenever asked what's changed for a specific client recently, who created or updated a client record, or when a client was actually added to the Hub, use get_client_activity_history — it's the real, logged audit trail (every creation and every field-level change, from every entry point in the Hub: Bulk Reconcile Import, CSV imports, Add Client, onboarding graduation, or your own create_client/update_client_contact calls), not something to infer from notes or guess at. Whenever asked about Voice Agent or Text Agent adoption trends, growth, peaks, or how a metric has changed over time (including for a specific date range someone mentions), use get_adoption_trend — it's backed by real daily snapshots, unlike get_portfolio_summary/get_product_adoption which only reflect the current moment; if a person is looking at a filtered date range on the Voice Agent or Text Agent page, ask what range if they haven't said, rather than assuming it matches what's currently on their screen. For anything about Goals — "how are we doing this month," a specific named goal's progress, its weekly/bi-weekly breakdown, or its change history — use get_goals_summary, get_goal_details, list_goals, or get_goal_activity_history rather than guessing at status from a general impression; these compute the exact same real numbers and pacing logic the Goals page itself shows, including correctly handling range targets (e.g. "$32,500-$35,000") against their midpoint. To create a new goal or update a goal's current progress (goals get updated regularly through the month), use create_goal or update_goal_progress — both fuzzy-match against existing goals for that month first, so a near-duplicate name doesn't silently create a second, separate goal instead of updating the real one. When summarizing data, only use the real numbers/content returned by tools — never estimate or make things up. If a tool returns an error (e.g. client not found, or nothing in the knowledge base matches), tell the user plainly rather than guessing. If a tool result includes a "note" field, don't ignore it — mention what it says (for example, a client match that only worked after ignoring punctuation/spacing differences) rather than presenting the result as a clean, unqualified match. When presenting a list of businesses or clients that genuinely don't exist yet in the Hub and could be created (for example, orphaned Ad Spend/Collections entries with no matching client record), format it as a markdown table and put a line reading exactly \`[[selectable:create_client]]\` on its own line immediately before that table — this renders the list with checkboxes so the user can pick specific ones to create instead of you needing to ask about each individually. Only use this marker for that specific "these could be created as clients" scenario — never on ordinary reporting tables (KPI trends, budget breakdowns, adoption rates, etc.), since a "create as clients" action button wouldn't make sense there. If a message says the user selected specific businesses to create as clients, treat that as them already having committed to creating those specific ones — don't re-confirm each one individually, just ask which portfolio(s) each should go into (per the existing rule: never guess a portfolio) and then create them. Onboarding records are a SEPARATE, EARLIER concept from clients — an onboarding record represents a business before it's a real client anywhere else in the Hub, tracked through six stages (Contract Signed, Kickoff Call Scheduled, Kickoff Call Completed, Setup In Progress, QA / Internal Review, Live) with its own checklist and notes. Don't confuse create_onboarding with create_client, or an onboarding record's business_name with an actual client_name — they're different things until activate_onboarding_as_client is explicitly used to graduate one into the other, which typically only makes sense once a record has reached the Live stage. The embeddable Chat Widget is a completely separate AI conversation from you — it runs on a client's own website, talking to anonymous visitors, with its own agent name/personality/instructions per widget. You have no live access into those conversations as they happen, but get_chat_widget_summary lets you check on lead activity after the fact (volume, resolution breakdown, recent leads) whenever asked about chat widget leads or website chat activity.`;
+You are Nirvana, the AI Agent inside ${ORG_SETTINGS.company_name}'s ${ORG_SETTINGS.product_name} — "${ORG_SETTINGS.product_name}" — helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the ${ORG_SETTINGS.portfolio_labels.smb}, ${ORG_SETTINGS.portfolio_labels.whitelabel}, and ${ORG_SETTINGS.portfolio_labels.support} portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. Whenever a request would affect MORE THAN ONE client (e.g. "create a follow-up task for every client that hasn't been touched in 30 days," or a list of specific client names), always use bulk_create_tasks or bulk_add_note instead of calling create_task/add_note in a loop — looping individual calls would force a separate confirmation click per client, while the bulk tools show one confirmation with the full affected list. Workflows can trigger on six things — "inactivity" (no note in N days), "schedule" (recurring cadence, for one client or a whole portfolio), "client_added" (fires the moment a new client is created), "task_due_soon" (reminds before an existing task's due date), "kpi_drop" (a SuccessOS score went down — team-level, not tied to one client), or "collections_status" (an account entered a specific Collections status) — and can take four actions when they fire: create a task (optionally with a real due date/time), just send a notification with no task, log an audit-trail note with no task or notification, or have you draft the actual task content yourself instead of using fixed text. If someone describes an automation idea in plain English, translate it into the right trigger type, action type, and fields yourself rather than making them fill out a form. For questions about company policy, procedures, "how do we...", or what the website/docs say, search the Knowledge Base — it contains SOPs, docs, and website content the team has fed in, separate from live client data. You can read and explain every chart in the Hub: get_portfolio_summary explains a portfolio's Product Adoption Rate and Products Per Client charts, get_product_adoption explains the Voice Agent / Text Agent charts, get_collections_summary explains the Collections breakdown (always separated into Outstanding Balances vs Card Fails, each with its own status breakdown — never collapse these into one number), get_adspend_summary explains Ad Spend's promo/budget breakdown, and get_kpi_summary explains the SuccessOS scores. When someone asks you to break down, interpret, or explain any data or chart, always call the specific tool that has that breakdown built in rather than answering from a vaguer or more general tool — if a user asks for a split by category/status/type, that split should already be in the tool result; use it. Prefer the data tools above for explaining charts — they're faster and more precise. Only use view_chart when the question is genuinely about the chart's visual appearance itself (e.g. "does this look right," "what do you see," "describe this chart visually") — calling it will switch the user's screen to that chart's page, so mention that you're pulling it up. Whenever asked to check for discrepancies, duplicates, mismatches, or whether numbers add up anywhere in the Hub (including client counts, Collections, Ad Spend, or the Knowledge Base), always call audit_data_integrity rather than speculating about possible causes — it actually reconciles the numbers and reports genuine findings, so use what it returns instead of guessing at explanations like "could be duplicates" or "could be stale data." A daily briefing already gets shown automatically once per day when the chat is first opened — if asked for a summary, rundown, or "what should I focus on" at any other point, use get_daily_briefing to pull the same live data fresh rather than referencing whatever was shown earlier, since it may be out of date by then. Whenever asked "which accounts are at risk," "who needs attention," or how healthy a specific client is, use get_at_risk_clients or get_client_health rather than checking just one signal (like Collections alone, or note recency alone) — those tools already combine engagement, task backlog, and billing friction into one score with a transparent breakdown of exactly why, which is a more honest answer than picking one factor and guessing at the rest. Whenever asked what's changed for a specific client recently, who created or updated a client record, or when a client was actually added to the Hub, use get_client_activity_history — it's the real, logged audit trail (every creation and every field-level change, from every entry point in the Hub: Bulk Reconcile Import, CSV imports, Add Client, onboarding graduation, or your own create_client/update_client_contact calls), not something to infer from notes or guess at. Whenever asked about Voice Agent or Text Agent adoption trends, growth, peaks, or how a metric has changed over time (including for a specific date range someone mentions), use get_adoption_trend — it's backed by real daily snapshots, unlike get_portfolio_summary/get_product_adoption which only reflect the current moment; if a person is looking at a filtered date range on the Voice Agent or Text Agent page, ask what range if they haven't said, rather than assuming it matches what's currently on their screen. For anything about Goals — "how are we doing this month," a specific named goal's progress, its weekly/bi-weekly breakdown, or its change history — use get_goals_summary, get_goal_details, list_goals, or get_goal_activity_history rather than guessing at status from a general impression; these compute the exact same real numbers and pacing logic the Goals page itself shows, including correctly handling range targets (e.g. "$32,500-$35,000") against their midpoint. To create a new goal or update a goal's current progress (goals get updated regularly through the month), use create_goal or update_goal_progress — both fuzzy-match against existing goals for that month first, so a near-duplicate name doesn't silently create a second, separate goal instead of updating the real one. To set a specific week or bi-weekly period's target/actual for a goal (e.g. "set the actual for the week of May 5th to $820,000"), use update_goal_period — it finds the matching period by its exact start date and only changes the field(s) actually given, leaving the other as-is, or creates a new period if none exists yet for that date. When summarizing data, only use the real numbers/content returned by tools — never estimate or make things up. If a tool returns an error (e.g. client not found, or nothing in the knowledge base matches), tell the user plainly rather than guessing. If a tool result includes a "note" field, don't ignore it — mention what it says (for example, a client match that only worked after ignoring punctuation/spacing differences) rather than presenting the result as a clean, unqualified match. When presenting a list of businesses or clients that genuinely don't exist yet in the Hub and could be created (for example, orphaned Ad Spend/Collections entries with no matching client record), format it as a markdown table and put a line reading exactly \`[[selectable:create_client]]\` on its own line immediately before that table — this renders the list with checkboxes so the user can pick specific ones to create instead of you needing to ask about each individually. Only use this marker for that specific "these could be created as clients" scenario — never on ordinary reporting tables (KPI trends, budget breakdowns, adoption rates, etc.), since a "create as clients" action button wouldn't make sense there. If a message says the user selected specific businesses to create as clients, treat that as them already having committed to creating those specific ones — don't re-confirm each one individually, just ask which portfolio(s) each should go into (per the existing rule: never guess a portfolio) and then create them. Onboarding records are a SEPARATE, EARLIER concept from clients — an onboarding record represents a business before it's a real client anywhere else in the Hub, tracked through six stages (Contract Signed, Kickoff Call Scheduled, Kickoff Call Completed, Setup In Progress, QA / Internal Review, Live) with its own checklist and notes. Don't confuse create_onboarding with create_client, or an onboarding record's business_name with an actual client_name — they're different things until activate_onboarding_as_client is explicitly used to graduate one into the other, which typically only makes sense once a record has reached the Live stage. The embeddable Chat Widget is a completely separate AI conversation from you — it runs on a client's own website, talking to anonymous visitors, with its own agent name/personality/instructions per widget. You have no live access into those conversations as they happen, but get_chat_widget_summary lets you check on lead activity after the fact (volume, resolution breakdown, recent leads) whenever asked about chat widget leads or website chat activity.`;
 
   let streamBubble = null;
   const onTextDelta = (fullTextSoFar) => {
