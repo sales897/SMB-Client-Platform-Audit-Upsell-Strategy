@@ -3211,6 +3211,16 @@ select.wfb-field-input { padding-right: 26px; }
       <select id="onboardingPipelineSelect" class="field-input" style="display:none;height:36px;margin-bottom:0;width:auto" onchange="switchOnboardingPipeline(this.value)"></select>
       <button class="btn btn-sm" id="topbarOnboardingPipelinesBtn" onclick="openManagePipelinesModal()" title="Create or edit pipelines" style="display:none"><span class="icon" data-icon="settings" data-icon-size="14"></span> <span data-i18n="onboarding_pipelines_btn">Pipelines</span></button>
       <button class="btn btn-primary btn-sm" id="topbarNewOnboardingBtn" onclick="openAddOnboardingModal()" style="display:none">＋ <span data-i18n="onboarding_new_btn">New Onboarding</span></button>
+      <select id="goalsMonthFilter" class="field-input" style="display:none;height:36px;margin-bottom:0;width:auto" onchange="setGoalsMonthFilter(this.value)"></select>
+      <select id="goalsPortfolioFilter" class="field-input" style="display:none;height:36px;margin-bottom:0;width:auto" onchange="setGoalsPortfolioFilter(this.value)">
+        <option value="all">All Portfolios</option>
+        <option value="smb">SMB</option>
+        <option value="whitelabel">White Label</option>
+        <option value="support">Support</option>
+        <option value="">Company-wide</option>
+      </select>
+      <button class="btn btn-sm" id="topbarGoalsSmartPasteBtn" onclick="openGoalsSmartPasteModal()" style="display:none">✎ Smart Paste</button>
+      <button class="btn btn-primary btn-sm" id="topbarNewGoalBtn" onclick="openAddGoalModal()" style="display:none">＋ New Goal</button>
     </div>
   </div>
 
@@ -4305,19 +4315,6 @@ select.wfb-field-input { padding-right: 26px; }
        PAGE 6: UPSELL PLAYBOOK
   ════════════════════════════════════════════════════════════════════════ -->
   <div class="page" id="page-upsell">
-    <div style="display:flex;justify-content:flex-end;gap:var(--space-2);align-items:center;margin-bottom:var(--space-4);flex-wrap:wrap">
-      <select class="field-input" id="goalsMonthFilter" style="height:36px;margin-bottom:0;width:auto" onchange="setGoalsMonthFilter(this.value)"></select>
-      <select class="field-input" id="goalsPortfolioFilter" style="height:36px;margin-bottom:0;width:auto" onchange="setGoalsPortfolioFilter(this.value)">
-        <option value="all">All Portfolios</option>
-        <option value="smb">SMB</option>
-        <option value="whitelabel">White Label</option>
-        <option value="support">Support</option>
-        <option value="">Company-wide</option>
-      </select>
-      <button class="btn btn-sm" onclick="openGoalsSmartPasteModal()">✎ Smart Paste</button>
-      <button class="btn btn-primary btn-sm" onclick="openAddGoalModal()">＋ New Goal</button>
-    </div>
-
     <div class="kpi-row">
       <div class="kpi kpi-theme-orange">
         <div class="kpi-icon"><span class="icon" data-icon="target" data-icon-size="16"></span></div>
@@ -6515,6 +6512,18 @@ function showPage(id) {
   if (onboardingPipelineSelect) onboardingPipelineSelect.style.display = onOnboardingPage ? '' : 'none';
   if (onboardingPipelinesBtn) onboardingPipelinesBtn.style.display = onOnboardingPage ? '' : 'none';
   if (newOnboardingBtn) newOnboardingBtn.style.display = onOnboardingPage ? '' : 'none';
+
+  // Goals' month/portfolio filters + Smart Paste/New Goal buttons -- same
+  // shared-topbar approach, only shown while the Goals page is open.
+  const goalsMonthFilterEl = document.getElementById('goalsMonthFilter');
+  const goalsPortfolioFilterEl = document.getElementById('goalsPortfolioFilter');
+  const goalsSmartPasteBtn = document.getElementById('topbarGoalsSmartPasteBtn');
+  const newGoalBtn = document.getElementById('topbarNewGoalBtn');
+  const onGoalsPage = id === 'upsell';
+  if (goalsMonthFilterEl) goalsMonthFilterEl.style.display = onGoalsPage ? '' : 'none';
+  if (goalsPortfolioFilterEl) goalsPortfolioFilterEl.style.display = onGoalsPage ? '' : 'none';
+  if (goalsSmartPasteBtn) goalsSmartPasteBtn.style.display = onGoalsPage ? '' : 'none';
+  if (newGoalBtn) newGoalBtn.style.display = onGoalsPage ? '' : 'none';
 
   if (id === 'home') rebuildHomePage();
   if (id === 'voice') rebuildVoicePage();
