@@ -13381,8 +13381,8 @@ function handleBulkReconcileZonePaste(event) {
   // businesses. Preventing default and inserting the plain text directly
   // keeps this in exact sync with the file-drop path above.
   event.preventDefault();
-  const text = (event.clipboardData || window.clipboardData).getData('text/plain');
-  document.getElementById('bulkReconcileDropZone').textContent = text;
+  const cd = event.clipboardData || window.clipboardData;
+  document.getElementById('bulkReconcileDropZone').textContent = extractPastedTextPreservingLayout(cd);
 }
 function handleBulkReconcileFileInput(event) {
   const file = event.target.files && event.target.files[0];
@@ -13447,8 +13447,28 @@ function handleGoalsSmartPastePaste(event) {
   // fragments multi-line text across sibling <div>s with no real newlines
   // between them, silently breaking multi-row parsing.
   event.preventDefault();
-  const text = (event.clipboardData || window.clipboardData).getData('text/plain');
-  document.getElementById('goalsSmartPasteDropzone').textContent = text;
+  const cd = event.clipboardData || window.clipboardData;
+  document.getElementById('goalsSmartPasteDropzone').textContent = extractPastedTextPreservingLayout(cd);
+}
+
+// Sources like Slack render tabular-looking data via CSS layout, not real
+// tab/newline characters -- a browser's plain-text clipboard linearization
+// of that can badly scramble reading order (confirmed: a real paste came
+// through with "Owner AI" jammed together, a Slack timestamp mid-content,
+// and columns interleaving). Preferring the HTML clipboard data when it
+// exists and re-rendering it off-screen to read back .innerText forces the
+// browser to compute real line breaks from the actual layout, which is far
+// more faithful than the plain-text version for this kind of source.
+function extractPastedTextPreservingLayout(clipboardData) {
+  const html = clipboardData.getData('text/html');
+  if (!html) return clipboardData.getData('text/plain');
+  const temp = document.createElement('div');
+  temp.style.cssText = 'position:absolute;left:-9999px;top:-9999px;white-space:normal';
+  temp.innerHTML = html;
+  document.body.appendChild(temp);
+  const text = temp.innerText;
+  document.body.removeChild(temp);
+  return text && text.trim() ? text : clipboardData.getData('text/plain');
 }
 
 async function parseGoalsSmartPasteText() {
