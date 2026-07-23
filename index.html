@@ -2110,7 +2110,17 @@ tr.pg-hidden-row { display: none; }
 .goals-month-nav-arrow:hover { color: var(--orange); background: var(--orange-dim); }
 .goals-month-nav-label { background: var(--orange-dim); border: 1.5px solid var(--orange); color: var(--orange); font-weight: 700; font-size: 12.5px; padding: 7px 16px; border-radius: var(--radius-pill); cursor: pointer; white-space: nowrap; transition: background-color var(--transition-slow); }
 .goals-month-nav-label:hover { background: rgba(226,84,31,.24); }
-.goals-month-picker-input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.goals-month-picker-panel { position: absolute; top: calc(100% + 6px); left: 50%; transform: translateX(-50%); background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: 0 8px 24px rgba(0,0,0,.4); padding: 14px; z-index: 50; width: 220px; }
+.goals-month-picker-year-row { display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+.goals-month-picker-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.goals-month-picker-cell { background: none; border: 1px solid transparent; color: var(--text2); font-size: 12px; font-weight: 600; padding: 8px 0; border-radius: var(--radius-xs); cursor: pointer; transition: background-color var(--transition-slow), color var(--transition-slow); }
+.goals-month-picker-cell:hover { background: var(--bg3); color: var(--text); }
+.goals-month-picker-cell.is-current { border-color: var(--border-strong, var(--border)); color: var(--text); }
+.goals-month-picker-cell.is-selected { background: var(--orange); color: #fff; }
+.goals-month-picker-cell.is-selected:hover { background: var(--orange); }
+.goals-month-picker-footer { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); text-align: center; }
+.goals-month-picker-footer-btn { background: none; border: none; color: var(--orange); font-size: 12px; font-weight: 700; cursor: pointer; padding: 4px; }
+.goals-month-picker-footer-btn:hover { text-decoration: underline; }
 .goals-view-toggle, .goals-cal-sub-toggle { display: inline-flex; gap: 2px; background: var(--bg3); padding: 3px; border-radius: var(--radius-sm); }
 .goals-cal-sub-toggle { margin-bottom: var(--space-3); }
 .goals-view-toggle-btn, .goals-cal-sub-toggle-btn { background: none; border: none; color: var(--text3); font-size: 11.5px; font-weight: 600; padding: 6px 12px; border-radius: var(--radius-xs); cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: color var(--transition-slow), background-color var(--transition-slow); }
@@ -3232,11 +3242,21 @@ select.wfb-field-input { padding-right: 26px; }
       <select id="onboardingPipelineSelect" class="field-input" style="display:none;height:36px;margin-bottom:0;width:auto" onchange="switchOnboardingPipeline(this.value)"></select>
       <button class="btn btn-sm" id="topbarOnboardingPipelinesBtn" onclick="openManagePipelinesModal()" title="Create or edit pipelines" style="display:none"><span class="icon" data-icon="settings" data-icon-size="14"></span> <span data-i18n="onboarding_pipelines_btn">Pipelines</span></button>
       <button class="btn btn-primary btn-sm" id="topbarNewOnboardingBtn" onclick="openAddOnboardingModal()" style="display:none">＋ <span data-i18n="onboarding_new_btn">New Onboarding</span></button>
-      <div class="goals-month-nav" id="goalsMonthNav" style="display:none">
+      <div class="goals-month-nav" id="goalsMonthNav" style="display:none;position:relative">
         <button class="goals-month-nav-arrow" onclick="shiftGoalsMonth(-1)" title="Previous month" aria-label="Previous month">‹</button>
         <button class="goals-month-nav-label" id="goalsMonthNavLabel" onclick="openGoalsMonthPicker()" title="Click to jump to any month"></button>
         <button class="goals-month-nav-arrow" onclick="shiftGoalsMonth(1)" title="Next month" aria-label="Next month">›</button>
-        <input type="month" id="goalsMonthPickerInput" class="goals-month-picker-input" onchange="setGoalsMonthFilter(this.value)" aria-label="Pick a month">
+        <div class="goals-month-picker-panel" id="goalsMonthPickerPanel" style="display:none">
+          <div class="goals-month-picker-year-row">
+            <button class="goals-month-nav-arrow" onclick="shiftGoalsMonthPickerYear(-1)" title="Previous year" aria-label="Previous year">‹</button>
+            <span id="goalsMonthPickerYearLabel"></span>
+            <button class="goals-month-nav-arrow" onclick="shiftGoalsMonthPickerYear(1)" title="Next year" aria-label="Next year">›</button>
+          </div>
+          <div class="goals-month-picker-grid" id="goalsMonthPickerGrid"></div>
+          <div class="goals-month-picker-footer">
+            <button class="goals-month-picker-footer-btn" onclick="jumpGoalsMonthPickerToThisMonth()">This Month</button>
+          </div>
+        </div>
       </div>
       <select id="goalsPortfolioFilter" class="field-input" style="display:none;height:36px;margin-bottom:0;width:auto" onchange="setGoalsPortfolioFilter(this.value)">
         <option value="all">All Portfolios</option>
@@ -15255,12 +15275,10 @@ function formatGoalTarget(goal) {
 
 function populateGoalsMonthFilter() {
   const labelEl = document.getElementById('goalsMonthNavLabel');
-  const pickerEl = document.getElementById('goalsMonthPickerInput');
   if (!labelEl) return;
   const currentMonth = new Date().toISOString().slice(0, 7);
   if (!goalsActiveMonth) goalsActiveMonth = currentMonth;
   labelEl.textContent = new Date(goalsActiveMonth + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-  if (pickerEl) pickerEl.value = goalsActiveMonth;
 }
 function setGoalsMonthFilter(month) { if (!month) return; goalsActiveMonth = month; populateGoalsMonthFilter(); rebuildGoalsPage(); }
 function shiftGoalsMonth(delta) {
@@ -15269,18 +15287,55 @@ function shiftGoalsMonth(delta) {
   d.setMonth(d.getMonth() + delta);
   setGoalsMonthFilter(d.toISOString().slice(0, 7));
 }
+
+// Custom themed month/year picker -- replaces the browser's native
+// <input type="month"> calendar (unstyleable, looked out of place against
+// the Hub's dark/orange theme) with a small dropdown built from the same
+// pill/card conventions used elsewhere.
+let goalsMonthPickerYear = null; // the year currently being BROWSED in the panel -- independent of goalsActiveMonth until a month is actually clicked
+
 function openGoalsMonthPicker() {
-  const pickerEl = document.getElementById('goalsMonthPickerInput');
-  if (!pickerEl) return;
-  // showPicker() is the real calendar UI (Chrome/Edge); older/other browsers
-  // fall back to focusing the native input, which still opens its own
-  // picker UI on most platforms when focused/clicked.
-  if (typeof pickerEl.showPicker === 'function') {
-    try { pickerEl.showPicker(); return; } catch (e) { /* fall through to fallback below */ }
-  }
-  pickerEl.focus();
-  pickerEl.click();
+  const panel = document.getElementById('goalsMonthPickerPanel');
+  if (!panel) return;
+  const isOpen = panel.style.display !== 'none';
+  if (isOpen) { panel.style.display = 'none'; return; }
+  goalsMonthPickerYear = Number((goalsActiveMonth || new Date().toISOString().slice(0, 7)).slice(0, 4));
+  renderGoalsMonthPickerPanel();
+  panel.style.display = '';
 }
+function renderGoalsMonthPickerPanel() {
+  const yearLabel = document.getElementById('goalsMonthPickerYearLabel');
+  const grid = document.getElementById('goalsMonthPickerGrid');
+  if (!yearLabel || !grid) return;
+  yearLabel.textContent = goalsMonthPickerYear;
+  const monthLabels = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const todayYm = new Date().toISOString().slice(0, 7);
+  grid.innerHTML = monthLabels.map((label, idx) => {
+    const ym = `${goalsMonthPickerYear}-${String(idx + 1).padStart(2, '0')}`;
+    const classes = ['goals-month-picker-cell'];
+    if (ym === goalsActiveMonth) classes.push('is-selected');
+    else if (ym === todayYm) classes.push('is-current');
+    return `<button class="${classes.join(' ')}" onclick="selectGoalsMonthFromPicker(${idx + 1})">${label}</button>`;
+  }).join('');
+}
+function shiftGoalsMonthPickerYear(delta) {
+  goalsMonthPickerYear += delta;
+  renderGoalsMonthPickerPanel();
+}
+function selectGoalsMonthFromPicker(monthNum) {
+  setGoalsMonthFilter(`${goalsMonthPickerYear}-${String(monthNum).padStart(2, '0')}`);
+  document.getElementById('goalsMonthPickerPanel').style.display = 'none';
+}
+function jumpGoalsMonthPickerToThisMonth() {
+  setGoalsMonthFilter(new Date().toISOString().slice(0, 7));
+  document.getElementById('goalsMonthPickerPanel').style.display = 'none';
+}
+document.addEventListener('click', (e) => {
+  const panel = document.getElementById('goalsMonthPickerPanel');
+  const nav = document.getElementById('goalsMonthNav');
+  if (!panel || panel.style.display === 'none') return;
+  if (!nav.contains(e.target)) panel.style.display = 'none';
+});
 function setGoalsPortfolioFilter(pk) { goalsActivePortfolio = pk; rebuildGoalsPage(); }
 
 // Shared by rebuildGoalsPage() and renderGoalsCalendar() so both the table
