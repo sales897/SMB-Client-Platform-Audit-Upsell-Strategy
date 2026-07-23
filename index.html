@@ -2105,6 +2105,36 @@ tr.pg-hidden-row { display: none; }
 .pill-ontrack { background: rgba(34,197,94,.14); color: var(--green); }
 .pill-atrisk { background: rgba(239,68,68,.14); color: var(--red); }
 .pill-offtrack { background: rgba(245,158,11,.14); color: var(--yellow); }
+.goals-month-nav { display: inline-flex; align-items: center; gap: 2px; height: 36px; }
+.goals-month-nav-arrow { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 18px; line-height: 1; padding: 6px 8px; border-radius: var(--radius-xs); transition: color var(--transition-slow), background-color var(--transition-slow); }
+.goals-month-nav-arrow:hover { color: var(--orange); background: var(--orange-dim); }
+.goals-month-nav-label { background: var(--orange-dim); border: 1.5px solid var(--orange); color: var(--orange); font-weight: 700; font-size: 12.5px; padding: 7px 16px; border-radius: var(--radius-pill); cursor: pointer; white-space: nowrap; transition: background-color var(--transition-slow); }
+.goals-month-nav-label:hover { background: rgba(226,84,31,.24); }
+.goals-month-picker-input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.goals-view-toggle, .goals-cal-sub-toggle { display: inline-flex; gap: 2px; background: var(--bg3); padding: 3px; border-radius: var(--radius-sm); }
+.goals-cal-sub-toggle { margin-bottom: var(--space-3); }
+.goals-view-toggle-btn, .goals-cal-sub-toggle-btn { background: none; border: none; color: var(--text3); font-size: 11.5px; font-weight: 600; padding: 6px 12px; border-radius: var(--radius-xs); cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: color var(--transition-slow), background-color var(--transition-slow); }
+.goals-view-toggle-btn:hover, .goals-cal-sub-toggle-btn:hover { color: var(--text); }
+.goals-view-toggle-btn.active, .goals-cal-sub-toggle-btn.active { background: var(--orange-dim); color: var(--orange); }
+.goals-calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.goals-cal-dow { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--text3); text-align: center; padding-bottom: 4px; }
+.goals-cal-day { min-height: 84px; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-xs); padding: 5px 5px 6px; display: flex; flex-direction: column; gap: 3px; }
+.goals-cal-day.is-outside { background: transparent; border-color: transparent; }
+.goals-cal-day.is-today { border-color: var(--orange); }
+.goals-cal-day-num { font-size: 10.5px; font-weight: 700; color: var(--text2); }
+.goals-cal-day.is-today .goals-cal-day-num { color: var(--orange); }
+.goals-cal-chip { font-size: 9.5px; font-weight: 700; padding: 2px 6px; border-radius: var(--radius-xs); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; line-height: 1.5; }
+.goals-cal-chip.status-on_track { background: rgba(34,197,94,.14); color: var(--green); }
+.goals-cal-chip.status-at_risk { background: rgba(239,68,68,.14); color: var(--red); }
+.goals-cal-chip.status-off_track { background: rgba(245,158,11,.14); color: var(--yellow); }
+.goals-cal-empty-hint { grid-column: 1 / -1; text-align: center; color: var(--text3); font-size: 12px; padding: 24px; }
+.cnt-contact-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 10px; }
+.cnt-contact-card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; gap: 8px; }
+.cnt-contact-head-left { display: flex; align-items: center; gap: 8px; }
+.cnt-contact-primary-badge { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--orange); background: var(--orange-dim); padding: 2px 7px; border-radius: var(--radius-pill); }
+.cnt-contact-updated { font-size: 11px; color: var(--text3); }
+.cnt-contact-fields { display: grid; grid-template-columns: 1fr 1fr 1.2fr 1fr auto; gap: 10px; align-items: end; }
+.cnt-empty-contacts-hint { color: var(--text3); font-size: 12.5px; padding: 10px 2px; }
 .progress-bar { width: 100%; height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; margin-top: 4px; }
 .progress-fill { height: 100%; border-radius: 3px; transition: width var(--transition-slow); }
 .owner-avatar { width: 22px; height: 22px; border-radius: 6px; background: var(--bg3); display: inline-flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; margin-right: 6px; color: var(--text2); }
@@ -3039,18 +3069,9 @@ select.wfb-field-input { padding-right: 26px; }
     <div class="cnt-section" style="margin-top:10px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
         <div class="cnt-section-title" style="margin-bottom:0"><span class="icon" data-icon="user" data-icon-size="14"></span> <span data-i18n="cnt_contact_info">Contact Info</span></div>
-        <div id="cntContactSavedNote" style="font-size:11px;color:var(--text3)"></div>
+        <button class="btn btn-ghost btn-sm" id="cntAddContactBtn" onclick="addClientContactCard()"><span class="icon" data-icon="plus" data-icon-size="12"></span> Add Contact</button>
       </div>
-      <div class="smart-paste-box" style="padding:8px 12px;margin-bottom:10px">
-        <input type="text" id="cntSmartPaste" class="field-input" style="height:34px;margin-bottom:0" placeholder="📋 Paste a signature, business card, or spreadsheet row to auto-fill →" onpaste="setTimeout(() => handleSmartPaste('cnt', this.value), 0)">
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1.2fr 1fr auto;gap:10px;align-items:end">
-        <div><label for="cntContactName" class="field-label" data-i18n="fld_contact_name">Contact Name</label><input type="text" id="cntContactName" class="field-input" style="height:36px" placeholder="e.g. Jamie Rivera"></div>
-        <div><label for="cntContactTitle" class="field-label" data-i18n="fld_title">Title</label><input type="text" id="cntContactTitle" class="field-input" style="height:36px" placeholder="e.g. Owner"></div>
-        <div><label for="cntContactEmail" class="field-label" data-i18n="fld_email">Email</label><input type="email" id="cntContactEmail" class="field-input" style="height:36px" placeholder="e.g. jamie@business.com"></div>
-        <div><label for="cntContactPhone" class="field-label" data-i18n="fld_phone">Phone</label><input type="tel" id="cntContactPhone" class="field-input" style="height:36px" placeholder="(555) 123-4567"></div>
-        <button class="btn btn-primary btn-sm" id="cntContactSubmitBtn" style="height:36px" onclick="saveClientContactInfo()"><span class="icon" data-icon="save" data-icon-size="13"></span> <span data-i18n="btn_save">Save</span></button>
-      </div>
+      <div id="cntContactsList"></div>
     </div>
 
     <div class="cnt-divider"></div>
@@ -3211,7 +3232,12 @@ select.wfb-field-input { padding-right: 26px; }
       <select id="onboardingPipelineSelect" class="field-input" style="display:none;height:36px;margin-bottom:0;width:auto" onchange="switchOnboardingPipeline(this.value)"></select>
       <button class="btn btn-sm" id="topbarOnboardingPipelinesBtn" onclick="openManagePipelinesModal()" title="Create or edit pipelines" style="display:none"><span class="icon" data-icon="settings" data-icon-size="14"></span> <span data-i18n="onboarding_pipelines_btn">Pipelines</span></button>
       <button class="btn btn-primary btn-sm" id="topbarNewOnboardingBtn" onclick="openAddOnboardingModal()" style="display:none">＋ <span data-i18n="onboarding_new_btn">New Onboarding</span></button>
-      <select id="goalsMonthFilter" class="field-input" style="display:none;height:36px;margin-bottom:0;width:auto" onchange="setGoalsMonthFilter(this.value)"></select>
+      <div class="goals-month-nav" id="goalsMonthNav" style="display:none">
+        <button class="goals-month-nav-arrow" onclick="shiftGoalsMonth(-1)" title="Previous month" aria-label="Previous month">‹</button>
+        <button class="goals-month-nav-label" id="goalsMonthNavLabel" onclick="openGoalsMonthPicker()" title="Click to jump to any month"></button>
+        <button class="goals-month-nav-arrow" onclick="shiftGoalsMonth(1)" title="Next month" aria-label="Next month">›</button>
+        <input type="month" id="goalsMonthPickerInput" class="goals-month-picker-input" onchange="setGoalsMonthFilter(this.value)" aria-label="Pick a month">
+      </div>
       <select id="goalsPortfolioFilter" class="field-input" style="display:none;height:36px;margin-bottom:0;width:auto" onchange="setGoalsPortfolioFilter(this.value)">
         <option value="all">All Portfolios</option>
         <option value="smb">SMB</option>
@@ -4370,8 +4396,12 @@ select.wfb-field-input { padding-right: 26px; }
     <div class="card">
       <div class="card-header">
         <div><div class="card-title" id="goalsTableTitle">Monthly Goals (0)</div></div>
+        <div class="goals-view-toggle" role="tablist" aria-label="Goals view">
+          <button class="goals-view-toggle-btn active" id="goalsViewToggleTable" onclick="setGoalsView('table')"><span class="icon" data-icon="clipboard" data-icon-size="12"></span> Table</button>
+          <button class="goals-view-toggle-btn" id="goalsViewToggleCalendar" onclick="setGoalsView('calendar')"><span class="icon" data-icon="calendar" data-icon-size="12"></span> Calendar</button>
+        </div>
       </div>
-      <div style="overflow-x:auto">
+      <div id="goalsTableWrap" style="overflow-x:auto">
         <table class="pill-rows" id="goalsTable">
           <thead><tr>
             <th style="text-align:left;padding-left:var(--space-3)">Goal</th>
@@ -4384,6 +4414,13 @@ select.wfb-field-input { padding-right: 26px; }
           </tr></thead>
           <tbody id="goalsTableBody"></tbody>
         </table>
+      </div>
+      <div id="goalsCalendarWrap" style="display:none">
+        <div class="goals-cal-sub-toggle">
+          <button class="goals-cal-sub-toggle-btn active" id="goalsCalModeDue" onclick="setGoalsCalendarMode('due')">Due Dates</button>
+          <button class="goals-cal-sub-toggle-btn" id="goalsCalModePeriods" onclick="setGoalsCalendarMode('periods')">Check-Ins (Weekly/Bi-Weekly)</button>
+        </div>
+        <div id="goalsCalendarGrid" class="goals-calendar-grid"></div>
       </div>
     </div>
 
@@ -6545,7 +6582,7 @@ function showPage(id) {
 
   // Goals' month/portfolio filters + Smart Paste/New Goal buttons -- same
   // shared-topbar approach, only shown while the Goals page is open.
-  const goalsMonthFilterEl = document.getElementById('goalsMonthFilter');
+  const goalsMonthFilterEl = document.getElementById('goalsMonthNav');
   const goalsPortfolioFilterEl = document.getElementById('goalsPortfolioFilter');
   const goalsUploadBtn = document.getElementById('topbarGoalsUploadBtn');
   const goalsSmartPasteBtn = document.getElementById('topbarGoalsSmartPasteBtn');
@@ -14890,9 +14927,10 @@ function parseSmartPaste(text) {
   return result;
 }
 
-// `prefix` is 'ac' (Add Client modal) or 'cnt' (client profile Contact Info section)
-function handleSmartPaste(prefix, rawText) {
-  const parsed = parseSmartPaste(rawText);
+// `prefix` is 'ac' (Add Client modal) -- the client profile's Contact Info
+// cards use handleContactCardSmartPaste() instead, since each card now has
+// its own per-contact set of field IDs rather than one fixed 'cnt' prefix.
+function fillSmartPasteFields(parsed, idFor) {
   const fillIfEmpty = (id, val) => {
     if (!val) return false;
     const el = document.getElementById(id);
@@ -14900,13 +14938,21 @@ function handleSmartPaste(prefix, rawText) {
     return false;
   };
   let filled = 0;
-  if (fillIfEmpty(prefix + 'ContactName', parsed.name)) filled++;
-  if (fillIfEmpty(prefix + 'ContactTitle', parsed.title)) filled++;
-  if (fillIfEmpty(prefix + 'ContactEmail', parsed.email)) filled++;
-  if (fillIfEmpty(prefix + 'ContactPhone', parsed.phone)) filled++;
+  if (fillIfEmpty(idFor('ContactName'), parsed.name)) filled++;
+  if (fillIfEmpty(idFor('ContactTitle'), parsed.title)) filled++;
+  if (fillIfEmpty(idFor('ContactEmail'), parsed.email)) filled++;
+  if (fillIfEmpty(idFor('ContactPhone'), parsed.phone)) filled++;
+  return filled;
+}
+function handleSmartPaste(prefix, rawText) {
+  const parsed = parseSmartPaste(rawText);
+  let filled = fillSmartPasteFields(parsed, (suffix) => prefix + suffix);
   // "Organization" (groups multi-location businesses) only exists on the Add Client modal —
   // only fill it from a detected company name if it's still empty, never overwrite.
-  if (prefix === 'ac' && fillIfEmpty('acOrg', parsed.org)) filled++;
+  if (prefix === 'ac') {
+    const orgEl = document.getElementById('acOrg');
+    if (parsed.org && orgEl && !orgEl.disabled && !orgEl.value.trim()) { orgEl.value = parsed.org; filled++; }
+  }
 
   const box = document.getElementById(prefix + 'SmartPaste');
   if (box) box.value = '';
@@ -14914,51 +14960,131 @@ function handleSmartPaste(prefix, rawText) {
   if (filled > 0) showToast(`Smart Paste filled in ${filled} field${filled === 1 ? '' : 's'} — double-check before saving.`, 'success');
   else showToast("Couldn't detect any contact info in that paste — try a different format or fill in manually.", 'warning');
 }
+function handleContactCardSmartPaste(contactId, rawText) {
+  const parsed = parseSmartPaste(rawText);
+  const idMap = { ContactName: 'name', ContactTitle: 'title', ContactEmail: 'email', ContactPhone: 'phone' };
+  const filled = fillSmartPasteFields(parsed, (suffix) => `cnt-${idMap[suffix]}-${contactId}`);
 
-function getClientContact(clientName) {
+  const box = document.getElementById(`cnt-paste-${contactId}`);
+  if (box) box.value = '';
+
+  if (filled > 0) showToast(`Smart Paste filled in ${filled} field${filled === 1 ? '' : 's'} — double-check before saving.`, 'success');
+  else showToast("Couldn't detect any contact info in that paste — try a different format or fill in manually.", 'warning');
+}
+
+// Returns ALL contacts saved for a client, oldest (first-added) first.
+// "Oldest first" is inferred from updated_at rather than a separate
+// created_at column (none exists) -- a contact's updated_at is set the
+// moment it's first saved, so the earliest updated_at is a reliable proxy
+// for "which contact was added first" as long as nothing rewrites history.
+function getClientContacts(clientName) {
   const norm = (clientName || '').trim().toLowerCase();
-  return CLIENT_CONTACTS.find(c => (c.client_name || '').trim().toLowerCase() === norm) || null;
+  return CLIENT_CONTACTS
+    .filter(c => (c.client_name || '').trim().toLowerCase() === norm)
+    .sort((a, b) => (a.updated_at || '').localeCompare(b.updated_at || ''));
 }
-
-function renderClientContactInfo() {
-  const contact = getClientContact(cntActiveClientName) || {};
-  const editable = canEdit();
-  const set = (id, val) => { const el = document.getElementById(id); if (el) { el.value = val || ''; el.disabled = !editable; } };
-  set('cntContactName', contact.contact_name);
-  set('cntContactTitle', contact.title);
-  set('cntContactEmail', contact.email);
-  set('cntContactPhone', contact.phone);
-  const pasteEl = document.getElementById('cntSmartPaste');
-  if (pasteEl) { pasteEl.value = ''; pasteEl.disabled = !editable; }
-  const note = document.getElementById('cntContactSavedNote');
-  if (note) {
-    note.textContent = contact.updated_at
-      ? `Last updated ${fmtNoteTime(contact.updated_at)}`
-      : (editable ? '' : 'No contact info added yet.');
-  }
+// Back-compat "primary contact" accessor -- every pre-existing call site
+// (Client Spotlight, Directory hint, Missing Contact Info filter, the
+// get_client_details/update_client_contact Nirvana tools) keeps working
+// unchanged: they all just want "a" contact to show/target, and that's
+// now defined as the first one added.
+function getClientContact(clientName) {
+  return getClientContacts(clientName)[0] || null;
 }
-
-async function saveClientContactInfo() {
-  if (!requirePermission('edit')) return;
-  const contact_name = (document.getElementById('cntContactName') || {}).value?.trim() || '';
-  const title = (document.getElementById('cntContactTitle') || {}).value?.trim() || '';
-  const email = (document.getElementById('cntContactEmail') || {}).value?.trim() || '';
-  const phone = (document.getElementById('cntContactPhone') || {}).value?.trim() || '';
-  const norm = (cntActiveClientName || '').trim().toLowerCase();
-  let contact = getClientContact(cntActiveClientName);
-  if (!contact) {
-    contact = { id: (crypto.randomUUID ? crypto.randomUUID() : 'contact_' + Date.now()), client_name: cntActiveClientName };
-    CLIENT_CONTACTS.push(contact);
-  }
-  contact.contact_name = contact_name;
-  contact.title = title;
-  contact.email = email;
-  contact.phone = phone;
+// Shared create/update/delete-by-id helpers so the Contact Info UI and the
+// Nirvana contact tools hit exactly the same code path, not two copies.
+async function upsertClientContactRecord(contact) {
   contact.updated_at = new Date().toISOString();
   localStorage.setItem(CLIENT_CONTACTS_CACHE_KEY, JSON.stringify(CLIENT_CONTACTS));
   try { await sbUpsert('client_contacts', contact); } catch(e) { console.warn('Could not save contact info:', e.message); }
+  return contact;
+}
+function createClientContactRecord(clientName) {
+  const contact = { id: (crypto.randomUUID ? crypto.randomUUID() : 'contact_' + Date.now() + Math.random().toString(36).slice(2, 8)), client_name: clientName };
+  CLIENT_CONTACTS.push(contact);
+  return contact;
+}
+async function deleteClientContactRecord(contactId) {
+  CLIENT_CONTACTS = CLIENT_CONTACTS.filter(c => c.id !== contactId);
+  localStorage.setItem(CLIENT_CONTACTS_CACHE_KEY, JSON.stringify(CLIENT_CONTACTS));
+  try { await sbDelete('client_contacts', `id=eq.${contactId}`); } catch(e) { console.warn('Could not delete contact:', e.message); }
+}
+
+function renderContactCardHtml(c, isPrimary, editable) {
+  const id = c.id;
+  const updatedNote = c.updated_at ? `Last updated ${fmtNoteTime(c.updated_at)}` : 'Not saved yet';
+  return `<div class="cnt-contact-card" data-contact-id="${id}">
+    <div class="cnt-contact-card-head">
+      <div class="cnt-contact-head-left">${isPrimary ? '<span class="cnt-contact-primary-badge">Primary</span>' : ''}<span class="cnt-contact-updated">${updatedNote}</span></div>
+      ${editable ? `<button class="icon-btn" onclick="deleteClientContactCard('${id}')" title="Delete this contact"><span class="icon" data-icon="trash" data-icon-size="13"></span></button>` : ''}
+    </div>
+    <div class="smart-paste-box" style="padding:8px 12px;margin-bottom:10px">
+      <input type="text" id="cnt-paste-${id}" class="field-input" style="height:34px;margin-bottom:0" placeholder="📋 Paste a signature, business card, or spreadsheet row to auto-fill →" onpaste="setTimeout(() => handleContactCardSmartPaste('${id}', this.value), 0)" ${editable ? '' : 'disabled'}>
+    </div>
+    <div class="cnt-contact-fields">
+      <div><label for="cnt-name-${id}" class="field-label">Contact Name</label><input type="text" id="cnt-name-${id}" class="field-input" style="height:36px" placeholder="e.g. Jamie Rivera" value="${escAttr(c.contact_name)}" ${editable ? '' : 'disabled'}></div>
+      <div><label for="cnt-title-${id}" class="field-label">Title</label><input type="text" id="cnt-title-${id}" class="field-input" style="height:36px" placeholder="e.g. Owner" value="${escAttr(c.title)}" ${editable ? '' : 'disabled'}></div>
+      <div><label for="cnt-email-${id}" class="field-label">Email</label><input type="email" id="cnt-email-${id}" class="field-input" style="height:36px" placeholder="e.g. jamie@business.com" value="${escAttr(c.email)}" ${editable ? '' : 'disabled'}></div>
+      <div><label for="cnt-phone-${id}" class="field-label">Phone</label><input type="tel" id="cnt-phone-${id}" class="field-input" style="height:36px" placeholder="(555) 123-4567" value="${escAttr(c.phone)}" ${editable ? '' : 'disabled'}></div>
+      ${editable ? `<button class="btn btn-primary btn-sm" style="height:36px" onclick="saveClientContactCard('${id}')"><span class="icon" data-icon="save" data-icon-size="13"></span> <span data-i18n="btn_save">Save</span></button>` : '<div></div>'}
+    </div>
+  </div>`;
+}
+
+function renderClientContactInfo() {
+  const listEl = document.getElementById('cntContactsList');
+  if (!listEl) return;
+  const editable = canEdit();
+  const addBtn = document.getElementById('cntAddContactBtn');
+  if (addBtn) addBtn.style.display = editable ? '' : 'none';
+  const contacts = getClientContacts(cntActiveClientName);
+  if (contacts.length === 0) {
+    listEl.innerHTML = `<div class="cnt-empty-contacts-hint">${editable ? 'No contacts added yet. Click "Add Contact" to add one.' : 'No contact info added yet.'}</div>`;
+    return;
+  }
+  listEl.innerHTML = contacts.map((c, idx) => renderContactCardHtml(c, idx === 0, editable)).join('');
+}
+
+// Adds a blank, not-yet-persisted card to the list and focuses its name
+// field. Nothing is written to Supabase until saveClientContactCard() runs
+// on this card -- see closeClientNotesTasksModal()'s cleanup for what
+// happens if the person never saves it.
+function addClientContactCard() {
+  if (!requirePermission('edit')) return;
+  const contact = createClientContactRecord(cntActiveClientName);
+  renderClientContactInfo();
+  const nameEl = document.getElementById(`cnt-name-${contact.id}`);
+  if (nameEl) nameEl.focus();
+}
+
+async function saveClientContactCard(contactId) {
+  if (!requirePermission('edit')) return;
+  const contact = CLIENT_CONTACTS.find(c => c.id === contactId);
+  if (!contact) return;
+  contact.contact_name = (document.getElementById(`cnt-name-${contactId}`) || {}).value?.trim() || '';
+  contact.title = (document.getElementById(`cnt-title-${contactId}`) || {}).value?.trim() || '';
+  contact.email = (document.getElementById(`cnt-email-${contactId}`) || {}).value?.trim() || '';
+  contact.phone = (document.getElementById(`cnt-phone-${contactId}`) || {}).value?.trim() || '';
+  await upsertClientContactRecord(contact);
   renderClientContactInfo();
   showToast('Contact info saved.', 'success');
+}
+
+async function deleteClientContactCard(contactId) {
+  if (!requirePermission('edit')) return;
+  const contact = CLIENT_CONTACTS.find(c => c.id === contactId);
+  if (!contact) return;
+  // Never-saved blank card -- just drop it from memory, nothing to confirm
+  // or delete server-side.
+  if (!contact.updated_at) {
+    CLIENT_CONTACTS = CLIENT_CONTACTS.filter(c => c.id !== contactId);
+    renderClientContactInfo();
+    return;
+  }
+  if (!confirm(`Delete ${contact.contact_name || 'this contact'}? This can't be undone.`)) return;
+  await deleteClientContactRecord(contactId);
+  renderClientContactInfo();
+  showToast('Contact deleted.', 'success');
 }
 
 async function loadNotifications() {
@@ -15041,6 +15167,8 @@ let GOALS = [];
 let GOAL_PERIODS = [];
 let goalsActiveMonth = '';
 let goalsActivePortfolio = 'all';
+let goalsViewMode = 'table';       // 'table' | 'calendar'
+let goalsCalendarMode = 'due';     // 'due' | 'periods'
 let goalsBreakdownActiveGoalId = null;
 const GOALS_CACHE_KEY = 'csh_goals_v1';
 const GOAL_PERIODS_CACHE_KEY = 'csh_goal_periods_v1';
@@ -15126,28 +15254,134 @@ function formatGoalTarget(goal) {
 }
 
 function populateGoalsMonthFilter() {
-  const sel = document.getElementById('goalsMonthFilter');
-  if (!sel) return;
-  const months = Array.from(new Set(GOALS.map(g => g.month.slice(0, 7)))).sort().reverse();
+  const labelEl = document.getElementById('goalsMonthNavLabel');
+  const pickerEl = document.getElementById('goalsMonthPickerInput');
+  if (!labelEl) return;
   const currentMonth = new Date().toISOString().slice(0, 7);
-  if (!months.includes(currentMonth)) months.unshift(currentMonth);
   if (!goalsActiveMonth) goalsActiveMonth = currentMonth;
-  sel.innerHTML = months.map(m => {
-    const label = new Date(m + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-    return `<option value="${m}" ${m === goalsActiveMonth ? 'selected' : ''}>${label}</option>`;
-  }).join('');
+  labelEl.textContent = new Date(goalsActiveMonth + '-01').toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  if (pickerEl) pickerEl.value = goalsActiveMonth;
 }
-function setGoalsMonthFilter(month) { goalsActiveMonth = month; rebuildGoalsPage(); }
+function setGoalsMonthFilter(month) { if (!month) return; goalsActiveMonth = month; populateGoalsMonthFilter(); rebuildGoalsPage(); }
+function shiftGoalsMonth(delta) {
+  const base = goalsActiveMonth || new Date().toISOString().slice(0, 7);
+  const d = new Date(base + '-01T00:00:00');
+  d.setMonth(d.getMonth() + delta);
+  setGoalsMonthFilter(d.toISOString().slice(0, 7));
+}
+function openGoalsMonthPicker() {
+  const pickerEl = document.getElementById('goalsMonthPickerInput');
+  if (!pickerEl) return;
+  // showPicker() is the real calendar UI (Chrome/Edge); older/other browsers
+  // fall back to focusing the native input, which still opens its own
+  // picker UI on most platforms when focused/clicked.
+  if (typeof pickerEl.showPicker === 'function') {
+    try { pickerEl.showPicker(); return; } catch (e) { /* fall through to fallback below */ }
+  }
+  pickerEl.focus();
+  pickerEl.click();
+}
 function setGoalsPortfolioFilter(pk) { goalsActivePortfolio = pk; rebuildGoalsPage(); }
 
-function rebuildGoalsPage() {
-  if (!document.getElementById('page-upsell')) return;
+// Shared by rebuildGoalsPage() and renderGoalsCalendar() so both the table
+// and calendar views always agree on which goals are "in view" for the
+// current month/portfolio filter -- one filter implementation, not two.
+function getFilteredGoalsWithStatus() {
   let filtered = GOALS.filter(g => g.month.slice(0, 7) === goalsActiveMonth);
   if (goalsActivePortfolio !== 'all') {
     filtered = filtered.filter(g => (goalsActivePortfolio === '' ? !g.portfolio : g.portfolio === goalsActivePortfolio));
   }
+  return filtered.map(g => ({ ...g, ...computeGoalStatus(g) }));
+}
 
-  const withStatus = filtered.map(g => ({ ...g, ...computeGoalStatus(g) }));
+function setGoalsView(mode) {
+  goalsViewMode = mode;
+  const tableBtn = document.getElementById('goalsViewToggleTable');
+  const calBtn = document.getElementById('goalsViewToggleCalendar');
+  const tableWrap = document.getElementById('goalsTableWrap');
+  const calWrap = document.getElementById('goalsCalendarWrap');
+  if (tableBtn) tableBtn.classList.toggle('active', mode === 'table');
+  if (calBtn) calBtn.classList.toggle('active', mode === 'calendar');
+  if (tableWrap) tableWrap.style.display = mode === 'table' ? '' : 'none';
+  if (calWrap) calWrap.style.display = mode === 'calendar' ? '' : 'none';
+  if (mode === 'calendar') renderGoalsCalendar();
+}
+
+function setGoalsCalendarMode(mode) {
+  goalsCalendarMode = mode;
+  const dueBtn = document.getElementById('goalsCalModeDue');
+  const periodsBtn = document.getElementById('goalsCalModePeriods');
+  if (dueBtn) dueBtn.classList.toggle('active', mode === 'due');
+  if (periodsBtn) periodsBtn.classList.toggle('active', mode === 'periods');
+  renderGoalsCalendar();
+}
+
+// Renders whichever calendar sub-view is active (due dates or weekly/
+// bi-weekly check-ins) for goalsActiveMonth, scoped to the same
+// month/portfolio filter the table uses (getFilteredGoalsWithStatus()).
+function renderGoalsCalendar() {
+  const grid = document.getElementById('goalsCalendarGrid');
+  if (!grid) return;
+  const withStatus = getFilteredGoalsWithStatus();
+  const monthStr = goalsActiveMonth || new Date().toISOString().slice(0, 7);
+  const [year, month] = monthStr.split('-').map(Number);
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const startDow = new Date(year, month - 1, 1).getDay();
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const dowLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+  if (withStatus.length === 0) {
+    grid.innerHTML = dowLabels.map(d => `<div class="goals-cal-dow">${d}</div>`).join('')
+      + `<div class="goals-cal-empty-hint">No goals set for this month yet. Click "New Goal" to add one.</div>`;
+    return;
+  }
+
+  let html = dowLabels.map(d => `<div class="goals-cal-dow">${d}</div>`).join('');
+  for (let i = 0; i < startDow; i++) html += `<div class="goals-cal-day is-outside"></div>`;
+
+  if (goalsCalendarMode === 'due') {
+    const byDay = {};
+    withStatus.forEach(g => {
+      if (!g.due_date || g.due_date.slice(0, 7) !== monthStr) return;
+      const dayNum = Number(g.due_date.slice(8, 10));
+      (byDay[dayNum] = byDay[dayNum] || []).push(g);
+    });
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `${monthStr}-${String(day).padStart(2, '0')}`;
+      const items = byDay[day] || [];
+      html += `<div class="goals-cal-day${dateStr === todayStr ? ' is-today' : ''}"><div class="goals-cal-day-num">${day}</div>${
+        items.map(g => `<div class="goals-cal-chip status-${g.status}" title="${escAttr(g.name)} — due ${dateStr}" onclick="showGoalBreakdown('${g.id}')">${escAttr(g.name)}</div>`).join('')
+      }</div>`;
+    }
+  } else {
+    const filteredGoalIds = new Set(withStatus.map(g => g.id));
+    const goalNameById = {};
+    withStatus.forEach(g => { goalNameById[g.id] = g.name; });
+    const byDay = {};
+    GOAL_PERIODS.filter(p => filteredGoalIds.has(p.goal_id) && p.period_start.slice(0, 7) === monthStr).forEach(p => {
+      const dayNum = Number(p.period_start.slice(8, 10));
+      (byDay[dayNum] = byDay[dayNum] || []).push(p);
+    });
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateStr = `${monthStr}-${String(day).padStart(2, '0')}`;
+      const items = byDay[day] || [];
+      html += `<div class="goals-cal-day${dateStr === todayStr ? ' is-today' : ''}"><div class="goals-cal-day-num">${day}</div>${
+        items.map(p => {
+          const ratio = p.target_value > 0 ? p.actual_value / p.target_value : 0;
+          const status = ratio >= 0.9 ? 'on_track' : ratio >= 0.6 ? 'at_risk' : 'off_track';
+          const label = `${p.period_type === 'biweekly' ? 'BW' : 'Wk'} · ${goalNameById[p.goal_id] || 'Goal'}`;
+          return `<div class="goals-cal-chip status-${status}" title="${escAttr(goalNameById[p.goal_id] || 'Goal')} — ${p.period_type} check-in, ${Math.round(ratio * 100)}% of target" onclick="showGoalBreakdown('${p.goal_id}')">${escAttr(label)}</div>`;
+        }).join('')
+      }</div>`;
+    }
+  }
+
+  grid.innerHTML = html;
+}
+
+function rebuildGoalsPage() {
+  if (!document.getElementById('page-upsell')) return;
+  const withStatus = getFilteredGoalsWithStatus();
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
   const total = withStatus.length;
   const onTrack = withStatus.filter(g => g.status === 'on_track').length;
@@ -15263,6 +15497,7 @@ function rebuildGoalsPage() {
   renderGoalsProgressTrendChart(filteredGoalIds);
   renderGoalsHistoryList();
   if (goalsBreakdownActiveGoalId) renderGoalsBreakdownTable();
+  if (goalsViewMode === 'calendar') renderGoalsCalendar();
 }
 
 // ─── GOAL COMPLETION MIX (donut) — zero new data needed, reuses the same
@@ -16960,12 +17195,14 @@ function openClientNotesTasksModal(clientName) {
   renderClientContactInfo();
   renderClientNotesThread();
   renderClientTasksList();
-  const contactBtn = document.getElementById('cntContactSubmitBtn');
-  if (contactBtn) contactBtn.style.display = canEdit() ? '' : 'none';
   document.getElementById('clientNotesTasksModal').classList.add('open');
 }
 function closeClientNotesTasksModal() {
   document.getElementById('clientNotesTasksModal').classList.remove('open');
+  // Drop any contact card the person clicked "+ Add Contact" on but never
+  // actually saved (no updated_at yet) -- otherwise it'd sit in memory as
+  // a phantom blank contact until the next full data reload.
+  if (cntActiveClientName) CLIENT_CONTACTS = CLIENT_CONTACTS.filter(c => c.client_name !== cntActiveClientName || c.updated_at);
   cntActiveClientName = null;
   cntTaggedEmails = [];
 }
@@ -24737,7 +24974,32 @@ const AI_AGENT_TOOLS = [
   },
   {
     name: 'update_client_contact',
-    description: 'Update one or more contact-info fields (name, title, email, phone) for an EXISTING client. Only the fields provided are changed — anything omitted is left as it was, so this is safe to use for adding just a new email or just a new phone number without needing to know or re-enter the rest. This changes data — the user will be asked to confirm before it is actually saved. The client must already exist; use create_client first if it does not.',
+    description: 'Update one or more contact-info fields (name, title, email, phone) for an EXISTING client\'s contact. Only the fields provided are changed — anything omitted is left as it was, so this is safe to use for adding just a new email or just a new phone number without needing to know or re-enter the rest. A client can have more than one saved contact now — by default this updates the PRIMARY contact (the first one added); pass target_contact_name to update a specific different contact by name instead. Use add_client_contact instead if the goal is to add a brand-new additional contact rather than change an existing one. This changes data — the user will be asked to confirm before it is actually saved. The client must already exist; use create_client first if it does not.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        client_name: { type: 'string' },
+        target_contact_name: { type: 'string', description: 'Optional — the existing contact\'s current name, if this client has more than one contact and a specific one (other than the primary) should be updated' },
+        contact_name: { type: 'string' },
+        contact_title: { type: 'string' },
+        contact_email: { type: 'string' },
+        contact_phone: { type: 'string' },
+      },
+      required: ['client_name'],
+    },
+  },
+  {
+    name: 'list_client_contacts',
+    description: 'List every saved contact for a client (name, title, email, phone), in the order they were added — the first one returned is the primary contact. Use this before add_client_contact or delete_client_contact when it matters which contacts already exist (e.g. to avoid creating a near-duplicate, or to confirm which one to remove).',
+    input_schema: {
+      type: 'object',
+      properties: { client_name: { type: 'string' } },
+      required: ['client_name'],
+    },
+  },
+  {
+    name: 'add_client_contact',
+    description: 'Add a brand-new, ADDITIONAL contact to an existing client — does not touch or overwrite any existing contact, so this is the right tool for "also add a second/third contact at this business." At least one field beyond the name should typically be given, but only contact_name is required. This changes data — the user will be asked to confirm before it is actually saved. The client must already exist; use create_client first if it does not.',
     input_schema: {
       type: 'object',
       properties: {
@@ -24747,7 +25009,19 @@ const AI_AGENT_TOOLS = [
         contact_email: { type: 'string' },
         contact_phone: { type: 'string' },
       },
-      required: ['client_name'],
+      required: ['client_name', 'contact_name'],
+    },
+  },
+  {
+    name: 'delete_client_contact',
+    description: 'Permanently remove one specific contact from a client, matched by name. If the client has more than one contact matching that name, or none, this returns an error asking for clarification rather than guessing. This changes data — the user will be asked to confirm first.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        client_name: { type: 'string' },
+        contact_name: { type: 'string', description: 'The existing contact\'s name to remove' },
+      },
+      required: ['client_name', 'contact_name'],
     },
   },
   {
@@ -25206,7 +25480,7 @@ async function executeAiTool(name, input) {
         const client = entry.portfolios[pk].client;
         getCatalog(pk).forEach(p => { (client[p.key] ? productsUsing : productsNotUsing).add(p.label); });
       });
-      const contact = getClientContact(entry.displayName);
+      const contacts = getClientContacts(entry.displayName);
       const notes = getClientNotes(entry.displayName).slice(0, 5).map(n => ({ author: n.author_name, when: fmtNoteTime(n.created_at), text: n.text }));
       const tasks = CLIENT_TASKS.filter(t => t.client_name === entry.displayName && t.status !== 'done').map(t => ({ title: t.title, due: t.due_date, assigned_to: t.assigned_to_name }));
       const normName = entry.displayName.trim().toLowerCase();
@@ -25217,7 +25491,7 @@ async function executeAiTool(name, input) {
         portfolios: pks.map(pk => PORTFOLIO_LABELS[pk]),
         products_in_use: Array.from(productsUsing),
         products_not_using: Array.from(productsNotUsing),
-        contact: contact ? { name: contact.contact_name, title: contact.title, email: contact.email, phone: contact.phone } : null,
+        contacts: contacts.length ? contacts.map((c, idx) => ({ name: c.contact_name, title: c.title, email: c.email, phone: c.phone, is_primary: idx === 0 })) : [],
         recent_notes: notes,
         open_tasks: tasks,
         collections: collectionsEntry ? { type: collectionsEntry.type, amount: collectionsEntry.amount, status: statusMeta(collectionsEntry.status).label } : null,
@@ -25739,18 +26013,12 @@ async function executeAiTool(name, input) {
       const email = (input.contact_email || '').trim();
       const phone = (input.contact_phone || '').trim();
       if (contact_name || title || email || phone) {
-        let contact = getClientContact(name);
-        if (!contact) {
-          contact = { id: (crypto.randomUUID ? crypto.randomUUID() : 'contact_' + Date.now()), client_name: name };
-          CLIENT_CONTACTS.push(contact);
-        }
+        const contact = getClientContact(name) || createClientContactRecord(name);
         contact.contact_name = contact_name;
         contact.title = title;
         contact.email = email;
         contact.phone = phone;
-        contact.updated_at = new Date().toISOString();
-        localStorage.setItem(CLIENT_CONTACTS_CACHE_KEY, JSON.stringify(CLIENT_CONTACTS));
-        try { await sbUpsert('client_contacts', contact); } catch(e) { console.warn('Could not save contact info:', e.message); }
+        await upsertClientContactRecord(contact);
         contactSaved = true;
       }
 
@@ -25775,10 +26043,13 @@ async function executeAiTool(name, input) {
       const fieldMap = { contact_name: 'contact_name', contact_title: 'title', contact_email: 'email', contact_phone: 'phone' };
       const providedKeys = Object.keys(fieldMap).filter(k => input[k] !== undefined && input[k] !== null && String(input[k]).trim() !== '');
       if (providedKeys.length === 0) return { error: 'No contact fields were provided to update.' };
-      let contact = getClientContact(entry.displayName);
-      if (!contact) {
-        contact = { id: (crypto.randomUUID ? crypto.randomUUID() : 'contact_' + Date.now()), client_name: entry.displayName };
-        CLIENT_CONTACTS.push(contact);
+      const targetName = (input.target_contact_name || '').trim().toLowerCase();
+      let contact;
+      if (targetName) {
+        contact = getClientContacts(entry.displayName).find(c => (c.contact_name || '').trim().toLowerCase() === targetName);
+        if (!contact) return { error: `No contact named "${input.target_contact_name}" found for ${entry.displayName}. Use list_client_contacts to see who's actually on file, or add_client_contact if this should be a new one.` };
+      } else {
+        contact = getClientContact(entry.displayName) || createClientContactRecord(entry.displayName);
       }
       providedKeys.forEach(k => {
         const oldValue = contact[fieldMap[k]] || '';
@@ -25786,11 +26057,50 @@ async function executeAiTool(name, input) {
         contact[fieldMap[k]] = newValue;
         if (oldValue !== newValue) logClientActivity({ clientName: entry.displayName, source: 'nirvana_update_contact', action: 'field_changed', fieldName: fieldMap[k], oldValue, newValue });
       });
-      contact.updated_at = new Date().toISOString();
-      localStorage.setItem(CLIENT_CONTACTS_CACHE_KEY, JSON.stringify(CLIENT_CONTACTS));
-      try { await sbUpsert('client_contacts', contact); } catch(e) { console.warn('Could not save contact info:', e.message); }
+      await upsertClientContactRecord(contact);
       if (typeof cntActiveClientName !== 'undefined' && cntActiveClientName === entry.displayName) renderClientContactInfo();
-      return { ok: true, client: entry.displayName, updated_fields: providedKeys.map(k => fieldMap[k]) };
+      return { ok: true, client: entry.displayName, contact: contact.contact_name, updated_fields: providedKeys.map(k => fieldMap[k]) };
+    }
+    case 'list_client_contacts': {
+      const entry = aiFindMergedClient(input.client_name);
+      if (!entry) return { error: 'Client not found' };
+      const contacts = getClientContacts(entry.displayName);
+      if (contacts.length === 0) return { client: entry.displayName, contacts: [], note: 'No contacts saved for this client yet.' };
+      return { client: entry.displayName, contacts: contacts.map((c, idx) => ({ name: c.contact_name, title: c.title, email: c.email, phone: c.phone, is_primary: idx === 0 })) };
+    }
+    case 'add_client_contact': {
+      if (!requirePermission('edit')) return { error: 'This account doesn\'t have permission to edit client contact info.' };
+      const entry = aiFindMergedClient(input.client_name);
+      if (!entry) return { error: 'Client not found. Use create_client first if this is a brand-new client.' };
+      const contact_name = (input.contact_name || '').trim();
+      if (!contact_name) return { error: 'contact_name is required to add a new contact.' };
+      // A near-duplicate name for the same client is far more likely a typo
+      // or the person meaning to update the existing one than a genuinely
+      // different second person — flag it rather than silently doubling up.
+      const existing = getClientContacts(entry.displayName).find(c => (c.contact_name || '').trim().toLowerCase() === contact_name.toLowerCase());
+      if (existing) return { error: `${entry.displayName} already has a contact named "${existing.contact_name}". Use update_client_contact with target_contact_name if you meant to update them instead.` };
+      const contact = createClientContactRecord(entry.displayName);
+      contact.contact_name = contact_name;
+      contact.title = (input.contact_title || '').trim();
+      contact.email = (input.contact_email || '').trim();
+      contact.phone = (input.contact_phone || '').trim();
+      await upsertClientContactRecord(contact);
+      logClientActivity({ clientName: entry.displayName, source: 'nirvana_add_contact', action: 'created', newValue: contact_name });
+      if (typeof cntActiveClientName !== 'undefined' && cntActiveClientName === entry.displayName) renderClientContactInfo();
+      return { ok: true, client: entry.displayName, contact_added: contact_name, total_contacts: getClientContacts(entry.displayName).length };
+    }
+    case 'delete_client_contact': {
+      if (!requirePermission('edit')) return { error: 'This account doesn\'t have permission to edit client contact info.' };
+      const entry = aiFindMergedClient(input.client_name);
+      if (!entry) return { error: 'Client not found' };
+      const targetName = (input.contact_name || '').trim().toLowerCase();
+      const matches = getClientContacts(entry.displayName).filter(c => (c.contact_name || '').trim().toLowerCase() === targetName);
+      if (matches.length === 0) return { error: `No contact named "${input.contact_name}" found for ${entry.displayName}. Use list_client_contacts to see who's on file.` };
+      if (matches.length > 1) return { error: `More than one contact named "${input.contact_name}" is saved for ${entry.displayName} — this needs to be resolved manually in the client profile rather than guessing which to delete.` };
+      await deleteClientContactRecord(matches[0].id);
+      logClientActivity({ clientName: entry.displayName, source: 'nirvana_delete_contact', action: 'deleted', oldValue: matches[0].contact_name });
+      if (typeof cntActiveClientName !== 'undefined' && cntActiveClientName === entry.displayName) renderClientContactInfo();
+      return { ok: true, client: entry.displayName, contact_deleted: matches[0].contact_name, remaining_contacts: getClientContacts(entry.displayName).length };
     }
     case 'find_duplicate_clients': {
       let groups = [];
@@ -26741,7 +27051,7 @@ async function runAiAgentTurn(toolTagForNextText) {
   const u = getCurrentUser();
   const systemPrompt = `${currentLanguage === 'es' ? 'IMPORTANT: The Hub is currently set to Spanish (MX). Respond to the user ENTIRELY in Spanish (Mexican Spanish), including this entire conversation, regardless of what language they write in — unless they explicitly ask you to switch to English. Data values, client names, and product names stay as-is; everything you write around them is in Spanish.\n\n' : ''}Current date and time: ${new Date().toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })}. This is read directly from the user's own device clock, so it already reflects their real timezone — treat it as ground truth. For ANY relative time request ("in 15 minutes", "tomorrow at 9am", "next Monday"), compute the exact resulting date/time yourself from this reference. Never ask the user what time it is or guess at a timestamp — the real current time is always right here.
 
-You are Nirvana, the AI Agent inside ${ORG_SETTINGS.company_name}'s ${ORG_SETTINGS.product_name} — "${ORG_SETTINGS.product_name}" — helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the ${ORG_SETTINGS.portfolio_labels.smb}, ${ORG_SETTINGS.portfolio_labels.whitelabel}, and ${ORG_SETTINGS.portfolio_labels.support} portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. Whenever a request would affect MORE THAN ONE client (e.g. "create a follow-up task for every client that hasn't been touched in 30 days," or a list of specific client names), always use bulk_create_tasks or bulk_add_note instead of calling create_task/add_note in a loop — looping individual calls would force a separate confirmation click per client, while the bulk tools show one confirmation with the full affected list. Workflows can trigger on six things — "inactivity" (no note in N days), "schedule" (recurring cadence, for one client or a whole portfolio), "client_added" (fires the moment a new client is created), "task_due_soon" (reminds before an existing task's due date), "kpi_drop" (a SuccessOS score went down — team-level, not tied to one client), or "collections_status" (an account entered a specific Collections status) — and can take four actions when they fire: create a task (optionally with a real due date/time), just send a notification with no task, log an audit-trail note with no task or notification, or have you draft the actual task content yourself instead of using fixed text. If someone describes an automation idea in plain English, translate it into the right trigger type, action type, and fields yourself rather than making them fill out a form. For questions about company policy, procedures, "how do we...", or what the website/docs say, search the Knowledge Base — it contains SOPs, docs, and website content the team has fed in, separate from live client data. You can read and explain every chart in the Hub: get_portfolio_summary explains a portfolio's Product Adoption Rate and Products Per Client charts, get_product_adoption explains the Voice Agent / Text Agent charts, get_collections_summary explains the Collections breakdown (always separated into Outstanding Balances vs Card Fails, each with its own status breakdown — never collapse these into one number), get_adspend_summary explains Ad Spend's promo/budget breakdown, and get_kpi_summary explains the SuccessOS scores. When someone asks you to break down, interpret, or explain any data or chart, always call the specific tool that has that breakdown built in rather than answering from a vaguer or more general tool — if a user asks for a split by category/status/type, that split should already be in the tool result; use it. Prefer the data tools above for explaining charts — they're faster and more precise. Only use view_chart when the question is genuinely about the chart's visual appearance itself (e.g. "does this look right," "what do you see," "describe this chart visually") — calling it will switch the user's screen to that chart's page, so mention that you're pulling it up. Whenever asked to check for discrepancies, duplicates, mismatches, or whether numbers add up anywhere in the Hub (including client counts, Collections, Ad Spend, or the Knowledge Base), always call audit_data_integrity rather than speculating about possible causes — it actually reconciles the numbers and reports genuine findings, so use what it returns instead of guessing at explanations like "could be duplicates" or "could be stale data." A daily briefing already gets shown automatically once per day when the chat is first opened — if asked for a summary, rundown, or "what should I focus on" at any other point, use get_daily_briefing to pull the same live data fresh rather than referencing whatever was shown earlier, since it may be out of date by then. Whenever asked "which accounts are at risk," "who needs attention," or how healthy a specific client is, use get_at_risk_clients or get_client_health rather than checking just one signal (like Collections alone, or note recency alone) — those tools already combine engagement, task backlog, and billing friction into one score with a transparent breakdown of exactly why, which is a more honest answer than picking one factor and guessing at the rest. Whenever asked what's changed for a specific client recently, who created or updated a client record, or when a client was actually added to the Hub, use get_client_activity_history — it's the real, logged audit trail (every creation and every field-level change, from every entry point in the Hub: Bulk Reconcile Import, CSV imports, Add Client, onboarding graduation, or your own create_client/update_client_contact calls), not something to infer from notes or guess at. Whenever asked about Voice Agent or Text Agent adoption trends, growth, peaks, or how a metric has changed over time (including for a specific date range someone mentions), use get_adoption_trend — it's backed by real daily snapshots, unlike get_portfolio_summary/get_product_adoption which only reflect the current moment; if a person is looking at a filtered date range on the Voice Agent or Text Agent page, ask what range if they haven't said, rather than assuming it matches what's currently on their screen. For anything about Goals — "how are we doing this month," a specific named goal's progress, its weekly/bi-weekly breakdown, or its change history — use get_goals_summary, get_goal_details, list_goals, or get_goal_activity_history rather than guessing at status from a general impression; these compute the exact same real numbers and pacing logic the Goals page itself shows, including correctly handling range targets (e.g. "$32,500-$35,000") against their midpoint. To create a new goal or update a goal's current progress (goals get updated regularly through the month), use create_goal or update_goal_progress — both fuzzy-match against existing goals for that month first, so a near-duplicate name doesn't silently create a second, separate goal instead of updating the real one. To set a specific week or bi-weekly period's target/actual for a goal (e.g. "set the actual for the week of May 5th to $820,000"), use update_goal_period — it finds the matching period by its exact start date and only changes the field(s) actually given, leaving the other as-is, or creates a new period if none exists yet for that date. When summarizing data, only use the real numbers/content returned by tools — never estimate or make things up. If a tool returns an error (e.g. client not found, or nothing in the knowledge base matches), tell the user plainly rather than guessing. If a tool result includes a "note" field, don't ignore it — mention what it says (for example, a client match that only worked after ignoring punctuation/spacing differences) rather than presenting the result as a clean, unqualified match. When presenting a list of businesses or clients that genuinely don't exist yet in the Hub and could be created (for example, orphaned Ad Spend/Collections entries with no matching client record), format it as a markdown table and put a line reading exactly \`[[selectable:create_client]]\` on its own line immediately before that table — this renders the list with checkboxes so the user can pick specific ones to create instead of you needing to ask about each individually. Only use this marker for that specific "these could be created as clients" scenario — never on ordinary reporting tables (KPI trends, budget breakdowns, adoption rates, etc.), since a "create as clients" action button wouldn't make sense there. If a message says the user selected specific businesses to create as clients, treat that as them already having committed to creating those specific ones — don't re-confirm each one individually, just ask which portfolio(s) each should go into (per the existing rule: never guess a portfolio) and then create them. Onboarding records are a SEPARATE, EARLIER concept from clients — an onboarding record represents a business before it's a real client anywhere else in the Hub, tracked through six stages (Contract Signed, Kickoff Call Scheduled, Kickoff Call Completed, Setup In Progress, QA / Internal Review, Live) with its own checklist and notes. Don't confuse create_onboarding with create_client, or an onboarding record's business_name with an actual client_name — they're different things until activate_onboarding_as_client is explicitly used to graduate one into the other, which typically only makes sense once a record has reached the Live stage. The embeddable Chat Widget is a completely separate AI conversation from you — it runs on a client's own website, talking to anonymous visitors, with its own agent name/personality/instructions per widget. You have no live access into those conversations as they happen, but get_chat_widget_summary lets you check on lead activity after the fact (volume, resolution breakdown, recent leads) whenever asked about chat widget leads or website chat activity.`;
+You are Nirvana, the AI Agent inside ${ORG_SETTINGS.company_name}'s ${ORG_SETTINGS.product_name} — "${ORG_SETTINGS.product_name}" — helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the ${ORG_SETTINGS.portfolio_labels.smb}, ${ORG_SETTINGS.portfolio_labels.whitelabel}, and ${ORG_SETTINGS.portfolio_labels.support} portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. Whenever a request would affect MORE THAN ONE client (e.g. "create a follow-up task for every client that hasn't been touched in 30 days," or a list of specific client names), always use bulk_create_tasks or bulk_add_note instead of calling create_task/add_note in a loop — looping individual calls would force a separate confirmation click per client, while the bulk tools show one confirmation with the full affected list. Workflows can trigger on six things — "inactivity" (no note in N days), "schedule" (recurring cadence, for one client or a whole portfolio), "client_added" (fires the moment a new client is created), "task_due_soon" (reminds before an existing task's due date), "kpi_drop" (a SuccessOS score went down — team-level, not tied to one client), or "collections_status" (an account entered a specific Collections status) — and can take four actions when they fire: create a task (optionally with a real due date/time), just send a notification with no task, log an audit-trail note with no task or notification, or have you draft the actual task content yourself instead of using fixed text. If someone describes an automation idea in plain English, translate it into the right trigger type, action type, and fields yourself rather than making them fill out a form. For questions about company policy, procedures, "how do we...", or what the website/docs say, search the Knowledge Base — it contains SOPs, docs, and website content the team has fed in, separate from live client data. You can read and explain every chart in the Hub: get_portfolio_summary explains a portfolio's Product Adoption Rate and Products Per Client charts, get_product_adoption explains the Voice Agent / Text Agent charts, get_collections_summary explains the Collections breakdown (always separated into Outstanding Balances vs Card Fails, each with its own status breakdown — never collapse these into one number), get_adspend_summary explains Ad Spend's promo/budget breakdown, and get_kpi_summary explains the SuccessOS scores. When someone asks you to break down, interpret, or explain any data or chart, always call the specific tool that has that breakdown built in rather than answering from a vaguer or more general tool — if a user asks for a split by category/status/type, that split should already be in the tool result; use it. Prefer the data tools above for explaining charts — they're faster and more precise. Only use view_chart when the question is genuinely about the chart's visual appearance itself (e.g. "does this look right," "what do you see," "describe this chart visually") — calling it will switch the user's screen to that chart's page, so mention that you're pulling it up. Whenever asked to check for discrepancies, duplicates, mismatches, or whether numbers add up anywhere in the Hub (including client counts, Collections, Ad Spend, or the Knowledge Base), always call audit_data_integrity rather than speculating about possible causes — it actually reconciles the numbers and reports genuine findings, so use what it returns instead of guessing at explanations like "could be duplicates" or "could be stale data." A daily briefing already gets shown automatically once per day when the chat is first opened — if asked for a summary, rundown, or "what should I focus on" at any other point, use get_daily_briefing to pull the same live data fresh rather than referencing whatever was shown earlier, since it may be out of date by then. Whenever asked "which accounts are at risk," "who needs attention," or how healthy a specific client is, use get_at_risk_clients or get_client_health rather than checking just one signal (like Collections alone, or note recency alone) — those tools already combine engagement, task backlog, and billing friction into one score with a transparent breakdown of exactly why, which is a more honest answer than picking one factor and guessing at the rest. Whenever asked what's changed for a specific client recently, who created or updated a client record, or when a client was actually added to the Hub, use get_client_activity_history — it's the real, logged audit trail (every creation and every field-level change, from every entry point in the Hub: Bulk Reconcile Import, CSV imports, Add Client, onboarding graduation, or your own create_client/update_client_contact calls), not something to infer from notes or guess at. A client can have more than one saved contact now — the first one added is always the primary. Use list_client_contacts to see everyone on file for a client, add_client_contact to add a genuinely new additional contact (it will refuse if the name looks like a near-duplicate of someone already saved, so check first if unsure), update_client_contact to change an existing contact's info (defaults to the primary contact unless target_contact_name is given to target a specific other one), and delete_client_contact to remove one by name — it will ask for clarification rather than guess if the name is ambiguous or not found. Whenever asked about Voice Agent or Text Agent adoption trends, growth, peaks, or how a metric has changed over time (including for a specific date range someone mentions), use get_adoption_trend — it's backed by real daily snapshots, unlike get_portfolio_summary/get_product_adoption which only reflect the current moment; if a person is looking at a filtered date range on the Voice Agent or Text Agent page, ask what range if they haven't said, rather than assuming it matches what's currently on their screen. For anything about Goals — "how are we doing this month," a specific named goal's progress, its weekly/bi-weekly breakdown, or its change history — use get_goals_summary, get_goal_details, list_goals, or get_goal_activity_history rather than guessing at status from a general impression; these compute the exact same real numbers and pacing logic the Goals page itself shows, including correctly handling range targets (e.g. "$32,500-$35,000") against their midpoint. To create a new goal or update a goal's current progress (goals get updated regularly through the month), use create_goal or update_goal_progress — both fuzzy-match against existing goals for that month first, so a near-duplicate name doesn't silently create a second, separate goal instead of updating the real one. To set a specific week or bi-weekly period's target/actual for a goal (e.g. "set the actual for the week of May 5th to $820,000"), use update_goal_period — it finds the matching period by its exact start date and only changes the field(s) actually given, leaving the other as-is, or creates a new period if none exists yet for that date. When summarizing data, only use the real numbers/content returned by tools — never estimate or make things up. If a tool returns an error (e.g. client not found, or nothing in the knowledge base matches), tell the user plainly rather than guessing. If a tool result includes a "note" field, don't ignore it — mention what it says (for example, a client match that only worked after ignoring punctuation/spacing differences) rather than presenting the result as a clean, unqualified match. When presenting a list of businesses or clients that genuinely don't exist yet in the Hub and could be created (for example, orphaned Ad Spend/Collections entries with no matching client record), format it as a markdown table and put a line reading exactly \`[[selectable:create_client]]\` on its own line immediately before that table — this renders the list with checkboxes so the user can pick specific ones to create instead of you needing to ask about each individually. Only use this marker for that specific "these could be created as clients" scenario — never on ordinary reporting tables (KPI trends, budget breakdowns, adoption rates, etc.), since a "create as clients" action button wouldn't make sense there. If a message says the user selected specific businesses to create as clients, treat that as them already having committed to creating those specific ones — don't re-confirm each one individually, just ask which portfolio(s) each should go into (per the existing rule: never guess a portfolio) and then create them. Onboarding records are a SEPARATE, EARLIER concept from clients — an onboarding record represents a business before it's a real client anywhere else in the Hub, tracked through six stages (Contract Signed, Kickoff Call Scheduled, Kickoff Call Completed, Setup In Progress, QA / Internal Review, Live) with its own checklist and notes. Don't confuse create_onboarding with create_client, or an onboarding record's business_name with an actual client_name — they're different things until activate_onboarding_as_client is explicitly used to graduate one into the other, which typically only makes sense once a record has reached the Live stage. The embeddable Chat Widget is a completely separate AI conversation from you — it runs on a client's own website, talking to anonymous visitors, with its own agent name/personality/instructions per widget. You have no live access into those conversations as they happen, but get_chat_widget_summary lets you check on lead activity after the fact (volume, resolution breakdown, recent leads) whenever asked about chat widget leads or website chat activity.`;
 
   let streamBubble = null;
   const onTextDelta = (fullTextSoFar) => {
