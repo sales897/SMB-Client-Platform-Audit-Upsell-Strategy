@@ -13600,8 +13600,8 @@ ${text}
     GOALS_SMART_PASTE_PARSED = parsed.filter(g => !g.is_subtotal_or_total).map(g => ({
       included: true,
       name: g.name,
-      category: g.category || null,
-      owner_name: g.owner_name || null,
+      category: (g.category || '').trim() || null,
+      owner_name: (g.owner_name || '').trim() || null,
       metric_type: ['currency', 'percent', 'count', 'days'].includes(g.metric_type) ? g.metric_type : 'count',
       direction: g.direction === 'decrease_to_target' ? 'decrease_to_target' : 'increase_to_target',
       target_value: Number(g.target_value) || 0,
@@ -15223,7 +15223,7 @@ function rebuildGoalsPage() {
       const groups = {};
       const groupOrder = [];
       withStatus.forEach(g => {
-        const key = g.category || 'Goals';
+        const key = (g.category || '').trim() || 'Goals';
         if (!groups[key]) { groups[key] = []; groupOrder.push(key); }
         groups[key].push(g);
       });
