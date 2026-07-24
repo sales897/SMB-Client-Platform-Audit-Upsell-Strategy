@@ -4345,7 +4345,42 @@ select.wfb-field-input { padding-right: 26px; }
        PAGE: BUSINESS HEALTH FRAMEWORK
   ════════════════════════════════════════════════════════════════════════ -->
   <div class="page" id="page-businesshealth">
+    <div class="card brand-section-card" style="margin-bottom:var(--space-5)">
+      <div class="card-header" style="margin-bottom:var(--space-3)">
+        <div><div class="card-title">Business Health Report</div><div class="card-sub" id="bhPeriodLabel">Monthly · last 30 days</div></div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <div class="cw-toggle-pair" id="bhPeriodToggle">
+            <button type="button" class="cw-toggle-btn active" data-val="daily" onclick="setBhReportPeriod('daily')">Daily</button>
+            <button type="button" class="cw-toggle-btn" data-val="biweekly" onclick="setBhReportPeriod('biweekly')">Bi-Weekly</button>
+            <button type="button" class="cw-toggle-btn" data-val="monthly" onclick="setBhReportPeriod('monthly')">Monthly</button>
+            <button type="button" class="cw-toggle-btn" data-val="yearly" onclick="setBhReportPeriod('yearly')">Yearly</button>
+            <button type="button" class="cw-toggle-btn" data-val="custom" onclick="setBhReportPeriod('custom')">Custom</button>
+          </div>
+          <div id="bhCustomRangeBox" style="display:none;gap:6px;align-items:center">
+            <input type="date" id="bhCustomStart" class="field-input" style="height:32px;margin-bottom:0" onchange="onBhCustomRangeChange()">
+            <span style="color:var(--text3);font-size:11px">to</span>
+            <input type="date" id="bhCustomEnd" class="field-input" style="height:32px;margin-bottom:0" onchange="onBhCustomRangeChange()">
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="downloadBhReportPdf()"><span class="icon" data-icon="download" data-icon-size="13"></span> Print / Save as PDF</button>
+          <button class="btn btn-primary btn-sm" onclick="downloadBhReportWord()"><span class="icon" data-icon="download" data-icon-size="13"></span> Download as Word</button>
+        </div>
+      </div>
+      <div class="card-sub" style="font-size:10.5px">Every metric below updates to this period. Reports are generated fresh from live data — nothing is pre-baked.</div>
+    </div>
+
+    <div class="card brand-section-card" style="margin-bottom:var(--space-5)">
+      <div class="card-title" style="font-size:14px">Answer the Key Questions</div>
+      <div class="card-sub" style="font-size:11px;margin-bottom:10px">The reason this page exists — quick, consistent, confident answers, not a data dig.</div>
+      <div id="bhAnswersList"></div>
+    </div>
+
     <div class="int-stat-bar" id="bhStatBar"></div>
+
+    <div class="card brand-section-card" style="margin-bottom:var(--space-5)">
+      <div class="card-title" style="font-size:13px">Customer Segmentation</div>
+      <div class="card-sub" style="font-size:11px;margin-bottom:8px">Reuses the same health scoring already used for individual client risk flags across the Hub — engagement, task backlog, and billing friction combined into one score per organization.</div>
+      <div id="bhSegmentationBar" class="int-stat-bar"></div>
+    </div>
 
     <div class="card brand-section-card" style="margin-bottom:var(--space-5)">
       <div class="card-header" style="margin-bottom:var(--space-3)">
@@ -4414,6 +4449,11 @@ select.wfb-field-input { padding-right: 26px; }
         <div class="card-sub" style="font-size:11px;margin-bottom:8px">Workflow runs and AI actions — real client usage of the Niche platform itself.</div>
         <div id="bhAdoptionPanel"></div>
       </div>
+    </div>
+
+    <div class="card brand-section-card" style="margin-bottom:var(--space-5)">
+      <div class="card-title" style="font-size:13px">What Can We Report With Confidence Today?</div>
+      <div id="bhConfidencePanel" style="margin-top:8px"></div>
     </div>
 
     <div class="page-footer"><span class="org-brand-inline">The HUB · Niche Inc.</span> · Business Health Framework</div>
@@ -21303,64 +21343,160 @@ async function rebuildBusinessHealthPage() {
     BH_INVENTORY = [];
   }
   bhInventoryPage = 1;
-  renderBhStatBar();
   renderBhInventoryTable();
-  renderBhReconciliation();
   renderBhDefinitions();
-  renderBhCustomerHealth();
-  renderBhRevenue();
-  renderBhAdoption();
+  renderBhReportPanels();
 }
 
-function bhIsInMonth(dateStr, ref) {
+let bhReportPeriod = 'daily';
+let bhCustomStart = null;
+let bhCustomEnd = null;
+
+function bhPeriodRange(period) {
+  const end = (period === 'custom' && bhCustomEnd) ? new Date(bhCustomEnd + 'T23:59:59') : new Date();
+  let start;
+  if (period === 'custom') start = bhCustomStart ? new Date(bhCustomStart) : new Date(end.getTime() - 30 * 86400000);
+  else start = new Date(end.getTime() - ({ daily: 1, biweekly: 14, monthly: 30, yearly: 365 }[period] || 30) * 86400000);
+  return { start, end };
+}
+function bhInRange(dateStr, start, end) {
   if (!dateStr) return false;
-  const d = new Date(dateStr);
-  return d.getMonth() === ref.getMonth() && d.getFullYear() === ref.getFullYear();
+  const t = new Date(dateStr).getTime();
+  return t >= start.getTime() && t <= end.getTime();
+}
+function setBhReportPeriod(period) {
+  bhReportPeriod = period;
+  document.querySelectorAll('#bhPeriodToggle .cw-toggle-btn').forEach(b => b.classList.toggle('active', b.dataset.val === period));
+  const customBox = document.getElementById('bhCustomRangeBox');
+  if (customBox) customBox.style.display = period === 'custom' ? 'flex' : 'none';
+  renderBhReportPanels();
+}
+function onBhCustomRangeChange() {
+  bhCustomStart = document.getElementById('bhCustomStart').value || null;
+  bhCustomEnd = document.getElementById('bhCustomEnd').value || null;
+  renderBhReportPanels();
 }
 
-function renderBhStatBar() {
-  const el = document.getElementById('bhStatBar');
-  if (!el) return;
-  const now = new Date();
+// Single source of truth for every metric shown on-screen AND in the
+// downloadable report -- both consume this exact same computation, so the
+// report can never silently drift from what's on the page.
+function computeBusinessHealthReport(period) {
+  const { start, end } = bhPeriodRange(period);
   const total = BH_INVENTORY.length;
   const paying = BH_INVENTORY.filter(r => r.billing_status === 'billed').length;
+  const active30 = BH_INVENTORY.filter(r => daysSinceLastClientNote(r.name) <= 30).length;
   const active90 = BH_INVENTORY.filter(r => daysSinceLastClientNote(r.name) <= 90).length;
-  const newThisMonth = BH_INVENTORY.filter(r => bhIsInMonth(r.created_at, now)).length;
-  const churnedThisMonth = BH_INVENTORY.filter(r => r.customer_status === 'cancelled' && bhIsInMonth(r.cancellation_date, now)).length;
+  const active180 = BH_INVENTORY.filter(r => daysSinceLastClientNote(r.name) <= 180).length;
+  const active365 = BH_INVENTORY.filter(r => daysSinceLastClientNote(r.name) <= 365).length;
+  const newInPeriod = BH_INVENTORY.filter(r => bhInRange(r.created_at, start, end)).length;
+  const churnedInPeriod = BH_INVENTORY.filter(r => r.customer_status === 'cancelled' && bhInRange(r.cancellation_date, start, end)).length;
+
+  // Reuses the SAME per-client health engine used everywhere else in the
+  // Hub (Client Spotlight, get_client_health, get_at_risk_clients) --
+  // one definition of "healthy vs at risk," not a second one invented here.
+  const healthScores = computeAllClientHealthScores('all');
+  const healthy = healthScores.filter(h => h.category.includes('Healthy')).length;
+  const watch = healthScores.filter(h => h.category.includes('Watch')).length;
+  const atRisk = healthScores.filter(h => h.category.includes('At Risk')).length;
+
+  const activeUnbilled = BH_INVENTORY.filter(r => r.customer_status === 'active' && r.billing_status !== 'billed').length;
+  const payingInactive = BH_INVENTORY.filter(r => r.billing_status === 'billed' && daysSinceLastClientNote(r.name) > 90).length;
+  const noOwner = BH_INVENTORY.filter(r => !r.account_owner).length;
+
+  const withRate = BH_INVENTORY.filter(r => r.monthly_rate && r.customer_status !== 'cancelled');
+  const mrr = withRate.reduce((s, r) => s + Number(r.monthly_rate), 0);
+  const rateCoverage = total ? Math.round(withRate.length / total * 100) : 0;
+
+  return {
+    period, start, end, total, paying, active30, active90, active180, active365,
+    newInPeriod, churnedInPeriod, healthy, watch, atRisk,
+    activeUnbilled, payingInactive, noOwner,
+    mrr, arr: mrr * 12, arpu: withRate.length ? mrr / withRate.length : 0, rateCoverage,
+  };
+}
+
+function renderBhReportPanels() {
+  const rep = computeBusinessHealthReport(bhReportPeriod);
+  const label = document.getElementById('bhPeriodLabel');
+  if (label) {
+    const fmt = (d) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const periodNames = { daily: 'Daily', biweekly: 'Bi-Weekly', monthly: 'Monthly', yearly: 'Yearly', custom: 'Custom' };
+    label.textContent = `${periodNames[rep.period]} · ${fmt(rep.start)} – ${fmt(rep.end)}`;
+  }
+  renderBhAnswers(rep);
+  renderBhStatBar(rep);
+  renderBhSegmentation(rep);
+  renderBhCustomerHealth(rep);
+  renderBhReconciliation(rep);
+  renderBhRevenue(rep);
+  renderBhAdoption();
+  renderBhConfidence(rep);
+}
+
+function renderBhAnswers(rep) {
+  const el = document.getElementById('bhAnswersList');
+  if (!el) return;
+  const confident = ['Total & paying customer counts', 'New/churned counts for the selected period', 'Customer health segmentation', 'Reconciliation flags (unbilled, inactive, unowned)'];
+  const notConfident = ['Platform Adoption (workflow runs, AI actions) — no data source connected'];
+  if (rep.rateCoverage < 100) notConfident.push(`Revenue — only ${rep.rateCoverage}% of organizations have a monthly rate entered`);
+  const qas = [
+    ['How many customers do we have?', `${rep.total.toLocaleString()} total.`],
+    ['How many paying customers do we have?', `${rep.paying.toLocaleString()}.`],
+    ['How many active customers do we have?', `${rep.active90.toLocaleString()} active within the last 90 days (30d: ${rep.active30} · 180d: ${rep.active180} · 365d: ${rep.active365}).`],
+    ['How many new customers did we add?', `${rep.newInPeriod.toLocaleString()} in the selected period.`],
+    ['How many customers churned?', `${rep.churnedInPeriod.toLocaleString()} in the selected period.`],
+    ['How are customers engaging with the platform?', `Based on CSH-recorded activity as a proxy (not yet real platform usage): ${rep.active90} of ${rep.total} organizations active in the last 90 days.`],
+    ['Which customers are healthy, underutilizing, or at risk?', `${rep.healthy} healthy, ${rep.watch} underutilizing, ${rep.atRisk} at risk.`],
+    ['What metrics can we report with confidence today?', confident.join(' · ') + '.'],
+    ['Where do we still have gaps?', `${rep.activeUnbilled} active-but-unbilled · ${rep.payingInactive} paying-but-inactive · ${rep.noOwner} unowned. Also: ${notConfident.join('; ')}.`],
+  ];
+  el.innerHTML = qas.map(([q, a]) => `
+    <div style="margin-bottom:11px;padding-bottom:11px;border-bottom:1px solid var(--border)">
+      <div style="font-weight:700;font-size:12.5px;color:var(--text)">${q}</div>
+      <div style="font-size:12px;color:var(--text2);margin-top:3px">${a}</div>
+    </div>`).join('');
+}
+
+function renderBhStatBar(rep) {
+  const el = document.getElementById('bhStatBar');
+  if (!el) return;
   el.innerHTML = `
-    <div class="int-stat-card"><div class="int-stat-label"><span class="icon" data-icon="users" data-icon-size="12"></span> Total Customers</div><div class="int-stat-value">${total.toLocaleString()}</div></div>
-    <div class="int-stat-card"><div class="int-stat-label"><span class="icon" data-icon="dollar" data-icon-size="12"></span> Paying Customers</div><div class="int-stat-value">${paying.toLocaleString()}</div></div>
-    <div class="int-stat-card"><div class="int-stat-label"><span class="icon" data-icon="check" data-icon-size="12"></span> Active (90-day)</div><div class="int-stat-value" style="color:var(--green)">${active90.toLocaleString()}</div></div>
-    <div class="int-stat-card"><div class="int-stat-label"><span class="icon" data-icon="trending" data-icon-size="12"></span> New This Month</div><div class="int-stat-value">${newThisMonth}</div></div>
-    <div class="int-stat-card"><div class="int-stat-label"><span class="icon" data-icon="alert" data-icon-size="12"></span> Churned This Month</div><div class="int-stat-value" style="color:${churnedThisMonth ? 'var(--red)' : 'var(--text)'}">${churnedThisMonth}</div></div>
+    <div class="int-stat-card"><div class="int-stat-label"><span class="icon" data-icon="users" data-icon-size="12"></span> Total Customers</div><div class="int-stat-value">${rep.total.toLocaleString()}</div></div>
+    <div class="int-stat-card"><div class="int-stat-label"><span class="icon" data-icon="dollar" data-icon-size="12"></span> Paying Customers</div><div class="int-stat-value">${rep.paying.toLocaleString()}</div></div>
+    <div class="int-stat-card"><div class="int-stat-label"><span class="icon" data-icon="check" data-icon-size="12"></span> Active (90-day)</div><div class="int-stat-value" style="color:var(--green)">${rep.active90.toLocaleString()}</div></div>
+    <div class="int-stat-card"><div class="int-stat-label"><span class="icon" data-icon="trending" data-icon-size="12"></span> New (period)</div><div class="int-stat-value">${rep.newInPeriod}</div></div>
+    <div class="int-stat-card"><div class="int-stat-label"><span class="icon" data-icon="alert" data-icon-size="12"></span> Churned (period)</div><div class="int-stat-value" style="color:${rep.churnedInPeriod ? 'var(--red)' : 'var(--text)'}">${rep.churnedInPeriod}</div></div>
   `;
 }
 
-function renderBhCustomerHealth() {
+function renderBhSegmentation(rep) {
+  const el = document.getElementById('bhSegmentationBar');
+  if (!el) return;
+  el.innerHTML = `
+    <div class="int-stat-card"><div class="int-stat-label">🟢 Healthy</div><div class="int-stat-value" style="color:var(--green)">${rep.healthy}</div></div>
+    <div class="int-stat-card"><div class="int-stat-label">🟡 Underutilizing</div><div class="int-stat-value" style="color:var(--yellow)">${rep.watch}</div></div>
+    <div class="int-stat-card"><div class="int-stat-label">🔴 At Risk</div><div class="int-stat-value" style="color:var(--red)">${rep.atRisk}</div></div>
+  `;
+}
+
+function renderBhCustomerHealth(rep) {
   const el = document.getElementById('bhCustomerHealthBar');
   if (!el) return;
-  const now = new Date();
-  const windows = [30, 90, 180, 365].map(n => BH_INVENTORY.filter(r => daysSinceLastClientNote(r.name) <= n).length);
-  const newThisMonth = BH_INVENTORY.filter(r => bhIsInMonth(r.created_at, now)).length;
-  const churnedThisMonth = BH_INVENTORY.filter(r => r.customer_status === 'cancelled' && bhIsInMonth(r.cancellation_date, now)).length;
-  const netGrowth = newThisMonth - churnedThisMonth;
+  const netGrowth = rep.newInPeriod - rep.churnedInPeriod;
   const cards = [
-    ['Active (30d)', windows[0]], ['Active (90d)', windows[1]], ['Active (180d)', windows[2]], ['Active (365d)', windows[3]],
-    ['Net Growth (this month)', (netGrowth >= 0 ? '+' : '') + netGrowth],
+    ['Active (30d)', rep.active30], ['Active (90d)', rep.active90], ['Active (180d)', rep.active180], ['Active (365d)', rep.active365],
+    ['Net Growth (period)', (netGrowth >= 0 ? '+' : '') + netGrowth],
   ];
   el.innerHTML = cards.map(([label, val]) => `<div class="int-stat-card"><div class="int-stat-label">${label}</div><div class="int-stat-value" style="font-size:16px">${val}</div></div>`).join('');
 }
 
-function renderBhReconciliation() {
+function renderBhReconciliation(rep) {
   const el = document.getElementById('bhReconciliationList');
   if (!el) return;
-  const activeUnbilled = BH_INVENTORY.filter(r => r.customer_status === 'active' && r.billing_status !== 'billed');
-  const payingInactive = BH_INVENTORY.filter(r => r.billing_status === 'billed' && daysSinceLastClientNote(r.name) > 90);
-  const noOwner = BH_INVENTORY.filter(r => !r.account_owner);
   const checks = [
-    { label: 'Active organizations not being billed', count: activeUnbilled.length },
-    { label: 'Paying organizations with no activity in 90+ days', count: payingInactive.length },
-    { label: 'Organizations with no assigned owner', count: noOwner.length },
+    { label: 'Active organizations not being billed', count: rep.activeUnbilled },
+    { label: 'Paying organizations with no activity in 90+ days', count: rep.payingInactive },
+    { label: 'Organizations with no assigned owner', count: rep.noOwner },
   ];
   el.innerHTML = checks.map(c => `
     <div class="brand-acc-row" style="margin-bottom:6px">
@@ -21380,22 +21516,17 @@ function renderBhDefinitions() {
     </div>`).join('');
 }
 
-function renderBhRevenue() {
+function renderBhRevenue(rep) {
   const el = document.getElementById('bhRevenuePanel');
   if (!el) return;
-  const withRate = BH_INVENTORY.filter(r => r.monthly_rate && r.customer_status !== 'cancelled');
-  const mrr = withRate.reduce((s, r) => s + Number(r.monthly_rate), 0);
-  const arr = mrr * 12;
-  const arpu = withRate.length ? mrr / withRate.length : 0;
-  const coverage = BH_INVENTORY.length ? Math.round(withRate.length / BH_INVENTORY.length * 100) : 0;
   el.innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      <div><div class="int-info-label">MRR</div><div class="int-info-value" style="font-size:17px">${fmtMoney(mrr)}</div></div>
-      <div><div class="int-info-label">ARR</div><div class="int-info-value" style="font-size:17px">${fmtMoney(arr)}</div></div>
-      <div><div class="int-info-label">ARPU</div><div class="int-info-value">${fmtMoney(arpu)}</div></div>
-      <div><div class="int-info-label">Rate Coverage</div><div class="int-info-value">${coverage}% of orgs</div></div>
+      <div><div class="int-info-label">MRR</div><div class="int-info-value" style="font-size:17px">${fmtMoney(rep.mrr)}</div></div>
+      <div><div class="int-info-label">ARR</div><div class="int-info-value" style="font-size:17px">${fmtMoney(rep.arr)}</div></div>
+      <div><div class="int-info-label">ARPU</div><div class="int-info-value">${fmtMoney(rep.arpu)}</div></div>
+      <div><div class="int-info-label">Rate Coverage</div><div class="int-info-value">${rep.rateCoverage}% of orgs</div></div>
     </div>
-    ${coverage < 100 ? `<div style="font-size:10.5px;color:var(--yellow);margin-top:8px">${(BH_INVENTORY.length - withRate.length).toLocaleString()} organization(s) have no monthly rate entered — MRR/ARR above only reflects what's been entered so far.</div>` : ''}
+    ${rep.rateCoverage < 100 ? `<div style="font-size:10.5px;color:var(--yellow);margin-top:8px">${(rep.total * (100 - rep.rateCoverage) / 100).toFixed(0)} organization(s) have no monthly rate entered — MRR/ARR above only reflects what's been entered so far.</div>` : ''}
     <div style="font-size:10px;color:var(--text3);margin-top:6px">GRR/NRR aren't shown — they require tracking rate changes over time (upgrades, downgrades, churn), and only one current rate per org is captured today.</div>
   `;
 }
@@ -21408,6 +21539,102 @@ function renderBhAdoption() {
     Not available yet. Workflow runs and AI actions happen inside the real Niche platform, which the Hub has no connection to today. This is a genuine gap, not a placeholder to ignore — closing it needs Engineering to expose that usage data via an API or database connection.
   </div>`;
 }
+
+function renderBhConfidence(rep) {
+  const el = document.getElementById('bhConfidencePanel');
+  if (!el) return;
+  const rows = [
+    { metric: 'Customer counts (total, paying, new, churned)', confidence: 'Full', color: 'var(--green)' },
+    { metric: 'Active-organization windows', confidence: 'Full, but CSH-activity is a proxy for real platform usage', color: 'var(--yellow)' },
+    { metric: 'Customer health segmentation', confidence: 'Full', color: 'var(--green)' },
+    { metric: 'Reconciliation flags', confidence: 'Full', color: 'var(--green)' },
+    { metric: 'Revenue (MRR/ARR/ARPU)', confidence: `${rep.rateCoverage}% coverage — only as complete as rates entered`, color: rep.rateCoverage >= 90 ? 'var(--green)' : 'var(--yellow)' },
+    { metric: 'Platform Adoption (workflow runs, AI actions)', confidence: 'Not available — no data source connected', color: 'var(--red)' },
+    { metric: 'GRR / NRR', confidence: 'Not available — needs historical rate tracking over time', color: 'var(--red)' },
+  ];
+  el.innerHTML = rows.map(r => `
+    <div class="brand-acc-row" style="margin-bottom:6px">
+      <span style="font-size:11.5px;color:var(--text2)">${r.metric}</span>
+      <span style="font-size:11px;font-weight:700;color:${r.color};text-align:right;max-width:55%">${r.confidence}</span>
+    </div>`).join('');
+}
+
+// ---- Downloadable report (Print/PDF + Word) -- built from the exact same
+// computeBusinessHealthReport() the on-screen page uses, so the download
+// can never show different numbers than what's visible on the page. ----
+function renderBhReportHTML(rep) {
+  const fmtDate = (d) => d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+  const row = (label, val) => `<tr><td style="padding:5px 0;border-bottom:1px solid #eee">${label}</td><td style="padding:5px 0;border-bottom:1px solid #eee;text-align:right;font-weight:bold">${val}</td></tr>`;
+  return `
+    <div style="font-family:Georgia,'Times New Roman',serif;color:#1a1a1a;max-width:800px;margin:0 auto;padding:20px">
+      <h1 style="font-size:22px;border-bottom:3px solid #e2541f;padding-bottom:10px;margin-bottom:4px">Business Health Report</h1>
+      <p style="color:#666;font-size:12px;margin-top:0">${escAttr(ORG_SETTINGS.company_name)} · ${rep.period.charAt(0).toUpperCase() + rep.period.slice(1)} Report · ${fmtDate(rep.start)} – ${fmtDate(rep.end)}</p>
+
+      <h2 style="font-size:15px;margin-top:26px;color:#e2541f">Customer Health</h2>
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        ${row('Total Customers', rep.total.toLocaleString())}
+        ${row('Paying Customers', rep.paying.toLocaleString())}
+        ${row('Active — 30 / 90 / 180 / 365 days', `${rep.active30} / ${rep.active90} / ${rep.active180} / ${rep.active365}`)}
+        ${row('New Customers (this period)', rep.newInPeriod)}
+        ${row('Churned Customers (this period)', rep.churnedInPeriod)}
+        ${row('Net Growth (this period)', (rep.newInPeriod - rep.churnedInPeriod >= 0 ? '+' : '') + (rep.newInPeriod - rep.churnedInPeriod))}
+      </table>
+
+      <h2 style="font-size:15px;margin-top:26px;color:#e2541f">Customer Segmentation</h2>
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        ${row('🟢 Healthy', rep.healthy)}
+        ${row('🟡 Underutilizing', rep.watch)}
+        ${row('🔴 At Risk', rep.atRisk)}
+      </table>
+
+      <h2 style="font-size:15px;margin-top:26px;color:#e2541f">Revenue</h2>
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        ${row('MRR', fmtMoney(rep.mrr))}
+        ${row('ARR', fmtMoney(rep.arr))}
+        ${row('ARPU', fmtMoney(rep.arpu))}
+        ${row('Rate Coverage', rep.rateCoverage + '% of organizations')}
+      </table>
+      <p style="font-size:11px;color:#888">GRR/NRR not included — require historical rate-change tracking not yet captured.</p>
+
+      <h2 style="font-size:15px;margin-top:26px;color:#e2541f">Reconciliation &amp; Data Gaps</h2>
+      <ul style="font-size:13px;line-height:1.7">
+        <li>${rep.activeUnbilled} active organization(s) not currently billed</li>
+        <li>${rep.payingInactive} paying organization(s) with no activity in 90+ days</li>
+        <li>${rep.noOwner} organization(s) with no assigned owner</li>
+        <li>Platform Adoption (workflow runs, AI actions) — not available; requires a connection to the real Niche platform</li>
+      </ul>
+
+      <p style="font-size:10px;color:#aaa;margin-top:36px;border-top:1px solid #eee;padding-top:10px">Generated ${fmtDate(new Date())} from ${escAttr(ORG_SETTINGS.product_name)} · ${escAttr(ORG_SETTINGS.company_name)}.</p>
+    </div>`;
+}
+function downloadBhReportPdf() {
+  const rep = computeBusinessHealthReport(bhReportPeriod);
+  const html = renderBhReportHTML(rep);
+  const win = window.open('', '_blank');
+  if (!win) { showToast('Please allow pop-ups to print/save the report.', 'warning'); return; }
+  win.document.write(`<!DOCTYPE html><html><head><title>Business Health Report</title></head><body>${html}</body></html>`);
+  win.document.close();
+  win.focus();
+  setTimeout(() => win.print(), 350);
+}
+function downloadBhReportWord() {
+  const rep = computeBusinessHealthReport(bhReportPeriod);
+  const html = renderBhReportHTML(rep);
+  const wordDoc = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+    <head><meta charset="utf-8"><title>Business Health Report</title></head>
+    <body>${html}</body></html>`;
+  const blob = new Blob(['\ufeff', wordDoc], { type: 'application/msword' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `Business-Health-Report-${rep.period}-${new Date().toISOString().slice(0, 10)}.doc`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showToast('Report downloaded.', 'success');
+}
+
 
 function onBhInventoryFilterChange() { bhInventoryPage = 1; renderBhInventoryTable(); }
 
@@ -21480,10 +21707,7 @@ async function updateBhField(id, field, value) {
   row[field] = value;
   try { await sbPatch('portfolio_clients', `id=eq.${id}`, { [field]: value }); }
   catch (e) { row[field] = prev; showToast('Could not save: ' + e.message, 'error'); renderBhInventoryTable(); return; }
-  renderBhStatBar();
-  renderBhCustomerHealth();
-  renderBhReconciliation();
-  renderBhRevenue();
+  renderBhReportPanels();
 }
 
 let clDirViewMode = 'board';
@@ -27028,8 +27252,19 @@ const AI_AGENT_TOOLS = [
   { name: 'get_kpi_summary', description: 'Get the current SuccessOS KPI scores and recent trend for all three KPIs.', input_schema: { type: 'object', properties: {} } },
   {
     name: 'get_business_health_summary',
-    description: 'Get the real, current Business Health Framework numbers: total/paying customers, active organizations at 30/90/180/365 days, new/churned this month, real reconciliation flags (active-but-unbilled, paying-but-inactive, unowned accounts), and revenue (MRR/ARR/ARPU, with real coverage — how many organizations actually have a rate entered). Also reports what is genuinely NOT available yet (Platform Adoption — workflow runs/AI actions — needs a Niche platform connection that does not exist today) rather than guessing at it. Use this whenever asked how many customers/paying customers/active customers there are, what churned, or how healthy the business is.',
-    input_schema: { type: 'object', properties: {} },
+    description: 'Get the real, current Business Health Framework numbers for a given period: total/paying customers, active organizations at 30/90/180/365 days, new/churned customers in the period, real customer health segmentation (healthy/underutilizing/at-risk — the same scoring used for individual client risk flags elsewhere in the Hub), real reconciliation flags (active-but-unbilled, paying-but-inactive, unowned accounts), and revenue (MRR/ARR/ARPU, with real coverage — how many organizations actually have a rate entered). Also reports what is genuinely NOT available yet (Platform Adoption — workflow runs/AI actions — needs a Niche platform connection that does not exist today) rather than guessing at it. Use this whenever asked how many customers/paying customers/active customers there are, what churned, how healthy the business is, or any of the standard business-health questions.',
+    input_schema: {
+      type: 'object',
+      properties: { period: { type: 'string', enum: ['daily', 'biweekly', 'monthly', 'yearly'], description: 'Reporting window for "new" and "churned" counts. Defaults to monthly if not specified.' } },
+    },
+  },
+  {
+    name: 'generate_business_health_report',
+    description: 'Prepare a downloadable Business Health report for a given period — refreshes the data, opens the Business Health page, and sets the period selector, then returns a preview of the numbers so you can describe it to the user. This does NOT download any file on its own — actually saving the file (as PDF via print, or as a Word document) requires the user to click the Print/Save as PDF or Download as Word button themselves, since downloading a file needs their own action, not yours. Tell the user their report is ready and point them at those buttons.',
+    input_schema: {
+      type: 'object',
+      properties: { period: { type: 'string', enum: ['daily', 'biweekly', 'monthly', 'yearly'], description: 'Defaults to monthly if not specified.' } },
+    },
   },
   {
     name: 'get_branding_status',
@@ -27829,33 +28064,46 @@ async function executeAiTool(name, input) {
     case 'get_kpi_summary':
       return KPI_KEYS.map(k => ({ kpi: KPI_META[k].label, score: getLatestKpiScore(k), trend: getKpiTrend(k) > 0 ? 'improved' : getKpiTrend(k) < 0 ? 'declined' : 'stable' }));
     case 'get_business_health_summary': {
-      let inventory;
+      const period = ['daily', 'biweekly', 'monthly', 'yearly'].includes(input.period) ? input.period : 'monthly';
       try {
-        inventory = await sbSelect('portfolio_clients', 'select=id,name,portfolio,customer_status,account_owner,billing_status,monthly_rate,created_at,cancellation_date');
+        BH_INVENTORY = await sbSelect('portfolio_clients', 'select=id,name,portfolio,organization,customer_status,account_owner,billing_status,monthly_rate,trial_date,first_paid_date,last_billing_date,cancellation_date,created_at&order=name.asc');
       } catch (e) { return { error: 'Could not load the customer inventory: ' + e.message }; }
-      const now = new Date();
-      const inMonth = (d) => d && new Date(d).getMonth() === now.getMonth() && new Date(d).getFullYear() === now.getFullYear();
-      const active = (n) => inventory.filter(r => daysSinceLastClientNote(r.name) <= n).length;
-      const withRate = inventory.filter(r => r.monthly_rate && r.customer_status !== 'cancelled');
-      const mrr = withRate.reduce((s, r) => s + Number(r.monthly_rate), 0);
+      const rep = computeBusinessHealthReport(period);
       return {
-        total_customers: inventory.length,
-        paying_customers: inventory.filter(r => r.billing_status === 'billed').length,
-        active_30_days: active(30), active_90_days: active(90), active_180_days: active(180), active_365_days: active(365),
-        new_this_month: inventory.filter(r => inMonth(r.created_at)).length,
-        churned_this_month: inventory.filter(r => r.customer_status === 'cancelled' && inMonth(r.cancellation_date)).length,
-        reconciliation_flags: {
-          active_but_unbilled: inventory.filter(r => r.customer_status === 'active' && r.billing_status !== 'billed').length,
-          paying_but_inactive_90d: inventory.filter(r => r.billing_status === 'billed' && daysSinceLastClientNote(r.name) > 90).length,
-          no_assigned_owner: inventory.filter(r => !r.account_owner).length,
-        },
+        period, range: { start: rep.start.toISOString().slice(0, 10), end: rep.end.toISOString().slice(0, 10) },
+        total_customers: rep.total, paying_customers: rep.paying,
+        active_30_days: rep.active30, active_90_days: rep.active90, active_180_days: rep.active180, active_365_days: rep.active365,
+        new_in_period: rep.newInPeriod, churned_in_period: rep.churnedInPeriod,
+        customer_segmentation: { healthy: rep.healthy, underutilizing: rep.watch, at_risk: rep.atRisk },
+        reconciliation_flags: { active_but_unbilled: rep.activeUnbilled, paying_but_inactive_90d: rep.payingInactive, no_assigned_owner: rep.noOwner },
         revenue: {
-          mrr: Number(mrr.toFixed(2)), arr: Number((mrr * 12).toFixed(2)),
-          arpu: withRate.length ? Number((mrr / withRate.length).toFixed(2)) : 0,
-          rate_coverage_pct: inventory.length ? Math.round(withRate.length / inventory.length * 100) : 0,
+          mrr: Number(rep.mrr.toFixed(2)), arr: Number(rep.arr.toFixed(2)), arpu: Number(rep.arpu.toFixed(2)),
+          rate_coverage_pct: rep.rateCoverage,
           note: 'MRR/ARR only reflect organizations with a monthly rate actually entered — check rate_coverage_pct before treating these as complete.',
         },
         platform_adoption: { available: false, note: 'Workflow runs and AI actions are not available — the Hub has no connection to the real Niche platform\'s usage data yet. This is a known, real gap, not a zero.' },
+      };
+    }
+    case 'generate_business_health_report': {
+      const period = ['daily', 'biweekly', 'monthly', 'yearly'].includes(input.period) ? input.period : 'monthly';
+      try {
+        BH_INVENTORY = await sbSelect('portfolio_clients', 'select=id,name,portfolio,organization,customer_status,account_owner,billing_status,monthly_rate,trial_date,first_paid_date,last_billing_date,cancellation_date,created_at&order=name.asc');
+      } catch (e) { return { error: 'Could not load the customer inventory: ' + e.message }; }
+      bhReportPeriod = period;
+      if (document.getElementById('page-businesshealth')) {
+        setBhReportPeriod(period);
+      }
+      const rep = computeBusinessHealthReport(period);
+      return {
+        ok: true,
+        period,
+        note: `Pulled up the Business Health page with the ${period} period selected and the data refreshed. The user can click "Print / Save as PDF" or "Download as Word" there to actually save the file — this tool prepares the report but doesn't download anything on its own, since downloading a file needs the user's own click.`,
+        preview: {
+          total_customers: rep.total, paying_customers: rep.paying, active_90_days: rep.active90,
+          new_in_period: rep.newInPeriod, churned_in_period: rep.churnedInPeriod,
+          customer_segmentation: { healthy: rep.healthy, underutilizing: rep.watch, at_risk: rep.atRisk },
+          revenue: { mrr: Number(rep.mrr.toFixed(2)), arr: Number(rep.arr.toFixed(2)), rate_coverage_pct: rep.rateCoverage },
+        },
       };
     }
     case 'get_branding_status': {
@@ -29549,7 +29797,7 @@ async function runAiAgentTurn(toolTagForNextText) {
   const u = getCurrentUser();
   const systemPrompt = `${currentLanguage === 'es' ? 'IMPORTANT: The Hub is currently set to Spanish (MX). Respond to the user ENTIRELY in Spanish (Mexican Spanish), including this entire conversation, regardless of what language they write in — unless they explicitly ask you to switch to English. Data values, client names, and product names stay as-is; everything you write around them is in Spanish.\n\n' : ''}Current date and time: ${new Date().toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })}. This is read directly from the user's own device clock, so it already reflects their real timezone — treat it as ground truth. For ANY relative time request ("in 15 minutes", "tomorrow at 9am", "next Monday"), compute the exact resulting date/time yourself from this reference. Never ask the user what time it is or guess at a timestamp — the real current time is always right here.
 
-You are Nirvana, the AI Agent inside ${ORG_SETTINGS.company_name}'s ${ORG_SETTINGS.product_name} — "${ORG_SETTINGS.product_name}" — helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the ${ORG_SETTINGS.portfolio_labels.smb}, ${ORG_SETTINGS.portfolio_labels.whitelabel}, and ${ORG_SETTINGS.portfolio_labels.support} portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. Whenever a request would affect MORE THAN ONE client (e.g. "create a follow-up task for every client that hasn't been touched in 30 days," or a list of specific client names), always use bulk_create_tasks or bulk_add_note instead of calling create_task/add_note in a loop — looping individual calls would force a separate confirmation click per client, while the bulk tools show one confirmation with the full affected list. Workflows can trigger on six things — "inactivity" (no note in N days), "schedule" (recurring cadence, for one client or a whole portfolio), "client_added" (fires the moment a new client is created), "task_due_soon" (reminds before an existing task's due date), "kpi_drop" (a SuccessOS score went down — team-level, not tied to one client), or "collections_status" (an account entered a specific Collections status) — and can take four actions when they fire: create a task (optionally with a real due date/time), just send a notification with no task, log an audit-trail note with no task or notification, or have you draft the actual task content yourself instead of using fixed text. If someone describes an automation idea in plain English, translate it into the right trigger type, action type, and fields yourself rather than making them fill out a form. For questions about company policy, procedures, "how do we...", or what the website/docs say, search the Knowledge Base — it contains SOPs, docs, and website content the team has fed in, separate from live client data. You can read and explain every chart in the Hub: get_portfolio_summary explains a portfolio's Product Adoption Rate and Products Per Client charts, get_product_adoption explains the Voice Agent / Text Agent charts, get_collections_summary explains the Collections breakdown (always separated into Outstanding Balances vs Card Fails, each with its own status breakdown — never collapse these into one number), get_adspend_summary explains Ad Spend's promo/budget breakdown, and get_kpi_summary explains the SuccessOS scores. When someone asks you to break down, interpret, or explain any data or chart, always call the specific tool that has that breakdown built in rather than answering from a vaguer or more general tool — if a user asks for a split by category/status/type, that split should already be in the tool result; use it. Prefer the data tools above for explaining charts — they're faster and more precise. Only use view_chart when the question is genuinely about the chart's visual appearance itself (e.g. "does this look right," "what do you see," "describe this chart visually") — calling it will switch the user's screen to that chart's page, so mention that you're pulling it up. Whenever asked to check for discrepancies, duplicates, mismatches, or whether numbers add up anywhere in the Hub (including client counts, Collections, Ad Spend, or the Knowledge Base), always call audit_data_integrity rather than speculating about possible causes — it actually reconciles the numbers and reports genuine findings, so use what it returns instead of guessing at explanations like "could be duplicates" or "could be stale data." A daily briefing already gets shown automatically once per day when the chat is first opened — if asked for a summary, rundown, or "what should I focus on" at any other point, use get_daily_briefing to pull the same live data fresh rather than referencing whatever was shown earlier, since it may be out of date by then. Whenever asked "which accounts are at risk," "who needs attention," or how healthy a specific client is, use get_at_risk_clients or get_client_health rather than checking just one signal (like Collections alone, or note recency alone) — those tools already combine engagement, task backlog, and billing friction into one score with a transparent breakdown of exactly why, which is a more honest answer than picking one factor and guessing at the rest. Whenever asked what's changed for a specific client recently, who created or updated a client record, or when a client was actually added to the Hub, use get_client_activity_history — it's the real, logged audit trail (every creation and every field-level change, from every entry point in the Hub: Bulk Reconcile Import, CSV imports, Add Client, onboarding graduation, or your own create_client/update_client_contact calls), not something to infer from notes or guess at. A client can have more than one saved contact now — the first one added is always the primary. Use list_client_contacts to see everyone on file for a client, add_client_contact to add a genuinely new additional contact (it will refuse if the name looks like a near-duplicate of someone already saved, so check first if unsure), update_client_contact to change an existing contact's info (defaults to the primary contact unless target_contact_name is given to target a specific other one), and delete_client_contact to remove one by name — it will ask for clarification rather than guess if the name is ambiguous or not found. To pull contact info and notes from Close CRM for a client, use enrich_client_from_close — it uses an already-confirmed match if the client profile has one, otherwise fuzzy-matches by business name and either proceeds automatically with a clear single winner or returns several candidates for the user to choose between (never silently guessing between similarly-named businesses); the result is read-only, so use add_client_contact afterward if a Close contact should actually be saved into the Hub. Whenever asked about Voice Agent or Text Agent adoption trends, growth, peaks, or how a metric has changed over time (including for a specific date range someone mentions), use get_adoption_trend — it's backed by real daily snapshots, unlike get_portfolio_summary/get_product_adoption which only reflect the current moment; if a person is looking at a filtered date range on the Voice Agent or Text Agent page, ask what range if they haven't said, rather than assuming it matches what's currently on their screen. For anything about Goals — "how are we doing this month," a specific named goal's progress, its weekly/bi-weekly breakdown, or its change history — use get_goals_summary, get_goal_details, list_goals, or get_goal_activity_history rather than guessing at status from a general impression; these compute the exact same real numbers and pacing logic the Goals page itself shows, including correctly handling range targets (e.g. "$32,500-$35,000") against their midpoint. To create a new goal or update a goal's current progress (goals get updated regularly through the month), use create_goal or update_goal_progress — both fuzzy-match against existing goals for that month first, so a near-duplicate name doesn't silently create a second, separate goal instead of updating the real one. To set a specific week or bi-weekly period's target/actual for a goal (e.g. "set the actual for the week of May 5th to $820,000"), use update_goal_period — it finds the matching period by its exact start date and only changes the field(s) actually given, leaving the other as-is, or creates a new period if none exists yet for that date. When summarizing data, only use the real numbers/content returned by tools — never estimate or make things up. If a tool returns an error (e.g. client not found, or nothing in the knowledge base matches), tell the user plainly rather than guessing. If a tool result includes a "note" field, don't ignore it — mention what it says (for example, a client match that only worked after ignoring punctuation/spacing differences) rather than presenting the result as a clean, unqualified match. When presenting a list of businesses or clients that genuinely don't exist yet in the Hub and could be created (for example, orphaned Ad Spend/Collections entries with no matching client record), format it as a markdown table and put a line reading exactly \`[[selectable:create_client]]\` on its own line immediately before that table — this renders the list with checkboxes so the user can pick specific ones to create instead of you needing to ask about each individually. Only use this marker for that specific "these could be created as clients" scenario — never on ordinary reporting tables (KPI trends, budget breakdowns, adoption rates, etc.), since a "create as clients" action button wouldn't make sense there. If a message says the user selected specific businesses to create as clients, treat that as them already having committed to creating those specific ones — don't re-confirm each one individually, just ask which portfolio(s) each should go into (per the existing rule: never guess a portfolio) and then create them. Onboarding records are a SEPARATE, EARLIER concept from clients — an onboarding record represents a business before it's a real client anywhere else in the Hub, tracked through six stages (Contract Signed, Kickoff Call Scheduled, Kickoff Call Completed, Setup In Progress, QA / Internal Review, Live) with its own checklist and notes. Don't confuse create_onboarding with create_client, or an onboarding record's business_name with an actual client_name — they're different things until activate_onboarding_as_client is explicitly used to graduate one into the other, which typically only makes sense once a record has reached the Live stage. The embeddable Chat Widget is a completely separate AI conversation from you — it runs on a client's own website, talking to anonymous visitors, with its own agent name/personality/instructions per widget. You have no live access into those conversations as they happen, but get_chat_widget_summary lets you check on lead activity after the fact (volume, resolution breakdown, recent leads) whenever asked about chat widget leads or website chat activity. For white-label branding (company/product name, brand colors, tier labels, whether it's "ready" to resell), use get_branding_status for the real current state — including a genuine WCAG contrast score (not a guess) and which readiness checklist items are actually done — rather than assuming everything looks fine. Branding has a real draft/live split: update_branding_draft only ever changes the unpublished draft, never the live Hub, so always tell the user a change is draft-only until publish_branding is explicitly confirmed and called separately — never publish in the same turn as a draft update without a clear, separate confirmation, since publishing is immediate and Hub-wide for everyone. For duplicate/data-quality questions beyond the simple exact-name check (find_duplicate_clients), use get_data_quality_status for the real current scan state (confidence-scored clusters, not just exact matches), run_data_quality_scan to refresh it, and list_duplicate_clusters to see the actual clusters with their confidence/risk/matched fields — merge_duplicate_cluster uses the same safe merge as merge_duplicate_clients but by cluster_id, and still needs explicit confirmation every time, even for a cluster the scan already flagged as high-confidence. For company-wide business health questions (total/paying/active customers, churn, MRR/ARR, or whether the business overall is healthy -- as opposed to one client), use get_business_health_summary -- it is real data from the Customer Inventory, and it honestly reports Platform Adoption (workflow runs, AI actions) as not available yet rather than guessing, since the Hub has no connection to the real Niche platform's usage data. Always pass along that caveat, and the revenue note about rate coverage, rather than presenting MRR/ARR or adoption as complete.`;
+You are Nirvana, the AI Agent inside ${ORG_SETTINGS.company_name}'s ${ORG_SETTINGS.product_name} — "${ORG_SETTINGS.product_name}" — helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the ${ORG_SETTINGS.portfolio_labels.smb}, ${ORG_SETTINGS.portfolio_labels.whitelabel}, and ${ORG_SETTINGS.portfolio_labels.support} portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. Whenever a request would affect MORE THAN ONE client (e.g. "create a follow-up task for every client that hasn't been touched in 30 days," or a list of specific client names), always use bulk_create_tasks or bulk_add_note instead of calling create_task/add_note in a loop — looping individual calls would force a separate confirmation click per client, while the bulk tools show one confirmation with the full affected list. Workflows can trigger on six things — "inactivity" (no note in N days), "schedule" (recurring cadence, for one client or a whole portfolio), "client_added" (fires the moment a new client is created), "task_due_soon" (reminds before an existing task's due date), "kpi_drop" (a SuccessOS score went down — team-level, not tied to one client), or "collections_status" (an account entered a specific Collections status) — and can take four actions when they fire: create a task (optionally with a real due date/time), just send a notification with no task, log an audit-trail note with no task or notification, or have you draft the actual task content yourself instead of using fixed text. If someone describes an automation idea in plain English, translate it into the right trigger type, action type, and fields yourself rather than making them fill out a form. For questions about company policy, procedures, "how do we...", or what the website/docs say, search the Knowledge Base — it contains SOPs, docs, and website content the team has fed in, separate from live client data. You can read and explain every chart in the Hub: get_portfolio_summary explains a portfolio's Product Adoption Rate and Products Per Client charts, get_product_adoption explains the Voice Agent / Text Agent charts, get_collections_summary explains the Collections breakdown (always separated into Outstanding Balances vs Card Fails, each with its own status breakdown — never collapse these into one number), get_adspend_summary explains Ad Spend's promo/budget breakdown, and get_kpi_summary explains the SuccessOS scores. When someone asks you to break down, interpret, or explain any data or chart, always call the specific tool that has that breakdown built in rather than answering from a vaguer or more general tool — if a user asks for a split by category/status/type, that split should already be in the tool result; use it. Prefer the data tools above for explaining charts — they're faster and more precise. Only use view_chart when the question is genuinely about the chart's visual appearance itself (e.g. "does this look right," "what do you see," "describe this chart visually") — calling it will switch the user's screen to that chart's page, so mention that you're pulling it up. Whenever asked to check for discrepancies, duplicates, mismatches, or whether numbers add up anywhere in the Hub (including client counts, Collections, Ad Spend, or the Knowledge Base), always call audit_data_integrity rather than speculating about possible causes — it actually reconciles the numbers and reports genuine findings, so use what it returns instead of guessing at explanations like "could be duplicates" or "could be stale data." A daily briefing already gets shown automatically once per day when the chat is first opened — if asked for a summary, rundown, or "what should I focus on" at any other point, use get_daily_briefing to pull the same live data fresh rather than referencing whatever was shown earlier, since it may be out of date by then. Whenever asked "which accounts are at risk," "who needs attention," or how healthy a specific client is, use get_at_risk_clients or get_client_health rather than checking just one signal (like Collections alone, or note recency alone) — those tools already combine engagement, task backlog, and billing friction into one score with a transparent breakdown of exactly why, which is a more honest answer than picking one factor and guessing at the rest. Whenever asked what's changed for a specific client recently, who created or updated a client record, or when a client was actually added to the Hub, use get_client_activity_history — it's the real, logged audit trail (every creation and every field-level change, from every entry point in the Hub: Bulk Reconcile Import, CSV imports, Add Client, onboarding graduation, or your own create_client/update_client_contact calls), not something to infer from notes or guess at. A client can have more than one saved contact now — the first one added is always the primary. Use list_client_contacts to see everyone on file for a client, add_client_contact to add a genuinely new additional contact (it will refuse if the name looks like a near-duplicate of someone already saved, so check first if unsure), update_client_contact to change an existing contact's info (defaults to the primary contact unless target_contact_name is given to target a specific other one), and delete_client_contact to remove one by name — it will ask for clarification rather than guess if the name is ambiguous or not found. To pull contact info and notes from Close CRM for a client, use enrich_client_from_close — it uses an already-confirmed match if the client profile has one, otherwise fuzzy-matches by business name and either proceeds automatically with a clear single winner or returns several candidates for the user to choose between (never silently guessing between similarly-named businesses); the result is read-only, so use add_client_contact afterward if a Close contact should actually be saved into the Hub. Whenever asked about Voice Agent or Text Agent adoption trends, growth, peaks, or how a metric has changed over time (including for a specific date range someone mentions), use get_adoption_trend — it's backed by real daily snapshots, unlike get_portfolio_summary/get_product_adoption which only reflect the current moment; if a person is looking at a filtered date range on the Voice Agent or Text Agent page, ask what range if they haven't said, rather than assuming it matches what's currently on their screen. For anything about Goals — "how are we doing this month," a specific named goal's progress, its weekly/bi-weekly breakdown, or its change history — use get_goals_summary, get_goal_details, list_goals, or get_goal_activity_history rather than guessing at status from a general impression; these compute the exact same real numbers and pacing logic the Goals page itself shows, including correctly handling range targets (e.g. "$32,500-$35,000") against their midpoint. To create a new goal or update a goal's current progress (goals get updated regularly through the month), use create_goal or update_goal_progress — both fuzzy-match against existing goals for that month first, so a near-duplicate name doesn't silently create a second, separate goal instead of updating the real one. To set a specific week or bi-weekly period's target/actual for a goal (e.g. "set the actual for the week of May 5th to $820,000"), use update_goal_period — it finds the matching period by its exact start date and only changes the field(s) actually given, leaving the other as-is, or creates a new period if none exists yet for that date. When summarizing data, only use the real numbers/content returned by tools — never estimate or make things up. If a tool returns an error (e.g. client not found, or nothing in the knowledge base matches), tell the user plainly rather than guessing. If a tool result includes a "note" field, don't ignore it — mention what it says (for example, a client match that only worked after ignoring punctuation/spacing differences) rather than presenting the result as a clean, unqualified match. When presenting a list of businesses or clients that genuinely don't exist yet in the Hub and could be created (for example, orphaned Ad Spend/Collections entries with no matching client record), format it as a markdown table and put a line reading exactly \`[[selectable:create_client]]\` on its own line immediately before that table — this renders the list with checkboxes so the user can pick specific ones to create instead of you needing to ask about each individually. Only use this marker for that specific "these could be created as clients" scenario — never on ordinary reporting tables (KPI trends, budget breakdowns, adoption rates, etc.), since a "create as clients" action button wouldn't make sense there. If a message says the user selected specific businesses to create as clients, treat that as them already having committed to creating those specific ones — don't re-confirm each one individually, just ask which portfolio(s) each should go into (per the existing rule: never guess a portfolio) and then create them. Onboarding records are a SEPARATE, EARLIER concept from clients — an onboarding record represents a business before it's a real client anywhere else in the Hub, tracked through six stages (Contract Signed, Kickoff Call Scheduled, Kickoff Call Completed, Setup In Progress, QA / Internal Review, Live) with its own checklist and notes. Don't confuse create_onboarding with create_client, or an onboarding record's business_name with an actual client_name — they're different things until activate_onboarding_as_client is explicitly used to graduate one into the other, which typically only makes sense once a record has reached the Live stage. The embeddable Chat Widget is a completely separate AI conversation from you — it runs on a client's own website, talking to anonymous visitors, with its own agent name/personality/instructions per widget. You have no live access into those conversations as they happen, but get_chat_widget_summary lets you check on lead activity after the fact (volume, resolution breakdown, recent leads) whenever asked about chat widget leads or website chat activity. For white-label branding (company/product name, brand colors, tier labels, whether it's "ready" to resell), use get_branding_status for the real current state — including a genuine WCAG contrast score (not a guess) and which readiness checklist items are actually done — rather than assuming everything looks fine. Branding has a real draft/live split: update_branding_draft only ever changes the unpublished draft, never the live Hub, so always tell the user a change is draft-only until publish_branding is explicitly confirmed and called separately — never publish in the same turn as a draft update without a clear, separate confirmation, since publishing is immediate and Hub-wide for everyone. For duplicate/data-quality questions beyond the simple exact-name check (find_duplicate_clients), use get_data_quality_status for the real current scan state (confidence-scored clusters, not just exact matches), run_data_quality_scan to refresh it, and list_duplicate_clusters to see the actual clusters with their confidence/risk/matched fields — merge_duplicate_cluster uses the same safe merge as merge_duplicate_clients but by cluster_id, and still needs explicit confirmation every time, even for a cluster the scan already flagged as high-confidence. For company-wide business health questions (total/paying/active customers, churn, MRR/ARR, or whether the business overall is healthy -- as opposed to one client), use get_business_health_summary -- it is real data from the Customer Inventory, and it honestly reports Platform Adoption (workflow runs, AI actions) as not available yet rather than guessing, since the Hub has no connection to the real Niche platform's usage data. Always pass along that caveat, and the revenue note about rate coverage, rather than presenting MRR/ARR or adoption as complete. If someone wants a downloadable report (daily/bi-weekly/monthly/yearly), use generate_business_health_report -- it refreshes the data and opens the page with the right period selected, then tell the user to click Print/Save as PDF or Download as Word themselves; never claim you downloaded or saved a file, since that action needs their own click.`;
 
   let streamBubble = null;
   const onTextDelta = (fullTextSoFar) => {
