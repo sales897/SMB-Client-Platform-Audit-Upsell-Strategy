@@ -440,6 +440,12 @@ body.ai-panel-open .main {
 .vital-legend i { width: 6px; height: 6px; border-radius: 2px; display: inline-block; flex-shrink: 0; }
 .vital-stackbar { display: flex; height: 12px; border-radius: var(--radius-xs); overflow: hidden; margin: 6px 0 0; }
 .vital-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; min-height: 0; }
+.vital-add-tile {
+  min-height: 128px; background: none; border: 1px dashed var(--border); border-radius: var(--radius-sm);
+  color: var(--text3); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+  cursor: pointer; font-size: 11px; font-family: inherit; transition: border-color var(--transition-base), color var(--transition-base);
+}
+.vital-add-tile:hover { border-color: var(--orange); color: var(--orange); }
 .vital-list-item { display: flex; align-items: center; gap: 8px; font-size: var(--font-2xs); padding: 5px 7px; background: var(--bg3); border-radius: var(--radius-xs); cursor: pointer; transition: background var(--transition-base); }
 .vital-list-item:hover { background: var(--bg4); }
 .vital-list-item .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 6px currentColor; }
@@ -8937,6 +8943,22 @@ const HOME_WIDGET_DEFS = {
     labelKey: 'vital_adoption_gap', dot: 'var(--yellow)', subKey: 'vital_adoption_gap_sub',
     body: '<div class="hub-mini-row"><div class="vital-stat" id="vitalAdoptionTotal">0</div><div id="vitalAdoptionBars"></div></div>',
   },
+  voiceAdoption: {
+    labelKey: 'Voice Agent Adoption', dot: 'var(--blue)', subKey: '% of clients using the Voice Agent',
+    body: '<div class="hub-mini-row"><div><div class="vital-stat" id="vitalVoiceAdoptionPct">0%</div><div class="vital-stat-sub" id="vitalVoiceAdoptionSub"></div></div><div id="vitalVoiceAdoptionDonut"></div></div>',
+  },
+  chatLeads: {
+    labelKey: 'Chat Widget Leads', dot: 'var(--purple)', subKey: 'Leads captured across all widgets',
+    body: '<div class="hub-mini-row"><div><div class="vital-stat" id="vitalChatLeadsTotal">0</div><div class="vital-stat-sub">total leads</div></div><div id="vitalChatLeadsBars"></div></div>',
+  },
+  dataQuality: {
+    labelKey: 'Data Quality', dot: 'var(--red)', subKey: 'Potential duplicates from the last scan',
+    body: '<div class="hub-mini-row"><div id="vitalDataQualityBody"></div></div>',
+  },
+  goals: {
+    labelKey: 'Goals This Month', dot: 'var(--green)', subKey: 'On track vs. off track',
+    body: '<div class="hub-mini-row"><div id="vitalGoalsBody"></div></div>',
+  },
 };
 const HOME_LAYOUT_DEFAULT = ['tasks', 'reminders', 'attention', 'onboarding', 'adspend', 'collections', 'kpi', 'adoption'];
 const HOME_LAYOUT_KEY = 'csh_home_layout_v1';
@@ -8944,7 +8966,7 @@ const HOME_LAYOUT_KEY = 'csh_home_layout_v1';
 function getHomeLayout() {
   try {
     const saved = JSON.parse(localStorage.getItem(HOME_LAYOUT_KEY) || 'null');
-    if (Array.isArray(saved) && saved.length === HOME_LAYOUT_DEFAULT.length && saved.every(k => HOME_WIDGET_DEFS[k])) return saved;
+    if (Array.isArray(saved) && saved.length > 0 && saved.every(k => HOME_WIDGET_DEFS[k])) return saved;
   } catch (e) {}
   return [...HOME_LAYOUT_DEFAULT];
 }
@@ -8960,7 +8982,7 @@ function buildHomeVitalsGrid() {
   const grid = document.getElementById('homeVitalsGrid');
   if (!grid) return;
   const layout = getHomeLayout();
-  grid.innerHTML = layout.map((key, i) => {
+  const cardsHtml = layout.map((key, i) => {
     const def = HOME_WIDGET_DEFS[key] || HOME_WIDGET_DEFS[HOME_LAYOUT_DEFAULT[i]];
     const label = t(def.labelKey);
     const sub = t(def.subKey);
@@ -8973,12 +8995,18 @@ function buildHomeVitalsGrid() {
             ${key === 'reminders' ? `<button class="vital-ask" onclick="event.stopPropagation();openAddReminderModal()" title="Remind me" aria-label="Set a personal reminder"><span class="icon" data-icon="plus" data-icon-size="14"></span></button>` : ''}
             <button class="vital-ask" onclick="event.stopPropagation();askNirvanaAboutVital('${key}')" title="Ask Nirvana about this" aria-label="Ask Nirvana about ${escAttr(label)}"><span class="icon" data-icon="sparkle" data-icon-size="14"></span></button>
             <button class="vital-ask" onclick="event.stopPropagation();openVitalSwapMenu(${i}, this)" title="Swap this block" aria-label="Swap this block for another">⇄</button>
+            <button class="vital-ask" onclick="event.stopPropagation();removeVitalWidget(${i})" title="Remove this card" aria-label="Remove ${escAttr(label)}"><span class="icon" data-icon="close" data-icon-size="13"></span></button>
           </div>
         </div>
         <div class="vital-sub">${escAttr(sub)}</div>
         ${def.body}
       </div>`;
   }).join('');
+  const availableToAdd = Object.keys(HOME_WIDGET_DEFS).filter(k => !layout.includes(k));
+  const addTileHtml = availableToAdd.length > 0
+    ? `<button class="vital-add-tile" onclick="openVitalAddMenu(this)" aria-label="Add a card"><span class="icon" data-icon="plus" data-icon-size="20"></span><span>Add a card</span></button>`
+    : '';
+  grid.innerHTML = cardsHtml + addTileHtml;
   renderHomeVitalsGrid();
 }
 
@@ -9044,6 +9072,42 @@ function swapVitalWidget(slot, key) {
   saveHomeLayout(layout);
   buildHomeVitalsGrid();
 }
+function removeVitalWidget(slot) {
+  const layout = getHomeLayout();
+  layout.splice(slot, 1);
+  saveHomeLayout(layout.length ? layout : [...HOME_LAYOUT_DEFAULT]);
+  buildHomeVitalsGrid();
+}
+// Same floating-menu approach as the swap menu -- appended to body and
+// positioned from the trigger's real screen position, not nested inside
+// the tile itself, so it reads as a genuine dropdown.
+function openVitalAddMenu(anchorEl) {
+  closeAllVitalSwapMenus();
+  const layout = getHomeLayout();
+  const available = Object.keys(HOME_WIDGET_DEFS).filter(k => !layout.includes(k));
+  if (available.length === 0) return;
+  const rect = anchorEl.getBoundingClientRect();
+  const menu = document.createElement('div');
+  menu.className = 'vital-swap-menu';
+  menu.id = 'vitalSwapMenuActive';
+  menu.innerHTML = available.map(k => `<div class="vital-swap-item" onclick="addVitalWidget('${k}')">${escAttr(t(HOME_WIDGET_DEFS[k].labelKey))}</div>`).join('');
+  document.body.appendChild(menu);
+  const menuRect = menu.getBoundingClientRect();
+  let left = rect.right - menuRect.width;
+  if (left < 8) left = 8;
+  let top = rect.bottom + 6;
+  if (top + menuRect.height > window.innerHeight - 8) top = rect.top - menuRect.height - 6;
+  menu.style.left = left + 'px';
+  menu.style.top = top + 'px';
+  setTimeout(() => document.addEventListener('click', closeAllVitalSwapMenus, { once: true }), 0);
+}
+function addVitalWidget(key) {
+  const layout = getHomeLayout();
+  if (layout.includes(key)) return;
+  layout.push(key);
+  saveHomeLayout(layout);
+  buildHomeVitalsGrid();
+}
 
 // Home vitals grid (2026-07-14) -- six chart-driven blocks replacing the old
 // KPI row + Quick Access + Today's Focus stack. Every block pulls real data
@@ -9058,6 +9122,10 @@ function renderHomeVitalsGrid() {
   renderVitalCollections();
   renderVitalKpi();
   renderVitalAdoptionGap();
+  renderVitalVoiceAdoption();
+  renderVitalChatLeads();
+  renderVitalDataQuality();
+  renderVitalGoals();
 }
 
 function renderVitalTasks() {
@@ -9200,6 +9268,78 @@ function renderVitalAdoptionGap() {
   barsEl.innerHTML = renderMiniBars(gaps.length ? gaps : [0], resolveCssColor('var(--yellow)'));
 }
 
+function renderVitalVoiceAdoption() {
+  const donutEl = document.getElementById('vitalVoiceAdoptionDonut');
+  if (!donutEl) return;
+  const all = getAllClientsWithPortfolio();
+  const total = all.length || 1;
+  const using = all.filter(x => x.client.voice_agent).length;
+  const pct = Math.round((using / total) * 100);
+  const pctEl = document.getElementById('vitalVoiceAdoptionPct');
+  if (pctEl) pctEl.textContent = pct + '%';
+  const subEl = document.getElementById('vitalVoiceAdoptionSub');
+  if (subEl) subEl.textContent = `${using} of ${all.length} clients`;
+  donutEl.innerHTML = renderMiniDonut(
+    [{ value: pct, color: resolveCssColor('var(--blue)') }, { value: 100 - pct, color: resolveCssColor('var(--bg3)') }],
+    { size: 52, stroke: 7 }
+  );
+}
+
+function renderVitalChatLeads() {
+  const barsEl = document.getElementById('vitalChatLeadsBars');
+  const totalEl = document.getElementById('vitalChatLeadsTotal');
+  if (!barsEl) return;
+  const total = CW_CONVERSATIONS.length;
+  if (totalEl) totalEl.textContent = total;
+  // Last 5 days of lead volume, oldest to newest -- same real activity CW_CONVERSATIONS already tracks.
+  const days = Array.from({ length: 5 }, (_, i) => {
+    const d = new Date(); d.setDate(d.getDate() - (4 - i));
+    return d.toISOString().slice(0, 10);
+  });
+  const counts = days.map(d => CW_CONVERSATIONS.filter(c => (c.created_at || '').slice(0, 10) === d).length);
+  barsEl.innerHTML = renderMiniBars(counts.some(c => c > 0) ? counts : [0], resolveCssColor('var(--purple)'));
+}
+
+function renderVitalDataQuality() {
+  const el = document.getElementById('vitalDataQualityBody');
+  if (!el) return;
+  if (!DQ_LAST_SCAN) {
+    el.innerHTML = `<div><div class="vital-stat" style="font-size:14px">Not scanned yet</div><div class="vital-stat-sub">Run a scan in Data Quality Studio</div></div>`;
+    return;
+  }
+  const high = DQ_CLUSTERS.filter(c => c.risk === 'High').length;
+  el.innerHTML = `
+    <div><div class="vital-stat">${DQ_LAST_SCAN.potential_duplicate_clusters}</div><div class="vital-stat-sub">${high} high-confidence</div></div>
+    ${renderMiniDonut([
+      { value: high, color: resolveCssColor('var(--red)') },
+      { value: DQ_CLUSTERS.filter(c => c.risk === 'Medium').length, color: resolveCssColor('var(--yellow)') },
+      { value: DQ_CLUSTERS.filter(c => c.risk === 'Low').length, color: resolveCssColor('var(--blue)') },
+    ], { size: 52, stroke: 7 })}
+  `;
+}
+
+function renderVitalGoals() {
+  const el = document.getElementById('vitalGoalsBody');
+  if (!el) return;
+  const currentMonth = new Date().toISOString().slice(0, 7);
+  const monthGoals = GOALS.filter(g => (g.month || '').slice(0, 7) === currentMonth).map(g => ({ ...g, ...computeGoalStatus(g) }));
+  if (monthGoals.length === 0) {
+    el.innerHTML = `<div class="vital-stat" style="font-size:14px">No goals set this month</div>`;
+    return;
+  }
+  const onTrack = monthGoals.filter(g => g.status === 'on_track').length;
+  const atRisk = monthGoals.filter(g => g.status === 'at_risk').length;
+  const offTrack = monthGoals.filter(g => g.status === 'off_track').length;
+  el.innerHTML = `
+    <div><div class="vital-stat">${onTrack}<span class="vital-stat-sub"> / ${monthGoals.length} on track</span></div></div>
+    ${renderMiniDonut([
+      { value: onTrack, color: resolveCssColor('var(--green)') },
+      { value: atRisk, color: resolveCssColor('var(--yellow)') },
+      { value: offTrack, color: resolveCssColor('var(--red)') },
+    ], { size: 52, stroke: 7 })}
+  `;
+}
+
 // Wires the Home vitals grid into Nirvana -- each block's ✨ button opens the
 // panel and asks a canned, topic-relevant question through the same send
 // pathway the panel's own quick-actions grid already uses.
@@ -9212,6 +9352,10 @@ const VITAL_NIRVANA_PROMPTS = {
   collections: "Summarize where we stand on collections right now.",
   kpi: "How are our SuccessOS KPI scores trending, and where should I focus?",
   adoption: "Which SMB clients have the biggest product adoption gap I should upsell?",
+  voiceAdoption: "Which clients aren't using the Voice Agent yet that would be good candidates?",
+  chatLeads: "Summarize recent Chat Widget lead activity across all my widgets.",
+  dataQuality: "What does the latest Data Quality Studio scan show, and what should I clean up first?",
+  goals: "How are this month's goals pacing, and which ones need attention?",
 };
 function askNirvanaAboutVital(topic) {
   const panel = document.getElementById('aiAgentPanel');
