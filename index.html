@@ -2548,7 +2548,7 @@ tr.pg-hidden-row { display: none; }
 .cw-drawer-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 500; display: none; }
 .cw-drawer-overlay.open { display: block; }
 .cw-drawer {
-  position: fixed; top: 0; right: -1040px; width: 1020px; max-width: 96vw; height: 100vh; background: var(--bg2);
+  position: fixed; top: 0; right: -1650px; width: min(94vw, 1600px); height: 100vh; background: var(--bg2);
   border-left: 1px solid var(--orange); box-shadow: -20px 0 60px rgba(0,0,0,.5), 0 0 40px rgba(226,84,31,.15);
   z-index: 501; transition: right var(--transition-slow); display: flex; flex-direction: column;
 }
@@ -2641,7 +2641,7 @@ tr.pg-hidden-row { display: none; }
 .cw-site-mockup-hero-title { width: 60%; height: 20px; border-radius: 5px; background: #dcdcdc; margin-bottom: 12px; }
 .cw-site-mockup-hero-sub { width: 40%; height: 10px; border-radius: 4px; background: #e6e6e6; margin-bottom: 18px; }
 .cw-site-mockup-hero-btn { width: 110px; height: 30px; border-radius: var(--radius-pill); background: linear-gradient(135deg, #d8d8d8, #e2e2e2); }
-.cw-widget-preview { position: absolute; bottom: 18px; right: 18px; display: flex; flex-direction: column; align-items: flex-end; gap: 12px; }
+.cw-widget-preview { position: absolute; bottom: 18px; left: 18px; right: 18px; display: flex; flex-direction: column; align-items: flex-end; gap: 12px; }
 .cw-preview-orb {
   width: 52px; height: 52px; border-radius: 50%; cursor: pointer; flex-shrink: 0;
   background: var(--cw-avatar-img, radial-gradient(circle at 35% 30%, #fff, var(--cw-color) 45%, var(--cw-color)));
@@ -25719,7 +25719,7 @@ function renderCwPreview(widget) {
   const color = widget.orb_color || '#e2541f';
   holder.style.setProperty('--cw-color', color);
   holder.style.setProperty('--cw-glow', widget.orb_glow_intensity ?? 14);
-  holder.style.justifyContent = (widget.dock_position === 'left') ? 'flex-start' : 'flex-end';
+  holder.style.alignItems = (widget.dock_position === 'left') ? 'flex-start' : 'flex-end';
   const mockupBody = holder.closest('.cw-site-mockup-body');
   if (mockupBody) mockupBody.style.direction = 'ltr'; // orb position is handled via holder alignment, not mockup direction
 
