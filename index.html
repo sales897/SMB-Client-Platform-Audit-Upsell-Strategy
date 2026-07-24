@@ -7303,7 +7303,7 @@ const I18N = {
     onboarding_pipeline_title: 'Onboarding Pipeline', onboarding_pipelines_btn: 'Pipelines', onboarding_new_btn: 'New Onboarding',
     onboarding_in_progress: 'in progress',
     settings_integrations_tab: 'Integrations', settings_team_tab: 'Team & Permissions', settings_cleanup_tab: 'Data Cleanup',
-    settings_gcal_title: 'Google Calendar', settings_authorize_title: 'Authorize a Teammate', settings_roles_title: 'Roles Explained',
+    settings_gcal_title: 'Google Calendar', settings_authorize_title: 'Authorize a Teammate', settings_roles_title: 'Roles & Permissions',
     settings_team_members_title: 'Team Members', settings_duplicates_title: 'Duplicate Clients', settings_scan_btn: 'Scan for Duplicates',
     wfb_title: 'Workflow Builder', wfb_subtitle: 'Design intelligent automations with our visual workflow builder.',
     wfb_group_triggers: 'TRIGGERS', wfb_group_conditions: 'CONDITIONS', wfb_group_actions: 'ACTIONS',
@@ -7460,7 +7460,7 @@ const I18N = {
     onboarding_pipeline_title: 'Proceso de Incorporación', onboarding_pipelines_btn: 'Flujos', onboarding_new_btn: 'Nueva Incorporación',
     onboarding_in_progress: 'en progreso',
     settings_integrations_tab: 'Integraciones', settings_team_tab: 'Equipo y Permisos', settings_cleanup_tab: 'Limpieza de Datos',
-    settings_gcal_title: 'Google Calendar', settings_authorize_title: 'Autorizar a un Compañero', settings_roles_title: 'Roles Explicados',
+    settings_gcal_title: 'Google Calendar', settings_authorize_title: 'Autorizar a un Compañero', settings_roles_title: 'Roles y Permisos',
     settings_team_members_title: 'Miembros del Equipo', settings_duplicates_title: 'Clientes Duplicados', settings_scan_btn: 'Buscar Duplicados',
     wfb_title: 'Constructor de Flujos', wfb_subtitle: 'Diseña automatizaciones inteligentes con nuestro constructor visual de flujos.',
     wfb_group_triggers: 'DISPARADORES', wfb_group_conditions: 'CONDICIONES', wfb_group_actions: 'ACCIONES',
@@ -13013,16 +13013,17 @@ function renderTeamUI() {
   const rolesPanel = document.getElementById('teamRolesPanel');
   if (rolesPanel) {
     const roleDefs = [
-      { key: 'admin', label: 'Admin', desc: 'Full control of the Hub. Manage team, settings, billing, and all data.', access: 'Full Access', color: 'var(--red)' },
-      { key: 'superuser', label: 'Super User', desc: 'Manage clients, data, and most Hub features. Cannot manage team or billing.', access: 'Elevated Access', color: 'var(--orange)' },
-      { key: 'user', label: 'User', desc: 'View dashboards, reports, and data. No access to edit or manage.', access: 'View Only', color: 'var(--text3)' },
+      { key: 'admin', label: 'Admin', desc: 'Full control of the Hub. Manage team, settings, billing, and all data.', access: 'Full Access' },
+      { key: 'superuser', label: 'Super User', desc: 'Manage clients, data, and most Hub features. Cannot manage team or billing.', access: 'Elevated Access' },
+      { key: 'user', label: 'User', desc: 'View dashboards, reports, and data. No access to edit or manage.', access: 'View Only' },
     ];
     rolesPanel.innerHTML = roleDefs.map(r => {
       const count = TEAM_MEMBERS.filter(m => m.role === r.key).length;
-      return `<div class="team-role-card">
+      const color = ROLE_META[r.key].color;
+      return `<div class="team-role-card team-role-glow-${r.key}">
         <div class="team-role-card-head">
-          <span style="font-weight:800;font-size:12.5px;color:${r.color}">${r.label}</span>
-          <span class="int-coming-soon-badge" style="color:${r.color};background:${r.color}22">${r.access}</span>
+          <span style="font-weight:800;font-size:12.5px;color:${color}">${r.label}</span>
+          <span class="int-coming-soon-badge" style="color:${color};background:${color}22">${r.access}</span>
         </div>
         <div style="font-size:11px;color:var(--text3);line-height:1.5">${r.desc}</div>
         <div style="font-size:10.5px;color:var(--text2);margin-top:4px">${count} member${count === 1 ? '' : 's'}</div>
