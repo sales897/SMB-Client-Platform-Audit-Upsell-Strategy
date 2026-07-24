@@ -2186,6 +2186,35 @@ tr.pg-hidden-row { display: none; }
 .int-coming-soon-cat { font-size: 11px; color: var(--text3); margin-bottom: 10px; }
 .int-coming-soon-badge { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; color: var(--text3); background: var(--bg3); padding: 3px 8px; border-radius: var(--radius-pill); display: inline-block; }
 .int-tile-action-row { margin-top: auto; padding-top: 10px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+/* ---- Brand Studio (Settings > Branding redesign) ---- */
+.brand-studio-layout { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); align-items: start; margin-bottom: var(--space-4); }
+.brand-editor-col, .brand-studio-col { display: flex; flex-direction: column; gap: var(--space-4); }
+.brand-section-card { margin-bottom: 0 !important; }
+.brand-section-head { display: flex; gap: 12px; align-items: flex-start; margin-bottom: var(--space-4); }
+.brand-num-badge { flex-shrink: 0; width: 24px; height: 24px; border-radius: var(--radius-xs); background: var(--orange-dim); color: var(--orange); font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; font-family: var(--font-mono); }
+.brand-theme-toggle, .brand-device-toggle { display: inline-flex; gap: 2px; background: var(--bg3); padding: 3px; border-radius: var(--radius-sm); }
+.brand-theme-btn, .brand-device-btn { flex: 1; background: none; border: none; color: var(--text3); font-size: 11px; font-weight: 600; padding: 8px 10px; border-radius: var(--radius-xs); cursor: pointer; display: inline-flex; align-items: center; gap: 5px; justify-content: center; white-space: nowrap; }
+.brand-theme-btn.active, .brand-device-btn.active { background: var(--orange-dim); color: var(--orange); }
+.brand-asset-row { display: flex; align-items: center; gap: 10px; }
+.brand-asset-thumb { width: 40px; height: 40px; border-radius: var(--radius-xs); background: var(--bg3); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
+.brand-asset-thumb img { max-width: 100%; max-height: 100%; }
+.brand-asset-name { font-size: 12px; color: var(--text2); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.brand-mark-drop { border: 1px dashed var(--border); border-radius: var(--radius-sm); padding: 20px 12px; text-align: center; cursor: pointer; color: var(--text3); transition: border-color var(--transition-slow); }
+.brand-mark-drop:hover { border-color: var(--orange); color: var(--text2); }
+.brand-tokens-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 6px; }
+.brand-token-swatch { border-radius: var(--radius-xs); height: 32px; border: 1px solid var(--border); margin-bottom: 4px; }
+.brand-token-label { font-size: 9px; color: var(--text3); text-align: center; }
+.brand-action-bar { display: flex; align-items: center; justify-content: space-between; padding-top: var(--space-4); border-top: 1px solid var(--border); }
+.brand-acc-row { display: flex; align-items: center; justify-content: space-between; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-xs); padding: 10px 14px; }
+/* Mini live-preview mockups -- purely illustrative scale, driven by real
+   draft colors/logo/product name rather than static images. */
+.brand-preview-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
+.brand-mock-card { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px; overflow: hidden; }
+.brand-mock-label { font-size: 9.5px; color: var(--text3); text-transform: uppercase; letter-spacing: .03em; margin-bottom: 6px; font-weight: 700; }
+.brand-mock-login { border-radius: var(--radius-xs); padding: 16px 10px; text-align: center; }
+.brand-mock-sidebar-item { font-size: 9px; padding: 4px 6px; border-radius: 4px; margin-bottom: 2px; color: var(--text3); }
+.brand-mock-sidebar-item.active { font-weight: 700; }
 .progress-bar { width: 100%; height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; margin-top: 4px; }
 .progress-fill { height: 100%; border-radius: 3px; transition: width var(--transition-slow); }
 .owner-avatar { width: 22px; height: 22px; border-radius: 6px; background: var(--bg3); display: inline-flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; margin-right: 6px; color: var(--text2); }
@@ -5697,64 +5726,141 @@ select.wfb-field-input { padding-right: 26px; }
     </div>
 
     <div id="settingsTab-branding" style="display:none">
-      <div class="card" style="margin-bottom:var(--space-5)">
-        <div class="card-header">
-          <div><div class="card-title"><span class="icon" data-icon="tag" data-icon-size="14"></span> White-Label Branding</div><div class="card-sub">Everything here drives the name, logo, and colors shown across the whole Hub — for reselling to a different company or industry</div></div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4)">
-          <div>
-            <label class="field-label">Company Name</label>
-            <input type="text" id="brandCompanyName" class="field-input" placeholder="Niche Inc.">
-          </div>
-          <div>
-            <label class="field-label">Product Name</label>
-            <input type="text" id="brandProductName" class="field-input" placeholder="The HUB">
-          </div>
-          <div>
-            <label class="field-label">Primary Color</label>
-            <div style="display:flex;gap:8px;align-items:center">
-              <input type="color" id="brandPrimaryColor" style="width:44px;height:36px;border-radius:8px;border:1px solid var(--border);background:none;cursor:pointer">
-              <input type="text" id="brandPrimaryColorHex" class="field-input" placeholder="#e2541f">
+      <div class="int-stat-bar" id="brandStatBar"></div>
+
+      <div class="brand-studio-layout">
+        <div class="brand-editor-col">
+          <div class="card brand-section-card">
+            <div class="brand-section-head"><span class="brand-num-badge">01</span><div><div class="card-title">Brand Identity</div><div class="card-sub">Define the name of your brand and primary product.</div></div></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4)">
+              <div><label class="field-label">Company Name</label><input type="text" id="brandCompanyName" class="field-input" placeholder="Niche Inc." oninput="onBrandDraftFieldChange()"></div>
+              <div><label class="field-label">Product Name</label><input type="text" id="brandProductName" class="field-input" placeholder="The HUB" oninput="onBrandDraftFieldChange()"></div>
             </div>
           </div>
-          <div>
-            <label class="field-label">Secondary/Accent Color</label>
-            <div style="display:flex;gap:8px;align-items:center">
-              <input type="color" id="brandPrimaryColorAlt" style="width:44px;height:36px;border-radius:8px;border:1px solid var(--border);background:none;cursor:pointer">
-              <input type="text" id="brandPrimaryColorAltHex" class="field-input" placeholder="#f2772e">
-            </div>
-          </div>
-          <div style="grid-column:1/-1">
-            <label class="field-label">Logo</label>
-            <div style="display:flex;align-items:center;gap:14px">
-              <div id="brandLogoPreviewWrap" style="width:56px;height:56px;border-radius:10px;border:1px solid var(--border);background:var(--bg3);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">
-                <img id="brandLogoPreview" src="" alt="" style="max-width:100%;max-height:100%;display:none">
-                <span id="brandLogoPreviewEmpty" style="font-size:10px;color:var(--text3)">none</span>
+
+          <div class="card brand-section-card">
+            <div class="brand-section-head"><span class="brand-num-badge">02</span><div><div class="card-title">Color System</div><div class="card-sub">Set your brand colors that power the entire experience.</div></div></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--space-4)">
+              <div>
+                <label class="field-label">Primary Color</label>
+                <div style="display:flex;gap:8px;align-items:center">
+                  <input type="color" id="brandPrimaryColor" style="width:44px;height:36px;border-radius:8px;border:1px solid var(--border);background:none;cursor:pointer">
+                  <input type="text" id="brandPrimaryColorHex" class="field-input" placeholder="#e2541f" oninput="onBrandDraftFieldChange()">
+                </div>
               </div>
-              <div style="flex:1">
-                <input type="file" id="brandLogoFileInput" accept="image/png,image/jpeg,image/svg+xml,image/webp,image/gif" style="display:none" onchange="handleBrandLogoUpload(event)">
-                <button class="btn btn-ghost btn-sm" onclick="document.getElementById('brandLogoFileInput').click()"><span class="icon" data-icon="paperclip" data-icon-size="13"></span> Upload Logo</button>
-                <span id="brandLogoUploadStatus" style="margin-left:8px;font-size:var(--font-xs);color:var(--text3)"></span>
-                <div style="margin-top:8px">
-                  <input type="text" id="brandLogoUrl" class="field-input" placeholder="https://… (or upload a file above)" oninput="updateBrandLogoPreviewFromUrl()" style="font-size:11px">
+              <div>
+                <label class="field-label">Secondary / Accent Color</label>
+                <div style="display:flex;gap:8px;align-items:center">
+                  <input type="color" id="brandPrimaryColorAlt" style="width:44px;height:36px;border-radius:8px;border:1px solid var(--border);background:none;cursor:pointer">
+                  <input type="text" id="brandPrimaryColorAltHex" class="field-input" placeholder="#f2772e" oninput="onBrandDraftFieldChange()">
+                </div>
+              </div>
+              <div>
+                <label class="field-label">Theme Mode</label>
+                <div class="brand-theme-toggle" id="brandThemeToggle">
+                  <button type="button" class="brand-theme-btn" data-theme="dark" onclick="setBrandDraftTheme('dark')">Dark</button>
+                  <button type="button" class="brand-theme-btn" data-theme="light" onclick="setBrandDraftTheme('light')">Light</button>
+                  <button type="button" class="brand-theme-btn" data-theme="auto" onclick="setBrandDraftTheme('auto')">Auto</button>
                 </div>
               </div>
             </div>
+            <div style="margin-top:10px">
+              <div class="field-label">Color Preview</div>
+              <div id="brandColorPreviewSwatches" style="display:flex;gap:8px;margin-top:4px"></div>
+            </div>
+          </div>
+
+          <div class="card brand-section-card">
+            <div class="brand-section-head"><span class="brand-num-badge">03</span><div><div class="card-title">Tier Naming</div><div class="card-sub">Rename the three client tiers to match a different reseller business model.</div></div></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--space-4)">
+              <div><label class="field-label">Tier 1 (internal key: smb)</label><input type="text" id="brandLabelSmb" class="field-input" placeholder="SMB" oninput="onBrandDraftFieldChange()"></div>
+              <div><label class="field-label">Tier 2 (internal key: whitelabel)</label><input type="text" id="brandLabelWhitelabel" class="field-input" placeholder="White Label" oninput="onBrandDraftFieldChange()"></div>
+              <div><label class="field-label">Tier 3 (internal key: support)</label><input type="text" id="brandLabelSupport" class="field-input" placeholder="Support" oninput="onBrandDraftFieldChange()"></div>
+            </div>
+          </div>
+
+          <div class="card brand-section-card">
+            <div class="brand-section-head"><span class="brand-num-badge">04</span><div><div class="card-title">Asset Uploads</div><div class="card-sub">Upload your logo and other brand assets.</div></div></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4)">
+              <div>
+                <label class="field-label">Logo</label>
+                <div class="brand-asset-row">
+                  <div class="brand-asset-thumb" id="brandLogoThumb"><span style="font-size:9px;color:var(--text3)">none</span></div>
+                  <div style="flex:1;min-width:0">
+                    <div id="brandLogoFileName" class="brand-asset-name">No logo uploaded</div>
+                    <div style="display:flex;gap:6px;margin-top:4px">
+                      <input type="file" id="brandLogoFileInput" accept="image/png,image/jpeg,image/svg+xml,image/webp,image/gif" style="display:none" onchange="handleBrandAssetUpload(event,'logo_url','brandLogoThumb','brandLogoFileName')">
+                      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('brandLogoFileInput').click()"><span class="icon" data-icon="paperclip" data-icon-size="12"></span> Upload Logo</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="brand-asset-row" style="margin-top:8px">
+                  <div class="brand-asset-thumb" id="brandFaviconThumb" style="width:28px;height:28px"><span style="font-size:8px;color:var(--text3)">—</span></div>
+                  <div style="flex:1;min-width:0">
+                    <div id="brandFaviconFileName" class="brand-asset-name" style="font-size:10.5px">No favicon uploaded</div>
+                  </div>
+                  <input type="file" id="brandFaviconFileInput" accept="image/png,image/x-icon,image/svg+xml" style="display:none" onchange="handleBrandAssetUpload(event,'favicon_url','brandFaviconThumb','brandFaviconFileName')">
+                  <button class="btn btn-ghost btn-sm" onclick="document.getElementById('brandFaviconFileInput').click()" title="Upload favicon"><span class="icon" data-icon="paperclip" data-icon-size="11"></span></button>
+                  <button class="icon-btn" onclick="removeBrandAsset('favicon_url','brandFaviconThumb','brandFaviconFileName')" title="Remove favicon"><span class="icon" data-icon="trash" data-icon-size="12"></span></button>
+                </div>
+              </div>
+              <div>
+                <label class="field-label">Brand Mark (Optional)</label>
+                <div class="brand-mark-drop" onclick="document.getElementById('brandMarkFileInput').click()">
+                  <div id="brandMarkThumb"><span class="icon" data-icon="download" data-icon-size="18"></span></div>
+                  <div id="brandMarkFileName" style="font-weight:700;font-size:12px;margin-top:6px">Upload Brand Mark</div>
+                  <div style="font-size:10px;color:var(--text3);margin-top:2px">SVG, PNG or JPG • Max 2MB</div>
+                </div>
+                <input type="file" id="brandMarkFileInput" accept="image/png,image/jpeg,image/svg+xml" style="display:none" onchange="handleBrandAssetUpload(event,'brand_mark_url','brandMarkThumb','brandMarkFileName')">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="brand-studio-col">
+          <div class="card brand-section-card">
+            <div class="brand-section-head" style="justify-content:space-between;width:100%">
+              <div style="display:flex;gap:10px;align-items:flex-start"><span style="font-size:16px">🎨</span><div><div class="card-title">Brand Studio</div><div class="card-sub">Live preview of your brand across key surfaces.</div></div></div>
+              <div class="brand-device-toggle" id="brandDeviceToggle">
+                <button type="button" class="brand-device-btn active" data-w="100%" onclick="setBrandPreviewDevice(this,'100%')"><span class="icon" data-icon="settings" data-icon-size="12"></span> Desktop</button>
+                <button type="button" class="brand-device-btn" data-w="460px" onclick="setBrandPreviewDevice(this,'460px')">Tablet</button>
+                <button type="button" class="brand-device-btn" data-w="260px" onclick="setBrandPreviewDevice(this,'260px')">Mobile</button>
+              </div>
+            </div>
+            <div id="brandPreviewViewport" style="max-width:100%;margin:0 auto;transition:max-width var(--transition-slow)">
+              <div class="brand-preview-grid" id="brandPreviewGrid"></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);margin-top:var(--space-4)">
+              <div>
+                <div class="field-label">Design Tokens</div>
+                <div id="brandDesignTokens" class="brand-tokens-grid"></div>
+              </div>
+              <div>
+                <div class="field-label">Typography</div>
+                <div id="brandTypographyPreview"></div>
+              </div>
+            </div>
+            <div style="margin-top:var(--space-4)">
+              <div class="card-title" style="font-size:13px">Accessibility</div>
+              <div class="card-sub" style="margin-bottom:8px">We check that your brand is readable and accessible for all users.</div>
+              <div id="brandAccessibilityChecks"></div>
+            </div>
           </div>
         </div>
       </div>
-      <div class="card" style="margin-bottom:var(--space-5)">
-        <div class="card-header">
-          <div><div class="card-title">Portfolio Tier Names</div><div class="card-sub">Rename the three client tiers to match a different reseller's business model — this only changes what's displayed, not how clients are grouped</div></div>
+
+      <div class="brand-action-bar">
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text3)">
+          <span class="int-dot" id="brandSaveDot" style="background:var(--green)"></span>
+          <span id="brandDraftStatus">No unsaved draft changes</span>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--space-4)">
-          <div><label class="field-label">Tier 1 (internal key: smb)</label><input type="text" id="brandLabelSmb" class="field-input" placeholder="SMB"></div>
-          <div><label class="field-label">Tier 2 (internal key: whitelabel)</label><input type="text" id="brandLabelWhitelabel" class="field-input" placeholder="White Label"></div>
-          <div><label class="field-label">Tier 3 (internal key: support)</label><input type="text" id="brandLabelSupport" class="field-input" placeholder="Support"></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm" onclick="resetBrandingToDefaults()">Reset to Defaults</button>
+          <button class="btn btn-ghost btn-sm" onclick="saveBrandingDraft()"><span class="icon" data-icon="save" data-icon-size="13"></span> Save Draft</button>
+          <button class="btn btn-ghost btn-sm" onclick="renderBrandStudioPreview()"><span class="icon" data-icon="eye" data-icon-size="13"></span> Preview</button>
+          <button class="btn btn-primary btn-sm" onclick="publishBranding()"><span class="icon" data-icon="rocket" data-icon-size="13"></span> Publish Branding</button>
         </div>
       </div>
-      <button class="btn btn-primary" onclick="saveBrandingForm()"><span class="icon" data-icon="sparkle" data-icon-size="14"></span> Save Branding</button>
-      <span id="brandingSaveStatus" style="margin-left:12px;font-size:var(--font-xs);color:var(--green)"></span>
     </div>
 
     <div id="settingsTab-team" style="display:none">
@@ -12035,85 +12141,229 @@ function switchSettingsTab(tab) {
 // Populates the Branding form from the real ORG_SETTINGS currently applied
 // across the Hub, not stale defaults, so the form always reflects reality.
 function populateBrandingForm() {
-  const s = ORG_SETTINGS;
-  document.getElementById('brandCompanyName').value = s.company_name || '';
-  document.getElementById('brandProductName').value = s.product_name || '';
-  document.getElementById('brandLogoUrl').value = s.logo_url || '';
-  updateBrandLogoPreviewFromUrl();
-  document.getElementById('brandPrimaryColor').value = s.primary_color || '#e2541f';
-  document.getElementById('brandPrimaryColorHex').value = s.primary_color || '#e2541f';
-  document.getElementById('brandPrimaryColorAlt').value = s.primary_color_alt || '#f2772e';
-  document.getElementById('brandPrimaryColorAltHex').value = s.primary_color_alt || '#f2772e';
-  const labels = s.portfolio_labels || {};
+  initOrgDraft();
+  const d = ORG_DRAFT;
+  document.getElementById('brandCompanyName').value = d.company_name || '';
+  document.getElementById('brandProductName').value = d.product_name || '';
+  document.getElementById('brandPrimaryColor').value = d.primary_color || '#e2541f';
+  document.getElementById('brandPrimaryColorHex').value = d.primary_color || '#e2541f';
+  document.getElementById('brandPrimaryColorAlt').value = d.primary_color_alt || '#f2772e';
+  document.getElementById('brandPrimaryColorAltHex').value = d.primary_color_alt || '#f2772e';
+  const labels = d.portfolio_labels || {};
   document.getElementById('brandLabelSmb').value = labels.smb || 'SMB';
   document.getElementById('brandLabelWhitelabel').value = labels.whitelabel || 'White Label';
   document.getElementById('brandLabelSupport').value = labels.support || 'Support';
+  setBrandAssetThumb('brandLogoThumb', 'brandLogoFileName', d.logo_url, 'No logo uploaded');
+  setBrandAssetThumb('brandFaviconThumb', 'brandFaviconFileName', d.favicon_url, 'No favicon uploaded');
+  setBrandAssetThumb('brandMarkThumb', 'brandMarkFileName', d.brand_mark_url, 'Upload Brand Mark');
+  document.querySelectorAll('.brand-theme-btn').forEach(b => b.classList.toggle('active', b.dataset.theme === (d.default_theme || 'dark')));
+  renderBrandingDraftStatus();
+  renderAllBrandDerivedViews();
 }
-async function saveBrandingForm() {
-  const patch = {
-    company_name: document.getElementById('brandCompanyName').value.trim() || 'Niche Inc.',
-    product_name: document.getElementById('brandProductName').value.trim() || 'The HUB',
-    logo_url: document.getElementById('brandLogoUrl').value.trim() || null,
-    primary_color: document.getElementById('brandPrimaryColorHex').value.trim() || '#e2541f',
-    primary_color_alt: document.getElementById('brandPrimaryColorAltHex').value.trim() || '#f2772e',
-    portfolio_labels: {
-      smb: document.getElementById('brandLabelSmb').value.trim() || 'SMB',
-      whitelabel: document.getElementById('brandLabelWhitelabel').value.trim() || 'White Label',
-      support: document.getElementById('brandLabelSupport').value.trim() || 'Support',
-    },
+// Called on every field edit -- pulls current form values into ORG_DRAFT
+// (in-memory only) and re-renders every real-data display that depends on
+// it (stat bar, swatches, preview, tokens, accessibility). Nothing here
+// touches the live Hub or Supabase -- that only happens on Save Draft/Publish.
+function onBrandDraftFieldChange() {
+  ORG_DRAFT.company_name = document.getElementById('brandCompanyName').value.trim() || BRANDING_DEFAULTS.company_name;
+  ORG_DRAFT.product_name = document.getElementById('brandProductName').value.trim() || BRANDING_DEFAULTS.product_name;
+  ORG_DRAFT.primary_color = document.getElementById('brandPrimaryColorHex').value.trim() || BRANDING_DEFAULTS.primary_color;
+  ORG_DRAFT.primary_color_alt = document.getElementById('brandPrimaryColorAltHex').value.trim() || BRANDING_DEFAULTS.primary_color_alt;
+  ORG_DRAFT.portfolio_labels = {
+    smb: document.getElementById('brandLabelSmb').value.trim() || 'SMB',
+    whitelabel: document.getElementById('brandLabelWhitelabel').value.trim() || 'White Label',
+    support: document.getElementById('brandLabelSupport').value.trim() || 'Support',
   };
-  const statusEl = document.getElementById('brandingSaveStatus');
-  try {
-    await saveOrgSettings(patch);
-    if (typeof rebuildAll === 'function') rebuildAll();
-    if (statusEl) { statusEl.textContent = 'Saved — branding updated across the Hub.'; setTimeout(() => { statusEl.textContent = ''; }, 4000); }
-  } catch (e) {
-    if (statusEl) { statusEl.style.color = 'var(--red)'; statusEl.textContent = 'Could not save: ' + e.message; }
-  }
+  renderAllBrandDerivedViews();
 }
-// Real logo upload -- stores the file in the 'org-branding' Supabase Storage
-// bucket (public read, Hub-authenticated write) and drops the resulting
-// public URL straight into the Logo URL field, so it saves the same way a
-// pasted URL would when "Save Branding" is clicked.
-async function handleBrandLogoUpload(event) {
+function setBrandDraftTheme(theme) {
+  ORG_DRAFT.default_theme = theme;
+  document.querySelectorAll('.brand-theme-btn').forEach(b => b.classList.toggle('active', b.dataset.theme === theme));
+  renderAllBrandDerivedViews();
+}
+function setBrandPreviewDevice(btnEl, width) {
+  document.querySelectorAll('.brand-device-btn').forEach(b => b.classList.remove('active'));
+  btnEl.classList.add('active');
+  const vp = document.getElementById('brandPreviewViewport');
+  if (vp) vp.style.maxWidth = width;
+}
+function renderAllBrandDerivedViews() {
+  renderBrandStudioStatBar();
+  renderBrandColorPreviewSwatches();
+  renderBrandStudioPreview();
+  renderBrandDesignTokens();
+  renderBrandTypography();
+  renderBrandAccessibility();
+}
+
+// Real logo/favicon/brand-mark upload -- stores the file in the
+// 'org-branding' Supabase Storage bucket (public read, Hub-authenticated
+// write) and sets the resulting public URL directly on ORG_DRAFT (not live)
+// under whichever field this asset slot maps to.
+async function handleBrandAssetUpload(event, draftField, thumbId, nameId) {
   const file = event.target.files && event.target.files[0];
   if (!file) return;
-  const statusEl = document.getElementById('brandLogoUploadStatus');
-  if (file.size > 3 * 1024 * 1024) {
-    if (statusEl) { statusEl.style.color = 'var(--red)'; statusEl.textContent = 'File too large — 3MB max.'; }
-    return;
-  }
-  if (statusEl) { statusEl.style.color = 'var(--text3)'; statusEl.textContent = 'Uploading…'; }
+  if (file.size > 2 * 1024 * 1024) { showToast('File too large — 2MB max.', 'error'); return; }
   try {
     const ext = (file.name.split('.').pop() || 'png').toLowerCase();
-    const path = `logo-${Date.now()}.${ext}`;
+    const path = `${draftField}-${Date.now()}.${ext}`;
     const { error: uploadError } = await supabaseClient.storage.from('org-branding').upload(path, file, { upsert: true, cacheControl: '3600' });
     if (uploadError) throw uploadError;
     const { data } = supabaseClient.storage.from('org-branding').getPublicUrl(path);
-    const publicUrl = data.publicUrl;
-    document.getElementById('brandLogoUrl').value = publicUrl;
-    updateBrandLogoPreviewFromUrl();
-    if (statusEl) { statusEl.style.color = 'var(--green)'; statusEl.textContent = 'Uploaded — click Save Branding to apply.'; }
+    ORG_DRAFT[draftField] = data.publicUrl;
+    setBrandAssetThumb(thumbId, nameId, data.publicUrl, file.name);
+    document.getElementById(nameId).textContent = file.name;
+    renderAllBrandDerivedViews();
+    showToast('Uploaded to draft — click Save Draft or Publish to keep it.', 'success');
   } catch (e) {
-    if (statusEl) { statusEl.style.color = 'var(--red)'; statusEl.textContent = 'Upload failed: ' + e.message; }
+    showToast('Upload failed: ' + e.message, 'error');
   }
 }
-function updateBrandLogoPreviewFromUrl() {
-  const url = document.getElementById('brandLogoUrl').value.trim();
-  const img = document.getElementById('brandLogoPreview');
-  const empty = document.getElementById('brandLogoPreviewEmpty');
-  if (!img || !empty) return;
-  if (url) { img.src = url; img.style.display = ''; empty.style.display = 'none'; }
-  else { img.style.display = 'none'; empty.style.display = ''; }
+function removeBrandAsset(draftField, thumbId, nameId) {
+  ORG_DRAFT[draftField] = null;
+  setBrandAssetThumb(thumbId, nameId, null, nameId === 'brandMarkFileName' ? 'Upload Brand Mark' : 'No file uploaded');
+  renderAllBrandDerivedViews();
 }
+function setBrandAssetThumb(thumbId, nameId, url, emptyLabel) {
+  const thumb = document.getElementById(thumbId);
+  const nameEl = document.getElementById(nameId);
+  if (thumb) thumb.innerHTML = url ? `<img src="${escAttr(url)}" alt="">` : `<span style="font-size:9px;color:var(--text3)">${thumbId === 'brandMarkThumb' ? '' : 'none'}</span>`;
+  if (nameEl && !url) nameEl.textContent = emptyLabel;
+}
+
 function syncBrandColorInputs() {
   const pairs = [['brandPrimaryColor', 'brandPrimaryColorHex'], ['brandPrimaryColorAlt', 'brandPrimaryColorAltHex']];
   pairs.forEach(([pickerId, hexId]) => {
     const picker = document.getElementById(pickerId), hex = document.getElementById(hexId);
     if (!picker || !hex) return;
-    picker.addEventListener('input', () => { hex.value = picker.value; });
+    picker.addEventListener('input', () => { hex.value = picker.value; onBrandDraftFieldChange(); });
     hex.addEventListener('change', () => { if (/^#[0-9a-fA-F]{6}$/.test(hex.value)) picker.value = hex.value; });
   });
+}
+
+// ---- Real-data render functions for the Brand Studio stat bar + preview ----
+function renderBrandStudioStatBar() {
+  const el = document.getElementById('brandStatBar');
+  if (!el) return;
+  const d = ORG_DRAFT;
+  const assetCount = [d.logo_url, d.brand_mark_url, d.favicon_url].filter(Boolean).length;
+  const acc = computeBrandAccessibility(d);
+  const readiness = computeWhiteLabelReadiness(d);
+  el.innerHTML = `
+    <div class="int-stat-card">
+      <div class="int-stat-label"><span class="icon" data-icon="tag" data-icon-size="12"></span> Active Brand Pack</div>
+      <div class="int-stat-value" style="font-size:15px">${escAttr(d.company_name)} • ${escAttr(d.product_name)}</div>
+    </div>
+    <div class="int-stat-card">
+      <div class="int-stat-label"><span class="icon" data-icon="download" data-icon-size="12"></span> Assets Uploaded</div>
+      <div class="int-stat-value">${assetCount} / 3</div>
+      <div class="int-stat-sub">Logo, Favicon, Brand Mark</div>
+    </div>
+    <div class="int-stat-card">
+      <div class="int-stat-label"><span class="icon" data-icon="eye" data-icon-size="12"></span> Contrast Score</div>
+      <div class="int-stat-value" style="color:${acc.passesAA ? 'var(--green)' : 'var(--red)'}">${acc.ratio ? acc.ratio.toFixed(1) + ':1' : '—'}</div>
+      <div class="int-stat-sub">${acc.level}</div>
+    </div>
+    <div class="int-stat-card">
+      <div class="int-stat-label"><span class="icon" data-icon="check" data-icon-size="12"></span> White-Label Readiness</div>
+      <div class="int-stat-value" style="font-size:15px;color:${readiness.ready ? 'var(--green)' : 'var(--yellow)'}">${readiness.ready ? 'Ready' : `${readiness.passed}/${readiness.total}`}</div>
+      <div class="int-stat-sub">${readiness.ready ? 'All checks passed' : 'Some checks incomplete'}</div>
+    </div>
+  `;
+}
+function renderBrandColorPreviewSwatches() {
+  const el = document.getElementById('brandColorPreviewSwatches');
+  if (!el) return;
+  const d = ORG_DRAFT;
+  const cs = getComputedStyle(document.documentElement);
+  const swatches = [d.primary_color, d.primary_color_alt, cs.getPropertyValue('--bg3').trim(), cs.getPropertyValue('--border').trim(), cs.getPropertyValue('--green').trim()];
+  el.innerHTML = swatches.map(c => `<div style="width:28px;height:28px;border-radius:50%;background:${c};border:1px solid var(--border)" title="${c}"></div>`).join('');
+}
+function renderBrandStudioPreview() {
+  const el = document.getElementById('brandPreviewGrid');
+  if (!el) return;
+  const d = ORG_DRAFT;
+  const logoHtml = d.logo_url ? `<img src="${escAttr(d.logo_url)}" style="height:16px;max-width:60px;object-fit:contain">` : `<span style="font-weight:800;color:${d.primary_color}">${escAttr((d.company_name || 'N').charAt(0))}</span>`;
+  el.innerHTML = `
+    <div class="brand-mock-card">
+      <div class="brand-mock-label">Login Screen</div>
+      <div class="brand-mock-login" style="background:linear-gradient(135deg, ${d.primary_color}22, ${d.primary_color_alt}11)">
+        <div style="margin-bottom:8px">${logoHtml}</div>
+        <div style="font-weight:700;font-size:11px;color:var(--text)">Welcome back</div>
+        <div style="font-size:9px;color:var(--text3);margin:6px 0">Sign in to your account</div>
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:4px;height:16px;margin-bottom:4px"></div>
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:4px;height:16px;margin-bottom:8px"></div>
+        <div style="background:${d.primary_color};color:#fff;border-radius:4px;height:18px;font-size:9px;display:flex;align-items:center;justify-content:center;font-weight:700">Sign In</div>
+      </div>
+    </div>
+    <div class="brand-mock-card">
+      <div class="brand-mock-label">Sidebar</div>
+      <div style="background:var(--bg1,#0a0a0a);border-radius:4px;padding:6px">
+        <div style="display:flex;align-items:center;gap:5px;margin-bottom:8px">${logoHtml}<span style="font-size:9px;font-weight:800;color:var(--text)">${escAttr(d.company_name)}</span></div>
+        <div class="brand-mock-sidebar-item active" style="background:${d.primary_color}22;color:${d.primary_color}">Dashboard</div>
+        <div class="brand-mock-sidebar-item">Clients</div>
+        <div class="brand-mock-sidebar-item">Sites</div>
+        <div class="brand-mock-sidebar-item">Reports</div>
+        <div class="brand-mock-sidebar-item">Automation</div>
+        <div class="brand-mock-sidebar-item">Billing</div>
+        <div class="brand-mock-sidebar-item">Support</div>
+        <div class="brand-mock-sidebar-item">Settings</div>
+      </div>
+    </div>
+    <div class="brand-mock-card" style="grid-column:1/-1">
+      <div class="brand-mock-label">Dashboard Header</div>
+      <div style="display:flex;align-items:center;gap:8px;background:var(--bg2);border-radius:4px;padding:6px 8px;margin-bottom:8px">
+        <span style="font-size:9px;color:var(--text3)">≡</span><span style="font-size:10px;font-weight:700;color:var(--text)">Dashboard</span>
+        <div style="flex:1;background:var(--bg3);border-radius:3px;height:14px;margin:0 6px"></div>
+        <span style="font-size:9px;color:${d.primary_color}">⟳</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px">
+        ${['Total Clients', 'Active Sites', 'Monthly Revenue', 'Support Tickets'].map(label => `
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:4px;padding:6px">
+            <div style="font-size:8px;color:var(--text3)">${label}</div>
+            <div style="font-size:11px;font-weight:800;color:var(--text)">—</div>
+            <div style="font-size:8px;color:${d.primary_color_alt}">▲ live</div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+function renderBrandDesignTokens() {
+  const el = document.getElementById('brandDesignTokens');
+  if (!el) return;
+  const d = ORG_DRAFT;
+  const cs = getComputedStyle(document.documentElement);
+  const tokens = [
+    ['Primary', d.primary_color], ['Secondary', d.primary_color_alt],
+    ['Background', cs.getPropertyValue('--bg').trim()], ['Surface', cs.getPropertyValue('--bg2').trim()],
+    ['Border', cs.getPropertyValue('--border').trim()], ['Text Primary', cs.getPropertyValue('--text').trim()],
+    ['Text Muted', cs.getPropertyValue('--text3').trim()], ['Success', cs.getPropertyValue('--green').trim()],
+  ];
+  el.innerHTML = tokens.map(([label, color]) => `<div><div class="brand-token-swatch" style="background:${color}"></div><div class="brand-token-label">${label}<br>${escAttr(color)}</div></div>`).join('');
+}
+function renderBrandTypography() {
+  const el = document.getElementById('brandTypographyPreview');
+  if (!el) return;
+  const cs = getComputedStyle(document.documentElement);
+  const displayFont = cs.getPropertyValue('--font-display').trim();
+  const monoFont = cs.getPropertyValue('--font-mono').trim();
+  el.innerHTML = `
+    <div style="font-family:${escAttr(displayFont)};font-size:26px;font-weight:800;color:var(--text)">Aa</div>
+    <div style="font-size:10.5px;color:var(--text3);margin:4px 0">${escAttr(displayFont.split(',')[0].replace(/'/g, ''))} • Display</div>
+    <div style="font-family:${escAttr(monoFont)};font-size:10.5px;color:var(--text2)">${escAttr(monoFont.split(',')[0].replace(/'/g, ''))} • Mono</div>
+    <div style="font-size:10px;color:var(--text3);letter-spacing:.02em;margin-top:4px">ABCDEFGHIJKLMNOPQRSTUVWXYZ<br>abcdefghijklmnopqrstuvwxyz<br>0123456789</div>`;
+}
+function renderBrandAccessibility() {
+  const el = document.getElementById('brandAccessibilityChecks');
+  if (!el) return;
+  const d = ORG_DRAFT;
+  const primaryAcc = computeBrandAccessibility(d);
+  const accentRatio = contrastRatio(d.primary_color_alt, '#ffffff');
+  const rows = [
+    { label: 'Primary color contrast (vs. white text)', value: primaryAcc.ratio ? primaryAcc.ratio.toFixed(2) + ':1' : '—', ok: primaryAcc.passesAA },
+    { label: 'WCAG 2.1 AA', value: primaryAcc.passesAA ? 'Pass' : 'Fail', ok: primaryAcc.passesAA },
+    { label: 'Accent color contrast (vs. white text)', value: accentRatio ? accentRatio.toFixed(2) + ':1' : '—', ok: accentRatio >= 4.5 },
+  ];
+  el.innerHTML = rows.map(r => `<div class="brand-acc-row" style="margin-bottom:6px"><span style="font-size:11.5px;color:var(--text2)">${r.label}</span><span style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:${r.ok ? 'var(--green)' : 'var(--red)'}">${r.value} <span class="icon" data-icon="${r.ok ? 'check' : 'alert'}" data-icon-size="13"></span></span></div>`).join('');
 }
 
 // ════════════════════════════════════════════════════════════════════════
@@ -25380,6 +25630,32 @@ const AI_AGENT_TOOLS = [
     },
   },
   { name: 'get_kpi_summary', description: 'Get the current SuccessOS KPI scores and recent trend for all three KPIs.', input_schema: { type: 'object', properties: {} } },
+  {
+    name: 'get_branding_status',
+    description: 'Get the current white-label branding state: the live (published) settings, whether there\'s an unpublished draft and what\'s different about it, the real WCAG contrast score for the primary color against white button text, and the white-label readiness checklist (which specific items are done vs still default). Use this whenever asked about branding status, whether the Hub is "white-label ready," what the current brand colors/name are, or whether there are unpublished branding changes.',
+    input_schema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'update_branding_draft',
+    description: 'Update one or more branding fields in the DRAFT (not live) — company name, product name, primary/accent color (hex), or a portfolio tier label. Only the fields provided are changed. This does NOT go live — use publish_branding for that, and always tell the user the change is only in the draft until they publish. The user will be asked to confirm before this is saved.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        company_name: { type: 'string' },
+        product_name: { type: 'string' },
+        primary_color: { type: 'string', description: 'Hex color, e.g. #e2541f' },
+        primary_color_alt: { type: 'string', description: 'Hex color, e.g. #f2772e' },
+        tier_smb_label: { type: 'string' },
+        tier_whitelabel_label: { type: 'string' },
+        tier_support_label: { type: 'string' },
+      },
+    },
+  },
+  {
+    name: 'publish_branding',
+    description: 'Publish the current branding draft — applies it live, Hub-wide, for everyone, immediately. This is a significant, visible, irreversible-without-another-publish change. Always confirm explicitly with the user before calling this, even if they seem to have already asked for it, and never chain this immediately after update_branding_draft in the same turn without a separate confirmation.',
+    input_schema: { type: 'object', properties: {} },
+  },
   { name: 'get_collections_summary', description: 'Get Collections data broken down separately by Outstanding Balances and Card Fails — each with its own account count, total dollar amount, and breakdown by status (Pending, In Review, Contacted, Payment Plan, Escalated, Resolved, Write-Off). Also includes accounts needing attention.', input_schema: { type: 'object', properties: {} } },
   { name: 'get_adspend_summary', description: 'Get Ad Spend Management data: total and average monthly budget, a breakdown by promo status (eligible / not eligible / already using — each with count and total budget), and the top 10 spenders.', input_schema: { type: 'object', properties: {} } },
   {
@@ -26113,6 +26389,47 @@ async function executeAiTool(name, input) {
     }
     case 'get_kpi_summary':
       return KPI_KEYS.map(k => ({ kpi: KPI_META[k].label, score: getLatestKpiScore(k), trend: getKpiTrend(k) > 0 ? 'improved' : getKpiTrend(k) < 0 ? 'declined' : 'stable' }));
+    case 'get_branding_status': {
+      const live = liveBrandingSnapshot();
+      const draft = ORG_SETTINGS.draft_data ? { ...live, ...ORG_SETTINGS.draft_data } : live;
+      const acc = computeBrandAccessibility(draft);
+      const readiness = computeWhiteLabelReadiness(draft);
+      const draftFields = Object.keys(draft).filter(k => JSON.stringify(draft[k]) !== JSON.stringify(live[k]));
+      return {
+        live: { company_name: live.company_name, product_name: live.product_name, primary_color: live.primary_color, primary_color_alt: live.primary_color_alt, portfolio_labels: live.portfolio_labels },
+        has_unpublished_draft: draftFields.length > 0,
+        draft_differs_in: draftFields,
+        contrast: { ratio: acc.ratio ? Number(acc.ratio.toFixed(2)) : null, wcag_level: acc.level, passes_aa: acc.passesAA },
+        white_label_readiness: { passed: readiness.passed, total: readiness.total, ready: readiness.ready, checklist: readiness.checks.map(c => ({ item: c.label, done: c.ok })) },
+      };
+    }
+    case 'update_branding_draft': {
+      if (!requirePermission('edit')) return { error: 'This account doesn\'t have permission to edit branding.' };
+      initOrgDraft();
+      const fieldMap = { company_name: 'company_name', product_name: 'product_name', primary_color: 'primary_color', primary_color_alt: 'primary_color_alt' };
+      const changed = [];
+      Object.entries(fieldMap).forEach(([inputKey, draftKey]) => {
+        if (input[inputKey]) { ORG_DRAFT[draftKey] = input[inputKey]; changed.push(draftKey); }
+      });
+      const tierMap = { tier_smb_label: 'smb', tier_whitelabel_label: 'whitelabel', tier_support_label: 'support' };
+      Object.entries(tierMap).forEach(([inputKey, tierKey]) => {
+        if (input[inputKey]) { ORG_DRAFT.portfolio_labels = { ...ORG_DRAFT.portfolio_labels, [tierKey]: input[inputKey] }; changed.push(`portfolio_labels.${tierKey}`); }
+      });
+      if (changed.length === 0) return { error: 'No branding fields were provided to update.' };
+      await saveBrandingDraft(true);
+      if (document.getElementById('brandStatBar')) populateBrandingForm();
+      return { ok: true, updated_fields: changed, note: 'Saved to the DRAFT only — not live yet. The user needs to Publish (or ask you to) for this to actually apply Hub-wide.' };
+    }
+    case 'publish_branding': {
+      if (!requirePermission('edit')) return { error: 'This account doesn\'t have permission to publish branding.' };
+      initOrgDraft();
+      try {
+        await saveOrgSettings({ ...ORG_DRAFT, draft_data: ORG_DRAFT, draft_updated_at: new Date().toISOString() });
+        if (typeof rebuildAll === 'function') rebuildAll();
+        if (document.getElementById('brandStatBar')) populateBrandingForm();
+      } catch (e) { return { error: 'Could not publish: ' + e.message }; }
+      return { ok: true, published: liveBrandingSnapshot() };
+    }
     case 'get_portfolio_summary': {
       const pk = input.portfolio;
       if (!['smb', 'whitelabel', 'support'].includes(pk)) return { error: 'portfolio must be smb, whitelabel, or support' };
@@ -27708,7 +28025,7 @@ async function runAiAgentTurn(toolTagForNextText) {
   const u = getCurrentUser();
   const systemPrompt = `${currentLanguage === 'es' ? 'IMPORTANT: The Hub is currently set to Spanish (MX). Respond to the user ENTIRELY in Spanish (Mexican Spanish), including this entire conversation, regardless of what language they write in — unless they explicitly ask you to switch to English. Data values, client names, and product names stay as-is; everything you write around them is in Spanish.\n\n' : ''}Current date and time: ${new Date().toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })}. This is read directly from the user's own device clock, so it already reflects their real timezone — treat it as ground truth. For ANY relative time request ("in 15 minutes", "tomorrow at 9am", "next Monday"), compute the exact resulting date/time yourself from this reference. Never ask the user what time it is or guess at a timestamp — the real current time is always right here.
 
-You are Nirvana, the AI Agent inside ${ORG_SETTINGS.company_name}'s ${ORG_SETTINGS.product_name} — "${ORG_SETTINGS.product_name}" — helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the ${ORG_SETTINGS.portfolio_labels.smb}, ${ORG_SETTINGS.portfolio_labels.whitelabel}, and ${ORG_SETTINGS.portfolio_labels.support} portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. Whenever a request would affect MORE THAN ONE client (e.g. "create a follow-up task for every client that hasn't been touched in 30 days," or a list of specific client names), always use bulk_create_tasks or bulk_add_note instead of calling create_task/add_note in a loop — looping individual calls would force a separate confirmation click per client, while the bulk tools show one confirmation with the full affected list. Workflows can trigger on six things — "inactivity" (no note in N days), "schedule" (recurring cadence, for one client or a whole portfolio), "client_added" (fires the moment a new client is created), "task_due_soon" (reminds before an existing task's due date), "kpi_drop" (a SuccessOS score went down — team-level, not tied to one client), or "collections_status" (an account entered a specific Collections status) — and can take four actions when they fire: create a task (optionally with a real due date/time), just send a notification with no task, log an audit-trail note with no task or notification, or have you draft the actual task content yourself instead of using fixed text. If someone describes an automation idea in plain English, translate it into the right trigger type, action type, and fields yourself rather than making them fill out a form. For questions about company policy, procedures, "how do we...", or what the website/docs say, search the Knowledge Base — it contains SOPs, docs, and website content the team has fed in, separate from live client data. You can read and explain every chart in the Hub: get_portfolio_summary explains a portfolio's Product Adoption Rate and Products Per Client charts, get_product_adoption explains the Voice Agent / Text Agent charts, get_collections_summary explains the Collections breakdown (always separated into Outstanding Balances vs Card Fails, each with its own status breakdown — never collapse these into one number), get_adspend_summary explains Ad Spend's promo/budget breakdown, and get_kpi_summary explains the SuccessOS scores. When someone asks you to break down, interpret, or explain any data or chart, always call the specific tool that has that breakdown built in rather than answering from a vaguer or more general tool — if a user asks for a split by category/status/type, that split should already be in the tool result; use it. Prefer the data tools above for explaining charts — they're faster and more precise. Only use view_chart when the question is genuinely about the chart's visual appearance itself (e.g. "does this look right," "what do you see," "describe this chart visually") — calling it will switch the user's screen to that chart's page, so mention that you're pulling it up. Whenever asked to check for discrepancies, duplicates, mismatches, or whether numbers add up anywhere in the Hub (including client counts, Collections, Ad Spend, or the Knowledge Base), always call audit_data_integrity rather than speculating about possible causes — it actually reconciles the numbers and reports genuine findings, so use what it returns instead of guessing at explanations like "could be duplicates" or "could be stale data." A daily briefing already gets shown automatically once per day when the chat is first opened — if asked for a summary, rundown, or "what should I focus on" at any other point, use get_daily_briefing to pull the same live data fresh rather than referencing whatever was shown earlier, since it may be out of date by then. Whenever asked "which accounts are at risk," "who needs attention," or how healthy a specific client is, use get_at_risk_clients or get_client_health rather than checking just one signal (like Collections alone, or note recency alone) — those tools already combine engagement, task backlog, and billing friction into one score with a transparent breakdown of exactly why, which is a more honest answer than picking one factor and guessing at the rest. Whenever asked what's changed for a specific client recently, who created or updated a client record, or when a client was actually added to the Hub, use get_client_activity_history — it's the real, logged audit trail (every creation and every field-level change, from every entry point in the Hub: Bulk Reconcile Import, CSV imports, Add Client, onboarding graduation, or your own create_client/update_client_contact calls), not something to infer from notes or guess at. A client can have more than one saved contact now — the first one added is always the primary. Use list_client_contacts to see everyone on file for a client, add_client_contact to add a genuinely new additional contact (it will refuse if the name looks like a near-duplicate of someone already saved, so check first if unsure), update_client_contact to change an existing contact's info (defaults to the primary contact unless target_contact_name is given to target a specific other one), and delete_client_contact to remove one by name — it will ask for clarification rather than guess if the name is ambiguous or not found. To pull contact info and notes from Close CRM for a client, use enrich_client_from_close — it uses an already-confirmed match if the client profile has one, otherwise fuzzy-matches by business name and either proceeds automatically with a clear single winner or returns several candidates for the user to choose between (never silently guessing between similarly-named businesses); the result is read-only, so use add_client_contact afterward if a Close contact should actually be saved into the Hub. Whenever asked about Voice Agent or Text Agent adoption trends, growth, peaks, or how a metric has changed over time (including for a specific date range someone mentions), use get_adoption_trend — it's backed by real daily snapshots, unlike get_portfolio_summary/get_product_adoption which only reflect the current moment; if a person is looking at a filtered date range on the Voice Agent or Text Agent page, ask what range if they haven't said, rather than assuming it matches what's currently on their screen. For anything about Goals — "how are we doing this month," a specific named goal's progress, its weekly/bi-weekly breakdown, or its change history — use get_goals_summary, get_goal_details, list_goals, or get_goal_activity_history rather than guessing at status from a general impression; these compute the exact same real numbers and pacing logic the Goals page itself shows, including correctly handling range targets (e.g. "$32,500-$35,000") against their midpoint. To create a new goal or update a goal's current progress (goals get updated regularly through the month), use create_goal or update_goal_progress — both fuzzy-match against existing goals for that month first, so a near-duplicate name doesn't silently create a second, separate goal instead of updating the real one. To set a specific week or bi-weekly period's target/actual for a goal (e.g. "set the actual for the week of May 5th to $820,000"), use update_goal_period — it finds the matching period by its exact start date and only changes the field(s) actually given, leaving the other as-is, or creates a new period if none exists yet for that date. When summarizing data, only use the real numbers/content returned by tools — never estimate or make things up. If a tool returns an error (e.g. client not found, or nothing in the knowledge base matches), tell the user plainly rather than guessing. If a tool result includes a "note" field, don't ignore it — mention what it says (for example, a client match that only worked after ignoring punctuation/spacing differences) rather than presenting the result as a clean, unqualified match. When presenting a list of businesses or clients that genuinely don't exist yet in the Hub and could be created (for example, orphaned Ad Spend/Collections entries with no matching client record), format it as a markdown table and put a line reading exactly \`[[selectable:create_client]]\` on its own line immediately before that table — this renders the list with checkboxes so the user can pick specific ones to create instead of you needing to ask about each individually. Only use this marker for that specific "these could be created as clients" scenario — never on ordinary reporting tables (KPI trends, budget breakdowns, adoption rates, etc.), since a "create as clients" action button wouldn't make sense there. If a message says the user selected specific businesses to create as clients, treat that as them already having committed to creating those specific ones — don't re-confirm each one individually, just ask which portfolio(s) each should go into (per the existing rule: never guess a portfolio) and then create them. Onboarding records are a SEPARATE, EARLIER concept from clients — an onboarding record represents a business before it's a real client anywhere else in the Hub, tracked through six stages (Contract Signed, Kickoff Call Scheduled, Kickoff Call Completed, Setup In Progress, QA / Internal Review, Live) with its own checklist and notes. Don't confuse create_onboarding with create_client, or an onboarding record's business_name with an actual client_name — they're different things until activate_onboarding_as_client is explicitly used to graduate one into the other, which typically only makes sense once a record has reached the Live stage. The embeddable Chat Widget is a completely separate AI conversation from you — it runs on a client's own website, talking to anonymous visitors, with its own agent name/personality/instructions per widget. You have no live access into those conversations as they happen, but get_chat_widget_summary lets you check on lead activity after the fact (volume, resolution breakdown, recent leads) whenever asked about chat widget leads or website chat activity.`;
+You are Nirvana, the AI Agent inside ${ORG_SETTINGS.company_name}'s ${ORG_SETTINGS.product_name} — "${ORG_SETTINGS.product_name}" — helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the ${ORG_SETTINGS.portfolio_labels.smb}, ${ORG_SETTINGS.portfolio_labels.whitelabel}, and ${ORG_SETTINGS.portfolio_labels.support} portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. Whenever a request would affect MORE THAN ONE client (e.g. "create a follow-up task for every client that hasn't been touched in 30 days," or a list of specific client names), always use bulk_create_tasks or bulk_add_note instead of calling create_task/add_note in a loop — looping individual calls would force a separate confirmation click per client, while the bulk tools show one confirmation with the full affected list. Workflows can trigger on six things — "inactivity" (no note in N days), "schedule" (recurring cadence, for one client or a whole portfolio), "client_added" (fires the moment a new client is created), "task_due_soon" (reminds before an existing task's due date), "kpi_drop" (a SuccessOS score went down — team-level, not tied to one client), or "collections_status" (an account entered a specific Collections status) — and can take four actions when they fire: create a task (optionally with a real due date/time), just send a notification with no task, log an audit-trail note with no task or notification, or have you draft the actual task content yourself instead of using fixed text. If someone describes an automation idea in plain English, translate it into the right trigger type, action type, and fields yourself rather than making them fill out a form. For questions about company policy, procedures, "how do we...", or what the website/docs say, search the Knowledge Base — it contains SOPs, docs, and website content the team has fed in, separate from live client data. You can read and explain every chart in the Hub: get_portfolio_summary explains a portfolio's Product Adoption Rate and Products Per Client charts, get_product_adoption explains the Voice Agent / Text Agent charts, get_collections_summary explains the Collections breakdown (always separated into Outstanding Balances vs Card Fails, each with its own status breakdown — never collapse these into one number), get_adspend_summary explains Ad Spend's promo/budget breakdown, and get_kpi_summary explains the SuccessOS scores. When someone asks you to break down, interpret, or explain any data or chart, always call the specific tool that has that breakdown built in rather than answering from a vaguer or more general tool — if a user asks for a split by category/status/type, that split should already be in the tool result; use it. Prefer the data tools above for explaining charts — they're faster and more precise. Only use view_chart when the question is genuinely about the chart's visual appearance itself (e.g. "does this look right," "what do you see," "describe this chart visually") — calling it will switch the user's screen to that chart's page, so mention that you're pulling it up. Whenever asked to check for discrepancies, duplicates, mismatches, or whether numbers add up anywhere in the Hub (including client counts, Collections, Ad Spend, or the Knowledge Base), always call audit_data_integrity rather than speculating about possible causes — it actually reconciles the numbers and reports genuine findings, so use what it returns instead of guessing at explanations like "could be duplicates" or "could be stale data." A daily briefing already gets shown automatically once per day when the chat is first opened — if asked for a summary, rundown, or "what should I focus on" at any other point, use get_daily_briefing to pull the same live data fresh rather than referencing whatever was shown earlier, since it may be out of date by then. Whenever asked "which accounts are at risk," "who needs attention," or how healthy a specific client is, use get_at_risk_clients or get_client_health rather than checking just one signal (like Collections alone, or note recency alone) — those tools already combine engagement, task backlog, and billing friction into one score with a transparent breakdown of exactly why, which is a more honest answer than picking one factor and guessing at the rest. Whenever asked what's changed for a specific client recently, who created or updated a client record, or when a client was actually added to the Hub, use get_client_activity_history — it's the real, logged audit trail (every creation and every field-level change, from every entry point in the Hub: Bulk Reconcile Import, CSV imports, Add Client, onboarding graduation, or your own create_client/update_client_contact calls), not something to infer from notes or guess at. A client can have more than one saved contact now — the first one added is always the primary. Use list_client_contacts to see everyone on file for a client, add_client_contact to add a genuinely new additional contact (it will refuse if the name looks like a near-duplicate of someone already saved, so check first if unsure), update_client_contact to change an existing contact's info (defaults to the primary contact unless target_contact_name is given to target a specific other one), and delete_client_contact to remove one by name — it will ask for clarification rather than guess if the name is ambiguous or not found. To pull contact info and notes from Close CRM for a client, use enrich_client_from_close — it uses an already-confirmed match if the client profile has one, otherwise fuzzy-matches by business name and either proceeds automatically with a clear single winner or returns several candidates for the user to choose between (never silently guessing between similarly-named businesses); the result is read-only, so use add_client_contact afterward if a Close contact should actually be saved into the Hub. Whenever asked about Voice Agent or Text Agent adoption trends, growth, peaks, or how a metric has changed over time (including for a specific date range someone mentions), use get_adoption_trend — it's backed by real daily snapshots, unlike get_portfolio_summary/get_product_adoption which only reflect the current moment; if a person is looking at a filtered date range on the Voice Agent or Text Agent page, ask what range if they haven't said, rather than assuming it matches what's currently on their screen. For anything about Goals — "how are we doing this month," a specific named goal's progress, its weekly/bi-weekly breakdown, or its change history — use get_goals_summary, get_goal_details, list_goals, or get_goal_activity_history rather than guessing at status from a general impression; these compute the exact same real numbers and pacing logic the Goals page itself shows, including correctly handling range targets (e.g. "$32,500-$35,000") against their midpoint. To create a new goal or update a goal's current progress (goals get updated regularly through the month), use create_goal or update_goal_progress — both fuzzy-match against existing goals for that month first, so a near-duplicate name doesn't silently create a second, separate goal instead of updating the real one. To set a specific week or bi-weekly period's target/actual for a goal (e.g. "set the actual for the week of May 5th to $820,000"), use update_goal_period — it finds the matching period by its exact start date and only changes the field(s) actually given, leaving the other as-is, or creates a new period if none exists yet for that date. When summarizing data, only use the real numbers/content returned by tools — never estimate or make things up. If a tool returns an error (e.g. client not found, or nothing in the knowledge base matches), tell the user plainly rather than guessing. If a tool result includes a "note" field, don't ignore it — mention what it says (for example, a client match that only worked after ignoring punctuation/spacing differences) rather than presenting the result as a clean, unqualified match. When presenting a list of businesses or clients that genuinely don't exist yet in the Hub and could be created (for example, orphaned Ad Spend/Collections entries with no matching client record), format it as a markdown table and put a line reading exactly \`[[selectable:create_client]]\` on its own line immediately before that table — this renders the list with checkboxes so the user can pick specific ones to create instead of you needing to ask about each individually. Only use this marker for that specific "these could be created as clients" scenario — never on ordinary reporting tables (KPI trends, budget breakdowns, adoption rates, etc.), since a "create as clients" action button wouldn't make sense there. If a message says the user selected specific businesses to create as clients, treat that as them already having committed to creating those specific ones — don't re-confirm each one individually, just ask which portfolio(s) each should go into (per the existing rule: never guess a portfolio) and then create them. Onboarding records are a SEPARATE, EARLIER concept from clients — an onboarding record represents a business before it's a real client anywhere else in the Hub, tracked through six stages (Contract Signed, Kickoff Call Scheduled, Kickoff Call Completed, Setup In Progress, QA / Internal Review, Live) with its own checklist and notes. Don't confuse create_onboarding with create_client, or an onboarding record's business_name with an actual client_name — they're different things until activate_onboarding_as_client is explicitly used to graduate one into the other, which typically only makes sense once a record has reached the Live stage. The embeddable Chat Widget is a completely separate AI conversation from you — it runs on a client's own website, talking to anonymous visitors, with its own agent name/personality/instructions per widget. You have no live access into those conversations as they happen, but get_chat_widget_summary lets you check on lead activity after the fact (volume, resolution breakdown, recent leads) whenever asked about chat widget leads or website chat activity. For white-label branding (company/product name, brand colors, tier labels, whether it's "ready" to resell), use get_branding_status for the real current state — including a genuine WCAG contrast score (not a guess) and which readiness checklist items are actually done — rather than assuming everything looks fine. Branding has a real draft/live split: update_branding_draft only ever changes the unpublished draft, never the live Hub, so always tell the user a change is draft-only until publish_branding is explicitly confirmed and called separately — never publish in the same turn as a draft update without a clear, separate confirmation, since publishing is immediate and Hub-wide for everyone.`;
 
   let streamBubble = null;
   const onTextDelta = (fullTextSoFar) => {
@@ -27804,6 +28121,7 @@ async function loadOrgSettings() {
     // Non-fatal — the Hub still works with the built-in Niche Inc. defaults.
   }
   applyOrgBranding();
+  initOrgDraft();
 }
 function applyOrgBranding() {
   const s = ORG_SETTINGS;
@@ -27838,6 +28156,117 @@ async function saveOrgSettings(patch) {
   await sbUpsert('org_settings', payload);
   ORG_SETTINGS = { ...ORG_SETTINGS, ...payload };
   applyOrgBranding();
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// BRAND STUDIO — draft/live split (2026-07-23)
+// ORG_SETTINGS above is always the LIVE, currently-applied branding.
+// ORG_DRAFT is a separate in-progress copy the Branding tab actually reads
+// and writes -- editing it never touches the live Hub until publishBranding()
+// explicitly copies it over. Persisted as one JSON blob (org_settings.draft_data)
+// rather than duplicating every column, so a half-finished draft survives a
+// reload/logout without affecting what anyone else sees.
+// ════════════════════════════════════════════════════════════════════════
+const BRANDING_DEFAULTS = {
+  company_name: 'Niche Inc.', product_name: 'The HUB', logo_url: null, brand_mark_url: null, favicon_url: null,
+  primary_color: '#e2541f', primary_color_alt: '#f2772e', default_theme: 'dark',
+  portfolio_labels: { smb: 'SMB', whitelabel: 'White Label', support: 'Support' },
+};
+let ORG_DRAFT = { ...BRANDING_DEFAULTS };
+
+function liveBrandingSnapshot() {
+  const s = ORG_SETTINGS;
+  return {
+    company_name: s.company_name, product_name: s.product_name, logo_url: s.logo_url,
+    brand_mark_url: s.brand_mark_url || null, favicon_url: s.favicon_url || null,
+    primary_color: s.primary_color, primary_color_alt: s.primary_color_alt,
+    default_theme: s.default_theme || 'dark',
+    portfolio_labels: { ...(s.portfolio_labels || BRANDING_DEFAULTS.portfolio_labels) },
+  };
+}
+// Draft starts as a copy of whatever's currently live the first time anyone
+// opens the tab (nothing to lose by starting from reality), then persists
+// on its own from there via draft_data.
+function initOrgDraft() {
+  ORG_DRAFT = ORG_SETTINGS.draft_data ? { ...liveBrandingSnapshot(), ...ORG_SETTINGS.draft_data } : liveBrandingSnapshot();
+}
+async function saveBrandingDraft(silent) {
+  try {
+    await sbUpsert('org_settings', { id: 'default', draft_data: ORG_DRAFT, draft_updated_at: new Date().toISOString() });
+    ORG_SETTINGS.draft_data = ORG_DRAFT;
+    ORG_SETTINGS.draft_updated_at = new Date().toISOString();
+    if (!silent) showToast('Draft saved — not live yet. Click Publish Branding to apply it Hub-wide.', 'success');
+    renderBrandingDraftStatus();
+  } catch (e) {
+    if (!silent) showToast('Could not save draft: ' + e.message, 'error');
+  }
+}
+async function publishBranding() {
+  if (!requirePermission('edit')) return;
+  const confirmed = await showConfirmDialog('This applies your draft branding Hub-wide, for everyone, immediately. Continue?', { title: '🚀 Publish Branding', confirmLabel: 'Publish', danger: false });
+  if (!confirmed) return;
+  try {
+    await saveOrgSettings({ ...ORG_DRAFT, draft_data: ORG_DRAFT, draft_updated_at: new Date().toISOString() });
+    if (typeof rebuildAll === 'function') rebuildAll();
+    showToast('Published — branding is now live across the Hub.', 'success');
+    renderBrandingDraftStatus();
+  } catch (e) {
+    showToast('Could not publish: ' + e.message, 'error');
+  }
+}
+function resetBrandingToDefaults() {
+  ORG_DRAFT = { ...BRANDING_DEFAULTS, portfolio_labels: { ...BRANDING_DEFAULTS.portfolio_labels } };
+  populateBrandingForm();
+  showToast('Reset to defaults in the draft — not published yet.', 'info');
+}
+function renderBrandingDraftStatus() {
+  const el = document.getElementById('brandDraftStatus');
+  if (!el) return;
+  const draftTime = ORG_SETTINGS.draft_updated_at ? fmtNoteTime(ORG_SETTINGS.draft_updated_at) : null;
+  el.textContent = draftTime ? `Draft autosaved ${draftTime}` : 'No unsaved draft changes';
+}
+
+// ---- Real WCAG 2.1 contrast math (relative luminance formula) -- not a
+// placeholder number. Checked against white text, matching .btn-primary's
+// actual color:white -- the real, most common on-brand-color text pairing
+// used throughout the Hub. ----
+function srgbToLinear(c) { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); }
+function relativeLuminance(hex) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex || '');
+  if (!m) return null;
+  const int = parseInt(m[1], 16);
+  const r = srgbToLinear((int >> 16) & 255), g = srgbToLinear((int >> 8) & 255), b = srgbToLinear(int & 255);
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+function contrastRatio(hexA, hexB) {
+  const lA = relativeLuminance(hexA), lB = relativeLuminance(hexB);
+  if (lA == null || lB == null) return null;
+  const lighter = Math.max(lA, lB), darker = Math.min(lA, lB);
+  return (lighter + 0.05) / (darker + 0.05);
+}
+function computeBrandAccessibility(draft) {
+  const ratio = contrastRatio(draft.primary_color, '#ffffff');
+  if (ratio == null) return { ratio: null, level: 'Invalid color', passesAA: false, passesAAA: false };
+  return {
+    ratio,
+    level: ratio >= 7 ? 'AAA' : ratio >= 4.5 ? 'AA' : ratio >= 3 ? 'AA (large text only)' : 'Fails',
+    passesAA: ratio >= 4.5,
+    passesAAA: ratio >= 7,
+  };
+}
+// Real checklist, not a fixed percentage -- each item is an actual
+// comparison against BRANDING_DEFAULTS, so "Ready" only shows once every
+// customizable field has genuinely been changed from the Niche Inc. default.
+function computeWhiteLabelReadiness(draft) {
+  const checks = [
+    { label: 'Company name customized', ok: draft.company_name && draft.company_name !== BRANDING_DEFAULTS.company_name },
+    { label: 'Product name customized', ok: draft.product_name && draft.product_name !== BRANDING_DEFAULTS.product_name },
+    { label: 'Logo uploaded', ok: !!draft.logo_url },
+    { label: 'Colors customized', ok: draft.primary_color !== BRANDING_DEFAULTS.primary_color || draft.primary_color_alt !== BRANDING_DEFAULTS.primary_color_alt },
+    { label: 'Tier names customized', ok: JSON.stringify(draft.portfolio_labels) !== JSON.stringify(BRANDING_DEFAULTS.portfolio_labels) },
+  ];
+  const passed = checks.filter(c => c.ok).length;
+  return { checks, passed, total: checks.length, ready: passed === checks.length };
 }
 
 // ════════════════════════════════════════════════════════════════════════
