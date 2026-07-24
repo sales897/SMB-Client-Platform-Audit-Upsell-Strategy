@@ -2203,7 +2203,10 @@ tr.pg-hidden-row { display: none; }
 .brand-mark-drop { border: 1px dashed var(--border); border-radius: var(--radius-sm); padding: 20px 12px; text-align: center; cursor: pointer; color: var(--text3); transition: border-color var(--transition-slow); }
 .brand-mark-drop:hover { border-color: var(--orange); color: var(--text2); }
 .brand-tokens-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 6px; }
-.brand-token-swatch { border-radius: var(--radius-xs); height: 32px; border: 1px solid var(--border); margin-bottom: 4px; }
+.brand-token-swatch { border-radius: var(--radius-xs); height: 32px; border: 1px solid var(--border); margin-bottom: 4px; transition: transform var(--transition-slow), box-shadow var(--transition-slow); }
+.brand-token-swatch:hover { transform: scale(1.04); box-shadow: 0 0 0 2px var(--orange); }
+.brand-token-reset { position: absolute; top: -5px; right: -5px; width: 15px; height: 15px; border-radius: 50%; background: var(--bg); border: 1px solid var(--border); color: var(--text3); font-size: 9px; display: flex; align-items: center; justify-content: center; }
+.brand-token-reset:hover { color: var(--red); }
 .brand-token-label { font-size: 9px; color: var(--text3); text-align: center; }
 .brand-action-bar { display: flex; align-items: center; justify-content: space-between; padding-top: var(--space-4); border-top: 1px solid var(--border); }
 .brand-acc-row { display: flex; align-items: center; justify-content: space-between; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-xs); padding: 10px 14px; }
@@ -5834,6 +5837,7 @@ select.wfb-field-input { padding-right: 26px; }
               <div>
                 <div class="field-label">Design Tokens</div>
                 <div id="brandDesignTokens" class="brand-tokens-grid"></div>
+                <input type="color" id="brandTokenColorPickerInput" style="position:absolute;width:1px;height:1px;opacity:0;pointer-events:none" onchange="commitBrandTokenPick(this.value)">
               </div>
               <div>
                 <div class="field-label">Typography</div>
@@ -12331,18 +12335,55 @@ function renderBrandStudioPreview() {
       </div>
     </div>`;
 }
+const BRAND_TOKEN_VAR_MAP = { bg: '--bg', bg2: '--bg2', border: '--border', text: '--text', text3: '--text3', green: '--green' };
+function getBrandTokenColor(key) {
+  const override = ORG_DRAFT.token_overrides && ORG_DRAFT.token_overrides[key];
+  if (override) return override;
+  return getComputedStyle(document.documentElement).getPropertyValue(BRAND_TOKEN_VAR_MAP[key]).trim();
+}
+let brandTokenPickerKey = null;
+function openBrandTokenPicker(key) {
+  brandTokenPickerKey = key;
+  const input = document.getElementById('brandTokenColorPickerInput');
+  input.value = getBrandTokenColor(key);
+  input.click();
+}
+function commitBrandTokenPick(value) {
+  if (!brandTokenPickerKey) return;
+  ORG_DRAFT.token_overrides = ORG_DRAFT.token_overrides || {};
+  ORG_DRAFT.token_overrides[brandTokenPickerKey] = value;
+  renderAllBrandDerivedViews();
+}
+function resetBrandToken(key) {
+  if (ORG_DRAFT.token_overrides) delete ORG_DRAFT.token_overrides[key];
+  renderAllBrandDerivedViews();
+}
 function renderBrandDesignTokens() {
   const el = document.getElementById('brandDesignTokens');
   if (!el) return;
   const d = ORG_DRAFT;
-  const cs = getComputedStyle(document.documentElement);
   const tokens = [
-    ['Primary', d.primary_color], ['Secondary', d.primary_color_alt],
-    ['Background', cs.getPropertyValue('--bg').trim()], ['Surface', cs.getPropertyValue('--bg2').trim()],
-    ['Border', cs.getPropertyValue('--border').trim()], ['Text Primary', cs.getPropertyValue('--text').trim()],
-    ['Text Muted', cs.getPropertyValue('--text3').trim()], ['Success', cs.getPropertyValue('--green').trim()],
+    { key: null, pickKey: 'primary_color', label: 'Primary', color: d.primary_color },
+    { key: null, pickKey: 'primary_color_alt', label: 'Secondary', color: d.primary_color_alt },
+    { key: 'bg', label: 'Background', color: getBrandTokenColor('bg') },
+    { key: 'bg2', label: 'Surface', color: getBrandTokenColor('bg2') },
+    { key: 'border', label: 'Border', color: getBrandTokenColor('border') },
+    { key: 'text', label: 'Text Primary', color: getBrandTokenColor('text') },
+    { key: 'text3', label: 'Text Muted', color: getBrandTokenColor('text3') },
+    { key: 'green', label: 'Success', color: getBrandTokenColor('green') },
   ];
-  el.innerHTML = tokens.map(([label, color]) => `<div><div class="brand-token-swatch" style="background:${color}"></div><div class="brand-token-label">${label}<br>${escAttr(color)}</div></div>`).join('');
+  el.innerHTML = tokens.map(t => {
+    const overridden = t.key && ORG_DRAFT.token_overrides && ORG_DRAFT.token_overrides[t.key];
+    const clickHandler = t.key
+      ? `openBrandTokenPicker('${t.key}')`
+      : `document.getElementById('${t.pickKey === 'primary_color' ? 'brandPrimaryColor' : 'brandPrimaryColorAlt'}').click()`;
+    return `<div>
+      <div class="brand-token-swatch" style="background:${t.color};cursor:pointer;position:relative" onclick="${clickHandler}" title="Click to change">
+        ${overridden ? `<span onclick="event.stopPropagation();resetBrandToken('${t.key}')" class="brand-token-reset" title="Reset to theme default">✕</span>` : ''}
+      </div>
+      <div class="brand-token-label">${t.label}<br>${escAttr(t.color)}</div>
+    </div>`;
+  }).join('');
 }
 function populateBrandFontSelects() {
   const dSel = document.getElementById('brandFontDisplaySelect');
@@ -25672,6 +25713,12 @@ const AI_AGENT_TOOLS = [
         primary_color_alt: { type: 'string', description: 'Hex color, e.g. #f2772e' },
         font_display: { type: 'string', enum: ['Bricolage Grotesque', 'Inter', 'Poppins', 'Space Grotesk', 'Sora', 'Manrope', 'Plus Jakarta Sans', 'Outfit', 'DM Sans', 'Playfair Display'] },
         font_mono: { type: 'string', enum: ['JetBrains Mono', 'Fira Code', 'IBM Plex Mono', 'Space Mono', 'Roboto Mono'] },
+        token_background: { type: 'string', description: 'Hex color override for the Background design token' },
+        token_surface: { type: 'string', description: 'Hex color override for the Surface design token' },
+        token_border: { type: 'string', description: 'Hex color override for the Border design token' },
+        token_text_primary: { type: 'string', description: 'Hex color override for the Text Primary design token' },
+        token_text_muted: { type: 'string', description: 'Hex color override for the Text Muted design token' },
+        token_success: { type: 'string', description: 'Hex color override for the Success design token' },
         tier_smb_label: { type: 'string' },
         tier_whitelabel_label: { type: 'string' },
         tier_support_label: { type: 'string' },
@@ -26446,6 +26493,14 @@ async function executeAiTool(name, input) {
         if (!FONT_MONO_OPTIONS.some(f => f.name === input.font_mono)) return { error: `"${input.font_mono}" isn't one of the available mono fonts. Valid options: ${FONT_MONO_OPTIONS.map(f => f.name).join(', ')}.` };
         ORG_DRAFT.font_mono = input.font_mono; ensureGoogleFontLoaded(input.font_mono, FONT_MONO_OPTIONS); changed.push('font_mono');
       }
+      const tokenInputMap = { token_background: 'bg', token_surface: 'bg2', token_border: 'border', token_text_primary: 'text', token_text_muted: 'text3', token_success: 'green' };
+      Object.entries(tokenInputMap).forEach(([inputKey, tokenKey]) => {
+        if (input[inputKey]) {
+          ORG_DRAFT.token_overrides = ORG_DRAFT.token_overrides || {};
+          ORG_DRAFT.token_overrides[tokenKey] = input[inputKey];
+          changed.push(`token_overrides.${tokenKey}`);
+        }
+      });
       const tierMap = { tier_smb_label: 'smb', tier_whitelabel_label: 'whitelabel', tier_support_label: 'support' };
       Object.entries(tierMap).forEach(([inputKey, tierKey]) => {
         if (input[inputKey]) { ORG_DRAFT.portfolio_labels = { ...ORG_DRAFT.portfolio_labels, [tierKey]: input[inputKey] }; changed.push(`portfolio_labels.${tierKey}`); }
@@ -28195,6 +28250,15 @@ function applyOrgBranding() {
     ensureGoogleFontLoaded(s.font_mono, FONT_MONO_OPTIONS);
     document.documentElement.style.setProperty('--font-mono', fontStack(s.font_mono, FONT_MONO_OPTIONS));
   }
+  // Design token overrides — Background/Surface/Border/Text Primary/Text
+  // Muted/Success. Empty/missing means "leave the current theme's own
+  // color alone"; only keys actually present get repointed.
+  const tokenVarMap = { bg: '--bg', bg2: '--bg2', border: '--border', text: '--text', text3: '--text3', green: '--green' };
+  if (s.token_overrides) {
+    Object.entries(s.token_overrides).forEach(([key, hex]) => {
+      if (hex && tokenVarMap[key]) document.documentElement.style.setProperty(tokenVarMap[key], hex);
+    });
+  }
 }
 async function saveOrgSettings(patch) {
   const payload = { id: 'default', updated_at: new Date().toISOString(), updated_by: (typeof CURRENT_AUTH_USER !== 'undefined' && CURRENT_AUTH_USER) ? CURRENT_AUTH_USER.email : null, ...patch };
@@ -28216,6 +28280,7 @@ const BRANDING_DEFAULTS = {
   company_name: 'Niche Inc.', product_name: 'The HUB', logo_url: null, brand_mark_url: null, favicon_url: null,
   primary_color: '#e2541f', primary_color_alt: '#f2772e', default_theme: 'dark',
   font_display: 'Bricolage Grotesque', font_mono: 'JetBrains Mono',
+  token_overrides: {},
   portfolio_labels: { smb: 'SMB', whitelabel: 'White Label', support: 'Support' },
 };
 let ORG_DRAFT = { ...BRANDING_DEFAULTS };
@@ -28270,6 +28335,7 @@ function liveBrandingSnapshot() {
     primary_color: s.primary_color, primary_color_alt: s.primary_color_alt,
     default_theme: s.default_theme || 'dark',
     font_display: s.font_display || BRANDING_DEFAULTS.font_display, font_mono: s.font_mono || BRANDING_DEFAULTS.font_mono,
+    token_overrides: s.token_overrides || {},
     portfolio_labels: { ...(s.portfolio_labels || BRANDING_DEFAULTS.portfolio_labels) },
   };
 }
@@ -28304,7 +28370,7 @@ async function publishBranding() {
   }
 }
 function resetBrandingToDefaults() {
-  ORG_DRAFT = { ...BRANDING_DEFAULTS, portfolio_labels: { ...BRANDING_DEFAULTS.portfolio_labels } };
+  ORG_DRAFT = { ...BRANDING_DEFAULTS, portfolio_labels: { ...BRANDING_DEFAULTS.portfolio_labels }, token_overrides: {} };
   populateBrandingForm();
   showToast('Reset to defaults in the draft — not published yet.', 'info');
 }
