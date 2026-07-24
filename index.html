@@ -1850,7 +1850,7 @@ tr.pg-hidden-row { display: none; }
 .btn-sm { padding: 6px 12px; font-size: 11px; }
 .btn:disabled { opacity: .4; cursor: not-allowed; }
 .modal.wide { width: 820px; }
-.modal.xwide { width: 1040px; padding: var(--space-5); max-height: 96vh; }
+.modal.xwide { width: 1040px; }
 .cnt-columns { display: grid; grid-template-columns: 1.15fr 1fr; gap: 24px; }
 .cnt-column-scroll { max-height: 46vh; overflow-y: auto; padding-right: 6px; }
 .cnt-column-divider { border-left: 1px solid var(--border); padding-left: 24px; }
@@ -2046,7 +2046,7 @@ tr.pg-hidden-row { display: none; }
   50% { box-shadow: 0 0 0 6px rgba(239,68,68,0); }
 }
 .cnt-section-title { font-size: 13px; font-weight: 800; color: var(--text); margin-bottom: 10px; }
-.cnt-divider { height: 1px; background: var(--border); margin: 14px 0; }
+.cnt-divider { height: 1px; background: var(--border); margin: 20px 0; }
 .smart-paste-box {
   background: rgba(226,84,31,.05); border: 1px dashed rgba(226,84,31,.35); border-radius: var(--radius-sm);
   padding: 12px 14px; margin-bottom: 16px;
@@ -2695,6 +2695,11 @@ tr.pg-hidden-row { display: none; }
 .wfb-tab-close:hover { opacity: 1 !important; background: var(--bg4); }
 .wfb-tab-new { flex-shrink: 0; width: 28px; height: 32px; display: flex; align-items: center; justify-content: center; color: var(--text3); cursor: pointer; border-radius: var(--radius-sm); }
 .wfb-tab-new:hover { color: var(--orange); background: var(--bg2); }
+.wf-toggle { position: relative; width: 24px; height: 13px; border-radius: 999px; background: var(--bg4); flex-shrink: 0; cursor: pointer; transition: background-color var(--transition-slow); }
+.wf-toggle::after { content: ''; position: absolute; top: 2px; left: 2px; width: 9px; height: 9px; border-radius: 50%; background: var(--text3); transition: transform var(--transition-slow), background-color var(--transition-slow); }
+.wf-toggle.is-on { background: rgba(34,197,94,.28); }
+.wf-toggle.is-on::after { transform: translateX(11px); background: var(--green); }
+.wf-toggle.is-disabled { cursor: not-allowed; opacity: .45; }
 .wfb-workflow-name { font-weight: 700; color: var(--text); font-size: var(--font-sm); }
 .wfb-autosave { font-size: var(--font-2xs); color: var(--text3); }
 .wfb-canvas-controls { margin-left: auto; display: flex; gap: 4px; }
@@ -21043,12 +21048,15 @@ async function rebuildWorkflowsPage() {
 function renderWfbTabs() {
   const bar = document.getElementById('wfbTabsBar');
   if (!bar) return;
-  bar.innerHTML = WORKFLOWS.map(w => `
-    <div class="wfb-tab${w.id === currentWorkflowGraphId ? ' active' : ''}" onclick="switchWfbWorkflowTab('${w.id}')" title="${escAttr(w.name)} — ${w.active ? 'Active' : 'Inactive'}">
-      <span class="status-dot ${w.active ? 'active' : 'inactive'}"></span>
+  bar.innerHTML = WORKFLOWS.map(w => {
+    const published = w.status === 'published';
+    const toggleTitle = published ? (w.active ? 'Pause this workflow' : 'Resume this workflow') : 'Publish this workflow first to activate it';
+    return `<div class="wfb-tab${w.id === currentWorkflowGraphId ? ' active' : ''}" onclick="switchWfbWorkflowTab('${w.id}')" title="${escAttr(w.name)} — ${w.active ? 'Active' : 'Inactive'}">
+      <div class="wf-toggle${w.active ? ' is-on' : ''}${published ? '' : ' is-disabled'}" onclick="toggleWorkflowActiveFromTab('${w.id}', event)" title="${toggleTitle}"></div>
       <span class="wfb-tab-label">${escAttr(w.name || 'Untitled')}</span>
       <span class="wfb-tab-close" onclick="event.stopPropagation();confirmDeleteWfbWorkflowTab('${w.id}')" title="Delete this workflow">${hubIcon('close', 10)}</span>
-    </div>`).join('') + `<div class="wfb-tab-new" onclick="createNewWfbWorkflow()" title="New workflow">${hubIcon('plus', 14)}</div>`;
+    </div>`;
+  }).join('') + `<div class="wfb-tab-new" onclick="createNewWfbWorkflow()" title="New workflow">${hubIcon('plus', 14)}</div>`;
 }
 async function switchWfbWorkflowTab(workflowId) {
   if (workflowId === currentWorkflowGraphId) return;
@@ -22673,19 +22681,32 @@ async function commitWorkflowSave(status) {
 // still finished and correct -- pausing isn't "back to draft," it's "stop
 // running for now." This patches just the active column, independent of
 // status, so a paused workflow stays marked Published.
+// Shared by the per-tab toggle and the canvas status-bar Pause/Resume
+// button -- one code path, so both always agree and neither can silently
+// activate a draft (broken/unconnected nodes can't safely run).
+async function setWorkflowActive(workflowId, nextActive) {
+  if (!requirePermission('edit')) return false;
+  const wf = WORKFLOWS.find(w => w.id === workflowId);
+  if (!wf) return false;
+  if (nextActive && wf.status !== 'published') { showToast('Publish this workflow first — a draft can\'t run.', 'warning'); return false; }
+  try { await sbPatch('workflows', `id=eq.${wf.id}`, { active: nextActive }); }
+  catch(e) { showToast('Could not update: ' + e.message, 'error'); return false; }
+  wf.active = nextActive;
+  renderWfbTabs();
+  if (workflowId === currentWorkflowGraphId) setWfbActiveIndicator(wf.active, wf.status);
+  showToast(wf.active ? '▸ Workflow resumed.' : '⏸ Workflow paused — it won\'t run until resumed.', 'success');
+  return true;
+}
 async function toggleCurrentWorkflowActive() {
-  if (!requirePermission('edit')) return;
   const wf = WORKFLOWS.find(w => w.id === currentWorkflowGraphId);
   if (!wf) return;
-  if (wf.status !== 'published') { showToast('Publish this workflow first — a draft can\'t run.', 'warning'); return; }
-  const nextActive = !wf.active;
-  try {
-    await sbPatch('workflows', `id=eq.${wf.id}`, { active: nextActive });
-  } catch(e) { showToast('Could not update: ' + e.message, 'error'); return; }
-  wf.active = nextActive;
-  setWfbActiveIndicator(wf.active, wf.status);
-  renderWfbTabs();
-  showToast(wf.active ? '▸ Workflow resumed.' : '⏸ Workflow paused — it won\'t run until resumed.', 'success');
+  await setWorkflowActive(wf.id, !wf.active);
+}
+async function toggleWorkflowActiveFromTab(workflowId, event) {
+  event.stopPropagation(); // don't also switch tabs when just flipping the toggle
+  const wf = WORKFLOWS.find(w => w.id === workflowId);
+  if (!wf) return;
+  await setWorkflowActive(workflowId, !wf.active);
 }
 function setWfbActiveIndicator(active, status) {
   const dot = document.getElementById('wfbActiveDot');
