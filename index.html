@@ -905,6 +905,7 @@ body.ai-panel-open .main {
 .hub-dt-day.selected { background: var(--orange); color: #fff; font-weight: 600; }
 .hub-dt-time-row { display: flex; gap: 4px; margin-bottom: 10px; }
 .hub-dt-time-row select { height: 30px; font-size: 12px; padding: 0 4px; }
+.hub-dt-time-row .themed-select-btn { min-height: 30px; font-size: 12px; padding: 0 8px; }
 .hub-dt-actions { display: flex; justify-content: flex-end; gap: 6px; }
 
 .pm-tab {
@@ -975,6 +976,10 @@ body.ai-panel-open .main {
 }
 .onboarding-waiting-select.set-client { border-color: var(--purple); color: var(--purple); }
 .onboarding-waiting-select.set-team { border-color: var(--blue); color: var(--blue); }
+.onboarding-card-footer .themed-select { margin-left: auto; max-width: 92px; }
+.onboarding-card-footer .themed-select-btn { font-size: 9.5px; min-height: auto; padding: 2px 4px; background: var(--bg3); }
+.onboarding-card-footer .themed-select-btn.set-client { border-color: var(--purple); color: var(--purple); }
+.onboarding-card-footer .themed-select-btn.set-team { border-color: var(--blue); color: var(--blue); }
 
 .onboarding-layout { display: flex; gap: 16px; align-items: flex-start; }
 .onboarding-main { flex: 1; min-width: 0; }
@@ -3090,6 +3095,9 @@ select.wfb-field-input { padding-right: 26px; }
         <div class="nav-item" onclick="showPage('textagent')">
           <span class="icon" data-icon="chat"></span> Text Agent
         </div>
+        <div class="nav-item" onclick="showPage('businesshealth')">
+          <span class="icon" data-icon="chart"></span> Business Health
+        </div>
       </div>
     </div>
 
@@ -3697,7 +3705,7 @@ select.wfb-field-input { padding-right: 26px; }
         </div>
         <div class="mc-table-pagination">
           <span>Rows per page:</span>
-          <select onchange="setClientTableRowsPerPage('smb', this.value)">
+          <select id="rowsPerPage-smb" onchange="setClientTableRowsPerPage('smb', this.value)">
             <option value="10">10</option>
             <option value="25">25</option>
             <option value="50">50</option>
@@ -3900,7 +3908,7 @@ select.wfb-field-input { padding-right: 26px; }
         </div>
         <div class="mc-table-pagination">
           <span>Rows per page:</span>
-          <select onchange="setClientTableRowsPerPage('whitelabel', this.value)">
+          <select id="rowsPerPage-whitelabel" onchange="setClientTableRowsPerPage('whitelabel', this.value)">
             <option value="10">10</option>
             <option value="25">25</option>
             <option value="50">50</option>
@@ -4334,6 +4342,84 @@ select.wfb-field-input { padding-right: 26px; }
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════════
+       PAGE: BUSINESS HEALTH FRAMEWORK
+  ════════════════════════════════════════════════════════════════════════ -->
+  <div class="page" id="page-businesshealth">
+    <div class="int-stat-bar" id="bhStatBar"></div>
+
+    <div class="card brand-section-card" style="margin-bottom:var(--space-5)">
+      <div class="card-header" style="margin-bottom:var(--space-3)">
+        <div><div class="card-title">Customer Inventory</div><div class="card-sub" id="bhInventoryCountSub">0 organizations</div></div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="bhInventorySearch" class="field-input" placeholder="Search organizations…" style="height:32px;width:180px;margin-bottom:0" oninput="onBhInventoryFilterChange()">
+          <select id="bhStatusFilter" class="field-select" style="height:32px" onchange="onBhInventoryFilterChange()">
+            <option value="all">All Statuses</option>
+            <option value="trial">Trial</option>
+            <option value="active">Active</option>
+            <option value="complimentary">Complimentary</option>
+            <option value="cancelled">Cancelled</option>
+            <option value="internal">Internal</option>
+          </select>
+          <select id="bhPortfolioFilter" class="field-select" style="height:32px" onchange="onBhInventoryFilterChange()">
+            <option value="all">All Portfolios</option>
+            <option value="smb">SMB</option>
+            <option value="whitelabel">White Label</option>
+            <option value="support">Support</option>
+          </select>
+        </div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="pill-rows" style="width:100%">
+          <thead><tr>
+            <th style="text-align:left;padding-left:var(--space-3)">Organization</th>
+            <th style="text-align:left">Status</th>
+            <th style="text-align:left">Owner</th>
+            <th style="text-align:left">Billing</th>
+            <th style="text-align:left">Last Activity</th>
+            <th>Monthly Rate</th>
+            <th></th>
+          </tr></thead>
+          <tbody id="bhInventoryBody"></tbody>
+        </table>
+      </div>
+      <div id="bhInventoryPagination" style="display:flex;justify-content:center;gap:6px;margin-top:12px"></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);margin-bottom:var(--space-5);align-items:start">
+      <div class="card brand-section-card">
+        <div class="card-title" style="font-size:13px">Reconciliation</div>
+        <div class="card-sub" style="font-size:11px;margin-bottom:8px">Documenting what doesn't line up — not forcing the data to fit.</div>
+        <div id="bhReconciliationList"></div>
+      </div>
+      <div class="card brand-section-card">
+        <div class="card-title" style="font-size:13px">Working Definitions</div>
+        <div class="card-sub" style="font-size:11px;margin-bottom:8px">Common language for the whole team, so reporting means the same thing to everyone.</div>
+        <div id="bhDefinitionsList"></div>
+      </div>
+    </div>
+
+    <div class="card brand-section-card" style="margin-bottom:var(--space-5)">
+      <div class="card-title" style="font-size:13px">Customer Health</div>
+      <div class="int-stat-bar" id="bhCustomerHealthBar" style="margin-top:8px"></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);margin-bottom:var(--space-5);align-items:start">
+      <div class="card brand-section-card">
+        <div class="card-title" style="font-size:13px">Revenue</div>
+        <div class="card-sub" style="font-size:11px;margin-bottom:8px" id="bhRevenueSub">Based on manually-entered monthly rates.</div>
+        <div id="bhRevenuePanel"></div>
+      </div>
+      <div class="card brand-section-card">
+        <div class="card-title" style="font-size:13px">Platform Adoption</div>
+        <div class="card-sub" style="font-size:11px;margin-bottom:8px">Workflow runs and AI actions — real client usage of the Niche platform itself.</div>
+        <div id="bhAdoptionPanel"></div>
+      </div>
+    </div>
+
+    <div class="page-footer"><span class="org-brand-inline">The HUB · Niche Inc.</span> · Business Health Framework</div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
        PAGE 5: SUPPORT DASHBOARD
   ════════════════════════════════════════════════════════════════════════ -->
   <div class="page" id="page-support">
@@ -4439,7 +4525,7 @@ select.wfb-field-input { padding-right: 26px; }
         </div>
         <div class="mc-table-pagination">
           <span>Rows per page:</span>
-          <select onchange="setClientTableRowsPerPage('support', this.value)">
+          <select id="rowsPerPage-support" onchange="setClientTableRowsPerPage('support', this.value)">
             <option value="10">10</option>
             <option value="25">25</option>
             <option value="50">50</option>
@@ -6886,6 +6972,7 @@ const pageMeta = {
   support:    { title: 'Support Dashboard',    sub: 'Open tickets & resolution metrics' },
   voice:      { title: 'Voice Agent',          sub: 'Performance & activity flags' },
   textagent:  { title: 'Text Agent',           sub: 'Performance & messaging metrics' },
+  businesshealth: { title: 'Business Health',  sub: 'Customer inventory, reconciliation, and company-wide metrics' },
   upsell:     { title: 'Goals',      sub: 'Monthly targets, weekly execution, and AI-assisted tracking' },
   action:     { title: 'SuccessOS', sub: 'The operating system for Client Success — playbooks, SOPs, KPIs, reporting, and coaching, all in one' },
   workflows:  { title: 'Workflows', sub: 'Automate the busywork — inactivity alerts and scheduled recurring tasks' },
@@ -6988,10 +7075,12 @@ function showPage(id) {
   // Onboarding's pipeline picker + Pipelines/New Onboarding buttons -- same
   // shared-topbar approach, only shown while the Onboarding page is open.
   const onboardingPipelineSelect = document.getElementById('onboardingPipelineSelect');
+  const onboardingPipelineSelectWrap = document.getElementById('ts-wrap-onboardingPipelineSelect');
   const onboardingPipelinesBtn = document.getElementById('topbarOnboardingPipelinesBtn');
   const newOnboardingBtn = document.getElementById('topbarNewOnboardingBtn');
   const onOnboardingPage = id === 'onboarding';
   if (onboardingPipelineSelect) onboardingPipelineSelect.style.display = onOnboardingPage ? '' : 'none';
+  if (onboardingPipelineSelectWrap) onboardingPipelineSelectWrap.style.display = onOnboardingPage ? '' : 'none';
   if (onboardingPipelinesBtn) onboardingPipelinesBtn.style.display = onOnboardingPage ? '' : 'none';
   if (newOnboardingBtn) newOnboardingBtn.style.display = onOnboardingPage ? '' : 'none';
 
@@ -6999,6 +7088,7 @@ function showPage(id) {
   // shared-topbar approach, only shown while the Goals page is open.
   const goalsMonthFilterEl = document.getElementById('goalsMonthNav');
   const goalsPortfolioFilterEl = document.getElementById('goalsPortfolioFilter');
+  const goalsPortfolioFilterWrap = document.getElementById('ts-wrap-goalsPortfolioFilter');
   const goalsUploadBtn = document.getElementById('topbarGoalsUploadBtn');
   const goalsSmartPasteBtn = document.getElementById('topbarGoalsSmartPasteBtn');
   const goalsExportBtn = document.getElementById('topbarGoalsExportBtn');
@@ -7007,6 +7097,7 @@ function showPage(id) {
   const onGoalsPage = id === 'upsell';
   if (goalsMonthFilterEl) goalsMonthFilterEl.style.display = onGoalsPage ? '' : 'none';
   if (goalsPortfolioFilterEl) goalsPortfolioFilterEl.style.display = onGoalsPage ? '' : 'none';
+  if (goalsPortfolioFilterWrap) goalsPortfolioFilterWrap.style.display = onGoalsPage ? '' : 'none';
   if (goalsUploadBtn) goalsUploadBtn.style.display = onGoalsPage ? '' : 'none';
   if (goalsSmartPasteBtn) goalsSmartPasteBtn.style.display = onGoalsPage ? '' : 'none';
   if (goalsExportBtn) goalsExportBtn.style.display = onGoalsPage ? '' : 'none';
@@ -7015,6 +7106,7 @@ function showPage(id) {
 
   if (id === 'home') rebuildHomePage();
   if (id === 'voice') rebuildVoicePage();
+  if (id === 'businesshealth') rebuildBusinessHealthPage();
   if (id === 'textagent') rebuildTextAgentPage();
   if (id === 'upsell') rebuildGoalsPage();
   if (id === 'settings') renderGoogleCalendarStatus();
@@ -9226,6 +9318,7 @@ async function loadVoiceAgentInsights() {
 }
 function rebuildVoicePage() {
   if (!document.getElementById('page-voice')) return;
+  themifySelect('vaSmartFilterPortfolio', { fullWidth: true });
   const all = getAllClientsWithPortfolio();
   const totalClients = all.length;
   const using = all.filter(x => x.client.voice_agent);
@@ -9490,6 +9583,8 @@ async function loadTextAgentInsights() {
 }
 function rebuildTextAgentPage() {
   if (!document.getElementById('page-textagent')) return;
+  themifySelect('taSmartFilterPortfolioSelect', { fullWidth: true });
+  themifySelect('taSmartFilterProductSelect', { fullWidth: true });
   const portfolios = ['smb', 'whitelabel', 'support'];
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
   const setHTML = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
@@ -10900,6 +10995,8 @@ function rebuildOrgFilter(pk) {
     orgs.map(o => `<option value="${escAttr(o)}">${escAttr(o)} (${orgCounts[o]} locations)</option>`).join('');
   if (orgs.includes(prevVal)) sel.value = prevVal;
   else { activeOrgFilters[pk] = ''; sel.value = ''; }
+  themifySelect('orgFilter-' + pk);
+  themifySelect('rowsPerPage-' + pk);
   const multilocEl = document.getElementById('kpi-' + pk + '-multiloc');
   if (multilocEl) multilocEl.textContent = orgs.length;
   renderOrgRollup(pk);
@@ -12341,7 +12438,7 @@ function renderIntTileHtml(tile, ctx) {
 // select's options get rebuilt dynamically (removes its own previous
 // wrapper first rather than stacking a second one).
 // ════════════════════════════════════════════════════════════════════════
-function themifySelect(selectId) {
+function themifySelect(selectId, { fullWidth = false } = {}) {
   const select = document.getElementById(selectId);
   if (!select || select.tagName !== 'SELECT') return;
   const existingWrap = document.getElementById(`ts-wrap-${selectId}`);
@@ -12352,9 +12449,15 @@ function themifySelect(selectId) {
   wrap.className = 'themed-select';
   wrap.id = `ts-wrap-${selectId}`;
   // Match whatever sizing the hidden select already had, so swapping it in
-  // doesn't reflow the layout around it.
+  // doesn't reflow the layout around it. `fullWidth` is an explicit opt-in
+  // for selects that were relying on the base stylesheet's width:100% (e.g.
+  // stacked form fields in a modal) -- NOT a blanket default, since a select
+  // sitting in a flex row (like the Team Role Filter) depends on natural
+  // shrink-to-fit sizing instead, and forcing width:100% there would stretch
+  // it to fill the row instead of sizing to its content.
   if (select.style.height) wrap.style.height = select.style.height;
   if (select.style.width) wrap.style.width = select.style.width;
+  else if (fullWidth) wrap.style.width = '100%';
 
   const selected = select.options[select.selectedIndex];
   wrap.innerHTML = `
@@ -12363,7 +12466,7 @@ function themifySelect(selectId) {
       <span class="themed-select-caret">▾</span>
     </button>
     <div class="themed-select-panel" id="ts-panel-${selectId}" style="display:none">
-      ${Array.from(select.options).map(o => `<div class="themed-select-option${o.value === select.value ? ' active' : ''}" data-value="${escAttr(o.value)}" onclick="pickThemedSelect('${selectId}', '${String(o.value).replace(/\\/g, '\\\\').replace(/'/g, "\\'")}')">${escAttr(o.text)}</div>`).join('')}
+      ${Array.from(select.options).map(o => `<div class="themed-select-option${o.value === select.value ? ' active' : ''}" data-value="${escAttr(o.value)}" onclick="pickThemedSelect('${selectId}', '${String(o.value).replace(/\\/g, '\\\\').replace(/'/g, "\\'")}', event)">${escAttr(o.text)}</div>`).join('')}
     </div>`;
   select.insertAdjacentElement('afterend', wrap);
 }
@@ -12373,7 +12476,8 @@ function toggleThemedSelect(selectId, event) {
   const panel = document.getElementById(`ts-panel-${selectId}`);
   if (panel) panel.style.display = panel.style.display === 'none' ? '' : 'none';
 }
-function pickThemedSelect(selectId, value) {
+function pickThemedSelect(selectId, value, event) {
+  if (event) event.stopPropagation();
   const select = document.getElementById(selectId);
   const label = document.getElementById(`ts-label-${selectId}`);
   const panel = document.getElementById(`ts-panel-${selectId}`);
@@ -12663,6 +12767,8 @@ function renderBrandTypography() {
   const mSel = document.getElementById('brandFontMonoSelect');
   if (dSel) dSel.value = d.font_display || BRANDING_DEFAULTS.font_display;
   if (mSel) mSel.value = d.font_mono || BRANDING_DEFAULTS.font_mono;
+  themifySelect('brandFontDisplaySelect', { fullWidth: true });
+  themifySelect('brandFontMonoSelect', { fullWidth: true });
   // Make sure whatever's currently selected is actually loaded -- covers
   // the case of reopening a draft that already had a non-default font picked.
   ensureGoogleFontLoaded(d.font_display || BRANDING_DEFAULTS.font_display, FONT_DISPLAY_OPTIONS);
@@ -12990,6 +13096,7 @@ function renderDqTrendChart() {
 }
 
 function renderDqClustersTable() {
+  if (!document.getElementById('ts-wrap-dqRiskFilter')) themifySelect('dqRiskFilter');
   const listEl = document.getElementById('dqClustersList');
   const countSub = document.getElementById('dqClusterCountSub');
   const pagEl = document.getElementById('dqClusterPagination');
@@ -13487,6 +13594,7 @@ async function removeTeamMember(id) {
 
 function renderTeamUI() {
   if (!document.getElementById('ts-wrap-teamRoleFilter')) themifySelect('teamRoleFilter');
+  themifySelect('newMemberRole', { fullWidth: true });
   const list = document.getElementById('teamMembersList');
   const countSub = document.getElementById('teamCountSub');
   if (countSub) countSub.textContent = `${TEAM_MEMBERS.length} ${TEAM_MEMBERS.length === 1 ? 'person' : 'people'}`;
@@ -13810,6 +13918,7 @@ function addAdSpendBusiness() {
   ['asName','asBudget','asWatermark','asAddons','asStartDate','asRecs'].forEach(id => document.getElementById(id).value = '');
   refreshHubDtTrigger('asStartDate', 'date');
   document.getElementById('asPromo').value = 'Yes';
+  themifySelect('asPromo', { fullWidth: true });
   rebuildAdSpendPage();
 }
 
@@ -13825,6 +13934,7 @@ function openEditAdSpendModal(id) {
   document.getElementById('asEditStartDate').value = b.startDate;
   refreshHubDtTrigger('asEditStartDate', 'date');
   document.getElementById('asEditPromo').value = b.promo;
+  themifySelect('asEditPromo', { fullWidth: true });
   document.getElementById('asEditAddons').value = b.addons.join(', ');
   document.getElementById('asEditRecs').value = b.recs;
   document.getElementById('editAdSpendModal').classList.add('open');
@@ -13945,6 +14055,7 @@ function fmtDateTime(d) {
 function promoPillClass(p) { return p === 'Yes' ? 'yes' : p === 'Already Using' ? 'using' : 'no'; }
 
 function rebuildAdSpendPage() {
+  if (!document.getElementById('ts-wrap-asPromo')) themifySelect('asPromo', { fullWidth: true });
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
   set('as-total', AD_SPEND_BUSINESSES.length);
   set('as-budget', fmtMoney(AD_SPEND_BUSINESSES.reduce((s, b) => s + (b.budget || 0), 0)));
@@ -14200,9 +14311,10 @@ function renderAdSpendMappingModal() {
     return `<tr>
       <td class="col-header">${h}</td>
       <td class="col-sample">${sample}</td>
-      <td><select data-idx="${i}" onchange="onAdSpendMappingChange(this)">${options(mapping[i])}</select></td>
+      <td><select id="as-mapping-${i}" data-idx="${i}" onchange="onAdSpendMappingChange(this)">${options(mapping[i])}</select></td>
     </tr>`;
   }).join('');
+  headers.forEach((h, i) => themifySelect(`as-mapping-${i}`, { fullWidth: true }));
   document.getElementById('asMappingWarning').style.display = 'none';
 }
 
@@ -14287,12 +14399,13 @@ function renderAdSpendDuplicatesReview() {
     dupList.innerHTML = dups.map((d,i) => `
       <div class="dup-row">
         <div class="dup-name">${escAttr(d.name)}<span class="dup-sub">Already in Ad Spend Management — choose what to do</span></div>
-        <select onchange="setAdSpendDupAction(${i}, this.value)" style="width:220px">
+        <select id="as-dup-${i}" onchange="setAdSpendDupAction(${i}, this.value)" style="width:220px">
           <option value="replace" ${d.action === 'replace' ? 'selected' : ''}><span class="icon" data-icon="refresh" data-icon-size="13"></span> Replace existing record</option>
           <option value="skip" ${d.action === 'skip' ? 'selected' : ''}>⏭️ Skip — keep existing as-is</option>
           <option value="both" ${d.action === 'both' ? 'selected' : ''}><span class="icon" data-icon="plus" data-icon-size="12"></span> Keep both (add as new)</option>
         </select>
       </div>`).join('');
+    dups.forEach((d, i) => themifySelect(`as-dup-${i}`));
   }
 }
 
@@ -15191,7 +15304,7 @@ function renderBulkReconcileReview() {
       </div>
       <div class="bulk-recon-match-picker">
         <label class="field-label" style="margin:0">Link to client:</label>
-        <select class="field-input" style="font-size:12px;padding:5px 8px" onchange="updateBulkReconcileMatch(${i}, this.value)">
+        <select id="bulk-match-${i}" class="field-input" style="font-size:12px;padding:5px 8px" onchange="updateBulkReconcileMatch(${i}, this.value)">
           <option value="">— No match / treat as new business —</option>
           ${clientOptionsHTML.replace(`value="${escAttr(biz.matched_client_name || '')}"`, `value="${escAttr(biz.matched_client_name || '')}" selected`)}
         </select>
@@ -15221,7 +15334,7 @@ function renderBulkReconcileReview() {
             <input type="checkbox" checked onchange="toggleBulkReconcileLineItem(${i},${j},this.checked)">
             <span style="color:var(--text3)">$</span>
             <input type="number" step="0.01" value="${li.amount}" class="field-input" style="width:90px;padding:4px 6px;font-size:12px" oninput="updateBulkReconcileLineItem(${i},${j},'amount',this.value)">
-            <select class="field-input" style="width:150px;padding:4px 6px;font-size:12px" onchange="updateBulkReconcileLineItem(${i},${j},'category',this.value)">
+            <select id="bulk-lineitem-cat-${i}-${j}" class="field-input" style="width:150px;padding:4px 6px;font-size:12px" onchange="updateBulkReconcileLineItem(${i},${j},'category',this.value)">
               ${LEDGER_CATEGORIES.map(c => `<option value="${c.key}" ${c.key === li.category ? 'selected' : ''}>${escAttr(c.label)}</option>`).join('')}
             </select>
             <input type="text" value="${escAttr(li.description)}" class="field-input" style="flex:1;padding:4px 6px;font-size:12px" oninput="updateBulkReconcileLineItem(${i},${j},'description',this.value)">
@@ -15229,6 +15342,11 @@ function renderBulkReconcileReview() {
       </div>
     </div>`;
   }).join('');
+
+  BULK_RECONCILE_PARSED.forEach((biz, i) => {
+    themifySelect(`bulk-match-${i}`, { fullWidth: true });
+    biz.line_items.forEach((li, j) => themifySelect(`bulk-lineitem-cat-${i}-${j}`, { fullWidth: true }));
+  });
 }
 
 function toggleBulkReconcileBiz(i, checked) {
@@ -15351,7 +15469,7 @@ function openAddLedgerModal(category) {
   document.getElementById('ledgerEntryClient').value = '';
   document.getElementById('ledgerEntryAmount').value = '';
   document.getElementById('ledgerEntryCategory').value = category || 'charges_to_bill';
-  document.getElementById('ledgerEntryDesc').value = '';
+  themifySelect('ledgerEntryCategory', { fullWidth: true });
   document.getElementById('ledgerEntryDue').value = '';
   document.getElementById('ledgerDeleteBtn').style.display = 'none';
   document.getElementById('ledgerSmartPasteFlag').style.display = 'none';
@@ -15367,6 +15485,7 @@ function openEditLedgerModal(id) {
   document.getElementById('ledgerEntryClient').value = e.client_name || '';
   document.getElementById('ledgerEntryAmount').value = e.amount || '';
   document.getElementById('ledgerEntryCategory').value = e.category || 'charges_to_bill';
+  themifySelect('ledgerEntryCategory', { fullWidth: true });
   document.getElementById('ledgerEntryDesc').value = e.description || '';
   document.getElementById('ledgerEntryDue').value = e.due_date || '';
   document.getElementById('ledgerDeleteBtn').style.display = '';
@@ -15529,6 +15648,7 @@ function populateCollectionsControls() {
   if (sel && !sel.dataset.filled) {
     sel.innerHTML = COLLECTIONS_STATUSES.map(s => `<option value="${s.key}">${s.label}</option>`).join('');
     sel.dataset.filled = '1';
+    themifySelect('colStatus', { fullWidth: true });
   }
   const pillsWrap = document.getElementById('colFilterPills');
   if (pillsWrap && !pillsWrap.dataset.filled) {
@@ -15617,6 +15737,7 @@ function openEditCollectionsModal(id) {
   refreshHubDtTrigger('colEditDate', 'date');
   refreshHubDtTrigger('colEditResolvedDate', 'date');
   sel.value = a.status;
+  themifySelect('colEditStatus', { fullWidth: true });
   document.getElementById('editCollectionsModal').classList.add('open');
 }
 function closeEditCollectionsModal() {
@@ -15833,7 +15954,7 @@ function rebuildCollectionsTable() {
     const noteTruncated = latestNote && latestNote.length > 44 ? latestNote.slice(0,44) + '…' : latestNote;
     const noteShort = latestNote ? escAttr(noteTruncated) : '<span style="color:var(--text3)">No notes yet</span>';
     const statusCell = editable
-      ? `<select class="status-select" style="background:${meta.bg};color:${meta.color}" onchange="updateCollectionsStatus('${a.id}', this.value)">
+      ? `<select id="col-status-${a.id}" class="status-select" onchange="updateCollectionsStatus('${a.id}', this.value)">
           ${COLLECTIONS_STATUSES.map(s => `<option value="${s.key}" ${s.key === a.status ? 'selected' : ''}>${s.label}</option>`).join('')}
         </select>`
       : `<span class="status-pill" style="background:${meta.bg};color:${meta.color}">${meta.label}</span>`;
@@ -15853,6 +15974,23 @@ function rebuildCollectionsTable() {
     ];
     return `<tr>${order.map(i => cellByIdx[i]).join('')}</tr>`;
   }).join('');
+
+  if (editable) {
+    rows.forEach(a => {
+      themifySelect(`col-status-${a.id}`);
+      const meta = statusMeta(a.status);
+      const btn = document.querySelector(`#ts-wrap-col-status-${a.id} .themed-select-btn`);
+      if (btn) {
+        btn.style.background = meta.bg;
+        btn.style.color = meta.color;
+        btn.style.border = 'none';
+        btn.style.borderRadius = '12px';
+        btn.style.padding = '4px 10px';
+        btn.style.fontSize = 'var(--font-2xs)';
+        btn.style.minHeight = 'auto';
+      }
+    });
+  }
 }
 
 // ─── COLLECTIONS IMPORT WIZARD (mapping + duplicate review) ────────────────────
@@ -15948,9 +16086,10 @@ function renderCollectionsMappingModal() {
     return `<tr>
       <td class="col-header">${h}</td>
       <td class="col-sample">${sample}</td>
-      <td><select data-idx="${i}" onchange="onCollectionsMappingChange(this)">${options(mapping[i])}</select></td>
+      <td><select id="col-mapping-${i}" data-idx="${i}" onchange="onCollectionsMappingChange(this)">${options(mapping[i])}</select></td>
     </tr>`;
   }).join('');
+  headers.forEach((h, i) => themifySelect(`col-mapping-${i}`, { fullWidth: true }));
   document.getElementById('colMappingWarning').style.display = 'none';
 }
 
@@ -16035,12 +16174,13 @@ function renderCollectionsDuplicatesReview() {
     dupList.innerHTML = dups.map((d,i) => `
       <div class="dup-row">
         <div class="dup-name">${escAttr(d.name)}<span class="dup-sub">Already in ${typeLabel} — choose what to do</span></div>
-        <select onchange="setCollectionsDupAction(${i}, this.value)" style="width:220px">
+        <select id="col-dup-${i}" onchange="setCollectionsDupAction(${i}, this.value)" style="width:220px">
           <option value="replace" ${d.action === 'replace' ? 'selected' : ''}><span class="icon" data-icon="refresh" data-icon-size="13"></span> Replace existing record</option>
           <option value="skip" ${d.action === 'skip' ? 'selected' : ''}>⏭️ Skip — keep existing as-is</option>
           <option value="both" ${d.action === 'both' ? 'selected' : ''}><span class="icon" data-icon="plus" data-icon-size="12"></span> Keep both (add as new)</option>
         </select>
       </div>`).join('');
+    dups.forEach((d, i) => themifySelect(`col-dup-${i}`));
   }
 }
 
@@ -16996,6 +17136,10 @@ function renderGoalsCalendar() {
 
 function rebuildGoalsPage() {
   if (!document.getElementById('page-upsell')) return;
+  themifySelect('goalsPortfolioFilter');
+  const gpfWrap = document.getElementById('ts-wrap-goalsPortfolioFilter');
+  const gpfOrig = document.getElementById('goalsPortfolioFilter');
+  if (gpfWrap && gpfOrig) gpfWrap.style.display = gpfOrig.style.display;
   const withStatus = getFilteredGoalsWithStatus();
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
   const total = withStatus.length;
@@ -17232,6 +17376,7 @@ async function renderGoalsHistoryList() {
     }
     const uniqueNames = Array.from(new Set(currentGoals.map(g => g.name))).sort();
     filterEl.innerHTML = `<option value="">All Goals</option>` + uniqueNames.map(n => `<option value="${escAttr(n)}" ${n === selectedName ? 'selected' : ''}>${escAttr(n)}</option>`).join('');
+    themifySelect('goalsHistoryFilter');
   }
 
   let entries = [];
@@ -17301,6 +17446,7 @@ function openAddPeriodModal() {
   document.getElementById('goalPeriodEnd').value = '';
   document.getElementById('goalPeriodTarget').value = '';
   document.getElementById('goalPeriodActual').value = '';
+  themifySelect('goalPeriodType', { fullWidth: true });
   document.getElementById('goalPeriodModalTitle').innerHTML = '<span class="icon" data-icon="target" data-icon-size="16"></span> Add Period';
   document.getElementById('goalPeriodModal').classList.add('open');
 }
@@ -17313,6 +17459,7 @@ function openEditPeriodModal(periodId) {
   document.getElementById('goalPeriodEnd').value = p.period_end;
   document.getElementById('goalPeriodTarget').value = p.target_value;
   document.getElementById('goalPeriodActual').value = p.actual_value;
+  themifySelect('goalPeriodType', { fullWidth: true });
   document.getElementById('goalPeriodModalTitle').innerHTML = '<span class="icon" data-icon="target" data-icon-size="16"></span> Edit Period';
   document.getElementById('goalPeriodModal').classList.add('open');
 }
@@ -17473,6 +17620,7 @@ function openAddGoalModal() {
   document.getElementById('goalStatusOverrideNoteWrap').style.display = 'none';
   document.getElementById('goalChangeNote').value = '';
   document.getElementById('goalChangeNoteWrap').style.display = 'none';
+  ['goalPortfolio', 'goalMetricType', 'goalDirection', 'goalStatusOverride'].forEach(id => themifySelect(id, { fullWidth: true }));
   document.getElementById('goalModalTitle').innerHTML = '<span class="icon" data-icon="target" data-icon-size="16"></span> New Goal';
   document.getElementById('goalModal').classList.add('open');
 }
@@ -17498,6 +17646,7 @@ function openEditGoalModal(id) {
   document.getElementById('goalStatusOverrideNoteWrap').style.display = hasOverride ? '' : 'none';
   document.getElementById('goalChangeNote').value = '';
   document.getElementById('goalChangeNoteWrap').style.display = '';
+  ['goalPortfolio', 'goalMetricType', 'goalDirection', 'goalStatusOverride'].forEach(id => themifySelect(id, { fullWidth: true }));
   document.getElementById('goalModalTitle').innerHTML = '<span class="icon" data-icon="target" data-icon-size="16"></span> Edit Goal';
   document.getElementById('goalModal').classList.add('open');
 }
@@ -17789,6 +17938,7 @@ function openAddOnboardingModal() {
   document.getElementById('obName').value = '';
   document.getElementById('obOrg').value = '';
   document.getElementById('obPortfolio').value = '';
+  themifySelect('obPortfolio', { fullWidth: true });
   document.getElementById('obProductPicker').innerHTML = 'Select a portfolio first to see its products.';
   document.getElementById('addOnboardingModal').classList.add('open');
 }
@@ -17966,6 +18116,9 @@ async function rebuildOnboardingPage() {
   const select = document.getElementById('onboardingPipelineSelect');
   if (select) {
     select.innerHTML = ONBOARDING_PIPELINES.map(p => `<option value="${p.id}" ${p.id === currentOnboardingPipelineId ? 'selected' : ''}>${escAttr(p.name)}</option>`).join('');
+    themifySelect('onboardingPipelineSelect');
+    const wrapEl = document.getElementById('ts-wrap-onboardingPipelineSelect');
+    if (wrapEl) wrapEl.style.display = select.style.display;
   }
   const wrap = document.getElementById('onboardingBoard');
   const pipelineRecords = ONBOARDING_RECORDS.filter(r => r.pipeline_id === currentOnboardingPipelineId);
@@ -18035,7 +18188,7 @@ async function rebuildOnboardingPage() {
           <span class="onboarding-owner-avatar" title="Started by ${escAttr(r.created_by || 'Unknown')}">${escAttr(initials || '?')}</span>
           <span class="footer-stat" title="Notes"><span class="icon" data-icon="note" data-icon-size="11"></span> ${notesCount}</span>
           ${checklist.length ? `<span class="footer-stat" title="Checklist"><span class="icon" data-icon="check" data-icon-size="11"></span> ${doneCount}/${checklist.length}</span>` : ''}
-          <select class="onboarding-waiting-select ${waitingClass}" onclick="event.stopPropagation()" onchange="event.stopPropagation();setOnboardingWaitingOn('${r.id}', this.value)" title="Who's this waiting on?">
+          <select id="ob-waiting-${r.id}" class="onboarding-waiting-select ${waitingClass}" onclick="event.stopPropagation()" onchange="event.stopPropagation();setOnboardingWaitingOn('${r.id}', this.value)" title="Who's this waiting on?">
             <option value="" ${!r.waiting_on ? 'selected' : ''}>—</option>
             <option value="client" ${r.waiting_on === 'client' ? 'selected' : ''}>Client</option>
             <option value="team" ${r.waiting_on === 'team' ? 'selected' : ''}>Us</option>
@@ -18053,6 +18206,20 @@ async function rebuildOnboardingPage() {
         <div class="onboarding-column-cards">${cards}</div>
       </div>`;
   }).join('');
+
+  // themifySelect builds a generic themed button that doesn't know about
+  // this select's semantic color-coding (purple = waiting on client, blue =
+  // waiting on us) -- apply it directly here since we already know each
+  // record's real waiting_on value at render time.
+  pipelineRecords.forEach(r => {
+    themifySelect(`ob-waiting-${r.id}`);
+    const btn = document.querySelector(`#ts-wrap-ob-waiting-${r.id} .themed-select-btn`);
+    if (btn) {
+      btn.classList.remove('set-client', 'set-team');
+      if (r.waiting_on === 'client') btn.classList.add('set-client');
+      else if (r.waiting_on === 'team') btn.classList.add('set-team');
+    }
+  });
 }
 
 function switchOnboardingPipeline(pipelineId) {
@@ -18806,6 +18973,9 @@ function openClientNotesTasksModal(clientName) {
   if (polishBtn) polishBtn.remove();
   renderCntTagPicker();
   populateCntTaskAssigneeSelect();
+  themifySelect('cntNewTaskReminder', { fullWidth: true });
+  themifySelect('cntNewTaskRecurrence', { fullWidth: true });
+  themifySelect('cntNewTaskRecurrenceUnit', { fullWidth: true });
   resetCntTaskDtFields();
   renderClientContactInfo();
   renderCloseCrmSection();
@@ -19465,6 +19635,7 @@ function populateCntTaskAssigneeSelect() {
   if (!sel) return;
   const u = getCurrentUser();
   sel.innerHTML = TEAM_MEMBERS.map(m => `<option value="${escAttr(m.email)}" ${u && m.email === u.email ? 'selected' : ''}>${escAttr(m.name)}${u && m.email === u.email ? ' (Myself)' : ''}</option>`).join('');
+  themifySelect('cntNewTaskAssignee');
 }
 
 const RECURRENCE_LABELS = { daily: 'Daily', weekdays: 'Weekdays', biweekly: 'Bi-weekly', monthly: 'Monthly' };
@@ -19696,6 +19867,7 @@ function renderCntDtPopover() {
       <button type="button" class="btn btn-ghost btn-sm" onclick="closeCntDtPopover()">Cancel</button>
       <button type="button" class="btn btn-primary btn-sm" onclick="cntDtApply()">Apply</button>
     </div>`;
+  ['cntDtHour', 'cntDtMinute', 'cntDtAmpm'].forEach(themifySelect);
 }
 function cntDtApply() {
   if (cntDtSelDay === null) { showToast('Pick a day.', 'warning'); return; }
@@ -19861,6 +20033,7 @@ function renderHubDtPopover() {
       <button type="button" class="btn btn-ghost btn-sm" onclick="closeHubDtPopover()">Cancel</button>
       <button type="button" class="btn btn-primary btn-sm" onclick="hubDtApply()">Apply</button>
     </div>`;
+  ['hubDtHour', 'hubDtMinute', 'hubDtAmpm'].forEach(themifySelect);
 }
 function hubDtApply() {
   if (hubDtSelDay === null) { showToast('Pick a day.', 'warning'); return; }
@@ -20167,6 +20340,10 @@ async function loadFromSupabase() {
           name: r.name,
           org: r.organization || '',
           cellNotes: r.cell_notes || undefined,
+          customer_status: r.customer_status || 'active',
+          account_owner: r.account_owner || null,
+          billing_status: r.billing_status || 'unknown',
+          monthly_rate: r.monthly_rate || null,
           ...r.products,
         }));
         loadedClients = true;
@@ -20438,9 +20615,10 @@ function renderMappingModal() {
     return `<tr>
       <td class="col-header">${h}</td>
       <td class="col-sample">${sample}</td>
-      <td><select data-idx="${i}" onchange="onMappingChange(this)">${options(mapping[i])}</select></td>
+      <td><select id="main-mapping-${i}" data-idx="${i}" onchange="onMappingChange(this)">${options(mapping[i])}</select></td>
     </tr>`;
   }).join('');
+  headers.forEach((h, i) => themifySelect(`main-mapping-${i}`, { fullWidth: true }));
   document.getElementById('mappingWarning').style.display = 'none';
 }
 
@@ -20541,12 +20719,13 @@ function renderDuplicatesReview() {
     dupList.innerHTML = dups.map((d, i) => `
       <div class="dup-row">
         <div class="dup-name">${escAttr(d.name)}<span class="dup-sub">Already exists in ${PORTFOLIOS[pk].name} — choose what to do</span></div>
-        <select onchange="setDupAction(${i}, this.value)" style="width:220px">
+        <select id="main-dup-${i}" onchange="setDupAction(${i}, this.value)" style="width:220px">
           <option value="replace" ${d.action === 'replace' ? 'selected' : ''}><span class="icon" data-icon="refresh" data-icon-size="13"></span> Replace existing with new data</option>
           <option value="skip" ${d.action === 'skip' ? 'selected' : ''}>⏭️ Skip — keep existing as-is</option>
           <option value="both" ${d.action === 'both' ? 'selected' : ''}><span class="icon" data-icon="plus" data-icon-size="12"></span> Keep both (add as new)</option>
         </select>
       </div>`).join('');
+    dups.forEach((d, i) => themifySelect(`main-dup-${i}`));
   }
 }
 
@@ -20742,6 +20921,7 @@ function addProduct() {
 
   nameEl.value = ''; iconEl.value = ''; descEl.value = '';
   prioEl.value = 'medium';
+  themifySelect('newProductPriority', { fullWidth: true });
 
   rebuildPortfolio(pk);
   rebuildProductCatalogPage();
@@ -20793,6 +20973,7 @@ function setProductPriority(pk, key, priority) {
 }
 
 function rebuildProductCatalogPage() {
+  if (!document.getElementById('ts-wrap-newProductPriority')) themifySelect('newProductPriority', { fullWidth: true });
   const pk = activeManagePortfolio;
   const list = document.getElementById('productCatalogList');
   if (!list) return;
@@ -20828,13 +21009,31 @@ function rebuildProductCatalogPage() {
           <div class="support-name">${p.label}</div>
           <div class="support-detail">${using} / ${cl.length} clients (${pct}%) &nbsp;·&nbsp; <span style="color:var(--text3)">key: ${p.key}</span></div>
         </div>
-        <select onchange="setProductPriority('${pk}','${p.key}', this.value)" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);font-size:var(--font-xs);font-weight:700;padding:var(--space-1) var(--space-2);border-radius:var(--radius-pill);outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:none">
+        <select id="prodpri-${pk}-${p.key}" onchange="setProductPriority('${pk}','${p.key}', this.value)">
           <option value="high" ${p.priority==='high'?'selected':''}><span class="icon" data-icon="trending" data-icon-size="14"></span> High</option>
           <option value="medium" ${p.priority==='medium'?'selected':''}>Medium</option>
           <option value="low" ${p.priority==='low'?'selected':''}>Targeted</option>
         </select>
         <button class="btn" style="background:rgba(239,68,68,.12);color:var(--red);border:1px solid rgba(239,68,68,.25);padding:var(--space-2) var(--space-4);font-size:var(--font-xs)" onclick="requestRemoveProduct('${pk}','${p.key}')"><span class="icon" data-icon="trash" data-icon-size="13"></span> Remove</button>
       </div>`;
+  });
+  // themifySelect runs after the loop, not inside it -- `innerHTML +=`
+  // re-parses the entire list on every iteration, which would destroy any
+  // themed wrapper created for an earlier product as soon as the next one
+  // gets appended.
+  cat.forEach(p => {
+    themifySelect(`prodpri-${pk}-${p.key}`);
+    const btn = document.querySelector(`#ts-wrap-prodpri-${pk}-${p.key} .themed-select-btn`);
+    if (btn) {
+      btn.style.background = 'var(--bg3)';
+      btn.style.border = '1px solid var(--border)';
+      btn.style.color = 'var(--text)';
+      btn.style.fontSize = 'var(--font-xs)';
+      btn.style.fontWeight = '700';
+      btn.style.borderRadius = 'var(--radius-pill)';
+      btn.style.minHeight = 'auto';
+      btn.style.padding = 'var(--space-1) var(--space-2)';
+    }
   });
 }
 
@@ -20972,6 +21171,7 @@ function openBulkActionModal(mode, scope = 'directory') {
     const sel = document.getElementById('bulkTaskAssignee');
     const u = getCurrentUser();
     sel.innerHTML = TEAM_MEMBERS.map(m => `<option value="${escAttr(m.email)}" ${u && m.email === u.email ? 'selected' : ''}>${escAttr(m.name)}${u && m.email === u.email ? escAttr(t('myself_suffix')) : ''}</option>`).join('');
+    themifySelect('bulkTaskAssignee', { fullWidth: true });
   } else {
     document.getElementById('bulkNoteText').value = '';
   }
@@ -21049,6 +21249,7 @@ function handleClientsDirectorySortSelect(value) {
 function syncClDirSortSelect() {
   const sel = document.getElementById('clDirSortSelect');
   if (sel) sel.value = `${clientsDirectorySort.key}-${clientsDirectorySort.dir}`;
+  themifySelect('clDirSortSelect');
 }
 
 // Real "days since last note" per client -- the same activity proxy the
@@ -21064,6 +21265,225 @@ function daysSinceLastClientNote(name) {
   if (notes.length === 0) return Infinity;
   const latestMs = notes.reduce((max, n) => Math.max(max, new Date(n.created_at).getTime() || 0), 0);
   return (Date.now() - latestMs) / (24 * 60 * 60 * 1000);
+}
+
+// ════════════════════════════════════════════════════════════════════════
+// BUSINESS HEALTH FRAMEWORK (2026-07-24) — built directly from the
+// "Business Health Framework" memo. Real Customer Inventory (fresh fetch,
+// not the stripped-down PORTFOLIOS cache, since row updates need a real id),
+// real Reconciliation checks, real Customer Health + Revenue metrics, and
+// an HONEST "not available yet" notice for Platform Adoption (workflow
+// runs / AI actions) -- that data lives in the actual Niche platform, which
+// the Hub has no connection to yet. Nothing here is fabricated to fill a
+// gap; gaps are surfaced, per the memo's own instruction.
+// ════════════════════════════════════════════════════════════════════════
+let BH_INVENTORY = [];
+let bhInventoryPage = 1;
+const BH_PER_PAGE = 15;
+
+// Verbatim from the memo, so the whole team is working from the same
+// language rather than everyone's own mental model of what "Active" means.
+const BH_DEFINITIONS = [
+  { term: 'Customer', def: 'An organization that has been onboarded into Niche, regardless of billing status.' },
+  { term: 'Paying Customer', def: 'An organization with an active paid subscription or billing agreement.' },
+  { term: 'Trial Customer', def: 'An organization currently evaluating the platform under a trial period.' },
+  { term: 'Active Organization', def: 'An organization that has demonstrated meaningful platform activity within the defined reporting window (30, 90, 180, or 365 days). Until real platform usage data is connected, this uses CSH-recorded activity (notes/tasks) as a proxy — see the Platform Adoption panel.' },
+  { term: 'Churned Customer', def: 'An organization that was previously paying and has cancelled or is no longer considered an active customer.' },
+  { term: 'Workflow Run', def: 'Definition to be finalized with Engineering — requires a connection to the real Niche platform, not yet available in the Hub.' },
+  { term: 'AI Action', def: 'Definition to be finalized with Engineering — requires a connection to the real Niche platform, not yet available in the Hub.' },
+  { term: 'Source of Truth', def: 'The designated system responsible for the authoritative value of a specific data element or metric. For everything on this page, that system is the Hub itself (portfolio_clients) — until/unless a real billing or usage system is connected.' },
+];
+
+async function rebuildBusinessHealthPage() {
+  if (!document.getElementById('page-businesshealth')) return;
+  try {
+    BH_INVENTORY = await sbSelect('portfolio_clients', 'select=id,name,portfolio,organization,customer_status,account_owner,billing_status,monthly_rate,trial_date,first_paid_date,last_billing_date,cancellation_date,created_at&order=name.asc');
+  } catch (e) {
+    console.warn('Could not load customer inventory:', e.message);
+    BH_INVENTORY = [];
+  }
+  bhInventoryPage = 1;
+  renderBhStatBar();
+  renderBhInventoryTable();
+  renderBhReconciliation();
+  renderBhDefinitions();
+  renderBhCustomerHealth();
+  renderBhRevenue();
+  renderBhAdoption();
+}
+
+function bhIsInMonth(dateStr, ref) {
+  if (!dateStr) return false;
+  const d = new Date(dateStr);
+  return d.getMonth() === ref.getMonth() && d.getFullYear() === ref.getFullYear();
+}
+
+function renderBhStatBar() {
+  const el = document.getElementById('bhStatBar');
+  if (!el) return;
+  const now = new Date();
+  const total = BH_INVENTORY.length;
+  const paying = BH_INVENTORY.filter(r => r.billing_status === 'billed').length;
+  const active90 = BH_INVENTORY.filter(r => daysSinceLastClientNote(r.name) <= 90).length;
+  const newThisMonth = BH_INVENTORY.filter(r => bhIsInMonth(r.created_at, now)).length;
+  const churnedThisMonth = BH_INVENTORY.filter(r => r.customer_status === 'cancelled' && bhIsInMonth(r.cancellation_date, now)).length;
+  el.innerHTML = `
+    <div class="int-stat-card"><div class="int-stat-label"><span class="icon" data-icon="users" data-icon-size="12"></span> Total Customers</div><div class="int-stat-value">${total.toLocaleString()}</div></div>
+    <div class="int-stat-card"><div class="int-stat-label"><span class="icon" data-icon="dollar" data-icon-size="12"></span> Paying Customers</div><div class="int-stat-value">${paying.toLocaleString()}</div></div>
+    <div class="int-stat-card"><div class="int-stat-label"><span class="icon" data-icon="check" data-icon-size="12"></span> Active (90-day)</div><div class="int-stat-value" style="color:var(--green)">${active90.toLocaleString()}</div></div>
+    <div class="int-stat-card"><div class="int-stat-label"><span class="icon" data-icon="trending" data-icon-size="12"></span> New This Month</div><div class="int-stat-value">${newThisMonth}</div></div>
+    <div class="int-stat-card"><div class="int-stat-label"><span class="icon" data-icon="alert" data-icon-size="12"></span> Churned This Month</div><div class="int-stat-value" style="color:${churnedThisMonth ? 'var(--red)' : 'var(--text)'}">${churnedThisMonth}</div></div>
+  `;
+}
+
+function renderBhCustomerHealth() {
+  const el = document.getElementById('bhCustomerHealthBar');
+  if (!el) return;
+  const now = new Date();
+  const windows = [30, 90, 180, 365].map(n => BH_INVENTORY.filter(r => daysSinceLastClientNote(r.name) <= n).length);
+  const newThisMonth = BH_INVENTORY.filter(r => bhIsInMonth(r.created_at, now)).length;
+  const churnedThisMonth = BH_INVENTORY.filter(r => r.customer_status === 'cancelled' && bhIsInMonth(r.cancellation_date, now)).length;
+  const netGrowth = newThisMonth - churnedThisMonth;
+  const cards = [
+    ['Active (30d)', windows[0]], ['Active (90d)', windows[1]], ['Active (180d)', windows[2]], ['Active (365d)', windows[3]],
+    ['Net Growth (this month)', (netGrowth >= 0 ? '+' : '') + netGrowth],
+  ];
+  el.innerHTML = cards.map(([label, val]) => `<div class="int-stat-card"><div class="int-stat-label">${label}</div><div class="int-stat-value" style="font-size:16px">${val}</div></div>`).join('');
+}
+
+function renderBhReconciliation() {
+  const el = document.getElementById('bhReconciliationList');
+  if (!el) return;
+  const activeUnbilled = BH_INVENTORY.filter(r => r.customer_status === 'active' && r.billing_status !== 'billed');
+  const payingInactive = BH_INVENTORY.filter(r => r.billing_status === 'billed' && daysSinceLastClientNote(r.name) > 90);
+  const noOwner = BH_INVENTORY.filter(r => !r.account_owner);
+  const checks = [
+    { label: 'Active organizations not being billed', count: activeUnbilled.length },
+    { label: 'Paying organizations with no activity in 90+ days', count: payingInactive.length },
+    { label: 'Organizations with no assigned owner', count: noOwner.length },
+  ];
+  el.innerHTML = checks.map(c => `
+    <div class="brand-acc-row" style="margin-bottom:6px">
+      <span style="font-size:11.5px;color:var(--text2)">${c.label}</span>
+      <span style="font-weight:700;color:${c.count ? 'var(--yellow)' : 'var(--green)'}">${c.count}</span>
+    </div>`).join('')
+    + `<div style="margin-top:10px"><button class="btn btn-ghost btn-sm" onclick="showPage('cleanup')"><span class="icon" data-icon="search" data-icon-size="12"></span> Check for duplicate/orphaned records in Data Quality Studio</button></div>`;
+}
+
+function renderBhDefinitions() {
+  const el = document.getElementById('bhDefinitionsList');
+  if (!el) return;
+  el.innerHTML = BH_DEFINITIONS.map(d => `
+    <div style="margin-bottom:8px">
+      <div style="font-weight:700;font-size:11.5px;color:var(--text)">${d.term}</div>
+      <div style="font-size:10.5px;color:var(--text3);line-height:1.5">${d.def}</div>
+    </div>`).join('');
+}
+
+function renderBhRevenue() {
+  const el = document.getElementById('bhRevenuePanel');
+  if (!el) return;
+  const withRate = BH_INVENTORY.filter(r => r.monthly_rate && r.customer_status !== 'cancelled');
+  const mrr = withRate.reduce((s, r) => s + Number(r.monthly_rate), 0);
+  const arr = mrr * 12;
+  const arpu = withRate.length ? mrr / withRate.length : 0;
+  const coverage = BH_INVENTORY.length ? Math.round(withRate.length / BH_INVENTORY.length * 100) : 0;
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div><div class="int-info-label">MRR</div><div class="int-info-value" style="font-size:17px">${fmtMoney(mrr)}</div></div>
+      <div><div class="int-info-label">ARR</div><div class="int-info-value" style="font-size:17px">${fmtMoney(arr)}</div></div>
+      <div><div class="int-info-label">ARPU</div><div class="int-info-value">${fmtMoney(arpu)}</div></div>
+      <div><div class="int-info-label">Rate Coverage</div><div class="int-info-value">${coverage}% of orgs</div></div>
+    </div>
+    ${coverage < 100 ? `<div style="font-size:10.5px;color:var(--yellow);margin-top:8px">${(BH_INVENTORY.length - withRate.length).toLocaleString()} organization(s) have no monthly rate entered — MRR/ARR above only reflects what's been entered so far.</div>` : ''}
+    <div style="font-size:10px;color:var(--text3);margin-top:6px">GRR/NRR aren't shown — they require tracking rate changes over time (upgrades, downgrades, churn), and only one current rate per org is captured today.</div>
+  `;
+}
+
+function renderBhAdoption() {
+  const el = document.getElementById('bhAdoptionPanel');
+  if (!el) return;
+  el.innerHTML = `<div class="cnt-empty-contacts-hint" style="text-align:left;padding:8px 0">
+    <span class="icon" data-icon="alert" data-icon-size="13" style="color:var(--yellow)"></span>
+    Not available yet. Workflow runs and AI actions happen inside the real Niche platform, which the Hub has no connection to today. This is a genuine gap, not a placeholder to ignore — closing it needs Engineering to expose that usage data via an API or database connection.
+  </div>`;
+}
+
+function onBhInventoryFilterChange() { bhInventoryPage = 1; renderBhInventoryTable(); }
+
+function renderBhInventoryTable() {
+  if (!document.getElementById('ts-wrap-bhStatusFilter')) themifySelect('bhStatusFilter');
+  if (!document.getElementById('ts-wrap-bhPortfolioFilter')) themifySelect('bhPortfolioFilter');
+  const body = document.getElementById('bhInventoryBody');
+  const countSub = document.getElementById('bhInventoryCountSub');
+  const pagEl = document.getElementById('bhInventoryPagination');
+  if (!body) return;
+  const q = (document.getElementById('bhInventorySearch')?.value || '').trim().toLowerCase();
+  const statusFilter = document.getElementById('bhStatusFilter')?.value || 'all';
+  const portfolioFilter = document.getElementById('bhPortfolioFilter')?.value || 'all';
+  const filtered = BH_INVENTORY.filter(r =>
+    (statusFilter === 'all' || r.customer_status === statusFilter) &&
+    (portfolioFilter === 'all' || r.portfolio === portfolioFilter) &&
+    (!q || r.name.toLowerCase().includes(q))
+  );
+  if (countSub) countSub.textContent = `${filtered.length.toLocaleString()} organization${filtered.length === 1 ? '' : 's'}`;
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / BH_PER_PAGE));
+  bhInventoryPage = Math.min(bhInventoryPage, totalPages);
+  const pageItems = filtered.slice((bhInventoryPage - 1) * BH_PER_PAGE, bhInventoryPage * BH_PER_PAGE);
+
+  body.innerHTML = pageItems.map(r => {
+    const days = daysSinceLastClientNote(r.name);
+    const lastActivityLabel = days === Infinity ? 'No activity logged' : `${Math.floor(days)}d ago`;
+    return `<tr>
+      <td style="padding-left:var(--space-3)"><div style="font-weight:700">${escAttr(r.name)}</div><div style="font-size:10px;color:var(--text3)">${PORTFOLIO_LABELS[r.portfolio] || r.portfolio}</div></td>
+      <td><select id="bh-status-${r.id}" onchange="updateBhField('${r.id}','customer_status',this.value)">
+        <option value="trial" ${r.customer_status === 'trial' ? 'selected' : ''}>Trial</option>
+        <option value="active" ${r.customer_status === 'active' ? 'selected' : ''}>Active</option>
+        <option value="complimentary" ${r.customer_status === 'complimentary' ? 'selected' : ''}>Complimentary</option>
+        <option value="cancelled" ${r.customer_status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+        <option value="internal" ${r.customer_status === 'internal' ? 'selected' : ''}>Internal</option>
+      </select></td>
+      <td><select id="bh-owner-${r.id}" onchange="updateBhField('${r.id}','account_owner',this.value)">
+        <option value="">Unassigned</option>
+        ${TEAM_MEMBERS.map(m => `<option value="${escAttr(m.email)}" ${r.account_owner === m.email ? 'selected' : ''}>${escAttr(m.name)}</option>`).join('')}
+      </select></td>
+      <td><select id="bh-billing-${r.id}" onchange="updateBhField('${r.id}','billing_status',this.value)">
+        <option value="billed" ${r.billing_status === 'billed' ? 'selected' : ''}>Billed</option>
+        <option value="not_billed" ${r.billing_status === 'not_billed' ? 'selected' : ''}>Not Billed</option>
+        <option value="unknown" ${r.billing_status === 'unknown' ? 'selected' : ''}>Unknown</option>
+      </select></td>
+      <td style="font-size:11px;color:var(--text3)">${lastActivityLabel}</td>
+      <td><input type="number" id="bh-rate-${r.id}" value="${r.monthly_rate || ''}" placeholder="—" style="width:80px" onchange="updateBhField('${r.id}','monthly_rate', this.value ? Number(this.value) : null)"></td>
+      <td><button class="row-action-btn" onclick="openClientNotesTasksModal('${escAttr(r.name)}')" title="Open profile"><span class="icon" data-icon="eye" data-icon-size="13"></span></button></td>
+    </tr>`;
+  }).join('');
+
+  pageItems.forEach(r => {
+    themifySelect(`bh-status-${r.id}`, { fullWidth: true });
+    themifySelect(`bh-owner-${r.id}`, { fullWidth: true });
+    themifySelect(`bh-billing-${r.id}`, { fullWidth: true });
+  });
+
+  if (pagEl) {
+    pagEl.innerHTML = Array.from({ length: totalPages }, (_, i) => i + 1).slice(0, 10).map(p =>
+      `<button class="btn btn-ghost btn-sm" style="min-width:30px;${p === bhInventoryPage ? 'background:var(--orange-dim);color:var(--orange)' : ''}" onclick="bhInventoryPage=${p};renderBhInventoryTable()">${p}</button>`
+    ).join('') + (totalPages > 10 ? `<span style="color:var(--text3);padding:6px">… ${totalPages}</span>` : '');
+  }
+}
+
+async function updateBhField(id, field, value) {
+  if (!requirePermission('edit')) { renderBhInventoryTable(); return; }
+  const row = BH_INVENTORY.find(r => r.id === id);
+  if (!row) return;
+  const prev = row[field];
+  row[field] = value;
+  try { await sbPatch('portfolio_clients', `id=eq.${id}`, { [field]: value }); }
+  catch (e) { row[field] = prev; showToast('Could not save: ' + e.message, 'error'); renderBhInventoryTable(); return; }
+  renderBhStatBar();
+  renderBhCustomerHealth();
+  renderBhReconciliation();
+  renderBhRevenue();
 }
 
 let clDirViewMode = 'board';
@@ -21355,6 +21775,7 @@ function populateClientsProductFilter() {
     products.map(p => `<option value="${escAttr(p.key)}">${escAttr(p.label)}</option>`).join('');
   if (prevVal === 'all' || products.some(p => p.key === prevVal)) sel.value = prevVal;
   else { activeProductFilter = 'all'; sel.value = 'all'; }
+  themifySelect('clientsProductFilter');
 }
 
 function filterClientsByProduct(key) {
@@ -21394,6 +21815,7 @@ function applyClDirCustomSavedView(id) {
   activeClCustomViewId = id;
   const sel = document.getElementById('clientsProductFilter');
   if (sel) sel.value = activeProductFilter;
+  themifySelect('clientsProductFilter');
   syncClDirSortSelect();
   renderClDirSidebarLists(computeClientDirectoryRows());
   filterClientsDirectory();
@@ -22701,6 +23123,7 @@ function renderCustomNodeTypesPalette() {
 
 function openCreateCustomNodeTypeModal() {
   document.getElementById('cnCategorySelect').value = 'action';
+  themifySelect('cnCategorySelect', { fullWidth: true });
   document.getElementById('cnTypeName').value = '';
   document.getElementById('cnTypeIcon').value = '';
   document.getElementById('cnFieldsList').innerHTML = '';
@@ -22712,11 +23135,12 @@ function closeCreateCustomNodeTypeModal() {
 }
 function addCustomNodeTypeFieldRow() {
   const wrap = document.getElementById('cnFieldsList');
+  const rowId = `cn-field-type-${wrap.children.length}-${Date.now().toString(36)}`;
   const row = document.createElement('div');
   row.className = 'cn-field-row';
   row.innerHTML = `
     <input type="text" class="field-input cn-field-label" placeholder="Field label (e.g. Phone Number)">
-    <select class="field-input cn-field-type" onchange="this.parentElement.querySelector('.cn-field-options').style.display = this.value === 'select' ? '' : 'none'">
+    <select id="${rowId}" class="field-input cn-field-type" onchange="this.parentElement.querySelector('.cn-field-options').style.display = this.value === 'select' ? '' : 'none'">
       <option value="text">Text</option>
       <option value="textarea">Text Area</option>
       <option value="select">Dropdown</option>
@@ -22726,6 +23150,7 @@ function addCustomNodeTypeFieldRow() {
     <label class="cn-field-merge-label"><input type="checkbox" class="cn-field-merge"> {{merge}}</label>
     <button class="row-action-btn danger" onclick="this.closest('.cn-field-row').remove()">×</button>`;
   wrap.appendChild(row);
+  themifySelect(rowId);
 }
 async function saveCustomNodeType() {
   if (!requirePermission('edit')) return;
@@ -22873,6 +23298,7 @@ function renderWfbSidebarEditor(nodeId) {
       <button class="wfb-mini-btn" data-action="close-node">Cancel</button>
       <button class="wfb-mini-btn primary" data-action="save-node">Save</button>
     </div>`;
+  schema.forEach(f => { if (f.type === 'select') themifySelect(`wfb-field-${node.id}-${f.key}`, { fullWidth: true }); });
   updateWfbPreview(node.id);
 }
 // Builds the live plain-English summary at the bottom of the editor panel
@@ -23812,6 +24238,7 @@ function populateWorkflowAssigneeSelect() {
   if (!sel) return;
   const u = getCurrentUser();
   sel.innerHTML = `<option value="">Whoever owns the account</option>` + TEAM_MEMBERS.map(m => `<option value="${escAttr(m.email)}" ${u && m.email === u.email ? 'selected' : ''}>${escAttr(m.name)}</option>`).join('');
+  themifySelect('wfActionAssignee', { fullWidth: true });
 }
 
 function renderWorkflowTriggerFields(existing) {
@@ -23826,6 +24253,7 @@ function renderWorkflowTriggerFields(existing) {
         <div><label for="wfScopePortfolio" class="field-label">Scope</label><select id="wfScopePortfolio" class="field-select" style="height:38px">${portfolioOptions}</select></div>
       </div>`;
     if (existing) document.getElementById('wfScopePortfolio').value = existing.scope_portfolio || 'all';
+    themifySelect('wfScopePortfolio', { fullWidth: true });
   } else if (triggerType === 'client_added') {
     box.innerHTML = `
       <div style="margin-bottom:16px">
@@ -23834,6 +24262,7 @@ function renderWorkflowTriggerFields(existing) {
         <div style="font-size:var(--font-xs);color:var(--text3);margin-top:4px">Fires the moment a new client is added to this portfolio — whether added manually or by Nirvana.</div>
       </div>`;
     if (existing) document.getElementById('wfScopePortfolioClientAdded').value = existing.scope_portfolio || 'all';
+    themifySelect('wfScopePortfolioClientAdded', { fullWidth: true });
   } else if (triggerType === 'task_due_soon') {
     box.innerHTML = `
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:8px">
@@ -23842,6 +24271,7 @@ function renderWorkflowTriggerFields(existing) {
       </div>
       <div style="font-size:var(--font-xs);color:var(--text3);margin-bottom:16px">Watches every open task with a due date for clients in scope — skips tasks that another workflow already created, so automations don't chain-react off each other.</div>`;
     if (existing) document.getElementById('wfScopePortfolioDueSoon').value = existing.scope_portfolio || 'all';
+    themifySelect('wfScopePortfolioDueSoon', { fullWidth: true });
   } else if (triggerType === 'kpi_drop') {
     box.innerHTML = `
       <div style="margin-bottom:8px">
@@ -23855,6 +24285,7 @@ function renderWorkflowTriggerFields(existing) {
       </div>
       <div style="font-size:var(--font-xs);color:var(--text3);margin-bottom:16px">Fires when this KPI's score goes down from its previous log. This is a team-level score, not per-client, so the created task isn't tied to a specific client.</div>`;
     if (existing) document.getElementById('wfTargetKpiKey').value = existing.target_kpi_key || '';
+    themifySelect('wfTargetKpiKey', { fullWidth: true });
   } else if (triggerType === 'collections_status') {
     box.innerHTML = `
       <div style="margin-bottom:8px">
@@ -23865,6 +24296,7 @@ function renderWorkflowTriggerFields(existing) {
       </div>
       <div style="font-size:var(--font-xs);color:var(--text3);margin-bottom:16px">Fires for any Collections account currently in this status. Checked every cycle, but won't pile up duplicates while a task from this workflow is still open for that account.</div>`;
     if (existing) document.getElementById('wfTargetCollectionsStatus').value = existing.target_collections_status || 'escalated';
+    themifySelect('wfTargetCollectionsStatus', { fullWidth: true });
   } else {
     box.innerHTML = `
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
@@ -23895,6 +24327,9 @@ function renderWorkflowTriggerFields(existing) {
         document.getElementById('wfScopeClientName').value = existing.scope_client_name || '';
       }
     }
+    themifySelect('wfScheduleType', { fullWidth: true });
+    themifySelect('wfScheduleCustomUnit', { fullWidth: true });
+    themifySelect('wfScopePortfolio2', { fullWidth: true });
   }
 }
 function toggleWorkflowCustomSchedule() {
@@ -24710,9 +25145,11 @@ function renderCwWidgetSelector() {
   if (!sel) return;
   if (CHAT_WIDGETS.length === 0) {
     sel.innerHTML = '<option value="">No widgets yet</option>';
+    themifySelect('cwWidgetSelector');
     return;
   }
   sel.innerHTML = CHAT_WIDGETS.map(w => `<option value="${escAttr(w.id)}" ${w.id === cwActiveWidgetId ? 'selected' : ''}>${escAttr(w.client_name || w.agent_name || w.id)}</option>`).join('');
+  themifySelect('cwWidgetSelector');
 }
 
 // Conversations are fetched SCOPED to whichever widget is currently
@@ -25601,6 +26038,7 @@ function populateCwSettingsFields() {
   document.getElementById('cwOpeningLine').value = widget.opening_line || '';
   document.getElementById('cwPersonalitySummary').value = widget.personality_summary || '';
   document.getElementById('cwTimezone').value = widget.timezone || 'America/Los_Angeles';
+  themifySelect('cwTimezone', { fullWidth: true });
   document.getElementById('cwAllowAfterHours').checked = widget.allow_after_hours !== false;
   document.getElementById('cwServiceDuration').value = widget.service_duration_minutes || 60;
   document.getElementById('cwBufferTime').value = widget.buffer_time_minutes ?? 15;
@@ -26296,6 +26734,8 @@ function openAddKnowledgeModal() {
   document.getElementById('kbSourceUrl').value = '';
   document.getElementById('kbContent').value = '';
   document.getElementById('kbContentMeta').textContent = '';
+  themifySelect('kbCategory', { fullWidth: true });
+  themifySelect('kbLanguage', { fullWidth: true });
   document.getElementById('knowledgeModal').classList.add('open');
 }
 
@@ -26312,6 +26752,8 @@ function openEditKnowledgeModal(id) {
   document.getElementById('kbSourceUrl').value = entry.source_url || '';
   document.getElementById('kbContent').value = entry.content || '';
   document.getElementById('kbContentMeta').textContent = `${(entry.content || '').length.toLocaleString()} characters`;
+  themifySelect('kbCategory', { fullWidth: true });
+  themifySelect('kbLanguage', { fullWidth: true });
   document.getElementById('knowledgeModal').classList.add('open');
 }
 
@@ -26342,6 +26784,7 @@ async function fetchKnowledgeFromUrl() {
       try { document.getElementById('kbTitle').value = new URL(url).hostname.replace(/^www\./, ''); } catch(e) {}
     }
     document.getElementById('kbCategory').value = 'website';
+    themifySelect('kbCategory', { fullWidth: true });
     updateKbLanguageHint();
     showToast('Page text fetched — review it below before saving.', 'success');
   } catch(e) {
@@ -26583,6 +27026,11 @@ const AI_AGENT_TOOLS = [
     },
   },
   { name: 'get_kpi_summary', description: 'Get the current SuccessOS KPI scores and recent trend for all three KPIs.', input_schema: { type: 'object', properties: {} } },
+  {
+    name: 'get_business_health_summary',
+    description: 'Get the real, current Business Health Framework numbers: total/paying customers, active organizations at 30/90/180/365 days, new/churned this month, real reconciliation flags (active-but-unbilled, paying-but-inactive, unowned accounts), and revenue (MRR/ARR/ARPU, with real coverage — how many organizations actually have a rate entered). Also reports what is genuinely NOT available yet (Platform Adoption — workflow runs/AI actions — needs a Niche platform connection that does not exist today) rather than guessing at it. Use this whenever asked how many customers/paying customers/active customers there are, what churned, or how healthy the business is.',
+    input_schema: { type: 'object', properties: {} },
+  },
   {
     name: 'get_branding_status',
     description: 'Get the current white-label branding state: the live (published) settings, whether there\'s an unpublished draft and what\'s different about it, the real WCAG contrast score for the primary color against white button text, and the white-label readiness checklist (which specific items are done vs still default). Use this whenever asked about branding status, whether the Hub is "white-label ready," what the current brand colors/name are, or whether there are unpublished branding changes.',
@@ -27380,6 +27828,36 @@ async function executeAiTool(name, input) {
     }
     case 'get_kpi_summary':
       return KPI_KEYS.map(k => ({ kpi: KPI_META[k].label, score: getLatestKpiScore(k), trend: getKpiTrend(k) > 0 ? 'improved' : getKpiTrend(k) < 0 ? 'declined' : 'stable' }));
+    case 'get_business_health_summary': {
+      let inventory;
+      try {
+        inventory = await sbSelect('portfolio_clients', 'select=id,name,portfolio,customer_status,account_owner,billing_status,monthly_rate,created_at,cancellation_date');
+      } catch (e) { return { error: 'Could not load the customer inventory: ' + e.message }; }
+      const now = new Date();
+      const inMonth = (d) => d && new Date(d).getMonth() === now.getMonth() && new Date(d).getFullYear() === now.getFullYear();
+      const active = (n) => inventory.filter(r => daysSinceLastClientNote(r.name) <= n).length;
+      const withRate = inventory.filter(r => r.monthly_rate && r.customer_status !== 'cancelled');
+      const mrr = withRate.reduce((s, r) => s + Number(r.monthly_rate), 0);
+      return {
+        total_customers: inventory.length,
+        paying_customers: inventory.filter(r => r.billing_status === 'billed').length,
+        active_30_days: active(30), active_90_days: active(90), active_180_days: active(180), active_365_days: active(365),
+        new_this_month: inventory.filter(r => inMonth(r.created_at)).length,
+        churned_this_month: inventory.filter(r => r.customer_status === 'cancelled' && inMonth(r.cancellation_date)).length,
+        reconciliation_flags: {
+          active_but_unbilled: inventory.filter(r => r.customer_status === 'active' && r.billing_status !== 'billed').length,
+          paying_but_inactive_90d: inventory.filter(r => r.billing_status === 'billed' && daysSinceLastClientNote(r.name) > 90).length,
+          no_assigned_owner: inventory.filter(r => !r.account_owner).length,
+        },
+        revenue: {
+          mrr: Number(mrr.toFixed(2)), arr: Number((mrr * 12).toFixed(2)),
+          arpu: withRate.length ? Number((mrr / withRate.length).toFixed(2)) : 0,
+          rate_coverage_pct: inventory.length ? Math.round(withRate.length / inventory.length * 100) : 0,
+          note: 'MRR/ARR only reflect organizations with a monthly rate actually entered — check rate_coverage_pct before treating these as complete.',
+        },
+        platform_adoption: { available: false, note: 'Workflow runs and AI actions are not available — the Hub has no connection to the real Niche platform\'s usage data yet. This is a known, real gap, not a zero.' },
+      };
+    }
     case 'get_branding_status': {
       const live = liveBrandingSnapshot();
       const draft = ORG_SETTINGS.draft_data ? { ...live, ...ORG_SETTINGS.draft_data } : live;
@@ -29071,7 +29549,7 @@ async function runAiAgentTurn(toolTagForNextText) {
   const u = getCurrentUser();
   const systemPrompt = `${currentLanguage === 'es' ? 'IMPORTANT: The Hub is currently set to Spanish (MX). Respond to the user ENTIRELY in Spanish (Mexican Spanish), including this entire conversation, regardless of what language they write in — unless they explicitly ask you to switch to English. Data values, client names, and product names stay as-is; everything you write around them is in Spanish.\n\n' : ''}Current date and time: ${new Date().toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })}. This is read directly from the user's own device clock, so it already reflects their real timezone — treat it as ground truth. For ANY relative time request ("in 15 minutes", "tomorrow at 9am", "next Monday"), compute the exact resulting date/time yourself from this reference. Never ask the user what time it is or guess at a timestamp — the real current time is always right here.
 
-You are Nirvana, the AI Agent inside ${ORG_SETTINGS.company_name}'s ${ORG_SETTINGS.product_name} — "${ORG_SETTINGS.product_name}" — helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the ${ORG_SETTINGS.portfolio_labels.smb}, ${ORG_SETTINGS.portfolio_labels.whitelabel}, and ${ORG_SETTINGS.portfolio_labels.support} portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. Whenever a request would affect MORE THAN ONE client (e.g. "create a follow-up task for every client that hasn't been touched in 30 days," or a list of specific client names), always use bulk_create_tasks or bulk_add_note instead of calling create_task/add_note in a loop — looping individual calls would force a separate confirmation click per client, while the bulk tools show one confirmation with the full affected list. Workflows can trigger on six things — "inactivity" (no note in N days), "schedule" (recurring cadence, for one client or a whole portfolio), "client_added" (fires the moment a new client is created), "task_due_soon" (reminds before an existing task's due date), "kpi_drop" (a SuccessOS score went down — team-level, not tied to one client), or "collections_status" (an account entered a specific Collections status) — and can take four actions when they fire: create a task (optionally with a real due date/time), just send a notification with no task, log an audit-trail note with no task or notification, or have you draft the actual task content yourself instead of using fixed text. If someone describes an automation idea in plain English, translate it into the right trigger type, action type, and fields yourself rather than making them fill out a form. For questions about company policy, procedures, "how do we...", or what the website/docs say, search the Knowledge Base — it contains SOPs, docs, and website content the team has fed in, separate from live client data. You can read and explain every chart in the Hub: get_portfolio_summary explains a portfolio's Product Adoption Rate and Products Per Client charts, get_product_adoption explains the Voice Agent / Text Agent charts, get_collections_summary explains the Collections breakdown (always separated into Outstanding Balances vs Card Fails, each with its own status breakdown — never collapse these into one number), get_adspend_summary explains Ad Spend's promo/budget breakdown, and get_kpi_summary explains the SuccessOS scores. When someone asks you to break down, interpret, or explain any data or chart, always call the specific tool that has that breakdown built in rather than answering from a vaguer or more general tool — if a user asks for a split by category/status/type, that split should already be in the tool result; use it. Prefer the data tools above for explaining charts — they're faster and more precise. Only use view_chart when the question is genuinely about the chart's visual appearance itself (e.g. "does this look right," "what do you see," "describe this chart visually") — calling it will switch the user's screen to that chart's page, so mention that you're pulling it up. Whenever asked to check for discrepancies, duplicates, mismatches, or whether numbers add up anywhere in the Hub (including client counts, Collections, Ad Spend, or the Knowledge Base), always call audit_data_integrity rather than speculating about possible causes — it actually reconciles the numbers and reports genuine findings, so use what it returns instead of guessing at explanations like "could be duplicates" or "could be stale data." A daily briefing already gets shown automatically once per day when the chat is first opened — if asked for a summary, rundown, or "what should I focus on" at any other point, use get_daily_briefing to pull the same live data fresh rather than referencing whatever was shown earlier, since it may be out of date by then. Whenever asked "which accounts are at risk," "who needs attention," or how healthy a specific client is, use get_at_risk_clients or get_client_health rather than checking just one signal (like Collections alone, or note recency alone) — those tools already combine engagement, task backlog, and billing friction into one score with a transparent breakdown of exactly why, which is a more honest answer than picking one factor and guessing at the rest. Whenever asked what's changed for a specific client recently, who created or updated a client record, or when a client was actually added to the Hub, use get_client_activity_history — it's the real, logged audit trail (every creation and every field-level change, from every entry point in the Hub: Bulk Reconcile Import, CSV imports, Add Client, onboarding graduation, or your own create_client/update_client_contact calls), not something to infer from notes or guess at. A client can have more than one saved contact now — the first one added is always the primary. Use list_client_contacts to see everyone on file for a client, add_client_contact to add a genuinely new additional contact (it will refuse if the name looks like a near-duplicate of someone already saved, so check first if unsure), update_client_contact to change an existing contact's info (defaults to the primary contact unless target_contact_name is given to target a specific other one), and delete_client_contact to remove one by name — it will ask for clarification rather than guess if the name is ambiguous or not found. To pull contact info and notes from Close CRM for a client, use enrich_client_from_close — it uses an already-confirmed match if the client profile has one, otherwise fuzzy-matches by business name and either proceeds automatically with a clear single winner or returns several candidates for the user to choose between (never silently guessing between similarly-named businesses); the result is read-only, so use add_client_contact afterward if a Close contact should actually be saved into the Hub. Whenever asked about Voice Agent or Text Agent adoption trends, growth, peaks, or how a metric has changed over time (including for a specific date range someone mentions), use get_adoption_trend — it's backed by real daily snapshots, unlike get_portfolio_summary/get_product_adoption which only reflect the current moment; if a person is looking at a filtered date range on the Voice Agent or Text Agent page, ask what range if they haven't said, rather than assuming it matches what's currently on their screen. For anything about Goals — "how are we doing this month," a specific named goal's progress, its weekly/bi-weekly breakdown, or its change history — use get_goals_summary, get_goal_details, list_goals, or get_goal_activity_history rather than guessing at status from a general impression; these compute the exact same real numbers and pacing logic the Goals page itself shows, including correctly handling range targets (e.g. "$32,500-$35,000") against their midpoint. To create a new goal or update a goal's current progress (goals get updated regularly through the month), use create_goal or update_goal_progress — both fuzzy-match against existing goals for that month first, so a near-duplicate name doesn't silently create a second, separate goal instead of updating the real one. To set a specific week or bi-weekly period's target/actual for a goal (e.g. "set the actual for the week of May 5th to $820,000"), use update_goal_period — it finds the matching period by its exact start date and only changes the field(s) actually given, leaving the other as-is, or creates a new period if none exists yet for that date. When summarizing data, only use the real numbers/content returned by tools — never estimate or make things up. If a tool returns an error (e.g. client not found, or nothing in the knowledge base matches), tell the user plainly rather than guessing. If a tool result includes a "note" field, don't ignore it — mention what it says (for example, a client match that only worked after ignoring punctuation/spacing differences) rather than presenting the result as a clean, unqualified match. When presenting a list of businesses or clients that genuinely don't exist yet in the Hub and could be created (for example, orphaned Ad Spend/Collections entries with no matching client record), format it as a markdown table and put a line reading exactly \`[[selectable:create_client]]\` on its own line immediately before that table — this renders the list with checkboxes so the user can pick specific ones to create instead of you needing to ask about each individually. Only use this marker for that specific "these could be created as clients" scenario — never on ordinary reporting tables (KPI trends, budget breakdowns, adoption rates, etc.), since a "create as clients" action button wouldn't make sense there. If a message says the user selected specific businesses to create as clients, treat that as them already having committed to creating those specific ones — don't re-confirm each one individually, just ask which portfolio(s) each should go into (per the existing rule: never guess a portfolio) and then create them. Onboarding records are a SEPARATE, EARLIER concept from clients — an onboarding record represents a business before it's a real client anywhere else in the Hub, tracked through six stages (Contract Signed, Kickoff Call Scheduled, Kickoff Call Completed, Setup In Progress, QA / Internal Review, Live) with its own checklist and notes. Don't confuse create_onboarding with create_client, or an onboarding record's business_name with an actual client_name — they're different things until activate_onboarding_as_client is explicitly used to graduate one into the other, which typically only makes sense once a record has reached the Live stage. The embeddable Chat Widget is a completely separate AI conversation from you — it runs on a client's own website, talking to anonymous visitors, with its own agent name/personality/instructions per widget. You have no live access into those conversations as they happen, but get_chat_widget_summary lets you check on lead activity after the fact (volume, resolution breakdown, recent leads) whenever asked about chat widget leads or website chat activity. For white-label branding (company/product name, brand colors, tier labels, whether it's "ready" to resell), use get_branding_status for the real current state — including a genuine WCAG contrast score (not a guess) and which readiness checklist items are actually done — rather than assuming everything looks fine. Branding has a real draft/live split: update_branding_draft only ever changes the unpublished draft, never the live Hub, so always tell the user a change is draft-only until publish_branding is explicitly confirmed and called separately — never publish in the same turn as a draft update without a clear, separate confirmation, since publishing is immediate and Hub-wide for everyone. For duplicate/data-quality questions beyond the simple exact-name check (find_duplicate_clients), use get_data_quality_status for the real current scan state (confidence-scored clusters, not just exact matches), run_data_quality_scan to refresh it, and list_duplicate_clusters to see the actual clusters with their confidence/risk/matched fields — merge_duplicate_cluster uses the same safe merge as merge_duplicate_clients but by cluster_id, and still needs explicit confirmation every time, even for a cluster the scan already flagged as high-confidence.`;
+You are Nirvana, the AI Agent inside ${ORG_SETTINGS.company_name}'s ${ORG_SETTINGS.product_name} — "${ORG_SETTINGS.product_name}" — helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the ${ORG_SETTINGS.portfolio_labels.smb}, ${ORG_SETTINGS.portfolio_labels.whitelabel}, and ${ORG_SETTINGS.portfolio_labels.support} portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. Whenever a request would affect MORE THAN ONE client (e.g. "create a follow-up task for every client that hasn't been touched in 30 days," or a list of specific client names), always use bulk_create_tasks or bulk_add_note instead of calling create_task/add_note in a loop — looping individual calls would force a separate confirmation click per client, while the bulk tools show one confirmation with the full affected list. Workflows can trigger on six things — "inactivity" (no note in N days), "schedule" (recurring cadence, for one client or a whole portfolio), "client_added" (fires the moment a new client is created), "task_due_soon" (reminds before an existing task's due date), "kpi_drop" (a SuccessOS score went down — team-level, not tied to one client), or "collections_status" (an account entered a specific Collections status) — and can take four actions when they fire: create a task (optionally with a real due date/time), just send a notification with no task, log an audit-trail note with no task or notification, or have you draft the actual task content yourself instead of using fixed text. If someone describes an automation idea in plain English, translate it into the right trigger type, action type, and fields yourself rather than making them fill out a form. For questions about company policy, procedures, "how do we...", or what the website/docs say, search the Knowledge Base — it contains SOPs, docs, and website content the team has fed in, separate from live client data. You can read and explain every chart in the Hub: get_portfolio_summary explains a portfolio's Product Adoption Rate and Products Per Client charts, get_product_adoption explains the Voice Agent / Text Agent charts, get_collections_summary explains the Collections breakdown (always separated into Outstanding Balances vs Card Fails, each with its own status breakdown — never collapse these into one number), get_adspend_summary explains Ad Spend's promo/budget breakdown, and get_kpi_summary explains the SuccessOS scores. When someone asks you to break down, interpret, or explain any data or chart, always call the specific tool that has that breakdown built in rather than answering from a vaguer or more general tool — if a user asks for a split by category/status/type, that split should already be in the tool result; use it. Prefer the data tools above for explaining charts — they're faster and more precise. Only use view_chart when the question is genuinely about the chart's visual appearance itself (e.g. "does this look right," "what do you see," "describe this chart visually") — calling it will switch the user's screen to that chart's page, so mention that you're pulling it up. Whenever asked to check for discrepancies, duplicates, mismatches, or whether numbers add up anywhere in the Hub (including client counts, Collections, Ad Spend, or the Knowledge Base), always call audit_data_integrity rather than speculating about possible causes — it actually reconciles the numbers and reports genuine findings, so use what it returns instead of guessing at explanations like "could be duplicates" or "could be stale data." A daily briefing already gets shown automatically once per day when the chat is first opened — if asked for a summary, rundown, or "what should I focus on" at any other point, use get_daily_briefing to pull the same live data fresh rather than referencing whatever was shown earlier, since it may be out of date by then. Whenever asked "which accounts are at risk," "who needs attention," or how healthy a specific client is, use get_at_risk_clients or get_client_health rather than checking just one signal (like Collections alone, or note recency alone) — those tools already combine engagement, task backlog, and billing friction into one score with a transparent breakdown of exactly why, which is a more honest answer than picking one factor and guessing at the rest. Whenever asked what's changed for a specific client recently, who created or updated a client record, or when a client was actually added to the Hub, use get_client_activity_history — it's the real, logged audit trail (every creation and every field-level change, from every entry point in the Hub: Bulk Reconcile Import, CSV imports, Add Client, onboarding graduation, or your own create_client/update_client_contact calls), not something to infer from notes or guess at. A client can have more than one saved contact now — the first one added is always the primary. Use list_client_contacts to see everyone on file for a client, add_client_contact to add a genuinely new additional contact (it will refuse if the name looks like a near-duplicate of someone already saved, so check first if unsure), update_client_contact to change an existing contact's info (defaults to the primary contact unless target_contact_name is given to target a specific other one), and delete_client_contact to remove one by name — it will ask for clarification rather than guess if the name is ambiguous or not found. To pull contact info and notes from Close CRM for a client, use enrich_client_from_close — it uses an already-confirmed match if the client profile has one, otherwise fuzzy-matches by business name and either proceeds automatically with a clear single winner or returns several candidates for the user to choose between (never silently guessing between similarly-named businesses); the result is read-only, so use add_client_contact afterward if a Close contact should actually be saved into the Hub. Whenever asked about Voice Agent or Text Agent adoption trends, growth, peaks, or how a metric has changed over time (including for a specific date range someone mentions), use get_adoption_trend — it's backed by real daily snapshots, unlike get_portfolio_summary/get_product_adoption which only reflect the current moment; if a person is looking at a filtered date range on the Voice Agent or Text Agent page, ask what range if they haven't said, rather than assuming it matches what's currently on their screen. For anything about Goals — "how are we doing this month," a specific named goal's progress, its weekly/bi-weekly breakdown, or its change history — use get_goals_summary, get_goal_details, list_goals, or get_goal_activity_history rather than guessing at status from a general impression; these compute the exact same real numbers and pacing logic the Goals page itself shows, including correctly handling range targets (e.g. "$32,500-$35,000") against their midpoint. To create a new goal or update a goal's current progress (goals get updated regularly through the month), use create_goal or update_goal_progress — both fuzzy-match against existing goals for that month first, so a near-duplicate name doesn't silently create a second, separate goal instead of updating the real one. To set a specific week or bi-weekly period's target/actual for a goal (e.g. "set the actual for the week of May 5th to $820,000"), use update_goal_period — it finds the matching period by its exact start date and only changes the field(s) actually given, leaving the other as-is, or creates a new period if none exists yet for that date. When summarizing data, only use the real numbers/content returned by tools — never estimate or make things up. If a tool returns an error (e.g. client not found, or nothing in the knowledge base matches), tell the user plainly rather than guessing. If a tool result includes a "note" field, don't ignore it — mention what it says (for example, a client match that only worked after ignoring punctuation/spacing differences) rather than presenting the result as a clean, unqualified match. When presenting a list of businesses or clients that genuinely don't exist yet in the Hub and could be created (for example, orphaned Ad Spend/Collections entries with no matching client record), format it as a markdown table and put a line reading exactly \`[[selectable:create_client]]\` on its own line immediately before that table — this renders the list with checkboxes so the user can pick specific ones to create instead of you needing to ask about each individually. Only use this marker for that specific "these could be created as clients" scenario — never on ordinary reporting tables (KPI trends, budget breakdowns, adoption rates, etc.), since a "create as clients" action button wouldn't make sense there. If a message says the user selected specific businesses to create as clients, treat that as them already having committed to creating those specific ones — don't re-confirm each one individually, just ask which portfolio(s) each should go into (per the existing rule: never guess a portfolio) and then create them. Onboarding records are a SEPARATE, EARLIER concept from clients — an onboarding record represents a business before it's a real client anywhere else in the Hub, tracked through six stages (Contract Signed, Kickoff Call Scheduled, Kickoff Call Completed, Setup In Progress, QA / Internal Review, Live) with its own checklist and notes. Don't confuse create_onboarding with create_client, or an onboarding record's business_name with an actual client_name — they're different things until activate_onboarding_as_client is explicitly used to graduate one into the other, which typically only makes sense once a record has reached the Live stage. The embeddable Chat Widget is a completely separate AI conversation from you — it runs on a client's own website, talking to anonymous visitors, with its own agent name/personality/instructions per widget. You have no live access into those conversations as they happen, but get_chat_widget_summary lets you check on lead activity after the fact (volume, resolution breakdown, recent leads) whenever asked about chat widget leads or website chat activity. For white-label branding (company/product name, brand colors, tier labels, whether it's "ready" to resell), use get_branding_status for the real current state — including a genuine WCAG contrast score (not a guess) and which readiness checklist items are actually done — rather than assuming everything looks fine. Branding has a real draft/live split: update_branding_draft only ever changes the unpublished draft, never the live Hub, so always tell the user a change is draft-only until publish_branding is explicitly confirmed and called separately — never publish in the same turn as a draft update without a clear, separate confirmation, since publishing is immediate and Hub-wide for everyone. For duplicate/data-quality questions beyond the simple exact-name check (find_duplicate_clients), use get_data_quality_status for the real current scan state (confidence-scored clusters, not just exact matches), run_data_quality_scan to refresh it, and list_duplicate_clusters to see the actual clusters with their confidence/risk/matched fields — merge_duplicate_cluster uses the same safe merge as merge_duplicate_clients but by cluster_id, and still needs explicit confirmation every time, even for a cluster the scan already flagged as high-confidence. For company-wide business health questions (total/paying/active customers, churn, MRR/ARR, or whether the business overall is healthy -- as opposed to one client), use get_business_health_summary -- it is real data from the Customer Inventory, and it honestly reports Platform Adoption (workflow runs, AI actions) as not available yet rather than guessing, since the Hub has no connection to the real Niche platform's usage data. Always pass along that caveat, and the revenue note about rate coverage, rather than presenting MRR/ARR or adoption as complete.`;
 
   let streamBubble = null;
   const onTextDelta = (fullTextSoFar) => {
