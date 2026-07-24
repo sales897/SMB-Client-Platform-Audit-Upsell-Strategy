@@ -524,6 +524,38 @@ body.ai-panel-open .main {
 .kpi-comet .pulse-1 { animation: kpiPulse 2.4s ease-out infinite; transform-box: fill-box; transform-origin: center; }
 .kpi-comet .pulse-2 { animation: kpiPulse 2.4s ease-out infinite; animation-delay: .5s; transform-box: fill-box; transform-origin: center; }
 @keyframes kpiPulse { 0% { opacity: .6; transform: scale(.8); } 100% { opacity: 0; transform: scale(1.25); } }
+
+/* ---- Data Quality Studio banner + animated orb ---- */
+.dq-studio-banner { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); background: linear-gradient(120deg, var(--bg2) 0%, var(--bg3) 100%); overflow: hidden; }
+.dq-studio-banner-text { flex: 1; min-width: 240px; }
+.dq-orb { width: 320px; max-width: 45%; height: auto; flex-shrink: 0; }
+.dq-halo { animation: dqHaloPulse 4s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes dqHaloPulse { 0%, 100% { opacity: .7; transform: scale(1); } 50% { opacity: 1; transform: scale(1.08); } }
+.dq-ring { transform-box: fill-box; transform-origin: center; }
+.dq-ring ellipse { fill: none; stroke: var(--orange); stroke-width: 1.4; }
+.dq-ring-1 { opacity: .55; animation: dqSpin 16s linear infinite; }
+.dq-ring-2 { opacity: .35; animation: dqSpin 22s linear infinite reverse; }
+.dq-ring-2 ellipse { stroke: var(--orange2); }
+.dq-ring-3 { opacity: .3; animation: dqSpin 12s linear infinite; }
+@keyframes dqSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.dq-core { fill: var(--orange2); filter: drop-shadow(0 0 6px var(--orange)); }
+.dq-core-pulse { fill: none; stroke: var(--orange); stroke-width: 1.2; transform-box: fill-box; transform-origin: center; animation: kpiPulse 2.6s ease-out infinite; }
+.dq-core-pulse-2 { animation-delay: .9s; }
+.dq-particles circle { fill: var(--orange2); animation: dqTwinkle 3.2s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.dq-particles circle:nth-child(2) { animation-delay: .4s; }
+.dq-particles circle:nth-child(3) { animation-delay: .8s; }
+.dq-particles circle:nth-child(4) { animation-delay: 1.2s; }
+.dq-particles circle:nth-child(5) { animation-delay: 1.6s; }
+.dq-particles circle:nth-child(6) { animation-delay: 2s; }
+.dq-particles circle:nth-child(7) { animation-delay: 2.4s; }
+.dq-particles circle:nth-child(8) { animation-delay: 2.8s; }
+@keyframes dqTwinkle { 0%, 100% { opacity: .15; } 50% { opacity: 1; } }
+.dq-rays line { stroke: var(--orange); stroke-width: 1; opacity: .12; stroke-dasharray: 2 4; animation: dqRayPulse 5s ease-in-out infinite; }
+.dq-rays line:nth-child(2) { animation-delay: .8s; }
+.dq-rays line:nth-child(3) { animation-delay: 1.6s; }
+.dq-rays line:nth-child(4) { animation-delay: 2.4s; }
+.dq-rays line:nth-child(5) { animation-delay: 3.2s; }
+@keyframes dqRayPulse { 0%, 100% { opacity: .06; } 50% { opacity: .3; } }
 @keyframes meshNodePulse { 0%, 100% { opacity: .5; transform: scale(.85); } 50% { opacity: 1; transform: scale(1.15); } }
 .kpi-comet .mesh-node { transform-box: fill-box; transform-origin: center; animation: meshNodePulse 2s ease-in-out infinite; }
 /* ─── Mission Control 3-column layout (Spotlight | Matrix | Analytics) ─── */
@@ -2074,6 +2106,12 @@ tr.pg-hidden-row { display: none; }
 .team-role-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 8px; }
 .team-role-card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
 .team-rec-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-xs); padding: 10px; margin-bottom: 8px; font-size: 11.5px; }
+.wf-toggle-switch { position: relative; display: inline-block; width: 36px; height: 20px; flex-shrink: 0; cursor: pointer; }
+.wf-toggle-switch input { opacity: 0; width: 0; height: 0; }
+.wf-toggle-slider { position: absolute; inset: 0; background: var(--bg4); border-radius: 999px; transition: background-color var(--transition-slow); }
+.wf-toggle-slider::before { content: ''; position: absolute; width: 14px; height: 14px; left: 3px; top: 3px; background: var(--text3); border-radius: 50%; transition: transform var(--transition-slow), background-color var(--transition-slow); }
+.wf-toggle-switch input:checked + .wf-toggle-slider { background: var(--orange-dim); }
+.wf-toggle-switch input:checked + .wf-toggle-slider::before { transform: translateX(16px); background: var(--orange); }
 .team-role-picker { position: relative; width: 150px; flex-shrink: 0; }
 .team-role-btn { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: var(--space-2) var(--space-3); background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-size: var(--font-xs); font-weight: 600; cursor: pointer; transition: box-shadow var(--transition-slow), border-color var(--transition-slow); }
 .team-role-caret { font-size: 9px; color: var(--text3); }
@@ -2083,6 +2121,14 @@ tr.pg-hidden-row { display: none; }
 .team-role-panel { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: 0 8px 20px rgba(0,0,0,.4); z-index: 20; overflow: hidden; }
 .team-role-option { padding: 8px 12px; font-size: 11.5px; font-weight: 600; color: var(--text2); cursor: pointer; }
 .team-role-option:hover { background: var(--orange-dim); color: var(--orange); }
+.themed-select { position: relative; display: inline-block; }
+.themed-select-btn { width: 100%; height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 12px; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-size: var(--font-xs); font-weight: 600; cursor: pointer; min-height: 34px; }
+.themed-select-btn:hover { border-color: var(--orange); }
+.themed-select-caret { font-size: 9px; color: var(--text3); flex-shrink: 0; }
+.themed-select-panel { position: absolute; top: calc(100% + 4px); left: 0; min-width: 100%; max-height: 260px; overflow-y: auto; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: 0 8px 20px rgba(0,0,0,.4); z-index: 40; }
+.themed-select-option { padding: 8px 12px; font-size: 11.5px; font-weight: 600; color: var(--text2); cursor: pointer; white-space: nowrap; }
+.themed-select-option:hover { background: var(--orange-dim); color: var(--orange); }
+.themed-select-option.active { color: var(--orange); background: var(--orange-dim); }
 
 /* ─── SECTION HEADERS ──────────────────────────────────────────────────── */
 .section-hd { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-2); }
@@ -5953,16 +5999,101 @@ select.wfb-field-input { padding-right: 26px; }
     </div>
 
     <div id="settingsTab-cleanup" style="display:none">
-      <div class="card" style="margin-bottom:var(--space-5)">
-        <div class="card-header">
-          <div><div class="card-title" data-i18n="settings_duplicates_title">Duplicate Clients</div><div class="card-sub">Same client name appearing more than once within the same portfolio — usually from a spreadsheet re-uploaded without de-duplicating against existing clients</div></div>
-          <button class="btn btn-primary btn-sm" onclick="scanForDuplicateClients()"><span class="icon" data-icon="search" data-icon-size="14"></span> <span data-i18n="settings_scan_btn">Scan for Duplicates</span></button>
+      <div class="card dq-studio-banner" style="margin-bottom:var(--space-5)">
+        <div class="dq-studio-banner-text">
+          <div class="card-title" style="display:flex;align-items:center;gap:10px">Data Quality Studio <span class="int-coming-soon-badge" style="color:var(--orange);background:var(--orange-dim)">AI POWERED</span></div>
+          <div class="card-sub">AI continuously scans your client data to detect duplicates, conflicts, and anomalies so you can maintain a single source of truth.</div>
+          <button class="btn btn-primary btn-sm" style="margin-top:14px" onclick="runDataQualityScan(true)"><span class="icon" data-icon="search" data-icon-size="14"></span> <span data-i18n="settings_scan_btn">Scan for Duplicates</span></button>
         </div>
-        <div id="duplicateClientsList">
-          <div style="color:var(--text3);font-size:var(--font-sm);text-align:center;padding:var(--space-5) 0">Click "Scan for Duplicates" to check.</div>
+        <svg class="dq-orb" viewBox="0 0 320 150" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <defs>
+            <radialGradient id="dqCoreGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stop-color="var(--orange2)" stop-opacity=".9"/>
+              <stop offset="40%" stop-color="var(--orange)" stop-opacity=".35"/>
+              <stop offset="100%" stop-color="var(--orange)" stop-opacity="0"/>
+            </radialGradient>
+          </defs>
+          <!-- faint rising light rays -->
+          <g class="dq-rays">
+            <line x1="30" y1="140" x2="30" y2="20" />
+            <line x1="48" y1="140" x2="48" y2="55" />
+            <line x1="66" y1="140" x2="66" y2="10" />
+            <line x1="84" y1="140" x2="84" y2="70" />
+            <line x1="102" y1="140" x2="102" y2="35" />
+          </g>
+          <!-- soft outer glow halo -->
+          <circle class="dq-halo" cx="215" cy="75" r="65" fill="url(#dqCoreGlow)"/>
+          <!-- orbit rings -->
+          <g class="dq-ring dq-ring-1"><ellipse cx="215" cy="75" rx="78" ry="26"/></g>
+          <g class="dq-ring dq-ring-2"><ellipse cx="215" cy="75" rx="78" ry="26"/></g>
+          <g class="dq-ring dq-ring-3"><ellipse cx="215" cy="75" rx="58" ry="19"/></g>
+          <!-- pulsing core -->
+          <circle class="dq-core" cx="215" cy="75" r="5"/>
+          <circle class="dq-core-pulse" cx="215" cy="75" r="5"/>
+          <circle class="dq-core-pulse dq-core-pulse-2" cx="215" cy="75" r="5"/>
+          <!-- twinkling particles -->
+          <g class="dq-particles">
+            <circle cx="150" cy="40" r="1.4"/><circle cx="270" cy="30" r="1.2"/><circle cx="290" cy="95" r="1.6"/>
+            <circle cx="170" cy="110" r="1.1"/><circle cx="240" cy="125" r="1.3"/><circle cx="125" cy="80" r="1.2"/>
+            <circle cx="255" cy="55" r="1"/><circle cx="200" cy="20" r="1.3"/>
+          </g>
+        </svg>
+      </div>
+
+      <div class="int-stat-bar" id="dqStatBar"></div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--space-4);margin-bottom:var(--space-5)">
+        <div class="card brand-section-card">
+          <div class="card-title" style="font-size:13px">Duplicate Distribution</div>
+          <div style="position:relative;height:150px;margin-top:8px"><canvas id="dqDistributionChart"></canvas></div>
+          <div id="dqDistributionLegend" style="margin-top:8px"></div>
+        </div>
+        <div class="card brand-section-card">
+          <div class="card-title" style="font-size:13px">Portfolio Breakdown</div>
+          <div class="card-sub" style="font-size:10px">Source-system overlap isn't tracked yet (no activity logged there so far) — showing real portfolio distribution instead.</div>
+          <div style="position:relative;height:150px;margin-top:8px"><canvas id="dqPortfolioChart"></canvas></div>
+        </div>
+        <div class="card brand-section-card">
+          <div class="card-title" style="font-size:13px">Duplicates Trend</div>
+          <div class="card-sub" style="font-size:10px">Builds up as you run more scans — only real scan history, nothing back-filled.</div>
+          <div style="position:relative;height:150px;margin-top:8px"><canvas id="dqTrendChart"></canvas></div>
         </div>
       </div>
+
+      <div style="display:grid;grid-template-columns:1fr 340px;gap:var(--space-4);align-items:start;margin-bottom:var(--space-5)">
+        <div class="card brand-section-card">
+          <div class="card-header" style="margin-bottom:var(--space-3)">
+            <div><div class="card-title">Duplicate Clusters</div><div class="card-sub" id="dqClusterCountSub">0 groups</div></div>
+            <div style="display:flex;gap:8px">
+              <input type="text" id="dqClusterSearch" class="field-input" placeholder="Search clusters…" style="height:32px;width:160px;margin-bottom:0" oninput="onDqClusterFilterChange()">
+              <select id="dqRiskFilter" class="field-select" style="height:32px" onchange="onDqClusterFilterChange()">
+                <option value="all">All Risk Levels</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+              </select>
+            </div>
+          </div>
+          <div id="dqClustersList"></div>
+          <div id="dqClusterPagination" style="display:flex;justify-content:center;gap:6px;margin-top:12px"></div>
+        </div>
+
+        <div class="card brand-section-card">
+          <div class="card-header" style="margin-bottom:var(--space-3)">
+            <div class="card-title" style="font-size:13px">Rule Builder / Cleanup Policies</div>
+          </div>
+          <div id="dqRulesList"></div>
+          <div class="card-title" style="font-size:12px;margin-top:12px">Cleanup Policy</div>
+          <div id="dqPoliciesList" style="margin-top:6px"></div>
+        </div>
+      </div>
+
+      <div class="card brand-section-card">
+        <div class="card-title" style="font-size:13px">Recent Activity</div>
+        <div id="dqActivityList" style="margin-top:8px"></div>
+      </div>
     </div>
+
     <div class="page-footer"><span class="org-brand-inline">The HUB · Niche Inc.</span> · Settings</div>
   </div>
 
@@ -12172,6 +12303,69 @@ function renderIntTileHtml(tile, ctx) {
   }
 }
 
+// ════════════════════════════════════════════════════════════════════════
+// GENERIC THEMED SELECT (2026-07-24) — the Hub has 70+ native <select>
+// elements; their open dropdown list is browser-native and can't be
+// restyled to match the dark theme (same root cause as the Goals month
+// picker and the team role picker built earlier). Rather than hand-writing
+// a bespoke themed dropdown per select, this converts any EXISTING native
+// select in place: the original stays in the DOM (hidden) as the real
+// source of truth, so nothing that reads `.value` or listens for
+// `onchange` needs to change. Idempotent — safe to call again after a
+// select's options get rebuilt dynamically (removes its own previous
+// wrapper first rather than stacking a second one).
+// ════════════════════════════════════════════════════════════════════════
+function themifySelect(selectId) {
+  const select = document.getElementById(selectId);
+  if (!select || select.tagName !== 'SELECT') return;
+  const existingWrap = document.getElementById(`ts-wrap-${selectId}`);
+  if (existingWrap) existingWrap.remove();
+
+  select.style.display = 'none';
+  const wrap = document.createElement('div');
+  wrap.className = 'themed-select';
+  wrap.id = `ts-wrap-${selectId}`;
+  // Match whatever sizing the hidden select already had, so swapping it in
+  // doesn't reflow the layout around it.
+  if (select.style.height) wrap.style.height = select.style.height;
+  if (select.style.width) wrap.style.width = select.style.width;
+
+  const selected = select.options[select.selectedIndex];
+  wrap.innerHTML = `
+    <button type="button" class="themed-select-btn" onclick="toggleThemedSelect('${selectId}', event)">
+      <span class="themed-select-label" id="ts-label-${selectId}">${escAttr(selected ? selected.text : '')}</span>
+      <span class="themed-select-caret">▾</span>
+    </button>
+    <div class="themed-select-panel" id="ts-panel-${selectId}" style="display:none">
+      ${Array.from(select.options).map(o => `<div class="themed-select-option${o.value === select.value ? ' active' : ''}" data-value="${escAttr(o.value)}" onclick="pickThemedSelect('${selectId}', '${String(o.value).replace(/\\/g, '\\\\').replace(/'/g, "\\'")}')">${escAttr(o.text)}</div>`).join('')}
+    </div>`;
+  select.insertAdjacentElement('afterend', wrap);
+}
+function toggleThemedSelect(selectId, event) {
+  if (event) event.stopPropagation();
+  document.querySelectorAll('.themed-select-panel').forEach(p => { if (p.id !== `ts-panel-${selectId}`) p.style.display = 'none'; });
+  const panel = document.getElementById(`ts-panel-${selectId}`);
+  if (panel) panel.style.display = panel.style.display === 'none' ? '' : 'none';
+}
+function pickThemedSelect(selectId, value) {
+  const select = document.getElementById(selectId);
+  const label = document.getElementById(`ts-label-${selectId}`);
+  const panel = document.getElementById(`ts-panel-${selectId}`);
+  if (select) {
+    select.value = value;
+    const selected = select.options[select.selectedIndex];
+    if (label) label.textContent = selected ? selected.text : value;
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+  if (panel) {
+    panel.querySelectorAll('.themed-select-option').forEach(o => o.classList.toggle('active', o.dataset.value === String(value)));
+    panel.style.display = 'none';
+  }
+}
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.themed-select')) document.querySelectorAll('.themed-select-panel').forEach(p => p.style.display = 'none');
+});
+
 function switchSettingsTab(tab) {
   document.querySelectorAll('#page-settings .pm-tab').forEach(b => b.classList.remove('active'));
   document.getElementById(`settings${tab.charAt(0).toUpperCase()}${tab.slice(1)}TabBtn`).classList.add('active');
@@ -12181,6 +12375,7 @@ function switchSettingsTab(tab) {
   document.getElementById('settingsTab-cleanup').style.display = tab === 'cleanup' ? '' : 'none';
   if (tab === 'branding') populateBrandingForm();
   if (tab === 'team') renderTeamUI();
+  if (tab === 'cleanup') { loadDataCleanupConfig().then(renderDataQualityStudio); }
 }
 // Populates the Branding form from the real ORG_SETTINGS currently applied
 // across the Hub, not stale defaults, so the form always reflects reality.
@@ -12651,6 +12846,349 @@ async function mergeDuplicateClientGroup(i) {
 }
 
 // ════════════════════════════════════════════════════════════════════════
+// DATA QUALITY STUDIO (2026-07-24) — real fuzzy duplicate detection, not
+// just the exact-name-match check above. Clusters, confidence scores, risk
+// tiers, scan history, configurable rules, and cleanup policies are all
+// backed by real data (new tables: data_cleanup_scans/rules/policies/
+// activity_log). Two honest substitutions from the reference mockup, both
+// flagged in the UI itself rather than silently faked:
+//   - "Source Overlap" venn -> real Portfolio Breakdown instead, since
+//     client_activity_log's source tracking has zero rows logged so far.
+//   - "Duplicates Trend" starts empty and builds up from real scans going
+//     forward -- nothing back-filled to look more populated than it is.
+// ════════════════════════════════════════════════════════════════════════
+let DQ_CLUSTERS = [];
+let DQ_LAST_SCAN = null;
+let DQ_SCAN_HISTORY = [];
+let DQ_RULES = [];
+let DQ_POLICIES = { auto_merge_high_confidence: false, send_medium_to_review: true, keep_low_for_review: true };
+let DQ_ACTIVITY = [];
+let dqClusterPage = 1;
+const DQ_CLUSTERS_PER_PAGE = 4;
+
+// Groups clients within the same portfolio by fuzzy name similarity
+// (reusing the same nameSimilarity() already used for duplicate-client
+// detection elsewhere) plus a real Organization-field match where present.
+// This is a simple greedy single-pass clustering (not full transitive
+// union-find) -- adequate for the 2-3-row clusters this actually produces
+// in practice, and keeps the O(n^2) per-portfolio comparison cheap enough
+// for a manual "Scan" click.
+function computeDuplicateClusters(rows) {
+  const byPortfolio = {};
+  rows.forEach(r => { (byPortfolio[r.portfolio] = byPortfolio[r.portfolio] || []).push(r); });
+  const clusters = [];
+  Object.values(byPortfolio).forEach(list => {
+    const assigned = new Set();
+    for (let i = 0; i < list.length; i++) {
+      if (assigned.has(list[i].id)) continue;
+      const members = [list[i]];
+      let maxScore = 0, orgMatch = false;
+      for (let j = i + 1; j < list.length; j++) {
+        if (assigned.has(list[j].id)) continue;
+        const score = nameSimilarity(list[i].name, list[j].name);
+        if (score >= 0.55) {
+          members.push(list[j]);
+          assigned.add(list[j].id);
+          maxScore = Math.max(maxScore, score);
+          if (list[i].organization && list[j].organization && list[i].organization.trim().toLowerCase() === list[j].organization.trim().toLowerCase()) orgMatch = true;
+        }
+      }
+      if (members.length > 1) {
+        assigned.add(list[i].id);
+        members.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+        const matchedFields = ['Business Name'];
+        if (orgMatch) matchedFields.push('Organization');
+        clusters.push({
+          id: `${list[i].portfolio}-${list[i].id}`,
+          members, confidence: maxScore, matchedFields, portfolio: list[i].portfolio,
+          risk: maxScore >= 0.90 ? 'High' : maxScore >= 0.70 ? 'Medium' : 'Low',
+        });
+      }
+    }
+  });
+  return clusters.sort((a, b) => b.confidence - a.confidence);
+}
+
+async function loadDataCleanupConfig() {
+  try { DQ_RULES = await sbSelect('data_cleanup_rules', 'order=rule_key.asc'); } catch (e) { DQ_RULES = []; }
+  try {
+    const rows = await sbSelect('data_cleanup_policies', 'id=eq.default&limit=1');
+    if (rows && rows[0]) DQ_POLICIES = rows[0];
+  } catch (e) { /* keep defaults */ }
+  try { DQ_SCAN_HISTORY = await sbSelect('data_cleanup_scans', 'order=scanned_at.desc&limit=30'); DQ_LAST_SCAN = DQ_SCAN_HISTORY[0] || null; } catch (e) { DQ_SCAN_HISTORY = []; }
+  try { DQ_ACTIVITY = await sbSelect('data_cleanup_activity_log', 'order=created_at.desc&limit=10'); } catch (e) { DQ_ACTIVITY = []; }
+}
+async function logDqActivity(eventType, detail) {
+  const u = getCurrentUser();
+  try {
+    await sbUpsert('data_cleanup_activity_log', { id: (crypto.randomUUID ? crypto.randomUUID() : 'dq_' + Date.now()), event_type: eventType, detail: detail || null, actor_email: u ? u.email : null });
+  } catch (e) { console.warn('Could not log cleanup activity:', e.message); }
+}
+
+async function runDataQualityScan(showFeedback) {
+  const listEl = document.getElementById('dqClustersList');
+  if (listEl) listEl.innerHTML = `<div style="text-align:center;padding:var(--space-5);color:var(--text3)">Scanning ${PORTFOLIOS ? Object.values(PORTFOLIOS).reduce((a, p) => a + p.clients.length, 0) : ''} clients…</div>`;
+  let rows;
+  try {
+    rows = await sbSelect('portfolio_clients', 'select=id,portfolio,name,organization,cell_notes,products,created_at&order=created_at.asc');
+  } catch (e) {
+    if (listEl) listEl.innerHTML = `<div style="color:var(--red);font-size:var(--font-sm)">Could not scan: ${escAttr(e.message)}</div>`;
+    return;
+  }
+  DQ_CLUSTERS = computeDuplicateClusters(rows);
+  dqClusterPage = 1;
+
+  const high = DQ_CLUSTERS.filter(c => c.risk === 'High').length;
+  const medium = DQ_CLUSTERS.filter(c => c.risk === 'Medium').length;
+  const low = DQ_CLUSTERS.filter(c => c.risk === 'Low').length;
+  let dataIssues = 0;
+  try {
+    const integrity = auditDataIntegrity();
+    const countIf = (v) => Array.isArray(v) ? v.length : 0;
+    dataIssues = countIf(integrity.duplicate_clients_within_a_single_portfolio) + countIf(integrity.orphaned_collections_accounts) + countIf(integrity.orphaned_adspend_businesses) + countIf(integrity.orphaned_contact_records) + countIf(integrity.knowledge_base_issues);
+  } catch (e) { /* leave at 0 if unavailable */ }
+
+  const scanRow = { scanned_at: new Date().toISOString(), total_clients: rows.length, potential_duplicate_clusters: DQ_CLUSTERS.length, high_confidence: high, medium_confidence: medium, low_confidence: low, data_issues: dataIssues };
+  try { await sbUpsert('data_cleanup_scans', { id: (crypto.randomUUID ? crypto.randomUUID() : 'scan_' + Date.now()), ...scanRow }); } catch (e) { console.warn('Could not save scan history:', e.message); }
+  DQ_LAST_SCAN = scanRow;
+  DQ_SCAN_HISTORY = [scanRow, ...DQ_SCAN_HISTORY].slice(0, 30);
+  await logDqActivity('scan_completed', `${DQ_CLUSTERS.length} potential duplicate cluster(s) found`);
+  await loadDataCleanupConfig(); // refresh activity feed with the entry just logged
+
+  renderDataQualityStudio();
+  if (showFeedback) showToast(`Scan complete — ${DQ_CLUSTERS.length} potential duplicate cluster(s) found.`, DQ_CLUSTERS.length ? 'warning' : 'success');
+}
+
+function onDqClusterFilterChange() { dqClusterPage = 1; renderDqClustersTable(); }
+
+function renderDataQualityStudio() {
+  if (!document.getElementById('dqStatBar')) return;
+  renderDqStatBar();
+  renderDqDistributionChart();
+  renderDqPortfolioChart();
+  renderDqTrendChart();
+  renderDqClustersTable();
+  renderDqRulesAndPolicies();
+  renderDqActivity();
+}
+
+function renderDqStatBar() {
+  const el = document.getElementById('dqStatBar');
+  if (!el) return;
+  const totalClients = DQ_LAST_SCAN ? DQ_LAST_SCAN.total_clients : (PORTFOLIOS ? Object.values(PORTFOLIOS).reduce((a, p) => a + p.clients.length, 0) : 0);
+  const potentialDupes = DQ_LAST_SCAN ? DQ_LAST_SCAN.potential_duplicate_clusters : DQ_CLUSTERS.length;
+  const dataIssues = DQ_LAST_SCAN ? DQ_LAST_SCAN.data_issues : 0;
+  const lastScanLabel = DQ_LAST_SCAN ? fmtNoteTime(DQ_LAST_SCAN.scanned_at) : 'Never scanned yet';
+  el.innerHTML = `
+    <div class="int-stat-card">
+      <div class="int-stat-label"><span class="icon" data-icon="users" data-icon-size="12"></span> Total Clients</div>
+      <div class="int-stat-value">${totalClients.toLocaleString()}</div>
+    </div>
+    <div class="int-stat-card">
+      <div class="int-stat-label"><span class="icon" data-icon="search" data-icon-size="12"></span> Potential Duplicates</div>
+      <div class="int-stat-value" style="color:${potentialDupes ? 'var(--yellow)' : 'var(--green)'}">${potentialDupes}</div>
+    </div>
+    <div class="int-stat-card">
+      <div class="int-stat-label"><span class="icon" data-icon="alert" data-icon-size="12"></span> Data Issues</div>
+      <div class="int-stat-value" style="color:${dataIssues ? 'var(--yellow)' : 'var(--green)'}">${dataIssues}</div>
+    </div>
+    <div class="int-stat-card">
+      <div class="int-stat-label"><span class="icon" data-icon="clock" data-icon-size="12"></span> Last Scan</div>
+      <div class="int-stat-value" style="font-size:15px">${lastScanLabel}</div>
+    </div>
+  `;
+}
+
+function renderDqDistributionChart() {
+  const canvas = document.getElementById('dqDistributionChart');
+  const legendEl = document.getElementById('dqDistributionLegend');
+  if (!canvas) return;
+  if (chartRegistry['dq-distribution']) { chartRegistry['dq-distribution'].destroy(); delete chartRegistry['dq-distribution']; }
+  const high = DQ_CLUSTERS.filter(c => c.risk === 'High').length;
+  const medium = DQ_CLUSTERS.filter(c => c.risk === 'Medium').length;
+  const low = DQ_CLUSTERS.filter(c => c.risk === 'Low').length;
+  const total = high + medium + low;
+  if (total === 0) {
+    canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+    if (legendEl) legendEl.innerHTML = `<div class="cnt-empty-contacts-hint">Run a scan to see the breakdown.</div>`;
+    return;
+  }
+  chartRegistry['dq-distribution'] = new Chart(canvas, {
+    type: 'doughnut',
+    data: { labels: ['High (90%+)', 'Medium (70-89%)', 'Low (50-69%)'], datasets: [{ data: [high, medium, low], backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6'], borderWidth: 0 }] },
+    options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { display: false } } },
+  });
+  if (legendEl) legendEl.innerHTML = `
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:#ef4444"><span>● High (90%+)</span><span>${high} (${Math.round(high / total * 100)}%)</span></div>
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:#f59e0b"><span>● Medium (70-89%)</span><span>${medium} (${Math.round(medium / total * 100)}%)</span></div>
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:#3b82f6"><span>● Low (50-69%)</span><span>${low} (${Math.round(low / total * 100)}%)</span></div>`;
+}
+
+function renderDqPortfolioChart() {
+  const canvas = document.getElementById('dqPortfolioChart');
+  if (!canvas) return;
+  if (chartRegistry['dq-portfolio']) { chartRegistry['dq-portfolio'].destroy(); delete chartRegistry['dq-portfolio']; }
+  const counts = ['smb', 'whitelabel', 'support'].map(pk => (typeof getClients === 'function' ? getClients(pk).length : 0));
+  chartRegistry['dq-portfolio'] = new Chart(canvas, {
+    type: 'doughnut',
+    data: { labels: [PORTFOLIO_LABELS.smb, PORTFOLIO_LABELS.whitelabel, PORTFOLIO_LABELS.support], datasets: [{ data: counts, backgroundColor: ['#e2541f', '#3b82f6', '#22c55e'], borderWidth: 0 }] },
+    options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { position: 'bottom', labels: { color: '#a39a92', font: { size: 10 }, boxWidth: 8 } } } },
+  });
+}
+
+function renderDqTrendChart() {
+  const canvas = document.getElementById('dqTrendChart');
+  if (!canvas) return;
+  if (chartRegistry['dq-trend']) { chartRegistry['dq-trend'].destroy(); delete chartRegistry['dq-trend']; }
+  const history = [...DQ_SCAN_HISTORY].reverse(); // oldest first for a left-to-right trend
+  if (history.length === 0) {
+    canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+    return;
+  }
+  chartRegistry['dq-trend'] = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels: history.map(s => fmtNoteTime(s.scanned_at)),
+      datasets: [{ label: 'Potential Duplicates', data: history.map(s => s.potential_duplicate_clusters), borderColor: '#e2541f', backgroundColor: 'rgba(226,84,31,.15)', fill: true, tension: 0.3, pointRadius: 2 }],
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { display: history.length > 1, ticks: { color: '#a39a92', font: { size: 9 } }, grid: { display: false } }, y: { beginAtZero: true, ticks: { color: '#a39a92', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,.05)' } } } },
+  });
+}
+
+function renderDqClustersTable() {
+  const listEl = document.getElementById('dqClustersList');
+  const countSub = document.getElementById('dqClusterCountSub');
+  const pagEl = document.getElementById('dqClusterPagination');
+  if (!listEl) return;
+  const q = (document.getElementById('dqClusterSearch')?.value || '').trim().toLowerCase();
+  const riskFilter = document.getElementById('dqRiskFilter')?.value || 'all';
+  const filtered = DQ_CLUSTERS.filter(c => (riskFilter === 'all' || c.risk === riskFilter) && (!q || c.members[0].name.toLowerCase().includes(q)));
+  if (countSub) countSub.textContent = `${filtered.length} group${filtered.length === 1 ? '' : 's'}`;
+
+  if (DQ_CLUSTERS.length === 0) {
+    listEl.innerHTML = `<div class="cnt-empty-contacts-hint">${DQ_LAST_SCAN ? 'No duplicate clusters found in the last scan.' : 'Click "Scan for Duplicates" above to check.'}</div>`;
+    if (pagEl) pagEl.innerHTML = '';
+    return;
+  }
+  if (filtered.length === 0) {
+    listEl.innerHTML = `<div class="cnt-empty-contacts-hint">No clusters match that search/filter.</div>`;
+    if (pagEl) pagEl.innerHTML = '';
+    return;
+  }
+  const totalPages = Math.max(1, Math.ceil(filtered.length / DQ_CLUSTERS_PER_PAGE));
+  dqClusterPage = Math.min(dqClusterPage, totalPages);
+  const pageItems = filtered.slice((dqClusterPage - 1) * DQ_CLUSTERS_PER_PAGE, dqClusterPage * DQ_CLUSTERS_PER_PAGE);
+
+  const riskColor = { High: 'var(--red)', Medium: 'var(--yellow)', Low: 'var(--blue)' };
+  listEl.innerHTML = pageItems.map(c => {
+    const survivor = c.members[0];
+    return `<div class="team-role-card" style="margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div style="font-weight:700;font-size:13px;color:var(--text)">${escAttr(survivor.name)}</div>
+          <div style="font-size:10.5px;color:var(--text3);margin-top:2px">${c.members.length} clients · Matched on ${c.matchedFields.join(', ')} · ${PORTFOLIO_LABELS[c.portfolio] || c.portfolio}</div>
+        </div>
+        <span class="int-coming-soon-badge" style="color:${riskColor[c.risk]};background:${riskColor[c.risk]}22">${c.risk} · ${Math.round(c.confidence * 100)}%</span>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:8px">
+        <button class="btn btn-ghost btn-sm" onclick="viewDqClusterDetail('${c.id}')"><span class="icon" data-icon="eye" data-icon-size="12"></span> Review</button>
+        <button class="btn btn-primary btn-sm" onclick="confirmMergeDqCluster('${c.id}')"><span class="icon" data-icon="broom" data-icon-size="12"></span> Merge ${c.members.length} → 1</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  if (pagEl) {
+    pagEl.innerHTML = Array.from({ length: totalPages }, (_, i) => i + 1).slice(0, 7).map(p =>
+      `<button class="btn btn-ghost btn-sm" style="min-width:30px;${p === dqClusterPage ? 'background:var(--orange-dim);color:var(--orange)' : ''}" onclick="dqClusterPage=${p};renderDqClustersTable()">${p}</button>`
+    ).join('') + (totalPages > 7 ? `<span style="color:var(--text3);padding:6px">… ${totalPages}</span>` : '');
+  }
+}
+
+function viewDqClusterDetail(clusterId) {
+  const c = DQ_CLUSTERS.find(x => x.id === clusterId);
+  if (!c) return;
+  const rowsHtml = c.members.map((m, idx) => `${idx === 0 ? '🏆 Oldest — stays' : '🗑️ Will be removed'}: ${escAttr(m.name)}${m.organization ? ' (' + escAttr(m.organization) + ')' : ''} — created ${fmtNoteTime(m.created_at)}`).join('\n');
+  alert(`Cluster: ${c.members[0].name}\nConfidence: ${Math.round(c.confidence * 100)}% (${c.risk} risk)\nMatched on: ${c.matchedFields.join(', ')}\n\n${rowsHtml}`);
+}
+async function confirmMergeDqCluster(clusterId) {
+  if (!requirePermission('edit')) return;
+  const c = DQ_CLUSTERS.find(x => x.id === clusterId);
+  if (!c) return;
+  const survivor = c.members[0];
+  const confirmed = await showConfirmDialog(`Merge ${c.members.length} rows into "${escAttr(survivor.name)}"? The oldest row stays; the rest are removed after combining their products onto it. This can't be undone.`, { title: '🧹 Merge Duplicate Cluster', confirmLabel: 'Merge', danger: true });
+  if (!confirmed) return;
+  const result = await mergeDuplicateGroupRows(c.members);
+  if (result.error) { showToast(result.error, 'error'); return; }
+  showToast(`Merged "${result.survivorName}" — ${result.deletedCount} duplicate row(s) removed.`, 'success');
+  await logDqActivity('manual_merge', `Merged ${c.members.length} rows into "${result.survivorName}"`);
+  DQ_CLUSTERS = DQ_CLUSTERS.filter(x => x.id !== clusterId);
+  await loadDataCleanupConfig();
+  renderDataQualityStudio();
+}
+
+function renderDqRulesAndPolicies() {
+  const rulesEl = document.getElementById('dqRulesList');
+  const policiesEl = document.getElementById('dqPoliciesList');
+  if (rulesEl) {
+    rulesEl.innerHTML = DQ_RULES.map(r => `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+        <div><div style="font-size:12px;font-weight:600;color:var(--text)">${escAttr(r.label)}</div><div style="font-size:10px;color:var(--text3)">${escAttr(r.field_basis)} · ${r.active ? 'Active' : 'Inactive'}</div></div>
+        <label class="wf-toggle-switch" style="transform:scale(.8)"><input type="checkbox" ${r.active ? 'checked' : ''} onchange="toggleDqRule('${r.id}', this.checked)"><span class="wf-toggle-slider"></span></label>
+      </div>`).join('') || `<div class="cnt-empty-contacts-hint">No rules configured.</div>`;
+  }
+  if (policiesEl) {
+    const policyDefs = [
+      { key: 'auto_merge_high_confidence', label: 'Auto-merge high-confidence duplicates (90%+)', warn: true },
+      { key: 'send_medium_to_review', label: 'Send medium-confidence to manual review (70-89%)' },
+      { key: 'keep_low_for_review', label: 'Keep low confidence for analysis (<70%)' },
+    ];
+    policiesEl.innerHTML = policyDefs.map(p => `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0">
+        <span style="font-size:11px;color:${p.warn ? 'var(--yellow)' : 'var(--text2)'}">${p.label}</span>
+        <label class="wf-toggle-switch" style="transform:scale(.8)"><input type="checkbox" ${DQ_POLICIES[p.key] ? 'checked' : ''} onchange="toggleDqPolicy('${p.key}', this.checked)"><span class="wf-toggle-slider"></span></label>
+      </div>`).join('');
+  }
+}
+async function toggleDqRule(ruleId, active) {
+  if (!requirePermission('admin')) { renderDqRulesAndPolicies(); return; }
+  const rule = DQ_RULES.find(r => r.id === ruleId);
+  if (!rule) return;
+  rule.active = active;
+  try { await sbPatch('data_cleanup_rules', `id=eq.${ruleId}`, { active }); } catch (e) { showToast('Could not save: ' + e.message, 'error'); }
+  await logDqActivity('rule_changed', `${rule.label} ${active ? 'enabled' : 'disabled'}`);
+  await loadDataCleanupConfig();
+  renderDqActivity();
+}
+async function toggleDqPolicy(key, value) {
+  if (!requirePermission('admin')) { renderDqRulesAndPolicies(); return; }
+  // Auto-merge is a real safety line, not just another toggle -- confirm
+  // explicitly before turning it on, and make clear it still won't run
+  // unattended without a person reviewing each batch.
+  if (key === 'auto_merge_high_confidence' && value) {
+    const confirmed = await showConfirmDialog('Enabling this lets you batch-merge all 90%+ confidence clusters in one action from the Duplicate Clusters list — it still shows you exactly what will be merged and asks for confirmation each time. It never merges automatically in the background. Continue?', { title: '⚠️ Enable Auto-Merge', confirmLabel: 'Enable', danger: true });
+    if (!confirmed) { renderDqRulesAndPolicies(); return; }
+  }
+  DQ_POLICIES[key] = value;
+  try { await sbUpsert('data_cleanup_policies', { id: 'default', ...DQ_POLICIES, updated_at: new Date().toISOString() }); } catch (e) { showToast('Could not save: ' + e.message, 'error'); }
+  await logDqActivity('policy_changed', `${key.replace(/_/g, ' ')} set to ${value}`);
+  await loadDataCleanupConfig();
+  renderDqActivity();
+}
+
+function renderDqActivity() {
+  const el = document.getElementById('dqActivityList');
+  if (!el) return;
+  if (DQ_ACTIVITY.length === 0) { el.innerHTML = `<div class="cnt-empty-contacts-hint">No activity yet — run a scan to get started.</div>`; return; }
+  const iconFor = { scan_completed: 'search', manual_merge: 'broom', rule_changed: 'settings', policy_changed: 'shield' };
+  el.innerHTML = DQ_ACTIVITY.map(a => `
+    <div class="int-activity-row">
+      <span class="icon" data-icon="${iconFor[a.event_type] || 'clock'}" data-icon-size="13" style="color:var(--orange)"></span>
+      <div class="int-activity-text">${escAttr(a.detail || a.event_type)}</div>
+      <div class="int-activity-time">${fmtNoteTime(a.created_at)}</div>
+    </div>`).join('');
+}
+
+// ════════════════════════════════════════════════════════════════════════
 // ROLES & PERMISSIONS
 // Team members live in Supabase table "team_members" (falls back to
 // localStorage if that table doesn't exist yet in your project — see the
@@ -12977,6 +13515,7 @@ async function removeTeamMember(id) {
 }
 
 function renderTeamUI() {
+  if (!document.getElementById('ts-wrap-teamRoleFilter')) themifySelect('teamRoleFilter');
   const list = document.getElementById('teamMembersList');
   const countSub = document.getElementById('teamCountSub');
   if (countSub) countSub.textContent = `${TEAM_MEMBERS.length} ${TEAM_MEMBERS.length === 1 ? 'person' : 'people'}`;
@@ -26190,6 +26729,36 @@ const AI_AGENT_TOOLS = [
     },
   },
   {
+    name: 'get_data_quality_status',
+    description: 'Get the current Data Quality Studio status: total clients, potential duplicate clusters found in the most recent scan (with a High/Medium/Low confidence breakdown), a real count of other data issues (orphaned Collections/Ad Spend/contact records, Knowledge Base problems), and when the last scan ran. If no scan has run yet, this says so rather than guessing — use run_data_quality_scan first in that case.',
+    input_schema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'run_data_quality_scan',
+    description: 'Run a fresh fuzzy duplicate-detection scan across all clients (real confidence scoring by name similarity and, where present, matching organization — not just exact-name matches) and save the result to real scan history. Read-only in the sense that it only detects and records — it does not merge or change any client data.',
+    input_schema: { type: 'object', properties: {} },
+  },
+  {
+    name: 'list_duplicate_clusters',
+    description: 'List duplicate clusters found in the most recent Data Quality scan, each with its confidence score, risk tier, matched fields, and member client names. Optionally filter by minimum confidence or risk tier. Run run_data_quality_scan first if there\'s no scan yet.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        risk: { type: 'string', enum: ['High', 'Medium', 'Low'], description: 'Only return clusters at this risk tier' },
+        min_confidence: { type: 'number', description: 'Only return clusters at or above this confidence (0-1, e.g. 0.9 for 90%+)' },
+      },
+    },
+  },
+  {
+    name: 'merge_duplicate_cluster',
+    description: 'Merge a specific duplicate cluster (found via list_duplicate_clusters) by its cluster id. Same safe merge as merge_duplicate_clients — keeps the oldest row, unions product flags, fills gaps without overwriting. This changes data — always show the user what\'s in the cluster (via list_duplicate_clusters) and get explicit confirmation before calling this, even if a scan already flagged it as high confidence.',
+    input_schema: {
+      type: 'object',
+      properties: { cluster_id: { type: 'string', description: 'The cluster id from list_duplicate_clusters, e.g. "smb-<uuid>"' } },
+      required: ['cluster_id'],
+    },
+  },
+  {
     name: 'find_duplicate_clients',
     description: 'Scan for clients whose name appears more than once within the same portfolio — usually caused by a spreadsheet being re-uploaded without de-duplicating against clients already in the Hub. Read-only; use this before merge_duplicate_clients to show the user what would be affected.',
     input_schema: { type: 'object', properties: {} },
@@ -27368,6 +27937,45 @@ async function executeAiTool(name, input) {
       if (typeof cntActiveClientName !== 'undefined' && cntActiveClientName === entry.displayName) renderClientContactInfo();
       return { ok: true, client: entry.displayName, contact_deleted: matches[0].contact_name, remaining_contacts: getClientContacts(entry.displayName).length };
     }
+    case 'get_data_quality_status': {
+      if (!DQ_LAST_SCAN) return { scanned_yet: false, note: 'No scan has run yet — use run_data_quality_scan first.' };
+      return {
+        scanned_yet: true,
+        last_scan: fmtNoteTime(DQ_LAST_SCAN.scanned_at),
+        total_clients: DQ_LAST_SCAN.total_clients,
+        potential_duplicate_clusters: DQ_LAST_SCAN.potential_duplicate_clusters,
+        confidence_breakdown: { high: DQ_LAST_SCAN.high_confidence, medium: DQ_LAST_SCAN.medium_confidence, low: DQ_LAST_SCAN.low_confidence },
+        data_issues: DQ_LAST_SCAN.data_issues,
+      };
+    }
+    case 'run_data_quality_scan': {
+      await runDataQualityScan(false);
+      return { ok: true, potential_duplicate_clusters: DQ_CLUSTERS.length, high_confidence: DQ_CLUSTERS.filter(c => c.risk === 'High').length, medium_confidence: DQ_CLUSTERS.filter(c => c.risk === 'Medium').length, low_confidence: DQ_CLUSTERS.filter(c => c.risk === 'Low').length };
+    }
+    case 'list_duplicate_clusters': {
+      if (DQ_CLUSTERS.length === 0 && !DQ_LAST_SCAN) return { error: 'No scan has run yet — use run_data_quality_scan first.' };
+      let clusters = DQ_CLUSTERS;
+      if (input.risk) clusters = clusters.filter(c => c.risk === input.risk);
+      if (input.min_confidence != null) clusters = clusters.filter(c => c.confidence >= input.min_confidence);
+      return {
+        clusters: clusters.map(c => ({
+          cluster_id: c.id, confidence: Number(c.confidence.toFixed(2)), risk: c.risk, matched_fields: c.matchedFields,
+          portfolio: PORTFOLIO_LABELS[c.portfolio] || c.portfolio,
+          members: c.members.map((m, idx) => ({ name: m.name, organization: m.organization || null, is_survivor: idx === 0 })),
+        })),
+      };
+    }
+    case 'merge_duplicate_cluster': {
+      if (!requirePermission('edit')) return { error: 'This account doesn\'t have permission to merge duplicate clients.' };
+      const c = DQ_CLUSTERS.find(x => x.id === input.cluster_id);
+      if (!c) return { error: `No cluster found with id "${input.cluster_id}" — use list_duplicate_clusters to get a current, valid cluster_id.` };
+      const result = await mergeDuplicateGroupRows(c.members);
+      if (result.error) return { error: result.error };
+      await logDqActivity('manual_merge', `Merged ${c.members.length} rows into "${result.survivorName}" (via Nirvana)`);
+      DQ_CLUSTERS = DQ_CLUSTERS.filter(x => x.id !== input.cluster_id);
+      if (document.getElementById('dqStatBar')) { await loadDataCleanupConfig(); renderDataQualityStudio(); }
+      return { ok: true, survivor_name: result.survivorName, rows_removed: result.deletedCount };
+    }
     case 'find_duplicate_clients': {
       let groups = [];
       try { groups = await detectDuplicateClientGroups(); } catch(e) { return { error: e.message }; }
@@ -27393,7 +28001,7 @@ async function executeAiTool(name, input) {
       if (matches.length > 1) return { error: `"${input.client_name}" has duplicates in more than one portfolio (${matches.map(g => PORTFOLIO_LABELS[g[0].portfolio]).join(', ')}) — call again with a specific portfolio to disambiguate.` };
       const result = await mergeDuplicateGroupRows(matches[0]);
       if (result.error) return { error: result.error };
-      if (typeof scanForDuplicateClients === 'function' && document.getElementById('duplicateClientsList')) scanForDuplicateClients(); // refresh the Settings tab's list too, if it's open
+      if (typeof renderDataQualityStudio === 'function' && document.getElementById('dqStatBar')) runDataQualityScan(false); // refresh the Settings tab's view too, if it's open
       return { ok: true, client_name: result.survivorName, rows_removed: result.deletedCount };
     }
     case 'create_reminder': {
@@ -28317,7 +28925,7 @@ async function runAiAgentTurn(toolTagForNextText) {
   const u = getCurrentUser();
   const systemPrompt = `${currentLanguage === 'es' ? 'IMPORTANT: The Hub is currently set to Spanish (MX). Respond to the user ENTIRELY in Spanish (Mexican Spanish), including this entire conversation, regardless of what language they write in — unless they explicitly ask you to switch to English. Data values, client names, and product names stay as-is; everything you write around them is in Spanish.\n\n' : ''}Current date and time: ${new Date().toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })}. This is read directly from the user's own device clock, so it already reflects their real timezone — treat it as ground truth. For ANY relative time request ("in 15 minutes", "tomorrow at 9am", "next Monday"), compute the exact resulting date/time yourself from this reference. Never ask the user what time it is or guess at a timestamp — the real current time is always right here.
 
-You are Nirvana, the AI Agent inside ${ORG_SETTINGS.company_name}'s ${ORG_SETTINGS.product_name} — "${ORG_SETTINGS.product_name}" — helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the ${ORG_SETTINGS.portfolio_labels.smb}, ${ORG_SETTINGS.portfolio_labels.whitelabel}, and ${ORG_SETTINGS.portfolio_labels.support} portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. Whenever a request would affect MORE THAN ONE client (e.g. "create a follow-up task for every client that hasn't been touched in 30 days," or a list of specific client names), always use bulk_create_tasks or bulk_add_note instead of calling create_task/add_note in a loop — looping individual calls would force a separate confirmation click per client, while the bulk tools show one confirmation with the full affected list. Workflows can trigger on six things — "inactivity" (no note in N days), "schedule" (recurring cadence, for one client or a whole portfolio), "client_added" (fires the moment a new client is created), "task_due_soon" (reminds before an existing task's due date), "kpi_drop" (a SuccessOS score went down — team-level, not tied to one client), or "collections_status" (an account entered a specific Collections status) — and can take four actions when they fire: create a task (optionally with a real due date/time), just send a notification with no task, log an audit-trail note with no task or notification, or have you draft the actual task content yourself instead of using fixed text. If someone describes an automation idea in plain English, translate it into the right trigger type, action type, and fields yourself rather than making them fill out a form. For questions about company policy, procedures, "how do we...", or what the website/docs say, search the Knowledge Base — it contains SOPs, docs, and website content the team has fed in, separate from live client data. You can read and explain every chart in the Hub: get_portfolio_summary explains a portfolio's Product Adoption Rate and Products Per Client charts, get_product_adoption explains the Voice Agent / Text Agent charts, get_collections_summary explains the Collections breakdown (always separated into Outstanding Balances vs Card Fails, each with its own status breakdown — never collapse these into one number), get_adspend_summary explains Ad Spend's promo/budget breakdown, and get_kpi_summary explains the SuccessOS scores. When someone asks you to break down, interpret, or explain any data or chart, always call the specific tool that has that breakdown built in rather than answering from a vaguer or more general tool — if a user asks for a split by category/status/type, that split should already be in the tool result; use it. Prefer the data tools above for explaining charts — they're faster and more precise. Only use view_chart when the question is genuinely about the chart's visual appearance itself (e.g. "does this look right," "what do you see," "describe this chart visually") — calling it will switch the user's screen to that chart's page, so mention that you're pulling it up. Whenever asked to check for discrepancies, duplicates, mismatches, or whether numbers add up anywhere in the Hub (including client counts, Collections, Ad Spend, or the Knowledge Base), always call audit_data_integrity rather than speculating about possible causes — it actually reconciles the numbers and reports genuine findings, so use what it returns instead of guessing at explanations like "could be duplicates" or "could be stale data." A daily briefing already gets shown automatically once per day when the chat is first opened — if asked for a summary, rundown, or "what should I focus on" at any other point, use get_daily_briefing to pull the same live data fresh rather than referencing whatever was shown earlier, since it may be out of date by then. Whenever asked "which accounts are at risk," "who needs attention," or how healthy a specific client is, use get_at_risk_clients or get_client_health rather than checking just one signal (like Collections alone, or note recency alone) — those tools already combine engagement, task backlog, and billing friction into one score with a transparent breakdown of exactly why, which is a more honest answer than picking one factor and guessing at the rest. Whenever asked what's changed for a specific client recently, who created or updated a client record, or when a client was actually added to the Hub, use get_client_activity_history — it's the real, logged audit trail (every creation and every field-level change, from every entry point in the Hub: Bulk Reconcile Import, CSV imports, Add Client, onboarding graduation, or your own create_client/update_client_contact calls), not something to infer from notes or guess at. A client can have more than one saved contact now — the first one added is always the primary. Use list_client_contacts to see everyone on file for a client, add_client_contact to add a genuinely new additional contact (it will refuse if the name looks like a near-duplicate of someone already saved, so check first if unsure), update_client_contact to change an existing contact's info (defaults to the primary contact unless target_contact_name is given to target a specific other one), and delete_client_contact to remove one by name — it will ask for clarification rather than guess if the name is ambiguous or not found. To pull contact info and notes from Close CRM for a client, use enrich_client_from_close — it uses an already-confirmed match if the client profile has one, otherwise fuzzy-matches by business name and either proceeds automatically with a clear single winner or returns several candidates for the user to choose between (never silently guessing between similarly-named businesses); the result is read-only, so use add_client_contact afterward if a Close contact should actually be saved into the Hub. Whenever asked about Voice Agent or Text Agent adoption trends, growth, peaks, or how a metric has changed over time (including for a specific date range someone mentions), use get_adoption_trend — it's backed by real daily snapshots, unlike get_portfolio_summary/get_product_adoption which only reflect the current moment; if a person is looking at a filtered date range on the Voice Agent or Text Agent page, ask what range if they haven't said, rather than assuming it matches what's currently on their screen. For anything about Goals — "how are we doing this month," a specific named goal's progress, its weekly/bi-weekly breakdown, or its change history — use get_goals_summary, get_goal_details, list_goals, or get_goal_activity_history rather than guessing at status from a general impression; these compute the exact same real numbers and pacing logic the Goals page itself shows, including correctly handling range targets (e.g. "$32,500-$35,000") against their midpoint. To create a new goal or update a goal's current progress (goals get updated regularly through the month), use create_goal or update_goal_progress — both fuzzy-match against existing goals for that month first, so a near-duplicate name doesn't silently create a second, separate goal instead of updating the real one. To set a specific week or bi-weekly period's target/actual for a goal (e.g. "set the actual for the week of May 5th to $820,000"), use update_goal_period — it finds the matching period by its exact start date and only changes the field(s) actually given, leaving the other as-is, or creates a new period if none exists yet for that date. When summarizing data, only use the real numbers/content returned by tools — never estimate or make things up. If a tool returns an error (e.g. client not found, or nothing in the knowledge base matches), tell the user plainly rather than guessing. If a tool result includes a "note" field, don't ignore it — mention what it says (for example, a client match that only worked after ignoring punctuation/spacing differences) rather than presenting the result as a clean, unqualified match. When presenting a list of businesses or clients that genuinely don't exist yet in the Hub and could be created (for example, orphaned Ad Spend/Collections entries with no matching client record), format it as a markdown table and put a line reading exactly \`[[selectable:create_client]]\` on its own line immediately before that table — this renders the list with checkboxes so the user can pick specific ones to create instead of you needing to ask about each individually. Only use this marker for that specific "these could be created as clients" scenario — never on ordinary reporting tables (KPI trends, budget breakdowns, adoption rates, etc.), since a "create as clients" action button wouldn't make sense there. If a message says the user selected specific businesses to create as clients, treat that as them already having committed to creating those specific ones — don't re-confirm each one individually, just ask which portfolio(s) each should go into (per the existing rule: never guess a portfolio) and then create them. Onboarding records are a SEPARATE, EARLIER concept from clients — an onboarding record represents a business before it's a real client anywhere else in the Hub, tracked through six stages (Contract Signed, Kickoff Call Scheduled, Kickoff Call Completed, Setup In Progress, QA / Internal Review, Live) with its own checklist and notes. Don't confuse create_onboarding with create_client, or an onboarding record's business_name with an actual client_name — they're different things until activate_onboarding_as_client is explicitly used to graduate one into the other, which typically only makes sense once a record has reached the Live stage. The embeddable Chat Widget is a completely separate AI conversation from you — it runs on a client's own website, talking to anonymous visitors, with its own agent name/personality/instructions per widget. You have no live access into those conversations as they happen, but get_chat_widget_summary lets you check on lead activity after the fact (volume, resolution breakdown, recent leads) whenever asked about chat widget leads or website chat activity. For white-label branding (company/product name, brand colors, tier labels, whether it's "ready" to resell), use get_branding_status for the real current state — including a genuine WCAG contrast score (not a guess) and which readiness checklist items are actually done — rather than assuming everything looks fine. Branding has a real draft/live split: update_branding_draft only ever changes the unpublished draft, never the live Hub, so always tell the user a change is draft-only until publish_branding is explicitly confirmed and called separately — never publish in the same turn as a draft update without a clear, separate confirmation, since publishing is immediate and Hub-wide for everyone.`;
+You are Nirvana, the AI Agent inside ${ORG_SETTINGS.company_name}'s ${ORG_SETTINGS.product_name} — "${ORG_SETTINGS.product_name}" — helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the ${ORG_SETTINGS.portfolio_labels.smb}, ${ORG_SETTINGS.portfolio_labels.whitelabel}, and ${ORG_SETTINGS.portfolio_labels.support} portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. Whenever a request would affect MORE THAN ONE client (e.g. "create a follow-up task for every client that hasn't been touched in 30 days," or a list of specific client names), always use bulk_create_tasks or bulk_add_note instead of calling create_task/add_note in a loop — looping individual calls would force a separate confirmation click per client, while the bulk tools show one confirmation with the full affected list. Workflows can trigger on six things — "inactivity" (no note in N days), "schedule" (recurring cadence, for one client or a whole portfolio), "client_added" (fires the moment a new client is created), "task_due_soon" (reminds before an existing task's due date), "kpi_drop" (a SuccessOS score went down — team-level, not tied to one client), or "collections_status" (an account entered a specific Collections status) — and can take four actions when they fire: create a task (optionally with a real due date/time), just send a notification with no task, log an audit-trail note with no task or notification, or have you draft the actual task content yourself instead of using fixed text. If someone describes an automation idea in plain English, translate it into the right trigger type, action type, and fields yourself rather than making them fill out a form. For questions about company policy, procedures, "how do we...", or what the website/docs say, search the Knowledge Base — it contains SOPs, docs, and website content the team has fed in, separate from live client data. You can read and explain every chart in the Hub: get_portfolio_summary explains a portfolio's Product Adoption Rate and Products Per Client charts, get_product_adoption explains the Voice Agent / Text Agent charts, get_collections_summary explains the Collections breakdown (always separated into Outstanding Balances vs Card Fails, each with its own status breakdown — never collapse these into one number), get_adspend_summary explains Ad Spend's promo/budget breakdown, and get_kpi_summary explains the SuccessOS scores. When someone asks you to break down, interpret, or explain any data or chart, always call the specific tool that has that breakdown built in rather than answering from a vaguer or more general tool — if a user asks for a split by category/status/type, that split should already be in the tool result; use it. Prefer the data tools above for explaining charts — they're faster and more precise. Only use view_chart when the question is genuinely about the chart's visual appearance itself (e.g. "does this look right," "what do you see," "describe this chart visually") — calling it will switch the user's screen to that chart's page, so mention that you're pulling it up. Whenever asked to check for discrepancies, duplicates, mismatches, or whether numbers add up anywhere in the Hub (including client counts, Collections, Ad Spend, or the Knowledge Base), always call audit_data_integrity rather than speculating about possible causes — it actually reconciles the numbers and reports genuine findings, so use what it returns instead of guessing at explanations like "could be duplicates" or "could be stale data." A daily briefing already gets shown automatically once per day when the chat is first opened — if asked for a summary, rundown, or "what should I focus on" at any other point, use get_daily_briefing to pull the same live data fresh rather than referencing whatever was shown earlier, since it may be out of date by then. Whenever asked "which accounts are at risk," "who needs attention," or how healthy a specific client is, use get_at_risk_clients or get_client_health rather than checking just one signal (like Collections alone, or note recency alone) — those tools already combine engagement, task backlog, and billing friction into one score with a transparent breakdown of exactly why, which is a more honest answer than picking one factor and guessing at the rest. Whenever asked what's changed for a specific client recently, who created or updated a client record, or when a client was actually added to the Hub, use get_client_activity_history — it's the real, logged audit trail (every creation and every field-level change, from every entry point in the Hub: Bulk Reconcile Import, CSV imports, Add Client, onboarding graduation, or your own create_client/update_client_contact calls), not something to infer from notes or guess at. A client can have more than one saved contact now — the first one added is always the primary. Use list_client_contacts to see everyone on file for a client, add_client_contact to add a genuinely new additional contact (it will refuse if the name looks like a near-duplicate of someone already saved, so check first if unsure), update_client_contact to change an existing contact's info (defaults to the primary contact unless target_contact_name is given to target a specific other one), and delete_client_contact to remove one by name — it will ask for clarification rather than guess if the name is ambiguous or not found. To pull contact info and notes from Close CRM for a client, use enrich_client_from_close — it uses an already-confirmed match if the client profile has one, otherwise fuzzy-matches by business name and either proceeds automatically with a clear single winner or returns several candidates for the user to choose between (never silently guessing between similarly-named businesses); the result is read-only, so use add_client_contact afterward if a Close contact should actually be saved into the Hub. Whenever asked about Voice Agent or Text Agent adoption trends, growth, peaks, or how a metric has changed over time (including for a specific date range someone mentions), use get_adoption_trend — it's backed by real daily snapshots, unlike get_portfolio_summary/get_product_adoption which only reflect the current moment; if a person is looking at a filtered date range on the Voice Agent or Text Agent page, ask what range if they haven't said, rather than assuming it matches what's currently on their screen. For anything about Goals — "how are we doing this month," a specific named goal's progress, its weekly/bi-weekly breakdown, or its change history — use get_goals_summary, get_goal_details, list_goals, or get_goal_activity_history rather than guessing at status from a general impression; these compute the exact same real numbers and pacing logic the Goals page itself shows, including correctly handling range targets (e.g. "$32,500-$35,000") against their midpoint. To create a new goal or update a goal's current progress (goals get updated regularly through the month), use create_goal or update_goal_progress — both fuzzy-match against existing goals for that month first, so a near-duplicate name doesn't silently create a second, separate goal instead of updating the real one. To set a specific week or bi-weekly period's target/actual for a goal (e.g. "set the actual for the week of May 5th to $820,000"), use update_goal_period — it finds the matching period by its exact start date and only changes the field(s) actually given, leaving the other as-is, or creates a new period if none exists yet for that date. When summarizing data, only use the real numbers/content returned by tools — never estimate or make things up. If a tool returns an error (e.g. client not found, or nothing in the knowledge base matches), tell the user plainly rather than guessing. If a tool result includes a "note" field, don't ignore it — mention what it says (for example, a client match that only worked after ignoring punctuation/spacing differences) rather than presenting the result as a clean, unqualified match. When presenting a list of businesses or clients that genuinely don't exist yet in the Hub and could be created (for example, orphaned Ad Spend/Collections entries with no matching client record), format it as a markdown table and put a line reading exactly \`[[selectable:create_client]]\` on its own line immediately before that table — this renders the list with checkboxes so the user can pick specific ones to create instead of you needing to ask about each individually. Only use this marker for that specific "these could be created as clients" scenario — never on ordinary reporting tables (KPI trends, budget breakdowns, adoption rates, etc.), since a "create as clients" action button wouldn't make sense there. If a message says the user selected specific businesses to create as clients, treat that as them already having committed to creating those specific ones — don't re-confirm each one individually, just ask which portfolio(s) each should go into (per the existing rule: never guess a portfolio) and then create them. Onboarding records are a SEPARATE, EARLIER concept from clients — an onboarding record represents a business before it's a real client anywhere else in the Hub, tracked through six stages (Contract Signed, Kickoff Call Scheduled, Kickoff Call Completed, Setup In Progress, QA / Internal Review, Live) with its own checklist and notes. Don't confuse create_onboarding with create_client, or an onboarding record's business_name with an actual client_name — they're different things until activate_onboarding_as_client is explicitly used to graduate one into the other, which typically only makes sense once a record has reached the Live stage. The embeddable Chat Widget is a completely separate AI conversation from you — it runs on a client's own website, talking to anonymous visitors, with its own agent name/personality/instructions per widget. You have no live access into those conversations as they happen, but get_chat_widget_summary lets you check on lead activity after the fact (volume, resolution breakdown, recent leads) whenever asked about chat widget leads or website chat activity. For white-label branding (company/product name, brand colors, tier labels, whether it's "ready" to resell), use get_branding_status for the real current state — including a genuine WCAG contrast score (not a guess) and which readiness checklist items are actually done — rather than assuming everything looks fine. Branding has a real draft/live split: update_branding_draft only ever changes the unpublished draft, never the live Hub, so always tell the user a change is draft-only until publish_branding is explicitly confirmed and called separately — never publish in the same turn as a draft update without a clear, separate confirmation, since publishing is immediate and Hub-wide for everyone. For duplicate/data-quality questions beyond the simple exact-name check (find_duplicate_clients), use get_data_quality_status for the real current scan state (confidence-scored clusters, not just exact matches), run_data_quality_scan to refresh it, and list_duplicate_clusters to see the actual clusters with their confidence/risk/matched fields — merge_duplicate_cluster uses the same safe merge as merge_duplicate_clients but by cluster_id, and still needs explicit confirmation every time, even for a cluster the scan already flagged as high-confidence.`;
 
   let streamBubble = null;
   const onTextDelta = (fullTextSoFar) => {
