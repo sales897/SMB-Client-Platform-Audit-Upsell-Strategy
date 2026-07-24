@@ -2145,6 +2145,31 @@ tr.pg-hidden-row { display: none; }
 .cnt-contact-updated { font-size: 11px; color: var(--text3); }
 .cnt-contact-fields { display: grid; grid-template-columns: 1fr 1fr 1.2fr 1fr auto; gap: 10px; align-items: end; }
 .cnt-empty-contacts-hint { color: var(--text3); font-size: 12.5px; padding: 10px 2px; }
+.int-stat-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3); margin-bottom: var(--space-4); }
+.int-stat-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px 16px; }
+.int-stat-label { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--text3); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+.int-stat-value { font-size: 20px; font-weight: 700; color: var(--text); font-family: var(--font-display); }
+.int-stat-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+.int-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+.int-card-body { display: grid; grid-template-columns: 1fr 260px; gap: var(--space-4); align-items: start; }
+.int-info-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); margin-bottom: var(--space-4); }
+.int-info-label { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--text3); margin-bottom: 4px; }
+.int-info-value { font-size: 13px; color: var(--text); font-weight: 600; }
+.int-health-panel { background: var(--bg3); border-radius: var(--radius-sm); padding: 14px; }
+.int-health-score { font-size: 26px; font-weight: 700; font-family: var(--font-display); text-align: center; margin-bottom: 2px; }
+.int-health-label { font-size: 11px; color: var(--text3); text-align: center; margin-bottom: 12px; }
+.int-health-check-row { display: flex; align-items: center; justify-content: space-between; font-size: 11.5px; color: var(--text2); padding: 5px 0; border-top: 1px solid var(--border); }
+.int-health-check-row:first-of-type { border-top: none; }
+.int-sync-controls { display: flex; align-items: center; gap: 10px; margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--border); }
+.int-activity-row { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 12.5px; }
+.int-activity-row:last-child { border-bottom: none; }
+.int-activity-text { color: var(--text2); flex: 1; }
+.int-activity-time { color: var(--text3); font-size: 11px; white-space: nowrap; }
+.int-available-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-3); }
+.int-coming-soon-tile { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 14px; opacity: .65; }
+.int-coming-soon-name { font-size: 13px; font-weight: 700; color: var(--text); margin: 8px 0 2px; }
+.int-coming-soon-cat { font-size: 11px; color: var(--text3); margin-bottom: 10px; }
+.int-coming-soon-badge { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; color: var(--text3); background: var(--bg3); padding: 3px 8px; border-radius: var(--radius-pill); display: inline-block; }
 .progress-bar { width: 100%; height: 6px; background: var(--bg3); border-radius: 3px; overflow: hidden; margin-top: 4px; }
 .progress-fill { height: 100%; border-radius: 3px; transition: width var(--transition-slow); }
 .owner-avatar { width: 22px; height: 22px; border-radius: 6px; background: var(--bg3); display: inline-flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; margin-right: 6px; color: var(--text2); }
@@ -5599,11 +5624,49 @@ select.wfb-field-input { padding-right: 26px; }
     </div>
 
     <div id="settingsTab-integrations">
+      <div class="int-stat-bar" id="intStatBar"></div>
+
       <div class="card" style="margin-bottom:var(--space-5)">
         <div class="card-header">
           <div><div class="card-title"><span class="icon" data-icon="calendar" data-icon-size="14"></span> <span data-i18n="settings_gcal_title">Google Calendar</span></div><div class="card-sub">Connect your own calendar — tasks assigned to you sync automatically and stay connected until you disconnect</div></div>
+          <div id="gcalConnectedPill"></div>
         </div>
         <div id="gcalStatusPillSettings" style="margin-top:var(--space-2)"></div>
+        <div id="gcalDetailPanel" style="display:none;margin-top:var(--space-4)">
+          <div class="int-card-body">
+            <div>
+              <div class="int-info-row">
+                <div><div class="int-info-label">Account</div><div class="int-info-value" id="intGcalAccount">—</div></div>
+                <div><div class="int-info-label">Sync Direction</div><div class="int-info-value">Bidirectional</div></div>
+                <div><div class="int-info-label">Synced Tasks</div><div class="int-info-value" id="intGcalSyncedCount">—</div></div>
+              </div>
+              <div class="int-sync-controls">
+                <button class="btn btn-primary btn-sm" onclick="pollGoogleCalendarChanges(true)"><span class="icon" data-icon="refresh" data-icon-size="13"></span> Sync Now</button>
+                <button class="btn btn-ghost btn-sm" onclick="disconnectGoogleCalendar()" style="color:var(--red)">Disconnect</button>
+                <span style="font-size:11px;color:var(--text3);margin-left:auto">Auto-syncs every 5 min while the Hub is open</span>
+              </div>
+            </div>
+            <div class="int-health-panel">
+              <div class="int-health-score" id="intHealthScore">—</div>
+              <div class="int-health-label" id="intHealthLabel">Connection Health</div>
+              <div id="intHealthChecklist"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:var(--space-5)">
+        <div class="card-header">
+          <div><div class="card-title"><span class="icon" data-icon="clock" data-icon-size="14"></span> Sync Activity</div><div class="card-sub">Real-time event log</div></div>
+        </div>
+        <div id="intActivityLog"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title"><span class="icon" data-icon="plug" data-icon-size="14"></span> Available Integrations</div><div class="card-sub">More integrations are on the way</div></div>
+        </div>
+        <div class="int-available-grid" id="intComingSoonGrid"></div>
       </div>
     </div>
 
@@ -10037,6 +10100,28 @@ async function logClientActivity({ clientName, source, action, fieldName, oldVal
 // Pulls the full audit trail for one client, most recent first -- the
 // "hidden" side of the hidden audit log, surfaced on demand rather than
 // shown by default anywhere.
+// Real sync activity logging for the Settings > Integrations redesign --
+// mirrors logClientActivity's fire-and-forget pattern (best-effort, never
+// blocks the calling flow on a logging failure).
+async function logIntegrationSync({ integration, eventType, direction, detail }) {
+  const u = getCurrentUser();
+  try {
+    await sbUpsert('integration_sync_log', {
+      id: (crypto.randomUUID ? crypto.randomUUID() : 'isl_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8)),
+      integration: integration || 'google_calendar',
+      event_type: eventType,
+      direction: direction || null,
+      detail: detail || null,
+      actor_email: u ? u.email : null,
+    });
+  } catch (e) { console.warn('Could not log integration sync activity:', e.message); }
+}
+async function getIntegrationSyncLog(integration, limit) {
+  try {
+    return await sbSelect('integration_sync_log', `integration=eq.${integration}&order=created_at.desc&limit=${limit || 20}`);
+  } catch (e) { console.warn('Could not load integration sync activity:', e.message); return []; }
+}
+
 async function getClientActivityHistory(clientName) {
   try {
     return await sbSelect('client_activity_log', `client_name=eq.${encodeURIComponent(clientName)}&order=created_at.desc`);
@@ -11371,6 +11456,7 @@ function initGoogleCalendarClient() {
         localStorage.setItem(GCAL_TOKEN_CACHE_KEY, JSON.stringify({ token: googleAccessToken, expiresAt: googleTokenExpiresAt }));
         await fetchGoogleConnectedAccount();
         showToast(`Google Calendar connected${googleConnectedAccountEmail ? ' — ' + googleConnectedAccountEmail : ''}. Your assigned tasks will sync automatically — this stays connected, no need to reconnect later.`, 'success');
+        logIntegrationSync({ integration: 'google_calendar', eventType: 'connected', detail: googleConnectedAccountEmail });
         syncMyTasksToGoogleCalendar();
       } catch(e) {
         showToast('Could not connect Google Calendar: ' + e.message, 'error');
@@ -11454,6 +11540,7 @@ function connectGoogleCalendar() {
 }
 
 async function disconnectGoogleCalendar() {
+  const priorAccount = googleConnectedAccountEmail;
   googleAccessToken = null;
   googleTokenExpiresAt = 0;
   googleConnectedAccountEmail = null;
@@ -11461,6 +11548,7 @@ async function disconnectGoogleCalendar() {
   localStorage.removeItem(GCAL_ACCOUNT_CACHE_KEY);
   renderGoogleCalendarStatus();
   showToast('Google Calendar disconnected.', 'info');
+  logIntegrationSync({ integration: 'google_calendar', eventType: 'disconnected', detail: priorAccount });
   try {
     await fetch('/.netlify/functions/google-oauth-disconnect', { headers: { 'Authorization': SB_HEADERS['Authorization'] } });
   } catch(e) {
@@ -11554,9 +11642,11 @@ async function pushTaskToGoogleCalendar(task) {
     try { synced = JSON.parse(localStorage.getItem(GCAL_SYNCED_TASKS_KEY) || '[]'); } catch(e) {}
     synced.push(task.id);
     localStorage.setItem(GCAL_SYNCED_TASKS_KEY, JSON.stringify(synced));
+    logIntegrationSync({ integration: 'google_calendar', eventType: 'synced', direction: 'to_calendar', detail: task.title });
     return true;
   } catch(e) {
     console.warn('Could not push task to Google Calendar:', e.message);
+    logIntegrationSync({ integration: 'google_calendar', eventType: 'sync_failed', direction: 'to_calendar', detail: `"${task.title}" — ${e.message}` });
     return false;
   }
 }
@@ -11669,6 +11759,7 @@ async function pollGoogleCalendarChanges(showFeedback) {
       renderClientTasksList();
       rebuildHomePage();
       ['smb', 'whitelabel', 'support'].forEach(pk => { if (typeof renderClientSpotlight === 'function') renderClientSpotlight(pk); });
+      logIntegrationSync({ integration: 'google_calendar', eventType: 'synced', direction: 'from_calendar', detail: `${changed} task${changed === 1 ? '' : 's'} updated${removed ? ', ' + removed + ' removed' : ''}` });
     }
     if (showFeedback) {
       showToast(changed || removed
@@ -11693,19 +11784,139 @@ document.addEventListener('visibilitychange', () => {
 
 function renderGoogleCalendarStatus() {
   const el = document.getElementById('gcalStatusPillSettings');
+  const pillEl = document.getElementById('gcalConnectedPill');
   if (!el) return;
-  if (!isGoogleCalendarConfigured()) { el.innerHTML = '<div style="font-size:var(--font-sm);color:var(--text3)">Not configured for this Hub yet — an Admin needs to add a Google OAuth Client ID.</div>'; return; }
+  if (!isGoogleCalendarConfigured()) {
+    el.innerHTML = '<div style="font-size:var(--font-sm);color:var(--text3)">Not configured for this Hub yet — an Admin needs to add a Google OAuth Client ID.</div>';
+    if (pillEl) pillEl.innerHTML = '';
+    return;
+  }
   if (isGoogleCalendarConnected()) {
-    const label = hubIcon('calendar',13) + (googleConnectedAccountEmail ? ` Connected: ${escAttr(googleConnectedAccountEmail)}` : ' Google Calendar connected');
-    el.innerHTML = `<div style="display:flex;align-items:center;gap:var(--space-3);flex-wrap:wrap">
-      <span class="portfolio-chip chip-addon" title="Tasks assigned to you sync to this calendar">${label}</span>
-      <button class="btn btn-ghost btn-sm" onclick="pollGoogleCalendarChanges(true)" title="Check Calendar for anything changed or deleted there">↻ Sync Now</button>
-      <button class="btn btn-ghost btn-sm" onclick="disconnectGoogleCalendar()" style="color:var(--red)">Disconnect</button>
-    </div>`;
+    // The rich detail panel below (account, health, sync controls, activity)
+    // covers everything this used to show inline -- just a small header
+    // badge here, no duplicate Sync Now/Disconnect buttons.
+    el.innerHTML = '';
+    if (pillEl) pillEl.innerHTML = '<span class="int-coming-soon-badge" style="color:var(--green);background:rgba(34,197,94,.14)"><span class="icon" data-icon="check" data-icon-size="10"></span> Connected</span>';
     if (!googleConnectedAccountEmail) fetchGoogleConnectedAccount(); // backfill once, then re-renders itself
   } else {
     el.innerHTML = `<button class="btn btn-primary btn-sm" onclick="connectGoogleCalendar()"><span class="icon" data-icon="calendar" data-icon-size="14"></span> Connect Google Calendar</button>`;
+    if (pillEl) pillEl.innerHTML = '';
   }
+  renderIntegrationsSettingsExtras();
+}
+
+// Computes real health checks for the Google Calendar connection -- no
+// fabricated categories. "Poll Frequency" is informational (a static fact
+// about how sync works here, not a pass/fail), since CSH syncs by polling
+// rather than webhooks.
+async function computeGoogleCalendarHealth(recentLog) {
+  const checks = [
+    { label: 'Authentication', ok: isGoogleCalendarConnected() },
+    { label: 'Recent Syncs', ok: !recentLog.slice(0, 5).some(l => l.event_type === 'sync_failed') },
+  ];
+  const score = Math.round(checks.filter(c => c.ok).length / checks.length * 100);
+  return { checks, score };
+}
+
+const INT_COMING_SOON = [
+  { name: 'Google Drive', icon: 'folder', category: 'Storage & Files' },
+  { name: 'Slack', icon: 'chat', category: 'Communication' },
+  { name: 'Notion', icon: 'note', category: 'Knowledge Base' },
+  { name: 'Zapier', icon: 'shuffle', category: 'Automation' },
+  { name: 'HubSpot', icon: 'building', category: 'CRM' },
+  { name: 'Gmail', icon: 'mail', category: 'Email' },
+  { name: 'Outlook Calendar', icon: 'calendar', category: 'Calendar' },
+];
+
+function fmtIntActivityText(entry) {
+  const dirNote = entry.direction === 'to_calendar' ? 'Hub → Google Calendar' : entry.direction === 'from_calendar' ? 'Google Calendar → Hub' : '';
+  switch (entry.event_type) {
+    case 'connected': return `Connected${entry.detail ? ' — ' + escAttr(entry.detail) : ''}`;
+    case 'disconnected': return `Disconnected${entry.detail ? ' — ' + escAttr(entry.detail) : ''}`;
+    case 'sync_failed': return `Sync failed${entry.detail ? ': ' + escAttr(entry.detail) : ''}`;
+    case 'synced': return `${escAttr(entry.detail || 'Synced')}${dirNote ? ' (' + dirNote + ')' : ''}`;
+    default: return escAttr(entry.detail || entry.event_type);
+  }
+}
+function intActivityIcon(eventType) {
+  if (eventType === 'sync_failed') return `<span class="icon" data-icon="alert" data-icon-size="14" style="color:var(--red)"></span>`;
+  if (eventType === 'disconnected') return `<span class="icon" data-icon="close" data-icon-size="14" style="color:var(--text3)"></span>`;
+  return `<span class="icon" data-icon="check" data-icon-size="14" style="color:var(--green)"></span>`;
+}
+
+// Fills in everything beyond the basic connect/disconnect pill: the top
+// stat bar, the Google Calendar detail panel (account/health/activity), and
+// the Coming Soon grid. Async because it pulls the real sync log.
+async function renderIntegrationsSettingsExtras() {
+  const statBar = document.getElementById('intStatBar');
+  const detailPanel = document.getElementById('gcalDetailPanel');
+  if (!statBar || !detailPanel) return; // Settings page not built yet
+
+  const connected = isGoogleCalendarConnected();
+  const recentLog = connected ? await getIntegrationSyncLog('google_calendar', 20) : [];
+  const health = connected ? await computeGoogleCalendarHealth(recentLog) : null;
+
+  detailPanel.style.display = connected ? '' : 'none';
+
+  if (connected) {
+    document.getElementById('intGcalAccount').textContent = googleConnectedAccountEmail || '—';
+    document.getElementById('intGcalSyncedCount').textContent = getMyGcalSyncedOpenTasks().length;
+
+    const { checks, score } = health;
+    const scoreEl = document.getElementById('intHealthScore');
+    scoreEl.textContent = score + '%';
+    scoreEl.style.color = score >= 100 ? 'var(--green)' : score >= 50 ? 'var(--yellow)' : 'var(--red)';
+    document.getElementById('intHealthLabel').textContent = score >= 100 ? 'Excellent' : score >= 50 ? 'Needs Attention' : 'Connection Issues';
+    document.getElementById('intHealthChecklist').innerHTML = checks.map(c => `
+      <div class="int-health-check-row"><span>${c.label}</span><span class="icon" data-icon="${c.ok ? 'check' : 'alert'}" data-icon-size="13" style="color:${c.ok ? 'var(--green)' : 'var(--red)'}"></span></div>
+    `).join('') + `<div class="int-health-check-row" style="color:var(--text3)"><span>Poll Frequency</span><span>Every 5 min</span></div>`;
+
+    const activityEl = document.getElementById('intActivityLog');
+    activityEl.innerHTML = recentLog.length
+      ? recentLog.slice(0, 10).map(entry => `
+        <div class="int-activity-row">
+          ${intActivityIcon(entry.event_type)}
+          <div class="int-activity-text">${fmtIntActivityText(entry)}</div>
+          <div class="int-activity-time">${fmtNoteTime(entry.created_at)}</div>
+        </div>`).join('')
+      : `<div class="cnt-empty-contacts-hint">No sync activity yet.</div>`;
+  }
+
+  // Top stat bar -- real numbers only: 1/1 "available" reflects that Google
+  // Calendar is the only integration that can actually be connected right
+  // now (everything else below is Coming Soon, not a live option).
+  const healthScore = health ? health.score : null;
+  const lastSync = recentLog[0] ? fmtNoteTime(recentLog[0].created_at) : (connected ? 'Never synced yet' : '—');
+  const activeWorkflows = WORKFLOWS.filter(w => w.active).length;
+  statBar.innerHTML = `
+    <div class="int-stat-card">
+      <div class="int-stat-label"><span class="icon" data-icon="plug" data-icon-size="12"></span> Connected Integrations</div>
+      <div class="int-stat-value">${connected ? 1 : 0} / 1</div>
+      <div class="int-stat-sub">${connected ? 'Google Calendar' : 'None connected yet'}</div>
+    </div>
+    <div class="int-stat-card">
+      <div class="int-stat-label"><span class="icon" data-icon="clock" data-icon-size="12"></span> Last Sync</div>
+      <div class="int-stat-value" style="font-size:15px">${lastSync}</div>
+    </div>
+    <div class="int-stat-card">
+      <div class="int-stat-label"><span class="icon" data-icon="check" data-icon-size="12"></span> Sync Health</div>
+      <div class="int-stat-value" style="font-size:15px;color:${!connected ? 'var(--text3)' : healthScore >= 100 ? 'var(--green)' : healthScore >= 50 ? 'var(--yellow)' : 'var(--red)'}">${connected ? (healthScore >= 100 ? 'Excellent' : healthScore >= 50 ? 'Needs Attention' : 'Connection Issues') : 'Not connected'}</div>
+    </div>
+    <div class="int-stat-card">
+      <div class="int-stat-label"><span class="icon" data-icon="sparkle" data-icon-size="12"></span> Automation Status</div>
+      <div class="int-stat-value" style="font-size:15px;color:${activeWorkflows > 0 ? 'var(--green)' : 'var(--text3)'}">${activeWorkflows > 0 ? 'Active' : 'Idle'}</div>
+      <div class="int-stat-sub">${activeWorkflows} workflow${activeWorkflows === 1 ? '' : 's'} active</div>
+    </div>
+  `;
+
+  document.getElementById('intComingSoonGrid').innerHTML = INT_COMING_SOON.map(i => `
+    <div class="int-coming-soon-tile">
+      <span class="icon" data-icon="${i.icon}" data-icon-size="20"></span>
+      <div class="int-coming-soon-name">${i.name}</div>
+      <div class="int-coming-soon-cat">${i.category}</div>
+      <span class="int-coming-soon-badge">Coming Soon</span>
+    </div>
+  `).join('');
 }
 
 function switchSettingsTab(tab) {
