@@ -2568,6 +2568,15 @@ tr.pg-hidden-row { display: none; }
 .cw-builder-grid { display: grid; grid-template-columns: 1.6fr 1fr; gap: var(--space-4); align-items: start; }
 .cw-builder-main { display: flex; flex-direction: column; gap: var(--space-3); }
 .cw-builder-side { display: flex; flex-direction: column; gap: var(--space-3); }
+.cw-preview-sticky { position: sticky; top: 0; z-index: 2; }
+.cw-context-menu { position: fixed; z-index: 2000; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: 0 12px 28px rgba(0,0,0,.5); padding: 6px; min-width: 200px; max-height: 320px; overflow-y: auto; }
+.cw-context-menu-label { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--text3); padding: 6px 8px 2px; }
+.cw-context-menu-item { display: flex; align-items: center; gap: 8px; padding: 7px 8px; font-size: 12px; font-weight: 600; color: var(--text2); border-radius: var(--radius-xs); cursor: pointer; }
+.cw-context-menu-item:hover { background: var(--orange-dim); color: var(--orange); }
+.cw-context-menu-item.danger:hover { background: rgba(239,68,68,.14); color: var(--red); }
+.cw-context-menu-divider { height: 1px; background: var(--border); margin: 6px 4px; }
+.cw-tag-chip { display: inline-flex; align-items: center; gap: 4px; font-size: 9.5px; font-weight: 700; padding: 2px 7px; border-radius: var(--radius-pill); }
+.cw-conv-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
 .cw-builder-card { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--space-3); }
 .cw-builder-card-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-2); }
 .cw-builder-card-title { display: flex; align-items: center; gap: 7px; font-weight: 700; font-size: var(--font-sm); color: var(--text); }
@@ -5046,8 +5055,16 @@ select.wfb-field-input { padding-right: 26px; }
           <button class="cw-filter-tab" data-val="exploring" onclick="setCwFilterTab('exploring')">New</button>
           <button class="cw-filter-tab" data-val="booked" onclick="setCwFilterTab('booked')">Booked</button>
           <button class="cw-filter-tab" data-val="transfer" onclick="setCwFilterTab('transfer')">Transferred</button>
+          <button class="cw-filter-tab" data-val="archived" onclick="setCwFilterTab('archived')">Archived</button>
         </div>
         <div id="cwConvList" class="cw-conv-list"></div>
+        <div class="cw-context-menu" id="cwLeadContextMenu" style="display:none">
+          <div class="cw-context-menu-label">Tags</div>
+          <div id="cwContextTagsSection"></div>
+          <div class="cw-context-menu-divider"></div>
+          <div class="cw-context-menu-item" onclick="archiveCwConversationFromMenu()"><span class="icon" data-icon="folder" data-icon-size="13"></span> Archive</div>
+          <div class="cw-context-menu-item danger" onclick="deleteCwConversationFromMenu()"><span class="icon" data-icon="trash" data-icon-size="13"></span> Delete</div>
+        </div>
       </div>
       <div class="cw-conv-detail-col" id="cwConvDetail">
         <div class="cw-empty-detail" id="cwEmptyDetailIcon"></div>
@@ -5098,6 +5115,24 @@ select.wfb-field-input { padding-right: 26px; }
             <div class="cw-settings-cards-grid" id="cwSettingsCardsGrid"></div>
           </div>
           <div class="cw-builder-side">
+            <div class="cw-settings-card cw-preview-sticky" style="cursor:default">
+              <div class="cw-settings-card-hd"><span id="cwPreviewIcon"></span><span class="cw-settings-card-title">Website Preview</span></div>
+              <p style="font-size:var(--font-2xs);color:var(--text3);margin:-6px 0 8px">How it looks live on a client's site</p>
+              <div class="cw-site-mockup">
+                <div class="cw-site-mockup-chrome"><span></span><span></span><span></span><div class="cw-site-mockup-url">yourclientsite.com</div></div>
+                <div class="cw-site-mockup-body">
+                  <div class="cw-site-mockup-nav"><div class="cw-site-mockup-logo"></div><div class="cw-site-mockup-navlinks"><span></span><span></span><span></span></div></div>
+                  <div class="cw-site-mockup-hero"><div class="cw-site-mockup-hero-title"></div><div class="cw-site-mockup-hero-sub"></div><div class="cw-site-mockup-hero-btn"></div></div>
+                  <div class="cw-widget-preview" id="cwWidgetPreview">
+                    <div class="cw-preview-panel" id="cwPreviewPanel">
+                      <div class="cw-preview-panel-hd" id="cwPreviewPanelHd"></div>
+                      <div class="cw-preview-panel-thread" id="cwPreviewPanelThread"></div>
+                    </div>
+                    <div class="cw-preview-orb" id="cwPreviewOrb" onclick="toggleCwPreviewPanel()"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
             <div class="cw-builder-card">
               <div class="cw-builder-card-hd"><span class="cw-builder-card-title"><span id="cwPersonalityIcon"></span> Personality</span></div>
               <textarea id="cwPersonalitySummary" class="field-input cw-personality-summary" rows="3" style="resize:vertical;font-family:inherit;background:none;border:1px solid var(--border);padding:8px"></textarea>
@@ -5112,23 +5147,6 @@ select.wfb-field-input { padding-right: 26px; }
             <div class="cw-builder-card">
               <div class="cw-builder-card-hd"><span class="cw-builder-card-title"><span id="cwKbIcon"></span> Knowledge Base</span></div>
               <div id="cwKbDocsList"></div>
-            </div>
-          </div>
-        </div>
-        <div class="cw-settings-card" style="cursor:default;margin-top:var(--space-3)">
-          <div class="cw-settings-card-hd"><span id="cwPreviewIcon"></span><span class="cw-settings-card-title">Website Preview</span><span style="font-size:var(--font-2xs);color:var(--text3);margin-left:auto">How it looks live on a client's site</span></div>
-          <div class="cw-site-mockup">
-            <div class="cw-site-mockup-chrome"><span></span><span></span><span></span><div class="cw-site-mockup-url">yourclientsite.com</div></div>
-            <div class="cw-site-mockup-body">
-              <div class="cw-site-mockup-nav"><div class="cw-site-mockup-logo"></div><div class="cw-site-mockup-navlinks"><span></span><span></span><span></span></div></div>
-              <div class="cw-site-mockup-hero"><div class="cw-site-mockup-hero-title"></div><div class="cw-site-mockup-hero-sub"></div><div class="cw-site-mockup-hero-btn"></div></div>
-              <div class="cw-widget-preview" id="cwWidgetPreview">
-                <div class="cw-preview-panel" id="cwPreviewPanel">
-                  <div class="cw-preview-panel-hd" id="cwPreviewPanelHd"></div>
-                  <div class="cw-preview-panel-thread" id="cwPreviewPanelThread"></div>
-                </div>
-                <div class="cw-preview-orb" id="cwPreviewOrb" onclick="toggleCwPreviewPanel()"></div>
-              </div>
             </div>
           </div>
         </div>
@@ -24748,6 +24766,7 @@ async function rebuildChatWidgetPage() {
     cwActiveWidgetId = CHAT_WIDGETS.length > 0 ? CHAT_WIDGETS[0].id : null;
   }
   renderCwWidgetSelector();
+  await loadCwTags();
   await reloadCwConversationsForActiveWidget();
 }
 
@@ -25108,21 +25127,128 @@ function rebuildChatWidgetInbox() {
   const list = document.getElementById('cwConvList');
   if (!list) return;
   const q = (document.getElementById('cwConvSearch') || {}).value?.toLowerCase() || '';
-  let convos = CW_CONVERSATIONS.filter(c => cwFilterTab === 'all' || c.resolution === cwFilterTab);
+  let convos = cwFilterTab === 'archived'
+    ? CW_CONVERSATIONS.filter(c => c.archived)
+    : CW_CONVERSATIONS.filter(c => !c.archived && (cwFilterTab === 'all' || c.resolution === cwFilterTab));
   if (q.trim()) convos = convos.filter(c => (c.lead_name || '').toLowerCase().includes(q) || (c.lead_email || '').toLowerCase().includes(q));
   if (convos.length === 0) {
     list.innerHTML = emptyStateHTML({ icon: cwIcon('chat', 32), title: t('es_no_conversations'), sub: t('es_no_conversations_sub'), compact: true });
     return;
   }
   list.innerHTML = convos.map(c => `
-    <div class="cw-conv-item${c.id === cwActiveConversationId ? ' active' : ''}" onclick="openChatWidgetConversation('${c.id}')">
+    <div class="cw-conv-item${c.id === cwActiveConversationId ? ' active' : ''}" onclick="openChatWidgetConversation('${c.id}')" oncontextmenu="openCwLeadContextMenu(event, '${c.id}')">
       <div class="cw-conv-item-hd">
         <span class="cw-conv-item-name">${escAttr(c.lead_name || 'Unknown Lead')}</span>
         <span class="cw-conv-item-time">${fmtNoteTime(c.updated_at)}</span>
       </div>
       <div class="cw-conv-item-preview">${escAttr(c.intent || c.service_requested || 'New conversation')}</div>
       <span class="cw-resolution-badge cw-resolution-${c.resolution}">${CW_RESOLUTION_LABELS[c.resolution] || c.resolution}</span>
+      ${renderCwConvTagsHtml(c)}
     </div>`).join('');
+}
+function renderCwConvTagsHtml(conv) {
+  const tagIds = conv.tag_ids || [];
+  if (tagIds.length === 0) return '';
+  const chips = tagIds.map(id => CW_TAGS.find(t => t.id === id)).filter(Boolean)
+    .map(t => `<span class="cw-tag-chip" style="background:${t.color}22;color:${t.color};box-shadow:0 0 6px ${t.color}66">${escAttr(t.label)}</span>`).join('');
+  return chips ? `<div class="cw-conv-tags">${chips}</div>` : '';
+}
+
+// ---- Chat Widget lead tags + right-click context menu (archive/delete/tag) ----
+// A small reusable org-wide tag palette (widget_tags), applied per-conversation
+// via tag_ids. Each new tag auto-gets the next color in the palette below --
+// "different colors" without needing a separate color-picker UI.
+const CW_TAG_COLORS = ['#ef4444', '#f59e0b', '#22c55e', '#3b82f6', '#a855f7', '#ec4899', '#14b8a6', '#eab308'];
+let CW_TAGS = [];
+let cwContextMenuTargetId = null;
+
+async function loadCwTags() {
+  try { CW_TAGS = await sbSelect('widget_tags', 'order=created_at.asc'); } catch (e) { console.warn('widget_tags unavailable:', e.message); CW_TAGS = []; }
+}
+
+function openCwLeadContextMenu(event, convId) {
+  event.preventDefault();
+  event.stopPropagation();
+  cwContextMenuTargetId = convId;
+  const menu = document.getElementById('cwLeadContextMenu');
+  if (!menu) return;
+  renderCwContextTagsSection(convId);
+  const x = Math.min(event.clientX, window.innerWidth - 220);
+  const y = Math.min(event.clientY, window.innerHeight - 260);
+  menu.style.left = x + 'px';
+  menu.style.top = y + 'px';
+  menu.style.display = '';
+}
+document.addEventListener('click', (e) => {
+  const menu = document.getElementById('cwLeadContextMenu');
+  if (menu && menu.style.display !== 'none' && !menu.contains(e.target)) menu.style.display = 'none';
+});
+// Right-clicking elsewhere on the page (not another lead row) should also
+// close it, rather than leaving a stale menu positioned over new content.
+document.addEventListener('contextmenu', (e) => {
+  if (!e.target.closest('.cw-conv-item')) { const menu = document.getElementById('cwLeadContextMenu'); if (menu) menu.style.display = 'none'; }
+});
+
+function renderCwContextTagsSection(convId) {
+  const conv = CW_CONVERSATIONS.find(c => c.id === convId);
+  const activeTagIds = new Set((conv && conv.tag_ids) || []);
+  const el = document.getElementById('cwContextTagsSection');
+  if (!el) return;
+  el.innerHTML = CW_TAGS.map(tg => `
+    <div class="cw-context-menu-item" onclick="event.stopPropagation();toggleCwConvTag('${convId}','${tg.id}')">
+      <span class="cw-tag-chip" style="background:${tg.color}22;color:${tg.color};box-shadow:0 0 6px ${tg.color}66">${activeTagIds.has(tg.id) ? '✓ ' : ''}${escAttr(tg.label)}</span>
+    </div>`).join('') + `<div class="cw-context-menu-item" onclick="event.stopPropagation();promptNewCwTag('${convId}')"><span class="icon" data-icon="plus" data-icon-size="12"></span> New Tag</div>`;
+}
+
+async function toggleCwConvTag(convId, tagId) {
+  const conv = CW_CONVERSATIONS.find(c => c.id === convId);
+  if (!conv) return;
+  const tagIds = new Set(conv.tag_ids || []);
+  tagIds.has(tagId) ? tagIds.delete(tagId) : tagIds.add(tagId);
+  conv.tag_ids = [...tagIds];
+  try { await sbPatch('widget_conversations', `id=eq.${convId}`, { tag_ids: conv.tag_ids }); }
+  catch (e) { showToast('Could not save tag: ' + e.message, 'error'); return; }
+  renderCwContextTagsSection(convId);
+  rebuildChatWidgetInbox();
+}
+
+async function promptNewCwTag(convId) {
+  const label = await showTextPromptDialog({ title: '🏷️ New Tag', label: 'Tag name', placeholder: 'e.g. Hot Lead, Follow Up, VIP' });
+  if (!label || !label.trim()) return;
+  const color = CW_TAG_COLORS[CW_TAGS.length % CW_TAG_COLORS.length];
+  const tag = { id: (crypto.randomUUID ? crypto.randomUUID() : 'tag_' + Date.now()), label: label.trim(), color };
+  try { await sbUpsert('widget_tags', tag); } catch (e) { showToast('Could not create tag: ' + e.message, 'error'); return; }
+  CW_TAGS.push(tag);
+  await toggleCwConvTag(convId, tag.id); // apply it to the lead you right-clicked, immediately
+  showToast(`Tag "${tag.label}" created and applied.`, 'success');
+}
+
+async function archiveCwConversationFromMenu() {
+  const id = cwContextMenuTargetId;
+  const conv = CW_CONVERSATIONS.find(c => c.id === id);
+  if (!conv) return;
+  document.getElementById('cwLeadContextMenu').style.display = 'none';
+  const nextArchived = !conv.archived;
+  conv.archived = nextArchived;
+  try { await sbPatch('widget_conversations', `id=eq.${id}`, { archived: nextArchived }); }
+  catch (e) { conv.archived = !nextArchived; showToast('Could not archive: ' + e.message, 'error'); return; }
+  rebuildChatWidgetInbox();
+  showToast(nextArchived ? 'Conversation archived.' : 'Conversation restored from archive.', 'success');
+}
+
+async function deleteCwConversationFromMenu() {
+  const id = cwContextMenuTargetId;
+  const conv = CW_CONVERSATIONS.find(c => c.id === id);
+  if (!conv) return;
+  document.getElementById('cwLeadContextMenu').style.display = 'none';
+  const confirmed = await showConfirmDialog(`Permanently delete the conversation with ${escAttr(conv.lead_name || 'this lead')}? This can't be undone.`, { title: '🗑️ Delete Conversation', confirmLabel: 'Delete', danger: true });
+  if (!confirmed) return;
+  try { await sbDelete('widget_conversations', `id=eq.${id}`); }
+  catch (e) { showToast('Could not delete: ' + e.message, 'error'); return; }
+  CW_CONVERSATIONS = CW_CONVERSATIONS.filter(c => c.id !== id);
+  if (cwActiveConversationId === id) cwActiveConversationId = null;
+  rebuildChatWidgetInbox();
+  showToast('Conversation deleted.', 'success');
 }
 
 function cwResolutionCounts() {
