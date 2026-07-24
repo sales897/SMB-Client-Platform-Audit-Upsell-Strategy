@@ -2112,6 +2112,7 @@ tr.pg-hidden-row { display: none; }
 .wf-toggle-slider::before { content: ''; position: absolute; width: 14px; height: 14px; left: 3px; top: 3px; background: var(--text3); border-radius: 50%; transition: transform var(--transition-slow), background-color var(--transition-slow); }
 .wf-toggle-switch input:checked + .wf-toggle-slider { background: var(--orange-dim); }
 .wf-toggle-switch input:checked + .wf-toggle-slider::before { transform: translateX(16px); background: var(--orange); }
+.dq-gauge-arc { transition: stroke-dasharray 1s ease-out; }
 .team-role-picker { position: relative; width: 150px; flex-shrink: 0; }
 .team-role-btn { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: var(--space-2) var(--space-3); background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-size: var(--font-xs); font-weight: 600; cursor: pointer; transition: box-shadow var(--transition-slow), border-color var(--transition-slow); }
 .team-role-caret { font-size: 9px; color: var(--text3); }
@@ -6045,7 +6046,7 @@ select.wfb-field-input { padding-right: 26px; }
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--space-4);margin-bottom:var(--space-5)">
         <div class="card brand-section-card">
           <div class="card-title" style="font-size:13px">Duplicate Distribution</div>
-          <div style="position:relative;height:150px;margin-top:8px"><canvas id="dqDistributionChart"></canvas></div>
+          <div style="position:relative;height:150px;margin-top:8px;display:flex;align-items:center;justify-content:center" id="dqDistributionChart"></div>
           <div id="dqDistributionLegend" style="margin-top:8px"></div>
         </div>
         <div class="card brand-section-card">
@@ -13000,24 +13001,41 @@ function renderDqStatBar() {
 }
 
 function renderDqDistributionChart() {
-  const canvas = document.getElementById('dqDistributionChart');
+  const wrap = document.getElementById('dqDistributionChart');
   const legendEl = document.getElementById('dqDistributionLegend');
-  if (!canvas) return;
-  if (chartRegistry['dq-distribution']) { chartRegistry['dq-distribution'].destroy(); delete chartRegistry['dq-distribution']; }
+  if (!wrap) return;
   const high = DQ_CLUSTERS.filter(c => c.risk === 'High').length;
   const medium = DQ_CLUSTERS.filter(c => c.risk === 'Medium').length;
   const low = DQ_CLUSTERS.filter(c => c.risk === 'Low').length;
   const total = high + medium + low;
   if (total === 0) {
-    canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+    wrap.innerHTML = '';
     if (legendEl) legendEl.innerHTML = `<div class="cnt-empty-contacts-hint">Run a scan to see the breakdown.</div>`;
     return;
   }
-  chartRegistry['dq-distribution'] = new Chart(canvas, {
-    type: 'doughnut',
-    data: { labels: ['High (90%+)', 'Medium (70-89%)', 'Low (50-69%)'], datasets: [{ data: [high, medium, low], backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6'], borderWidth: 0 }] },
-    options: { responsive: true, maintainAspectRatio: false, cutout: '65%', plugins: { legend: { display: false } } },
+  // Radial/gauge-style bars -- each ring's arc length is that category's
+  // real share of the total, same underlying numbers as before, just
+  // plotted on a polar axis (concentric rings) instead of a donut.
+  const rings = [
+    { key: 'high', value: high, radius: 55, color: '#ef4444' },
+    { key: 'medium', value: medium, radius: 42, color: '#f59e0b' },
+    { key: 'low', value: low, radius: 29, color: '#3b82f6' },
+  ];
+  const ringsSvg = rings.map(r => {
+    const circumference = 2 * Math.PI * r.radius;
+    return `<circle cx="70" cy="70" r="${r.radius}" fill="none" stroke="var(--bg4)" stroke-width="9"/>
+      <circle class="dq-gauge-arc" data-target="${(circumference * (total ? r.value / total : 0)).toFixed(1)}" data-circ="${circumference.toFixed(1)}"
+        cx="70" cy="70" r="${r.radius}" fill="none" stroke="${r.color}" stroke-width="9" stroke-linecap="round"
+        stroke-dasharray="0 ${circumference.toFixed(1)}"
+        style="transform-box:fill-box;transform-origin:center;transform:rotate(-90deg);filter:drop-shadow(0 0 4px ${r.color})"/>`;
+  }).join('');
+  wrap.innerHTML = `<svg viewBox="0 0 140 140" width="140" height="140">${ringsSvg}</svg>`;
+  // Set the real target dasharray a frame later so the transition (defined
+  // in CSS) actually animates the fill in, rather than snapping to it instantly.
+  requestAnimationFrame(() => {
+    wrap.querySelectorAll('.dq-gauge-arc').forEach(el => { el.setAttribute('stroke-dasharray', `${el.dataset.target} ${el.dataset.circ}`); });
   });
+
   if (legendEl) legendEl.innerHTML = `
     <div style="display:flex;justify-content:space-between;font-size:11px;color:#ef4444"><span>● High (90%+)</span><span>${high} (${Math.round(high / total * 100)}%)</span></div>
     <div style="display:flex;justify-content:space-between;font-size:11px;color:#f59e0b"><span>● Medium (70-89%)</span><span>${medium} (${Math.round(medium / total * 100)}%)</span></div>
