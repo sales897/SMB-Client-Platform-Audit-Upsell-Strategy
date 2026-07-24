@@ -404,14 +404,11 @@ body.ai-panel-open .main {
 #page-home .vital-block { overflow: hidden; padding: var(--space-3); }
 #page-home .page-footer { display: none; }
 
-.home-vitals-grid { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: repeat(4, minmax(160px, 1fr)); gap: var(--space-4); margin-bottom: 24px; }
+.home-vitals-grid { display: grid; grid-template-columns: repeat(3, 1fr); grid-auto-rows: minmax(84px, auto); gap: var(--space-3); margin-bottom: 24px; align-items: start; }
 .vital-block {
   position: relative; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm);
-  padding: var(--space-4); display: flex; flex-direction: column; min-width: 0;
+  padding: 12px 14px; display: flex; flex-direction: column; min-width: 0;
 }
-.vital-block::before, .vital-block::after { content: ''; position: absolute; width: 14px; height: 14px; border-color: var(--orange); border-style: solid; opacity: .75; }
-.vital-block::before { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
-.vital-block::after { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
 .vital-block-hd { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-bottom: 2px; }
 .vital-block[draggable="true"] { cursor: grab; }
 .vital-block[draggable="true"]:active { cursor: grabbing; }
@@ -425,22 +422,21 @@ body.ai-panel-open .main {
 .vital-swap-item { padding: 6px 10px; font-size: var(--font-2xs); border-radius: var(--radius-xs); cursor: pointer; color: var(--text2); }
 .vital-swap-item:hover { background: var(--bg4); color: var(--text); }
 .vital-swap-item.active { color: var(--orange); font-weight: 700; }
-.vital-block-hd h3 { margin: 0; font-size: var(--font-xs); letter-spacing: .5px; text-transform: uppercase; color: var(--text); display: flex; align-items: center; gap: 7px; font-weight: 700; }
-.vital-dot { width: 6px; height: 6px; border-radius: 50%; box-shadow: 0 0 8px currentColor; animation: vitalPulse 2.2s infinite; flex-shrink: 0; }
-@keyframes vitalPulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
-.vital-sub { font-size: var(--font-2xs); color: var(--text3); margin-bottom: var(--space-3); }
+.vital-block-hd h3 { margin: 0; font-size: 11px; color: var(--text2); display: flex; align-items: center; gap: 7px; font-weight: 600; }
+.vital-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+.vital-sub { font-size: 10px; color: var(--text3); margin-bottom: 8px; }
 .vital-ask { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 13px; padding: 2px 5px; border-radius: var(--radius-xs); transition: all var(--transition-base); line-height: 1; }
 .vital-ask:hover { color: var(--orange); background: var(--bg3); }
-.vital-chart-wrap { flex: 1; min-height: 0; position: relative; animation: chartGlowPulse 3.4s ease-in-out infinite; }
-.vital-stat { font-size: 22px; font-weight: 800; color: var(--orange); font-family: var(--font-display); line-height: 1; }
-.vital-stat-sub { font-size: var(--font-2xs); color: var(--text3); margin-top: 2px; }
+.vital-chart-wrap { flex: 1; min-height: 0; position: relative; }
+.vital-stat { font-size: 17px; font-weight: 700; color: var(--text); font-family: var(--font-display); line-height: 1; }
+.vital-stat-sub { font-size: 10px; color: var(--text3); margin-top: 2px; }
 .vital-ring-wrap { display: flex; align-items: center; gap: var(--space-3); flex: 1; }
-.vital-ring-canvas-wrap { position: relative; width: 66px; height: 66px; flex-shrink: 0; animation: chartGlowPulse 3.4s ease-in-out infinite; }
+.vital-ring-canvas-wrap { position: relative; width: 66px; height: 66px; flex-shrink: 0; }
 .vital-ring-label { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: var(--text); }
-.vital-legend { display: flex; flex-direction: column; gap: 4px; font-size: var(--font-2xs); }
-.vital-legend span { display: flex; align-items: center; gap: 6px; color: var(--text2); }
-.vital-legend i { width: 7px; height: 7px; border-radius: 2px; display: inline-block; flex-shrink: 0; }
-.vital-stackbar { display: flex; height: 18px; border-radius: var(--radius-xs); overflow: hidden; margin: var(--space-2) 0; box-shadow: 0 0 10px rgba(226,84,31,.15); }
+.vital-legend { display: flex; flex-direction: column; gap: 3px; font-size: 9.5px; }
+.vital-legend span { display: flex; align-items: center; gap: 5px; color: var(--text2); }
+.vital-legend i { width: 6px; height: 6px; border-radius: 2px; display: inline-block; flex-shrink: 0; }
+.vital-stackbar { display: flex; height: 12px; border-radius: var(--radius-xs); overflow: hidden; margin: 6px 0 0; }
 .vital-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; min-height: 0; }
 .vital-list-item { display: flex; align-items: center; gap: 8px; font-size: var(--font-2xs); padding: 5px 7px; background: var(--bg3); border-radius: var(--radius-xs); cursor: pointer; transition: background var(--transition-base); }
 .vital-list-item:hover { background: var(--bg4); }
@@ -2232,6 +2228,39 @@ tr.pg-hidden-row { display: none; }
 .int-stat-label { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--text3); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
 .int-stat-value { font-size: 20px; font-weight: 700; color: var(--text); font-family: var(--font-display); }
 .int-stat-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+/* ════════════════════════════════════════════════════════════════════
+   MINIMALIST UI FOUNDATION (2026-07-24) — shared building blocks for the
+   page-by-page redesign, approved against the mockups. Deliberately a NEW
+   set of classes (.hub-mini-*, .hub-tab*) rather than redefining
+   .int-stat-card etc directly -- so pages not yet converted keep their
+   current look untouched, and each page opts in when its turn comes.
+   ════════════════════════════════════════════════════════════════════ */
+.hub-mini-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 9px; margin-bottom: var(--space-4); }
+.hub-mini-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; }
+.hub-mini-card.accent-left { border-left: 2px solid var(--hub-accent, var(--orange)); border-radius: 2px var(--radius-sm) var(--radius-sm) 2px; }
+/* Subtle glow -- reserved for the one card/element on a screen that's
+   actually the headline, not sprinkled across every card. Deliberately a
+   much tighter, lower-opacity shadow than the existing .int-tile/.dq-*
+   glow effects used elsewhere in the app. */
+.hub-mini-card.glow { box-shadow: 0 0 12px -9px var(--hub-glow, rgba(226,84,31,.4)); border-color: var(--hub-glow-border, rgba(226,84,31,.3)); }
+.hub-mini-label { font-size: 10px; color: var(--text3); margin-bottom: 4px; }
+.hub-mini-value { font-size: 16px; font-weight: 700; color: var(--text); font-family: var(--font-display); display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; }
+.hub-mini-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; }
+
+/* Real, reusable tabs -- for collapsing stacked sections down to one
+   visible panel at a time (the single biggest clutter fix identified
+   across the mockups). data-group correlates a .hub-tab to its
+   .hub-tab-panel regardless of where each sits in the DOM. */
+.hub-tabs { display: flex; gap: 4px; margin-bottom: var(--space-3); border-bottom: 1px solid var(--border); }
+.hub-tab { padding: 7px 4px; margin-right: 14px; font-size: 12px; color: var(--text3); cursor: pointer; border-bottom: 1.5px solid transparent; background: none; border-top: none; border-left: none; border-right: none; font-family: inherit; }
+.hub-tab:hover { color: var(--text2); }
+.hub-tab.active { color: var(--orange); border-bottom-color: var(--orange); }
+.hub-tab-panel { display: none; }
+.hub-tab-panel.active { display: block; }
+
+@keyframes hubSparkDraw { to { stroke-dashoffset: 0; } }
+@keyframes hubBarGrow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
 .int-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
 .int-card-body { display: grid; grid-template-columns: 1fr 260px; gap: var(--space-4); align-items: start; }
 .int-info-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); margin-bottom: var(--space-4); }
@@ -2303,30 +2332,31 @@ tr.pg-hidden-row { display: none; }
 .ai-insights-banner {
   display: flex;
   align-items: center;
-  gap: var(--space-4);
-  background: linear-gradient(120deg, #e2541f, #c96a3a 40%, #a39e96 70%, #d4d0c8);
-  border-radius: var(--radius-lg);
-  padding: var(--space-4) var(--space-5);
-  margin-bottom: var(--space-5);
-  color: #fff;
-  box-shadow: 0 0 0 1px rgba(255,255,255,.5), 0 0 20px rgba(255,255,255,.25);
+  gap: var(--space-3);
+  background: var(--bg2);
+  border: 1px solid var(--hub-glow-border, rgba(226,84,31,.3));
+  border-radius: var(--radius-sm);
+  padding: 9px 14px;
+  margin-bottom: var(--space-4);
+  color: var(--text2);
+  box-shadow: 0 0 12px -9px var(--hub-glow, rgba(226,84,31,.4));
 }
-.ai-insights-icon { font-size: 20px; flex-shrink: 0; }
-.ai-insights-label { font-size: var(--font-2xs); font-weight: 700; letter-spacing: .5px; text-transform: uppercase; opacity: .85; margin-bottom: 2px; }
-.ai-insights-text { font-size: var(--font-md); font-weight: 600; line-height: 1.4; }
+.ai-insights-icon { font-size: 14px; flex-shrink: 0; color: var(--orange); }
+.ai-insights-label { font-size: 11px; font-weight: 700; color: var(--orange); display: inline; margin-right: 4px; }
+.ai-insights-text { font-size: 12px; font-weight: 400; line-height: 1.4; display: inline; color: var(--text2); }
 .ai-insights-refresh {
   margin-left: auto;
-  background: rgba(0,0,0,.25);
+  background: none;
   border: none;
-  color: #fff;
-  width: 32px; height: 32px;
+  color: var(--text3);
+  width: 22px; height: 22px;
   border-radius: 50%;
   cursor: pointer;
   flex-shrink: 0;
-  font-size: var(--font-sm);
-  transition: background var(--transition-base);
+  font-size: 12px;
+  transition: background var(--transition-base), color var(--transition-base);
 }
-.ai-insights-refresh:hover { background: rgba(0,0,0,.4); }
+.ai-insights-refresh:hover { background: var(--bg3); color: var(--orange); }
 .ai-insights-refresh:disabled { opacity: .5; cursor: default; }
 .home-greeting { font-family: var(--font-display); font-size: var(--font-xl); font-weight: 800; color: var(--text); margin-bottom: 4px; }
 .home-greeting-sub { font-size: var(--font-base); color: var(--text3); margin-bottom: var(--space-5); }
@@ -8883,15 +8913,15 @@ const HOME_WIDGET_DEFS = {
   },
   attention: {
     labelKey: 'vital_needs_attention', dot: 'var(--red)', subKey: 'vital_needs_attention_sub',
-    body: '<div class="vital-ring-wrap"><div class="vital-ring-canvas-wrap"><canvas id="vitalAttentionRing"></canvas><div class="vital-ring-label" id="vitalAttentionCount">0</div></div><div class="vital-legend" id="vitalAttentionLegend"></div></div>',
+    body: '<div class="hub-mini-row"><div id="vitalAttentionDonut"></div><div class="vital-legend" id="vitalAttentionLegend"></div></div>',
   },
   onboarding: {
     labelKey: 'vital_onboarding_pipeline', dot: 'var(--purple)', subKey: 'vital_onboarding_pipeline_sub',
-    body: '<div class="vital-chart-wrap"><canvas id="vitalOnboardingFunnel"></canvas></div>',
+    body: '<div class="hub-mini-row"><div class="vital-stat" id="vitalOnboardingTotal">0</div><div id="vitalOnboardingBars"></div></div>',
   },
   adspend: {
     labelKey: 'vital_ad_spend', dot: 'var(--orange)', subKey: 'vital_ad_spend_sub',
-    body: '<div class="vital-ring-wrap"><div class="vital-ring-canvas-wrap"><canvas id="vitalAdSpendRing"></canvas><div class="vital-ring-label" id="vitalAdSpendPct">0%</div></div><div><div class="vital-stat" id="vitalAdSpendBudget">$0</div><div class="vital-stat-sub">total budget</div></div></div>',
+    body: '<div class="hub-mini-row"><div><div class="vital-stat" id="vitalAdSpendBudget">$0</div><div class="vital-stat-sub">total budget</div></div><div id="vitalAdSpendDonut"></div></div>',
   },
   collections: {
     labelKey: 'vital_collections', dot: 'var(--red)', subKey: 'vital_collections_sub',
@@ -8899,11 +8929,11 @@ const HOME_WIDGET_DEFS = {
   },
   kpi: {
     labelKey: 'vital_kpi', dot: 'var(--green)', subKey: 'vital_kpi_sub',
-    body: '<div class="vital-chart-wrap"><canvas id="vitalKpiLine"></canvas></div><div class="vital-stat" id="vitalKpiAvg" style="margin-top:6px;font-size:16px"></div>',
+    body: '<div class="hub-mini-row"><div class="vital-stat" id="vitalKpiAvg" style="font-size:16px"></div><div id="vitalKpiSpark"></div></div>',
   },
   adoption: {
     labelKey: 'vital_adoption_gap', dot: 'var(--yellow)', subKey: 'vital_adoption_gap_sub',
-    body: '<div class="vital-chart-wrap"><canvas id="vitalAdoptionGap"></canvas></div>',
+    body: '<div class="hub-mini-row"><div class="vital-stat" id="vitalAdoptionTotal">0</div><div id="vitalAdoptionBars"></div></div>',
   },
 };
 const HOME_LAYOUT_DEFAULT = ['tasks', 'reminders', 'attention', 'onboarding', 'adspend', 'collections', 'kpi', 'adoption'];
@@ -9066,14 +9096,16 @@ function renderVitalReminders() {
 }
 
 function renderVitalAttention() {
-  const canvas = document.getElementById('vitalAttentionRing');
-  if (!canvas) return;
+  const wrap = document.getElementById('vitalAttentionDonut');
+  if (!wrap) return;
   const escalated = COLLECTIONS_ACCOUNTS.filter(a => a.status === 'escalated').length;
   const inreview = COLLECTIONS_ACCOUNTS.filter(a => a.status === 'inreview').length;
   const pending = COLLECTIONS_ACCOUNTS.filter(a => a.status === 'pending').length;
   const total = escalated + inreview + pending;
-  const countEl = document.getElementById('vitalAttentionCount');
-  if (countEl) countEl.textContent = total;
+  wrap.innerHTML = renderMiniDonut(
+    [{ value: escalated, color: resolveCssColor('var(--red)') }, { value: inreview, color: resolveCssColor('var(--yellow)') }, { value: pending, color: resolveCssColor('var(--text3)') }],
+    { size: 60, stroke: 8, centerLabel: total }
+  );
   const legend = document.getElementById('vitalAttentionLegend');
   if (legend) {
     legend.innerHTML = `
@@ -9081,65 +9113,38 @@ function renderVitalAttention() {
       <span><i style="background:var(--yellow)"></i>${inreview} In Review</span>
       <span><i style="background:var(--text3)"></i>${pending} Pending</span>`;
   }
-  destroyChart('vital-attention');
-  chartRegistry['vital-attention'] = new Chart(canvas, {
-    type: 'doughnut',
-    data: {
-      labels: ['Escalated', 'In Review', 'Pending'],
-      datasets: [{ data: [escalated, inreview, pending], backgroundColor: [resolveCssColor('var(--red)'), resolveCssColor('var(--yellow)'), resolveCssColor('var(--text3)')], borderWidth: 2, borderColor: resolveCssColor('var(--bg2)'), hoverOffset: 4 }],
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false, cutout: '72%',
-      plugins: { legend: { display: false }, tooltip: { backgroundColor: C.tooltipBg, borderColor: C.tooltipBorder, borderWidth: 1, titleColor: C.tooltipTitle, bodyColor: C.orange, padding: 10, cornerRadius: 8 } },
-    },
-  });
 }
 
 function renderVitalOnboarding() {
-  const canvas = document.getElementById('vitalOnboardingFunnel');
-  if (!canvas) return;
-  // KNOWN SCOPING DECISION: this funnel shows the default pipeline only --
-  // once multiple custom pipelines with different stages exist, a single
-  // combined funnel across all of them wouldn't have a coherent shared axis
+  const barsEl = document.getElementById('vitalOnboardingBars');
+  const totalEl = document.getElementById('vitalOnboardingTotal');
+  if (!barsEl) return;
+  // KNOWN SCOPING DECISION: this shows the default pipeline only -- once
+  // multiple custom pipelines with different stages exist, a single
+  // combined view across all of them wouldn't have a coherent shared axis
   // to plot against. Home shows the default pipeline's shape; the full
   // multi-pipeline picture lives on the Onboarding page itself.
   const defaultPipeline = ONBOARDING_PIPELINES.find(p => p.is_default) || ONBOARDING_PIPELINES[0];
   const pid = defaultPipeline ? defaultPipeline.id : null;
   const stages = pid ? getPipelineStages(pid) : [];
   const counts = stages.map(s => ONBOARDING_RECORDS.filter(r => r.pipeline_id === pid && r.stage === s.stage_key).length);
-  const labels = stages.map(s => s.label);
-  destroyChart('vital-onboarding');
-  chartRegistry['vital-onboarding'] = new Chart(canvas, {
-    type: 'bar',
-    data: { labels, datasets: [{ data: counts, backgroundColor: (ctx) => verticalGradient(ctx.chart.ctx, ctx.chart.chartArea, '#a855f7'), _glowColor: '#a855f7', borderRadius: { topRight: 6, bottomRight: 6 }, borderSkipped: 'left', barPercentage: 0.6 }] },
-    options: {
-      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false }, tooltip: { backgroundColor: C.tooltipBg, borderColor: C.tooltipBorder, borderWidth: 1, titleColor: C.tooltipTitle, bodyColor: C.orange, padding: 10, cornerRadius: 8 } },
-      scales: {
-        x: { beginAtZero: true, ticks: { color: C.tick, stepSize: 1, font: { size: 9 } }, grid: { color: C.grid }, border: { display: false } },
-        y: { grid: { display: false }, ticks: { color: C.text, font: { size: 9 } }, border: { display: false } },
-      },
-    },
-  });
+  if (totalEl) totalEl.textContent = counts.reduce((a, b) => a + b, 0);
+  barsEl.innerHTML = renderMiniBars(counts.length ? counts : [0], resolveCssColor('var(--purple)'));
 }
 
 function renderVitalAdSpend() {
-  const canvas = document.getElementById('vitalAdSpendRing');
-  if (!canvas) return;
+  const wrap = document.getElementById('vitalAdSpendDonut');
+  if (!wrap) return;
   const totalBudget = AD_SPEND_BUSINESSES.reduce((s, b) => s + (b.budget || 0), 0);
   const eligible = AD_SPEND_BUSINESSES.filter(b => b.promo === 'Yes' || b.promo === 'Already Using').length;
   const using = AD_SPEND_BUSINESSES.filter(b => b.promo === 'Already Using').length;
   const pct = eligible > 0 ? Math.round((using / eligible) * 100) : 0;
-  const pctEl = document.getElementById('vitalAdSpendPct');
-  if (pctEl) pctEl.textContent = pct + '%';
   const budgetEl = document.getElementById('vitalAdSpendBudget');
   if (budgetEl) budgetEl.textContent = fmtMoney(totalBudget);
-  destroyChart('vital-adspend');
-  chartRegistry['vital-adspend'] = new Chart(canvas, {
-    type: 'doughnut',
-    data: { datasets: [{ data: [pct, 100 - pct], backgroundColor: [resolveCssColor('var(--orange)'), resolveCssColor('var(--bg3)')], borderWidth: 0, hoverOffset: 0 }] },
-    options: { responsive: true, maintainAspectRatio: false, cutout: '76%', plugins: { legend: { display: false }, tooltip: { enabled: false } } },
-  });
+  wrap.innerHTML = renderMiniDonut(
+    [{ value: pct, color: resolveCssColor('var(--orange)') }, { value: 100 - pct, color: resolveCssColor('var(--bg3)') }],
+    { size: 56, stroke: 7, centerLabel: pct + '%' }
+  );
 }
 
 function renderVitalCollections() {
@@ -9152,13 +9157,13 @@ function renderVitalCollections() {
   const totalEl = document.getElementById('vitalCollectionsTotal');
   if (totalEl) totalEl.textContent = fmtMoney(total);
   wrap.innerHTML = total > 0
-    ? byStatus.map(s => `<div style="width:${(s.amount / total * 100).toFixed(1)}%;background:${resolveCssColor(s.color)};box-shadow:0 0 8px ${resolveCssColor(s.color)}" title="${escAttr(s.label)}: ${fmtMoney(s.amount)}"></div>`).join('')
+    ? byStatus.map(s => `<div style="width:${(s.amount / total * 100).toFixed(1)}%;background:${resolveCssColor(s.color)}" title="${escAttr(s.label)}: ${fmtMoney(s.amount)}"></div>`).join('')
     : '';
 }
 
 function renderVitalKpi() {
-  const canvas = document.getElementById('vitalKpiLine');
-  if (!canvas) return;
+  const sparkEl = document.getElementById('vitalKpiSpark');
+  if (!sparkEl) return;
   const scores = KPI_KEYS.map(k => getLatestKpiScore(k));
   const avgEl = document.getElementById('vitalKpiAvg');
   if (avgEl) {
@@ -9166,50 +9171,31 @@ function renderVitalKpi() {
     avgEl.innerHTML = `${avg}<span class="vital-stat-sub"> / 5 avg</span>`;
   }
   const allDates = Array.from(new Set(KPI_SCORE_HISTORY.map(r => (r.created_at || '').slice(0, 10)))).filter(Boolean).sort();
-  const datasets = KPI_KEYS.map(k => {
-    const rows = getKpiHistory(k);
-    const data = allDates.map(d => {
+  // Combined average across the 3 KPIs at each date -- a single sparkline
+  // can't usefully show 3 separate series at this size, so this trades
+  // per-KPI precision for a genuine "is the average trending up or down"
+  // read. The full 3-line breakdown still lives on the SuccessOS page itself.
+  const avgSeries = allDates.map(d => {
+    const vals = KPI_KEYS.map(k => {
+      const rows = getKpiHistory(k);
       const upTo = rows.filter(r => (r.created_at || '').slice(0, 10) <= d);
       return upTo.length ? upTo[upTo.length - 1].score : null;
-    });
-    return { label: getKpiMeta()[k].short, data, borderColor: getKpiMeta()[k].color, backgroundColor: getKpiMeta()[k].color, tension: 0.35, spanGaps: true, pointRadius: 2, pointHoverRadius: 4, borderWidth: 2 };
-  });
-  destroyChart('vital-kpi');
-  chartRegistry['vital-kpi'] = new Chart(canvas, {
-    type: 'line',
-    data: { labels: allDates.map(d => fmtDate(d)), datasets },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false }, tooltip: { backgroundColor: C.tooltipBg, borderColor: C.tooltipBorder, borderWidth: 1, titleColor: C.tooltipTitle, bodyColor: C.orange, padding: 10, cornerRadius: 8 } },
-      scales: {
-        y: { beginAtZero: true, max: 5, ticks: { stepSize: 1, color: C.tick, font: { size: 9 } }, grid: { color: C.grid }, border: { display: false } },
-        x: { grid: { display: false }, ticks: { display: false }, border: { display: false } },
-      },
-    },
-  });
+    }).filter(v => v != null);
+    return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+  }).filter(v => v != null);
+  sparkEl.innerHTML = renderMiniSparkline(avgSeries.length >= 2 ? avgSeries : [0, 0], resolveCssColor('var(--green)'));
 }
 
 function renderVitalAdoptionGap() {
-  const canvas = document.getElementById('vitalAdoptionGap');
-  if (!canvas) return;
+  const barsEl = document.getElementById('vitalAdoptionBars');
+  const totalEl = document.getElementById('vitalAdoptionTotal');
+  if (!barsEl) return;
   const cat = getCatalog('smb');
   const cl = getClients('smb');
   const total = cl.length || 1;
   const gaps = cat.map(p => total - cl.filter(c => c[p.key]).length);
-  const labels = cat.map(p => p.label);
-  destroyChart('vital-adoption-gap');
-  chartRegistry['vital-adoption-gap'] = new Chart(canvas, {
-    type: 'bar',
-    data: { labels, datasets: [{ data: gaps, backgroundColor: (ctx) => verticalGradient(ctx.chart.ctx, ctx.chart.chartArea, '#f59e0b'), _glowColor: '#f59e0b', borderRadius: 3, barPercentage: 0.75, categoryPercentage: 0.9 }] },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false }, tooltip: { backgroundColor: C.tooltipBg, borderColor: C.tooltipBorder, borderWidth: 1, titleColor: C.tooltipTitle, bodyColor: C.orange, padding: 10, cornerRadius: 8 } },
-      scales: {
-        y: { beginAtZero: true, ticks: { color: C.tick, font: { size: 8 } }, grid: { color: C.grid }, border: { display: false } },
-        x: { grid: { display: false }, ticks: { display: false }, border: { display: false } },
-      },
-    },
-  });
+  if (totalEl) totalEl.innerHTML = `${cat.length}<span class="vital-stat-sub"> products</span>`;
+  barsEl.innerHTML = renderMiniBars(gaps.length ? gaps : [0], resolveCssColor('var(--yellow)'));
 }
 
 // Wires the Home vitals grid into Nirvana -- each block's ✨ button opens the
@@ -12478,6 +12464,68 @@ function renderIntTileHtml(tile, ctx) {
 // select's options get rebuilt dynamically (removes its own previous
 // wrapper first rather than stacking a second one).
 // ════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════
+// MINIMALIST UI FOUNDATION — JS half (2026-07-24). Small, real, animated
+// inline charts to replace full Chart.js cards where only the shape of
+// the trend matters, not precise reading -- and the generic tab switcher
+// used to collapse stacked sections. Every page converted in this redesign
+// draws from these instead of each reinventing its own mini-chart markup.
+// ════════════════════════════════════════════════════════════════════
+function renderMiniSparkline(values, color, opts) {
+  opts = opts || {};
+  const w = opts.width || 52, h = opts.height || 20;
+  if (!values || values.length < 2) return `<svg width="${w}" height="${h}"></svg>`;
+  const min = Math.min(...values), max = Math.max(...values);
+  const range = (max - min) || 1;
+  const step = w / (values.length - 1);
+  const pts = values.map((v, i) => `${(i * step).toFixed(1)},${(h - ((v - min) / range) * (h - 2) - 1).toFixed(1)}`).join(' ');
+  const len = w + h;
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="stroke-dasharray:${len};stroke-dashoffset:${len};animation:hubSparkDraw .9s ease-out forwards"/></svg>`;
+}
+function renderMiniBars(values, color, opts) {
+  opts = opts || {};
+  const w = opts.width || 52, h = opts.height || 20;
+  if (!values || values.length === 0) return `<svg width="${w}" height="${h}"></svg>`;
+  const max = Math.max(...values, 1);
+  const gap = 3;
+  const barW = Math.max(2, (w - gap * (values.length - 1)) / values.length);
+  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${values.map((v, i) => {
+    const barH = Math.max(2, (v / max) * (h - 2));
+    const x = i * (barW + gap);
+    return `<rect x="${x.toFixed(1)}" y="${(h - barH).toFixed(1)}" width="${barW.toFixed(1)}" height="${barH.toFixed(1)}" rx="1" fill="${color}" style="transform-origin:bottom;transform-box:fill-box;animation:hubBarGrow .7s ease-out ${(i * 0.06).toFixed(2)}s both"/>`;
+  }).join('')}</svg>`;
+}
+// segments: [{ value, color }]. Real proportional arcs (not fake wedges),
+// drawn in with SMIL so each segment animates independently without
+// needing a uniquely-named CSS keyframe per instance.
+function renderMiniDonut(segments, opts) {
+  opts = opts || {};
+  const size = opts.size || 76, stroke = opts.stroke || 10, centerLabel = opts.centerLabel;
+  const r = (size - stroke) / 2, cx = size / 2, cy = size / 2;
+  const circumference = 2 * Math.PI * r;
+  const total = segments.reduce((s, seg) => s + seg.value, 0) || 1;
+  let offsetDeg = -90;
+  const arcs = segments.map(seg => {
+    const frac = seg.value / total;
+    const dash = frac * circumference;
+    const rotate = offsetDeg;
+    offsetDeg += frac * 360;
+    return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${seg.color}" stroke-width="${stroke}" stroke-dasharray="0 ${circumference.toFixed(1)}" transform="rotate(${rotate.toFixed(1)} ${cx} ${cy})"><animate attributeName="stroke-dasharray" from="0 ${circumference.toFixed(1)}" to="${dash.toFixed(1)} ${(circumference - dash).toFixed(1)}" dur="1s" fill="freeze" calcMode="spline" keySplines="0.2 0.8 0.2 1"/></circle>`;
+  }).join('');
+  const label = centerLabel != null ? `<text x="${cx}" y="${cy + 5}" text-anchor="middle" font-size="15" font-weight="700" fill="var(--text)">${escAttr(String(centerLabel))}</text>` : '';
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--bg4)" stroke-width="${stroke}"/>
+    ${arcs}${label}
+  </svg>`;
+}
+// Correlates any .hub-tab[data-group=X][data-tab=Y] with any
+// .hub-tab-panel[data-group=X][data-tab=Y], regardless of DOM nesting --
+// so tabs and their panels don't need to be siblings.
+function switchHubTab(groupId, tabKey) {
+  document.querySelectorAll(`.hub-tab[data-group="${groupId}"]`).forEach(t => t.classList.toggle('active', t.dataset.tab === tabKey));
+  document.querySelectorAll(`.hub-tab-panel[data-group="${groupId}"]`).forEach(p => p.classList.toggle('active', p.dataset.tab === tabKey));
+}
+
 function themifySelect(selectId, { fullWidth = false } = {}) {
   const select = document.getElementById(selectId);
   if (!select || select.tagName !== 'SELECT') return;
