@@ -6090,6 +6090,7 @@ select.wfb-field-input { padding-right: 26px; }
           <div class="card-header" style="margin-bottom:var(--space-3)">
             <div><div class="card-title">Duplicate Clusters</div><div class="card-sub" id="dqClusterCountSub">0 groups</div></div>
             <div style="display:flex;gap:8px">
+              <button class="btn btn-primary btn-sm" id="dqBatchMergeBtn" style="display:none" onclick="confirmBatchMergeHighConfidence()"><span class="icon" data-icon="broom" data-icon-size="13"></span> Batch Merge High-Confidence</button>
               <input type="text" id="dqClusterSearch" class="field-input" placeholder="Search clusters…" style="height:32px;width:160px;margin-bottom:0" oninput="onDqClusterFilterChange()">
               <select id="dqRiskFilter" class="field-select" style="height:32px" onchange="onDqClusterFilterChange()">
                 <option value="all">All Risk Levels</option>
@@ -12703,11 +12704,11 @@ function renderBrandAccessibility() {
 // deleting redundant rows never orphans a note/task/contact, since none of
 // them ever pointed at a specific duplicate row's id to begin with.
 // ════════════════════════════════════════════════════════════════════════
-let duplicateClientScanResults = [];
-
-// Shared, DOM-free detection logic -- used by both scanForDuplicateClients()
-// (the UI) and Nirvana's find_duplicate_clients tool, so there's exactly one
-// implementation to keep correct instead of two that can quietly drift apart.
+// Shared, DOM-free detection logic -- used by Nirvana's find_duplicate_clients
+// tool and a Home-page widget. The old UI card that used to call this via
+// scanForDuplicateClients() was replaced by the Data Quality Studio's fuzzy
+// engine (see computeDuplicateClusters() below), so this exact-match version
+// stays only for the simpler tools/widgets that still use it directly.
 async function detectDuplicateClientGroups() {
   const rows = await sbSelect('portfolio_clients', 'select=id,portfolio,name,organization,cell_notes,products,created_at&order=created_at.asc');
   const groups = {};
@@ -12720,104 +12721,12 @@ async function detectDuplicateClientGroups() {
   return Object.values(groups).filter(g => g.length > 1);
 }
 
-async function scanForDuplicateClients() {
-  const wrap = document.getElementById('duplicateClientsList');
-  wrap.innerHTML = `<div style="text-align:center;padding:var(--space-5);color:var(--text3)">Scanning…</div>`;
-
-  try {
-    duplicateClientScanResults = await detectDuplicateClientGroups();
-  } catch(e) {
-    wrap.innerHTML = `<div style="color:var(--red);font-size:var(--font-sm)">Could not scan: ${escAttr(e.message)}</div>`;
-    return;
-  }
-
-  if (duplicateClientScanResults.length === 0) {
-    wrap.innerHTML = emptyStateHTML({ icon: hubIcon('check', 28), title: t('es_no_duplicates'), sub: t('es_no_duplicates_sub') });
-    return;
-  }
-
-  wrap.innerHTML = duplicateClientScanResults.map((group, i) => renderDuplicateGroupRow(i, false)).join('');
-}
-
-function renderDuplicateGroupRow(i, expanded) {
-  const group = duplicateClientScanResults[i];
-  const first = group[0];
-  const summary = `<div class="edit-client-row" style="align-items:flex-start" id="dupGroupRow-${i}">
-    <div style="flex:1">
-      <div style="font-weight:700;color:var(--text);font-size:var(--font-base)">${escAttr(first.name)}</div>
-      <div style="font-size:var(--font-xs);color:var(--text2);margin-top:2px">
-        <span class="portfolio-chip chip-${first.portfolio}">${escAttr(PORTFOLIO_LABELS[first.portfolio] || first.portfolio)}</span>
-        appears ${group.length} times
-      </div>
-    </div>
-    <button class="row-action-btn" onclick="toggleDuplicateGroupReview(${i})">${expanded ? hubIcon('close',13) + ' Close' : hubIcon('eye',13) + ' Review &amp; Merge'}</button>
-  </div>`;
-
-  if (!expanded) return summary;
-
-  const productKeys = Array.from(new Set(group.flatMap(r => Object.keys(r.products || {}).filter(k => r.products[k]))));
-  const detailRows = group.map((r, idx) => `
-    <div style="padding:var(--space-2) var(--space-3);background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:var(--space-2)">
-      <div style="font-size:var(--font-xs);font-weight:700;color:${idx === 0 ? 'var(--green)' : 'var(--text3)'};margin-bottom:2px">${idx === 0 ? '🏆 Oldest — stays' : '🗑️ Will be deleted'} · created ${fmtNoteTime(r.created_at)}</div>
-      <div style="font-size:var(--font-sm)">${r.organization ? 'Org: ' + escAttr(r.organization) : '<span style="color:var(--text3)">No organization</span>'}</div>
-      <div style="font-size:var(--font-xs);color:var(--text2);margin-top:2px">${Object.keys(r.products || {}).filter(k => r.products[k]).map(escAttr).join(', ') || 'No products marked in use'}</div>
-    </div>`).join('');
-
-  const hasNext = i < duplicateClientScanResults.length - 1;
-  return `<div style="border:1px solid var(--orange);border-radius:var(--radius-sm);padding:var(--space-3);margin-bottom:var(--space-2)">
-    ${summary}
-    <div style="margin-top:var(--space-3)">
-      <div style="font-size:var(--font-xs);color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:var(--space-2)">${group.length} duplicate rows</div>
-      ${detailRows}
-      <div style="font-size:var(--font-xs);color:var(--text2);margin-bottom:var(--space-3)">
-        Merging combines every product marked "in use" across all ${group.length} rows onto the survivor (${productKeys.length ? escAttr(productKeys.join(', ')) : 'none marked yet'}) — nothing gets silently lost. Notes, tasks, and contacts aren't affected either way, since they're linked by client name, not by these specific rows.
-      </div>
-      <div style="display:flex;gap:var(--space-2)">
-        <button class="btn btn-primary btn-sm" onclick="confirmMergeDuplicateGroup(${i})"><span class="icon" data-icon="broom" data-icon-size="14"></span> Merge ${group.length} → 1</button>
-        ${hasNext ? `<button class="btn btn-ghost btn-sm" onclick="reviewNextDuplicateGroup(${i})">Next →</button>` : ''}
-      </div>
-    </div>
-  </div>`;
-}
-
-function toggleDuplicateGroupReview(i) {
-  const el = document.getElementById(`dupGroupRow-${i}`);
-  const alreadyExpanded = el && el.parentElement && el.parentElement.style.borderColor;
-  el.parentElement.outerHTML = renderDuplicateGroupRow(i, !alreadyExpanded);
-}
-
-// Collapses the current group and expands the next one in the same pass,
-// so reviewing a long list of duplicates doesn't require closing each one
-// individually before opening the next.
-function reviewNextDuplicateGroup(currentIndex) {
-  const currentEl = document.getElementById(`dupGroupRow-${currentIndex}`);
-  if (currentEl && currentEl.parentElement) currentEl.parentElement.outerHTML = renderDuplicateGroupRow(currentIndex, false);
-  const nextIndex = currentIndex + 1;
-  if (nextIndex >= duplicateClientScanResults.length) return;
-  const nextEl = document.getElementById(`dupGroupRow-${nextIndex}`);
-  if (nextEl && nextEl.parentElement) {
-    nextEl.parentElement.outerHTML = renderDuplicateGroupRow(nextIndex, true);
-    document.getElementById(`dupGroupRow-${nextIndex}`).scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }
-}
-
-async function confirmMergeDuplicateGroup(i) {
-  const group = duplicateClientScanResults[i];
-  if (!group) return;
-  const confirmed = await showConfirmDialog(
-    `Merge all ${group.length} rows for "${group[0].name}" into one? This deletes ${group.length - 1} duplicate row(s) after combining their product flags onto the oldest one. This can't be undone from here.`,
-    { title: '🧹 Merge duplicates', confirmLabel: `Merge ${group.length} → 1`, danger: true }
-  );
-  if (!confirmed) return;
-  await mergeDuplicateClientGroup(i);
-}
-
 // Shared, DOM-free merge logic -- takes the actual row objects (not a UI
 // cache index), does the union/gap-fill/patch/delete, and refreshes the
 // live client cache so the rest of the app reflects it immediately. Used by
-// both the UI's mergeDuplicateClientGroup() and Nirvana's
-// merge_duplicate_clients tool, so there's one implementation of the actual
-// database logic, not two that could drift.
+// Data Quality Studio's cluster merge and Nirvana's merge_duplicate_clients/
+// merge_duplicate_cluster tools, so there's one implementation of the actual
+// database logic, not several that could drift.
 async function mergeDuplicateGroupRows(group) {
   const survivor = group[0]; // oldest, per detectDuplicateClientGroups()'s created_at.asc sort
   const rest = group.slice(1);
@@ -12851,23 +12760,6 @@ async function mergeDuplicateGroupRows(group) {
   if (typeof loadFromSupabase === 'function') { try { await loadFromSupabase(); rebuildAll(); } catch(e) { console.warn(e.message); } }
 
   return { ok: true, survivorName: survivor.name, deletedCount: rest.length };
-}
-
-async function mergeDuplicateClientGroup(i) {
-  const group = duplicateClientScanResults[i];
-  if (!group) return;
-
-  const result = await mergeDuplicateGroupRows(group);
-  if (result.error) { showToast(result.error, 'error'); return; }
-
-  showToast(`Merged "${result.survivorName}" — ${result.deletedCount} duplicate row(s) removed.`, 'success');
-  duplicateClientScanResults.splice(i, 1);
-  // Re-render the remaining groups' rows now that indexes have shifted,
-  // rather than leaving stale onclick handlers pointing at the wrong index.
-  const wrap = document.getElementById('duplicateClientsList');
-  wrap.innerHTML = duplicateClientScanResults.length === 0
-    ? emptyStateHTML({ icon: hubIcon('check', 28), title: t('es_no_duplicates'), sub: t('es_no_duplicates_sub') })
-    : duplicateClientScanResults.map((g, idx) => renderDuplicateGroupRow(idx, false)).join('');
 }
 
 // ════════════════════════════════════════════════════════════════════════
@@ -13107,6 +12999,14 @@ function renderDqClustersTable() {
   const filtered = DQ_CLUSTERS.filter(c => (riskFilter === 'all' || c.risk === riskFilter) && (!q || c.members[0].name.toLowerCase().includes(q)));
   if (countSub) countSub.textContent = `${filtered.length} group${filtered.length === 1 ? '' : 's'}`;
 
+  const batchBtn = document.getElementById('dqBatchMergeBtn');
+  if (batchBtn) {
+    const highCount = DQ_CLUSTERS.filter(c => c.risk === 'High').length;
+    const showBtn = DQ_POLICIES.auto_merge_high_confidence && highCount > 0;
+    batchBtn.style.display = showBtn ? '' : 'none';
+    if (showBtn) batchBtn.innerHTML = `<span class="icon" data-icon="broom" data-icon-size="13"></span> Batch Merge High-Confidence (${highCount})`;
+  }
+
   if (DQ_CLUSTERS.length === 0) {
     listEl.innerHTML = `<div class="cnt-empty-contacts-hint">${DQ_LAST_SCAN ? 'No duplicate clusters found in the last scan.' : 'Click "Scan for Duplicates" above to check.'}</div>`;
     if (pagEl) pagEl.innerHTML = '';
@@ -13164,6 +13064,35 @@ async function confirmMergeDqCluster(clusterId) {
   showToast(`Merged "${result.survivorName}" — ${result.deletedCount} duplicate row(s) removed.`, 'success');
   await logDqActivity('manual_merge', `Merged ${c.members.length} rows into "${result.survivorName}"`);
   DQ_CLUSTERS = DQ_CLUSTERS.filter(x => x.id !== clusterId);
+  await loadDataCleanupConfig();
+  renderDataQualityStudio();
+}
+
+// The actual action behind "Auto-merge high-confidence duplicates (90%+)" --
+// previously that policy toggle saved and showed a warning, but nothing
+// ever executed a batch merge; this is the real implementation. Still never
+// silent: always lists exactly what's about to be merged and requires an
+// explicit confirmation, even though the policy itself is "on".
+async function confirmBatchMergeHighConfidence() {
+  if (!requirePermission('edit')) return;
+  const targets = DQ_CLUSTERS.filter(c => c.risk === 'High');
+  if (targets.length === 0) { showToast('No high-confidence clusters to merge.', 'info'); return; }
+  const preview = targets.slice(0, 8).map(c => `• "${escAttr(c.members[0].name)}" (${c.members.length} rows, ${Math.round(c.confidence * 100)}%)`).join('\n')
+    + (targets.length > 8 ? `\n…and ${targets.length - 8} more` : '');
+  const confirmed = await showConfirmDialog(
+    `This will merge all ${targets.length} high-confidence cluster(s) below in one pass:\n\n${preview}\n\nThe oldest row in each survives; the rest are removed after combining products onto it. This can't be undone.`,
+    { title: '🧹 Batch Merge High-Confidence Duplicates', confirmLabel: `Merge ${targets.length} cluster(s)`, danger: true }
+  );
+  if (!confirmed) return;
+
+  let merged = 0, failed = 0;
+  for (const c of targets) {
+    const result = await mergeDuplicateGroupRows(c.members);
+    if (result.error) { failed++; console.warn('Batch merge failed for', c.members[0].name, ':', result.error); }
+    else { merged++; DQ_CLUSTERS = DQ_CLUSTERS.filter(x => x.id !== c.id); }
+  }
+  await logDqActivity('batch_merge', `Batch-merged ${merged} high-confidence cluster(s)${failed ? ` (${failed} failed)` : ''}`);
+  showToast(`Batch merge complete — ${merged} cluster(s) merged${failed ? `, ${failed} failed` : ''}.`, failed ? 'warning' : 'success');
   await loadDataCleanupConfig();
   renderDataQualityStudio();
 }
