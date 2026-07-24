@@ -2074,6 +2074,15 @@ tr.pg-hidden-row { display: none; }
 .team-role-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 8px; }
 .team-role-card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
 .team-rec-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-xs); padding: 10px; margin-bottom: 8px; font-size: 11.5px; }
+.team-role-picker { position: relative; width: 150px; flex-shrink: 0; }
+.team-role-btn { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: var(--space-2) var(--space-3); background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-size: var(--font-xs); font-weight: 600; cursor: pointer; transition: box-shadow var(--transition-slow), border-color var(--transition-slow); }
+.team-role-caret { font-size: 9px; color: var(--text3); }
+.team-role-glow-user { border-color: rgba(163,154,146,.5); box-shadow: 0 0 0 1px rgba(163,154,146,.2), 0 0 8px rgba(163,154,146,.25); }
+.team-role-glow-superuser { border-color: rgba(59,130,246,.55); color: var(--blue); box-shadow: 0 0 0 1px rgba(59,130,246,.25), 0 0 10px rgba(59,130,246,.35); }
+.team-role-glow-admin { border-color: rgba(226,84,31,.55); color: var(--orange2); box-shadow: 0 0 0 1px rgba(226,84,31,.25), 0 0 10px rgba(226,84,31,.35); }
+.team-role-panel { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: 0 8px 20px rgba(0,0,0,.4); z-index: 20; overflow: hidden; }
+.team-role-option { padding: 8px 12px; font-size: 11.5px; font-weight: 600; color: var(--text2); cursor: pointer; }
+.team-role-option:hover { background: var(--orange-dim); color: var(--orange); }
 
 /* ─── SECTION HEADERS ──────────────────────────────────────────────────── */
 .section-hd { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-2); }
@@ -12914,6 +12923,30 @@ async function addTeamMember() {
   showToast(`${email} can now sign in (${roleLabel} access).`, 'success');
 }
 
+// Custom themed role picker -- replaces the native <select> (which can't be
+// restyled to match the dark theme's open dropdown list) with a small
+// panel matching the same convention already used for the Goals month
+// picker. Colors reuse the exact scheme already established for .role-pill,
+// not new ones.
+const ROLE_META = {
+  user: { label: 'User', color: 'var(--text2)', glow: 'rgba(163,154,146,.4)' },
+  superuser: { label: 'Super User', color: 'var(--blue)', glow: 'rgba(59,130,246,.45)' },
+  admin: { label: 'Admin', color: 'var(--orange2)', glow: 'rgba(226,84,31,.45)' },
+};
+function toggleTeamRolePicker(id, event) {
+  if (event) event.stopPropagation();
+  document.querySelectorAll('.team-role-panel').forEach(p => { if (p.id !== `role-panel-${id}`) p.style.display = 'none'; });
+  const panel = document.getElementById(`role-panel-${id}`);
+  if (panel) panel.style.display = panel.style.display === 'none' ? '' : 'none';
+}
+function pickTeamRole(id, role) {
+  const panel = document.getElementById(`role-panel-${id}`);
+  if (panel) panel.style.display = 'none';
+  updateTeamMemberRole(id, role);
+}
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.team-role-picker')) document.querySelectorAll('.team-role-panel').forEach(p => p.style.display = 'none');
+});
 async function updateTeamMemberRole(id, role) {
   if (!requirePermission('admin')) { renderTeamUI(); return; }
   const m = TEAM_MEMBERS.find(x => x.id === id);
@@ -12929,6 +12962,7 @@ async function updateTeamMemberRole(id, role) {
   }
   const cur = getCurrentUser();
   if (cur && cur.id === id) { cur.role = m.role; applyPermissionsToUI(); }
+  renderTeamUI();
 }
 
 async function removeTeamMember(id) {
@@ -13034,11 +13068,14 @@ function renderTeamUI() {
         <div class="team-row">
           <span class="user-avatar">${m.avatar ? `<img src="${m.avatar}" alt="">` : initials(m.name)}</span>
           <div class="team-name">${escAttr(m.name)}${m.id === (getCurrentUser()||{}).id ? ' <span style="color:var(--orange);font-size:10px;font-weight:800">YOU</span>' : ''}<div class="team-email">${escAttr(m.email)}</div></div>
-          <select onchange="updateTeamMemberRole('${m.id}', this.value)" style="width:150px;padding:var(--space-2) var(--space-3);background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:var(--font-xs)">
-            <option value="user" ${m.role==='user'?'selected':''}>User</option>
-            <option value="superuser" ${m.role==='superuser'?'selected':''}>Super User</option>
-            <option value="admin" ${m.role==='admin'?'selected':''}>Admin</option>
-          </select>
+          <div class="team-role-picker">
+            <button type="button" class="team-role-btn team-role-glow-${m.role}" onclick="toggleTeamRolePicker('${m.id}', event)">${escAttr(ROLE_META[m.role].label)} <span class="team-role-caret">▾</span></button>
+            <div class="team-role-panel" id="role-panel-${m.id}" style="display:none">
+              <div class="team-role-option" onclick="pickTeamRole('${m.id}','user')">User</div>
+              <div class="team-role-option" onclick="pickTeamRole('${m.id}','superuser')">Super User</div>
+              <div class="team-role-option" onclick="pickTeamRole('${m.id}','admin')">Admin</div>
+            </div>
+          </div>
           <span class="team-status-col"><span class="int-dot" style="background:${dotColor};width:6px;height:6px"></span>${st.label}</span>
           <span class="team-lastactive-col">${st.lastActive}</span>
           <button class="row-action-btn danger" onclick="removeTeamMember('${m.id}')"><span class="icon" data-icon="trash" data-icon-size="13"></span> Remove</button>
