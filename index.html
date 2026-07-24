@@ -2065,6 +2065,15 @@ tr.pg-hidden-row { display: none; }
 .team-row { display: flex; align-items: center; gap: var(--space-2); padding: var(--space-3) var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-sm); margin-bottom: var(--space-2); background: var(--bg3); }
 .team-row .team-name { flex: 1; font-weight: 700; font-size: var(--font-base); color: var(--text); }
 .team-row .team-email { font-size: var(--font-xs); color: var(--text3); }
+.team-layout { display: grid; grid-template-columns: 300px 1fr 300px; gap: var(--space-4); align-items: start; }
+.team-col-narrow, .team-col-wide { display: flex; flex-direction: column; gap: var(--space-4); }
+.team-note-box { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-xs); padding: 10px 12px; font-size: 11px; color: var(--text3); display: flex; gap: 8px; align-items: flex-start; line-height: 1.5; }
+.team-secure-box { text-align: left; }
+.team-status-col { width: 90px; font-size: 11px; display: flex; align-items: center; gap: 5px; }
+.team-lastactive-col { width: 100px; font-size: 11px; color: var(--text3); }
+.team-role-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 8px; }
+.team-role-card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.team-rec-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-xs); padding: 10px; margin-bottom: 8px; font-size: 11.5px; }
 
 /* ─── SECTION HEADERS ──────────────────────────────────────────────────── */
 .section-hd { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-2); }
@@ -5872,48 +5881,65 @@ select.wfb-field-input { padding-right: 26px; }
     </div>
 
     <div id="settingsTab-team" style="display:none">
-      <div class="card" style="margin-bottom:var(--space-5)">
-        <div class="card-header">
-          <div><div class="card-title" data-i18n="settings_authorize_title">Authorize a Teammate</div><div class="card-sub">This email will be able to sign in with Google, or by creating a password</div></div>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 160px 120px;gap:var(--space-3);align-items:end">
-          <div>
-            <label for="newMemberEmail" class="field-label">Email <span style="color:var(--orange)">(required — this is their login)</span></label>
-            <input type="text" id="newMemberEmail" placeholder="jordan@getniche.ai" class="field-input">
-          </div>
-          <div>
-            <label for="newMemberName" class="field-label">Name <span style="color:var(--text3)">(optional — fills in automatically on first sign-in)</span></label>
+      <div class="int-stat-bar" id="teamStatBar"></div>
+
+      <div class="team-layout">
+        <div class="team-col-narrow">
+          <div class="card brand-section-card">
+            <div class="card-title">Authorize Teammate</div>
+            <div class="card-sub" style="margin-bottom:var(--space-4)">Invite a new teammate to the Hub.</div>
+            <label for="newMemberEmail" class="field-label">Email (required)</label>
+            <input type="text" id="newMemberEmail" placeholder="name@company.com" class="field-input">
+            <label for="newMemberName" class="field-label">Name (optional)</label>
             <input type="text" id="newMemberName" placeholder="e.g. Jordan Lee" class="field-input">
-          </div>
-          <div>
             <label for="newMemberRole" class="field-label">Role</label>
-            <select id="newMemberRole" class="field-input">
+            <select id="newMemberRole" class="field-input" style="margin-bottom:var(--space-3)">
               <option value="user">User — view only</option>
               <option value="superuser">Super user — upload & edit</option>
               <option value="admin">Admin — full access</option>
             </select>
+            <div class="team-note-box">
+              <span class="icon" data-icon="info" data-icon-size="14"></span>
+              New members will receive an email invite with setup instructions.
+            </div>
+            <button class="btn btn-primary" style="width:100%;margin-top:var(--space-3)" onclick="addTeamMember()">Authorize &amp; Send Invite</button>
+            <div style="font-size:10.5px;color:var(--text3);margin-top:8px;line-height:1.5">This app is invite-only — once added, they sign in at the Hub with <b>Sign in with Google</b> (if that email is a Google account) or <b>"Create your password"</b> under Email/Password.</div>
           </div>
-          <button class="btn btn-primary" onclick="addTeamMember()">＋ Authorize</button>
+          <div class="card brand-section-card team-secure-box">
+            <div style="display:flex;align-items:center;gap:8px;color:var(--orange);font-weight:800;font-size:13px"><span class="icon" data-icon="lock" data-icon-size="15"></span> Secure by design</div>
+            <div style="font-size:11.5px;color:var(--text3);margin-top:8px;line-height:1.6">All invites are time-limited and permissioned. You can revoke access anytime.</div>
+          </div>
         </div>
-        <div style="font-size:var(--font-xs);color:var(--text3);margin-top:var(--space-3);line-height:1.6">
-          This app is invite-only — only emails added here can sign in. Once added, tell them to go to the Hub and either click <b>Sign in with Google</b> (if that email is a Google account), or use <b>"First time here? Create your password"</b> under Email/Password to set one up.
+
+        <div class="team-col-wide">
+          <div class="card brand-section-card">
+            <div class="card-header" style="margin-bottom:var(--space-3)">
+              <div><div class="card-title" data-i18n="settings_team_members_title">Team Members</div><div class="card-sub" id="teamCountSub">0 people</div></div>
+              <div style="display:flex;gap:8px">
+                <input type="text" id="teamSearchInput" class="field-input" placeholder="Search members…" style="height:34px;width:200px;margin-bottom:0" oninput="renderTeamUI()">
+                <select id="teamRoleFilter" class="field-select" style="height:34px" onchange="renderTeamUI()">
+                  <option value="all">All Roles</option>
+                  <option value="admin">Admin</option>
+                  <option value="superuser">Super User</option>
+                  <option value="user">User</option>
+                </select>
+              </div>
+            </div>
+            <div id="teamMembersList"></div>
+          </div>
         </div>
-      </div>
-      <div class="card" style="margin-bottom:var(--space-5)">
-        <div class="card-header">
-          <div><div class="card-title" data-i18n="settings_roles_title">Roles Explained</div></div>
+
+        <div class="team-col-narrow">
+          <div class="card brand-section-card">
+            <div class="card-title" data-i18n="settings_roles_title">Roles &amp; Permissions</div>
+            <div class="card-sub" style="margin-bottom:var(--space-3)">Manage roles and what each role can access.</div>
+            <div id="teamRolesPanel"></div>
+          </div>
+          <div class="card brand-section-card">
+            <div class="card-title" style="font-size:13px">Recommendations</div>
+            <div id="teamRecommendations" style="margin-top:8px"></div>
+          </div>
         </div>
-        <div style="font-size:var(--font-sm);color:var(--text2);line-height:1.9">
-          <div><span class="role-pill admin">Admin</span> Full access — upload, edit clients, manage the product catalog, and manage the team.</div>
-          <div><span class="role-pill superuser">Super user</span> Can upload spreadsheets, connect Sheets, and edit/merge clients. Cannot manage team or the product catalog.</div>
-          <div><span class="role-pill user">User</span> View-only — dashboards, charts, and reports, no editing or uploads.</div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-header">
-          <div><div class="card-title" data-i18n="settings_team_members_title">Team Members</div><div class="card-sub" id="teamCountSub">0 people</div></div>
-        </div>
-        <div id="teamMembersList"></div>
       </div>
     </div>
 
@@ -12145,6 +12171,7 @@ function switchSettingsTab(tab) {
   document.getElementById('settingsTab-team').style.display = tab === 'team' ? '' : 'none';
   document.getElementById('settingsTab-cleanup').style.display = tab === 'cleanup' ? '' : 'none';
   if (tab === 'branding') populateBrandingForm();
+  if (tab === 'team') renderTeamUI();
 }
 // Populates the Branding form from the real ORG_SETTINGS currently applied
 // across the Hub, not stale defaults, so the form always reflects reality.
@@ -12631,6 +12658,10 @@ async function mergeDuplicateClientGroup(i) {
 const ROLE_RANK = { user: 1, superuser: 2, admin: 3 };
 const TEAM_CACHE_KEY = 'csh_team_members_v1';
 let TEAM_MEMBERS = [];
+// Real last-sign-in data per email, from Supabase Auth via team-status.mjs
+// (admin-only). Stays {} for non-admins or if the call fails -- status
+// falls back to a neutral, non-fabricated display rather than guessing.
+let TEAM_AUTH_STATUS = {};
 let CURRENT_AUTH_USER = null; // { id, name, email, role, authId } — set once a session is authorized
 let loginMode = 'signin'; // 'signin' | 'signup'
 
@@ -12781,7 +12812,7 @@ function normalizeRole(raw) {
 async function loadTeamMembers() {
   try {
     const rows = await sbSelect('team_members', 'order=name.asc');
-    TEAM_MEMBERS = rows.map(r => ({ id: r.id, name: r.name, email: r.email || '', role: normalizeRole(r.role), avatar: r.avatar || '' }));
+    TEAM_MEMBERS = rows.map(r => ({ id: r.id, name: r.name, email: r.email || '', role: normalizeRole(r.role), avatar: r.avatar || '', created_at: r.created_at }));
     localStorage.setItem(TEAM_CACHE_KEY, JSON.stringify(TEAM_MEMBERS));
     // Self-heal: if a role was stored in a non-canonical format (e.g. "super user"
     // with a space, instead of "superuser"), write the canonical value straight
@@ -12794,7 +12825,56 @@ async function loadTeamMembers() {
     try { TEAM_MEMBERS = JSON.parse(localStorage.getItem(TEAM_CACHE_KEY) || '[]'); }
     catch(e2) { TEAM_MEMBERS = []; }
   }
+  await loadTeamAuthStatus();
   renderTeamUI();
+}
+// Real sign-in history from Supabase Auth (last_sign_in_at) -- not available
+// in team_members itself. Admin-only server call; silently no-ops for
+// non-admins or if it fails, so status just falls back to a neutral display
+// rather than fabricating anything.
+async function loadTeamAuthStatus() {
+  if (!isAdmin()) { TEAM_AUTH_STATUS = {}; return; }
+  try {
+    const res = await fetch('/.netlify/functions/team-status', {
+      method: 'POST',
+      headers: { 'Authorization': SB_HEADERS['Authorization'], 'Content-Type': 'application/json' },
+      body: '{}',
+    });
+    const data = await res.json();
+    TEAM_AUTH_STATUS = res.ok ? (data.users || {}) : {};
+  } catch (e) {
+    console.warn('Could not load team sign-in status:', e.message);
+    TEAM_AUTH_STATUS = {};
+  }
+}
+// Real status derived from actual sign-in data — "Invited" (never signed
+// in), "Active" (signed in within the last 30 days), or "Inactive"
+// (signed in before that). Falls back to an honest "—" rather than a
+// fabricated status if the auth data isn't available (non-admin viewer,
+// or the lookup failed).
+function getTeamMemberStatus(member) {
+  const auth = TEAM_AUTH_STATUS[(member.email || '').toLowerCase()];
+  if (!auth) return { status: null, label: '—', lastActive: '—' };
+  if (!auth.last_sign_in_at) return { status: 'invited', label: 'Invited', lastActive: '—' };
+  const daysSince = (Date.now() - new Date(auth.last_sign_in_at).getTime()) / 86400000;
+  return {
+    status: daysSince <= 30 ? 'active' : 'inactive',
+    label: daysSince <= 30 ? 'Active' : 'Inactive',
+    lastActive: fmtNoteTime(auth.last_sign_in_at),
+  };
+}
+function computeTeamAccessHealth(members) {
+  const admins = members.filter(m => m.role === 'admin');
+  const elevated = members.filter(m => m.role === 'admin' || m.role === 'superuser');
+  const invited = members.filter(m => getTeamMemberStatus(m).status === 'invited');
+  const stalePendingInvites = invited.filter(m => m.created_at && (Date.now() - new Date(m.created_at).getTime()) / 86400000 > 7);
+  const checks = [
+    { label: 'At least one Admin exists', ok: admins.length >= 1 },
+    { label: 'No more than half the team has elevated access', ok: members.length === 0 || elevated.length / members.length <= 0.5 },
+    { label: 'No pending invites older than 7 days', ok: stalePendingInvites.length === 0 },
+  ];
+  const passed = checks.filter(c => c.ok).length;
+  return { checks, passed, total: checks.length, score: Math.round(passed / checks.length * 100), admins, elevated, invited, stalePendingInvites };
 }
 
 async function persistTeamMember(member) {
@@ -12866,20 +12946,104 @@ function renderTeamUI() {
   const list = document.getElementById('teamMembersList');
   const countSub = document.getElementById('teamCountSub');
   if (countSub) countSub.textContent = `${TEAM_MEMBERS.length} ${TEAM_MEMBERS.length === 1 ? 'person' : 'people'}`;
+
+  const health = computeTeamAccessHealth(TEAM_MEMBERS);
+
+  // Stat bar
+  const statBar = document.getElementById('teamStatBar');
+  if (statBar) {
+    const adminPct = TEAM_MEMBERS.length ? Math.round(health.admins.length / TEAM_MEMBERS.length * 100) : 0;
+    statBar.innerHTML = `
+      <div class="int-stat-card">
+        <div class="int-stat-label"><span class="icon" data-icon="users" data-icon-size="12"></span> Total Team Members</div>
+        <div class="int-stat-value">${TEAM_MEMBERS.length}</div>
+      </div>
+      <div class="int-stat-card">
+        <div class="int-stat-label"><span class="icon" data-icon="mail" data-icon-size="12"></span> Pending Invites</div>
+        <div class="int-stat-value" style="color:${health.invited.length ? 'var(--yellow)' : 'var(--text)'}">${health.invited.length}</div>
+      </div>
+      <div class="int-stat-card">
+        <div class="int-stat-label"><span class="icon" data-icon="shield" data-icon-size="12"></span> Admins</div>
+        <div class="int-stat-value">${health.admins.length}</div>
+        <div class="int-stat-sub">${adminPct}% of team</div>
+      </div>
+      <div class="int-stat-card">
+        <div class="int-stat-label"><span class="icon" data-icon="check" data-icon-size="12"></span> Access Health</div>
+        <div class="int-stat-value" style="font-size:15px;color:${health.score === 100 ? 'var(--green)' : health.score >= 60 ? 'var(--yellow)' : 'var(--red)'}">${health.score === 100 ? 'Healthy' : health.score + '%'}</div>
+        <div class="int-stat-sub">${health.passed}/${health.total} checks passed</div>
+      </div>
+    `;
+  }
+
+  // Roles & Permissions panel — real per-role member counts
+  const rolesPanel = document.getElementById('teamRolesPanel');
+  if (rolesPanel) {
+    const roleDefs = [
+      { key: 'admin', label: 'Admin', desc: 'Full control of the Hub. Manage team, settings, billing, and all data.', access: 'Full Access', color: 'var(--red)' },
+      { key: 'superuser', label: 'Super User', desc: 'Manage clients, data, and most Hub features. Cannot manage team or billing.', access: 'Elevated Access', color: 'var(--orange)' },
+      { key: 'user', label: 'User', desc: 'View dashboards, reports, and data. No access to edit or manage.', access: 'View Only', color: 'var(--text3)' },
+    ];
+    rolesPanel.innerHTML = roleDefs.map(r => {
+      const count = TEAM_MEMBERS.filter(m => m.role === r.key).length;
+      return `<div class="team-role-card">
+        <div class="team-role-card-head">
+          <span style="font-weight:800;font-size:12.5px;color:${r.color}">${r.label}</span>
+          <span class="int-coming-soon-badge" style="color:${r.color};background:${r.color}22">${r.access}</span>
+        </div>
+        <div style="font-size:11px;color:var(--text3);line-height:1.5">${r.desc}</div>
+        <div style="font-size:10.5px;color:var(--text2);margin-top:4px">${count} member${count === 1 ? '' : 's'}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // Recommendations — real, derived from the same access-health checks, not
+  // a canned/fake list.
+  const rec = document.getElementById('teamRecommendations');
+  if (rec) {
+    const cards = [];
+    if (health.stalePendingInvites.length > 0) {
+      const oldest = health.stalePendingInvites.sort((a, b) => new Date(a.created_at) - new Date(b.created_at))[0];
+      const days = Math.floor((Date.now() - new Date(oldest.created_at).getTime()) / 86400000);
+      cards.push(`<div class="team-rec-card"><span class="icon" data-icon="mail" data-icon-size="13" style="color:var(--yellow)"></span> <b>Review ${health.stalePendingInvites.length} pending invite${health.stalePendingInvites.length === 1 ? '' : 's'}</b><br><span style="color:var(--text3)">${escAttr(oldest.name)} was invited ${days} day${days === 1 ? '' : 's'} ago.</span></div>`);
+    }
+    if (!health.checks[1].ok) {
+      cards.push(`<div class="team-rec-card"><span class="icon" data-icon="alert" data-icon-size="13" style="color:var(--orange)"></span> <b>Consider least-privilege access</b><br><span style="color:var(--text3)">${health.elevated.length} users have elevated access.</span></div>`);
+    }
+    if (cards.length === 0) {
+      cards.push(`<div class="team-rec-card"><span class="icon" data-icon="check" data-icon-size="13" style="color:var(--green)"></span> <b>Great job! Access health is optimal</b><br><span style="color:var(--text3)">No action needed at this time.</span></div>`);
+    }
+    rec.innerHTML = cards.join('');
+  }
+
+  // Filtered/searched table
   if (list) {
+    const q = (document.getElementById('teamSearchInput')?.value || '').trim().toLowerCase();
+    const roleFilter = document.getElementById('teamRoleFilter')?.value || 'all';
+    const filtered = TEAM_MEMBERS.filter(m =>
+      (roleFilter === 'all' || m.role === roleFilter) &&
+      (!q || m.name.toLowerCase().includes(q) || m.email.toLowerCase().includes(q))
+    );
     list.innerHTML = TEAM_MEMBERS.length === 0
       ? emptyStateHTML({ icon: hubIcon('users',28), title: t('es_no_one_authorized'), sub: t('es_no_one_authorized_sub') })
-      : TEAM_MEMBERS.map(m => `
+      : filtered.length === 0
+      ? `<div class="cnt-empty-contacts-hint">No members match that search/filter.</div>`
+      : filtered.map(m => {
+        const st = getTeamMemberStatus(m);
+        const dotColor = st.status === 'active' ? 'var(--green)' : st.status === 'invited' ? 'var(--yellow)' : st.status === 'inactive' ? 'var(--text3)' : 'var(--text3)';
+        return `
         <div class="team-row">
           <span class="user-avatar">${m.avatar ? `<img src="${m.avatar}" alt="">` : initials(m.name)}</span>
-          <div class="team-name">${m.name}<div class="team-email">${m.email}</div></div>
-          <select onchange="updateTeamMemberRole('${m.id}', this.value)" style="width:170px;padding:var(--space-2) var(--space-3);background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:var(--font-xs)">
-            <option value="user" ${m.role==='user'?'selected':''}>User — view only</option>
-            <option value="superuser" ${m.role==='superuser'?'selected':''}>Super user</option>
+          <div class="team-name">${escAttr(m.name)}${m.id === (getCurrentUser()||{}).id ? ' <span style="color:var(--orange);font-size:10px;font-weight:800">YOU</span>' : ''}<div class="team-email">${escAttr(m.email)}</div></div>
+          <select onchange="updateTeamMemberRole('${m.id}', this.value)" style="width:150px;padding:var(--space-2) var(--space-3);background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-size:var(--font-xs)">
+            <option value="user" ${m.role==='user'?'selected':''}>User</option>
+            <option value="superuser" ${m.role==='superuser'?'selected':''}>Super User</option>
             <option value="admin" ${m.role==='admin'?'selected':''}>Admin</option>
           </select>
+          <span class="team-status-col"><span class="int-dot" style="background:${dotColor};width:6px;height:6px"></span>${st.label}</span>
+          <span class="team-lastactive-col">${st.lastActive}</span>
           <button class="row-action-btn danger" onclick="removeTeamMember('${m.id}')"><span class="icon" data-icon="trash" data-icon-size="13"></span> Remove</button>
-        </div>`).join('');
+        </div>`;
+      }).join('');
   }
 }
 
