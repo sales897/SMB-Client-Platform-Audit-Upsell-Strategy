@@ -2125,6 +2125,8 @@ tr.pg-hidden-row { display: none; }
 .themed-select { position: relative; display: inline-block; }
 .themed-select-btn { width: 100%; height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 12px; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-size: var(--font-xs); font-weight: 600; cursor: pointer; min-height: 34px; }
 .themed-select-btn:hover { border-color: var(--orange); }
+.themed-select-btn:disabled { opacity: .4; cursor: not-allowed; }
+.themed-select-btn:disabled:hover { border-color: var(--border); }
 .themed-select-caret { font-size: 9px; color: var(--text3); flex-shrink: 0; }
 .themed-select-panel { position: absolute; top: calc(100% + 4px); left: 0; min-width: 100%; max-height: 260px; overflow-y: auto; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: 0 8px 20px rgba(0,0,0,.4); z-index: 40; }
 .themed-select-option { padding: 8px 12px; font-size: 11.5px; font-weight: 600; color: var(--text2); cursor: pointer; white-space: nowrap; }
@@ -2643,18 +2645,18 @@ tr.pg-hidden-row { display: none; }
 .cw-site-mockup-hero-btn { width: 110px; height: 30px; border-radius: var(--radius-pill); background: linear-gradient(135deg, #d8d8d8, #e2e2e2); }
 .cw-widget-preview { position: absolute; bottom: 18px; left: 18px; right: 18px; display: flex; flex-direction: column; align-items: flex-end; gap: 12px; }
 .cw-preview-orb {
-  width: 52px; height: 52px; border-radius: 50%; cursor: pointer; flex-shrink: 0;
+  width: var(--cw-orb-size, 52px); height: var(--cw-orb-size, 52px); border-radius: 50%; cursor: pointer; flex-shrink: 0;
   background: var(--cw-avatar-img, radial-gradient(circle at 35% 30%, #fff, var(--cw-color) 45%, var(--cw-color)));
   background-size: cover; background-position: center;
   box-shadow: 0 0 calc(10px + var(--cw-glow, 14) * 1px) var(--cw-color), 0 0 calc(20px + var(--cw-glow, 14) * 1.6px) color-mix(in srgb, var(--cw-color) 55%, transparent);
-  transition: transform .15s ease;
+  transition: transform .15s ease, width .2s ease, height .2s ease;
 }
 .cw-preview-orb:hover { transform: scale(1.08); }
 .cw-preview-panel {
-  width: 260px; max-height: 0; opacity: 0; overflow: hidden; background: #171310; border-radius: 14px;
-  box-shadow: 0 10px 34px rgba(0,0,0,.35); transition: max-height .25s ease, opacity .2s ease;
+  width: var(--cw-panel-width, 260px); max-height: 0; opacity: 0; overflow: hidden; background: #171310; border-radius: 14px;
+  box-shadow: 0 10px 34px rgba(0,0,0,.35); transition: max-height .25s ease, opacity .2s ease, width .2s ease;
 }
-.cw-preview-panel.open { max-height: 320px; opacity: 1; }
+.cw-preview-panel.open { max-height: var(--cw-panel-height, 320px); opacity: 1; }
 .cw-preview-panel-hd { padding: 12px 14px; background: linear-gradient(135deg, var(--cw-color), var(--cw-color)); color: #fff; font-size: 12px; font-weight: 700; }
 .cw-preview-panel-thread { padding: 12px; display: flex; flex-direction: column; gap: 8px; font-size: 11px; }
 .cw-preview-msg { max-width: 85%; padding: 6px 10px; border-radius: 10px; line-height: 1.4; align-self: flex-start; background: #241c15; color: #ece5dd; }
@@ -2663,7 +2665,9 @@ tr.pg-hidden-row { display: none; }
 .cw-color-swatch:hover { transform: scale(1.15); }
 .cw-color-swatch.active { border-color: var(--text); box-shadow: 0 0 0 1px var(--bg2), 0 0 0 3px var(--text), 0 0 12px currentColor; }
 .cw-avatar-picker { display: flex; gap: 8px; margin-bottom: var(--space-3); flex-wrap: wrap; }
-.cw-avatar-option { width: 38px; height: 38px; border-radius: 50%; background: var(--bg4); border: 2px solid transparent; display: flex; align-items: center; justify-content: center; font-size: 17px; cursor: pointer; }
+.cw-avatar-option { width: 38px; height: 38px; border-radius: 50%; background: var(--bg4); border: 2px solid transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; }
+.cw-avatar-option svg { width: 100%; height: 100%; }
+.cw-preview-orb svg { width: 100%; height: 100%; border-radius: 50%; }
 .cw-avatar-option:hover { background: var(--bg2); }
 .cw-avatar-option.active { border-color: var(--orange); box-shadow: 0 0 10px rgba(226,84,31,.5); }
 .cw-toggle-pair { display: flex; gap: 6px; margin-bottom: var(--space-3); }
@@ -2679,6 +2683,8 @@ tr.pg-hidden-row { display: none; }
 .cw-hours-row { display: grid; grid-template-columns: 40px 1fr 1fr auto; gap: 6px; align-items: center; font-size: var(--font-xs); }
 .cw-hours-row input[type="time"] { background: var(--bg4); border: 1px solid var(--border); border-radius: var(--radius-xs); color: var(--text); padding: 4px 6px; font-size: 11px; }
 .cw-hours-row input[type="time"]:disabled { opacity: .4; }
+.cw-hours-row select { width: 46px; background: var(--bg4); border: 1px solid var(--border); border-radius: var(--radius-xs); color: var(--text); padding: 4px 2px; font-size: 10px; }
+.cw-hours-row .themed-select-btn { min-height: 26px; padding: 0 6px; width: 46px; font-size: 10px; }
 .cw-calendar-status { display: flex; align-items: center; gap: 8px; background: var(--bg4); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--space-2) var(--space-3); margin-bottom: var(--space-3); font-size: var(--font-sm); }
 .cw-save-btn { width: 100%; justify-content: center; }
 
@@ -12351,7 +12357,7 @@ function themifySelect(selectId) {
 
   const selected = select.options[select.selectedIndex];
   wrap.innerHTML = `
-    <button type="button" class="themed-select-btn" onclick="toggleThemedSelect('${selectId}', event)">
+    <button type="button" class="themed-select-btn" ${select.disabled ? 'disabled' : ''} onclick="toggleThemedSelect('${selectId}', event)">
       <span class="themed-select-label" id="ts-label-${selectId}">${escAttr(selected ? selected.text : '')}</span>
       <span class="themed-select-caret">▾</span>
     </button>
@@ -25537,7 +25543,20 @@ function createTaskFromChatWidgetLead(convId) {
   showToast(`Creating a task for "${c.lead_name}" — open a client profile to add it, or ask Nirvana.`, 'info');
 }
 
-const CW_AVATARS = ['🤖', '🦊', '✨', '👋', '🎯', '💬'];
+// Illustrated avatar options (no photorealistic image generation available,
+// so these are clean flat-illustration silhouettes rather than photos --
+// swap in real photos via "Upload Photo" if preferred). Two male-presenting,
+// two female-presenting, plus an abstract orb and a friendly robot for
+// anyone who'd rather not use a human figure.
+const CW_AVATAR_SVGS = {
+  nova: '<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="novaG" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#fff"/><stop offset="45%" stop-color="#e2541f"/><stop offset="100%" stop-color="#a83913"/></radialGradient></defs><circle cx="20" cy="20" r="20" fill="url(#novaG)"/><path d="M20 10l2 6 6 2-6 2-2 6-2-6-6-2 6-2z" fill="#fff" opacity=".9"/></svg>',
+  robot: '<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="20" fill="#3b3226"/><rect x="10" y="12" width="20" height="16" rx="5" fill="#e2541f"/><circle cx="16" cy="20" r="2.4" fill="#fff"/><circle cx="24" cy="20" r="2.4" fill="#fff"/><rect x="18" y="6" width="4" height="5" rx="2" fill="#e2541f"/></svg>',
+  male1: '<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="20" fill="#3b82f6"/><path d="M6 40a14 14 0 0 1 28 0z" fill="#d9a066"/><circle cx="20" cy="16" r="8" fill="#d9a066"/><path d="M12 14c0-5 4-9 8-9s8 4 8 9h-2c-1-3-3-6-6-6s-5 3-6 6z" fill="#3a2a1a"/></svg>',
+  male2: '<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="20" fill="#22c55e"/><path d="M6 40a14 14 0 0 1 28 0z" fill="#c98a52"/><circle cx="20" cy="16" r="8" fill="#c98a52"/><path d="M12 14c0-5 4-8 8-8s8 3 8 8h-2c-1-2-3-4-6-4s-5 2-6 4z" fill="#2b2118"/><path d="M13 19c0 4 3 7 7 7s7-3 7-7" fill="none" stroke="#2b2118" stroke-width="2.5" stroke-linecap="round"/></svg>',
+  female1: '<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="20" fill="#ec4899"/><path d="M6 40a14 14 0 0 1 28 0z" fill="#e8b48a"/><circle cx="20" cy="16" r="8" fill="#e8b48a"/><path d="M9 31c-1-9 3-19 11-19s12 10 11 19c-1-3-2-5-2-5v-5a9 9 0 0 0-18 0v5s-1 2-2 5z" fill="#5a3a2a"/></svg>',
+  female2: '<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="20" fill="#a855f7"/><path d="M6 40a14 14 0 0 1 28 0z" fill="#f0c29a"/><circle cx="20" cy="16" r="8" fill="#f0c29a"/><path d="M12 14c0-5 4-8 8-8s8 3 8 8c0 1-1 2-1 2s0-4-3-5c-1 2-3 3-5 3s-4-1-5-3c-3 1-3 5-3 5s-1-1-1-2z" fill="#3a2a1a"/><circle cx="20" cy="5" r="3.2" fill="#3a2a1a"/></svg>',
+};
+const CW_AVATARS = ['nova', 'robot', 'male1', 'male2', 'female1', 'female2'];
 const CW_DAY_LABELS = { mon: 'Mon', tue: 'Tue', wed: 'Wed', thu: 'Thu', fri: 'Fri', sat: 'Sat', sun: 'Sun' };
 const CW_SETTINGS_LAYOUT_KEY = 'csh_cw_settings_layout_v1';
 const CW_SETTINGS_LAYOUT_DEFAULT = ['identity', 'style', 'hours', 'calendar'];
@@ -25659,7 +25678,7 @@ function populateCwSettingsFields() {
   document.getElementById('cwMinNotice').value = widget.min_notice_hours ?? 2;
 
   const avatarWrap = document.getElementById('cwAvatarPicker');
-  avatarWrap.innerHTML = CW_AVATARS.map(a => `<div class="cw-avatar-option${!widget.avatar_image_url && a === widget.avatar ? ' active' : ''}" onclick="selectCwAvatar('${a}')">${a}</div>`).join('');
+  avatarWrap.innerHTML = CW_AVATARS.map(a => `<div class="cw-avatar-option${!widget.avatar_image_url && a === widget.avatar ? ' active' : ''}" onclick="selectCwAvatar('${a}')">${CW_AVATAR_SVGS[a]}</div>`).join('');
 
   const avatarPreviewEl = document.getElementById('cwAvatarUploadPreview');
   const removePhotoBtn = document.getElementById('cwRemovePhotoBtn');
@@ -25694,11 +25713,18 @@ function populateCwSettingsFields() {
     const d = hours[day] || { open: '09:00', close: '17:00', enabled: false };
     return `<div class="cw-hours-row">
       <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="checkbox" ${d.enabled ? 'checked' : ''} onchange="toggleCwHoursDay('${day}', this.checked)"> ${CW_DAY_LABELS[day]}</label>
-      <input type="time" value="${d.open}" ${d.enabled ? '' : 'disabled'} onchange="updateCwHours('${day}','open',this.value)">
-      <input type="time" value="${d.close}" ${d.enabled ? '' : 'disabled'} onchange="updateCwHours('${day}','close',this.value)">
+      ${renderCwTimeSelectsHtml(day, 'open', d.open, d.enabled)}
+      ${renderCwTimeSelectsHtml(day, 'close', d.close, d.enabled)}
       <span></span>
     </div>`;
   }).join('');
+  // themifySelect reads each select's own <option>s -- call it after the
+  // HTML above actually exists in the DOM, once per hour/minute/period part.
+  Object.keys(CW_DAY_LABELS).forEach(day => {
+    ['open', 'close'].forEach(field => {
+      ['h', 'm', 'p'].forEach(part => themifySelect(`cwTime-${day}-${field}-${part}`));
+    });
+  });
 
   const calStatus = document.getElementById('cwCalendarStatus');
   calStatus.innerHTML = widget.calendar_connected
@@ -25720,16 +25746,20 @@ function renderCwPreview(widget) {
   holder.style.setProperty('--cw-color', color);
   holder.style.setProperty('--cw-glow', widget.orb_glow_intensity ?? 14);
   holder.style.alignItems = (widget.dock_position === 'left') ? 'flex-start' : 'flex-end';
+  const isCompact = widget.dock_size === 'compact';
+  holder.style.setProperty('--cw-orb-size', isCompact ? '40px' : '52px');
+  holder.style.setProperty('--cw-panel-width', isCompact ? '220px' : '260px');
+  holder.style.setProperty('--cw-panel-height', isCompact ? '260px' : '320px');
   const mockupBody = holder.closest('.cw-site-mockup-body');
   if (mockupBody) mockupBody.style.direction = 'ltr'; // orb position is handled via holder alignment, not mockup direction
 
   if (widget.avatar_image_url) {
     orb.style.setProperty('--cw-avatar-img', `url(${widget.avatar_image_url})`);
-    orb.textContent = '';
+    orb.innerHTML = '';
   } else {
     orb.style.removeProperty('--cw-avatar-img');
-    orb.textContent = widget.avatar || '🤖';
-    orb.style.display = 'flex'; orb.style.alignItems = 'center'; orb.style.justifyContent = 'center'; orb.style.fontSize = '22px';
+    orb.innerHTML = CW_AVATAR_SVGS[widget.avatar] || CW_AVATAR_SVGS.nova;
+    orb.style.display = 'flex'; orb.style.alignItems = 'center'; orb.style.justifyContent = 'center';
   }
 
   const hd = document.getElementById('cwPreviewPanelHd');
@@ -25755,6 +25785,10 @@ function liveUpdateCwPreview() {
   if (openingEl) previewWidget.opening_line = openingEl.value;
   const dockPosBtn = document.querySelector('#cwDockPositionToggle .cw-toggle-btn.active');
   if (dockPosBtn) previewWidget.dock_position = dockPosBtn.dataset.val;
+  const dockSizeBtn = document.querySelector('#cwDockSizeToggle .cw-toggle-btn.active');
+  if (dockSizeBtn) previewWidget.dock_size = dockSizeBtn.dataset.val;
+  const activeSwatch = document.querySelector('.cw-color-swatch.active');
+  if (activeSwatch) previewWidget.orb_color = rgbToHex(activeSwatch.style.backgroundColor);
   renderCwPreview(previewWidget);
 }
 function liveUpdateCwGlow(value) {
@@ -25996,6 +26030,43 @@ function updateCwHours(day, field, value) {
   if (!widget.business_hours[day]) widget.business_hours[day] = { enabled: true };
   widget.business_hours[day][field] = value;
 }
+// ---- Themed hour/minute/AM-PM picker for Business Hours -- replaces the
+// native <input type="time">, whose open dropdown can't be restyled to
+// match the dark theme (same root cause as the Goals month picker and the
+// team role picker built earlier this session). Storage format stays the
+// existing "HH:MM" 24-hour string, just parsed/assembled at the edges.
+function cwTime24ToParts(t) {
+  const [hStr, mStr] = (t || '09:00').split(':');
+  const h = parseInt(hStr, 10) || 0;
+  const period = h >= 12 ? 'PM' : 'AM';
+  let h12 = h % 12; if (h12 === 0) h12 = 12;
+  return { h12: String(h12).padStart(2, '0'), m: (mStr || '00').padStart(2, '0'), period };
+}
+function cwPartsToTime24(h12, m, period) {
+  let h = parseInt(h12, 10) % 12;
+  if (period === 'PM') h += 12;
+  return `${String(h).padStart(2, '0')}:${m}`;
+}
+function renderCwTimeSelectsHtml(day, field, value24, enabled) {
+  const { h12, m, period } = cwTime24ToParts(value24);
+  const idBase = `cwTime-${day}-${field}`;
+  const hourOpts = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0')).map(h => `<option value="${h}" ${h === h12 ? 'selected' : ''}>${h}</option>`).join('');
+  const minOpts = ['00', '15', '30', '45'].map(mm => `<option value="${mm}" ${mm === m ? 'selected' : ''}>${mm}</option>`).join('');
+  const periodOpts = ['AM', 'PM'].map(p => `<option value="${p}" ${p === period ? 'selected' : ''}>${p}</option>`).join('');
+  const dis = enabled ? '' : 'disabled';
+  return `<div style="display:flex;gap:3px" ${enabled ? '' : 'title="Enable this day to edit hours"'}>
+    <select id="${idBase}-h" ${dis} onchange="onCwTimePartChange('${day}','${field}')">${hourOpts}</select>
+    <select id="${idBase}-m" ${dis} onchange="onCwTimePartChange('${day}','${field}')">${minOpts}</select>
+    <select id="${idBase}-p" ${dis} onchange="onCwTimePartChange('${day}','${field}')">${periodOpts}</select>
+  </div>`;
+}
+function onCwTimePartChange(day, field) {
+  const idBase = `cwTime-${day}-${field}`;
+  const h = document.getElementById(`${idBase}-h`).value;
+  const m = document.getElementById(`${idBase}-m`).value;
+  const p = document.getElementById(`${idBase}-p`).value;
+  updateCwHours(day, field, cwPartsToTime24(h, m, p));
+}
 
 function selectCwAvatar(avatar) {
   const widget = CHAT_WIDGETS.find(w => w.id === cwActiveWidgetId);
@@ -26009,6 +26080,8 @@ function selectCwColor(color) {
   document.querySelectorAll('.cw-color-swatch').forEach(el => el.classList.remove('active'));
   event.target.classList.add('active');
   document.getElementById('cwWidgetPreview').style.setProperty('--cw-color', color);
+  const widget = CHAT_WIDGETS.find(w => w.id === cwActiveWidgetId);
+  if (widget) widget.orb_color = color;
 }
 
 async function saveChatWidgetSettings() {
