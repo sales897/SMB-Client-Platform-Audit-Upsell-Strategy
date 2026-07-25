@@ -588,14 +588,20 @@ body.ai-panel-open .main {
 .cmdboard-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: var(--space-4); }
 .cmdboard-outer { display: flex; gap: 16px; align-items: flex-start; }
 .cmdboard-content-col { flex: 1; min-width: 0; }
-.cmdboard-layout { display: grid; grid-template-columns: 250px 1fr; gap: 16px; align-items: start; }
-@media (max-width: 1200px) { .cmdboard-layout { grid-template-columns: 1fr; } .cmdboard-outer { flex-direction: column; } }
+.cmdboard-layout { display: grid; grid-template-columns: 250px 1fr 280px; gap: 16px; align-items: start; transition: grid-template-columns var(--transition-base); }
+.cmdboard-layout.sidebar-hidden { grid-template-columns: 0 1fr 280px; }
+.cmdboard-layout.sidebar-hidden .cmdboard-sidebar-left { display: none; }
+@media (max-width: 1300px) { .cmdboard-layout { grid-template-columns: 250px 1fr; } .cmdboard-layout .cmdboard-sidebar-right { grid-column: 1 / -1; position: static; width: 100%; } }
+@media (max-width: 900px) { .cmdboard-layout { grid-template-columns: 1fr; } .cmdboard-outer { flex-direction: column; } }
 .cmdboard-sidebar-left, .cmdboard-sidebar-right {
   background: var(--gradient-card); border: 1px solid var(--border); border-radius: var(--radius);
   padding: var(--space-4); display: flex; flex-direction: column; gap: 4px;
 }
-.cmdboard-sidebar-right { position: sticky; top: 16px; width: 280px; flex-shrink: 0; }
-@media (max-width: 1200px) { .cmdboard-sidebar-right { position: static; width: 100%; } }
+.cmdboard-sidebar-left, .cmdboard-sidebar-right { position: sticky; top: 16px; }
+.cmdboard-sidebar-right { width: 280px; flex-shrink: 0; }
+@media (max-width: 900px) { .cmdboard-sidebar-left, .cmdboard-sidebar-right { position: static; width: 100%; } }
+.cmdboard-sidebar-restore { position: absolute; left: -4px; top: 0; }
+.cmdboard-main { position: relative; }
 .cmdboard-section { margin-bottom: var(--space-4); }
 .cmdboard-section:last-child { margin-bottom: 0; }
 .cmdboard-section-hd { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: var(--text3); margin-bottom: 8px; }
@@ -3514,10 +3520,13 @@ select.wfb-field-input { padding-right: 26px; }
       <div class="hub-mini-card accent-left" style="--hub-accent:var(--red)"><div class="hub-mini-label">Support Clients</div><div class="hub-mini-value" id="cl-support-count">0</div></div>
       <div class="hub-mini-card accent-left" style="--hub-accent:var(--purple)"><div class="hub-mini-label">In 2+ Portfolios</div><div class="hub-mini-value" id="cl-multi-count">0</div><div class="vital-stat-sub">Cross-sold accounts</div></div>
     </div>
-    <div class="cmdboard-layout" style="margin-top:var(--space-4)">
-      <div class="cmdboard-sidebar-left">
+    <div class="cmdboard-layout" id="clDirLayout" style="margin-top:var(--space-4)">
+      <div class="cmdboard-sidebar-left" id="clDirSidebarLeft">
         <div class="cmdboard-section">
-          <div class="cmdboard-section-hd">Command Filters</div>
+          <div class="cmdboard-section-hd" style="display:flex;align-items:center;justify-content:space-between">
+            <span>Command Filters</span>
+            <button class="vital-ask" onclick="toggleClDirSidebar()" title="Hide Command Filters" aria-label="Hide Command Filters"><span class="icon" data-icon="arrowBack" data-icon-size="13"></span></button>
+          </div>
           <div style="position:relative">
             <input type="text" class="search-box" id="clientsSearch" placeholder="Search all clients..." oninput="debouncedFilterClientsDirectory()" style="width:100%">
           </div>
@@ -3537,6 +3546,7 @@ select.wfb-field-input { padding-right: 26px; }
       </div>
 
       <div class="cmdboard-main">
+        <button class="vital-ask cmdboard-sidebar-restore" id="clDirSidebarRestoreBtn" onclick="toggleClDirSidebar()" title="Show Command Filters" aria-label="Show Command Filters" style="display:none"><span class="icon" data-icon="arrowBack" data-icon-size="13" style="display:inline-block;transform:rotate(180deg)"></span></button>
         <div class="cmdboard-toolbar">
           <div>Viewing: <b id="clDirViewingLabel">All Clients</b> · <span class="row-count" id="clientsRowCount">0 clients</span></div>
           <div class="cmdboard-toolbar-right">
@@ -3581,14 +3591,14 @@ select.wfb-field-input { padding-right: 26px; }
           </div>
         </div>
       </div>
-    </div>
-    </div>
 
-    <div class="cmdboard-sidebar-right">
-      <div class="cmdboard-section-hd">AI Insights <span class="cmdboard-beta">BETA</span></div>
-      <div id="clDirAiInsights"></div>
-      <div class="cmdboard-section-hd" style="margin-top:14px">Recently Updated Clients</div>
-      <div id="clDirRecentActivity"></div>
+      <div class="cmdboard-sidebar-right">
+        <div class="cmdboard-section-hd">AI Insights</div>
+        <div id="clDirAiInsights"></div>
+        <div class="cmdboard-section-hd" style="margin-top:14px">Recently Updated Clients</div>
+        <div id="clDirRecentActivity"></div>
+      </div>
+    </div>
     </div>
     </div>
 
@@ -21954,6 +21964,7 @@ function computeClientDirectoryRows() {
 }
 
 function rebuildClientsDirectory() {
+  initClDirSidebarState();
   const allRows = computeClientDirectoryRows();
   const validNames = new Set(allRows.map(r => r.row.displayName));
   selectedDirectoryClients.forEach(name => { if (!validNames.has(name)) selectedDirectoryClients.delete(name); });
@@ -22123,6 +22134,26 @@ function renderClientBoardView(rows) {
     </div>`;
   }
   wrap.innerHTML = html;
+}
+
+const CLDIR_SIDEBAR_KEY = 'csh_cldir_sidebar_hidden_v1';
+function toggleClDirSidebar() {
+  const layout = document.getElementById('clDirLayout');
+  const restoreBtn = document.getElementById('clDirSidebarRestoreBtn');
+  if (!layout) return;
+  const hidden = !layout.classList.contains('sidebar-hidden');
+  layout.classList.toggle('sidebar-hidden', hidden);
+  if (restoreBtn) restoreBtn.style.display = hidden ? '' : 'none';
+  try { localStorage.setItem(CLDIR_SIDEBAR_KEY, hidden ? '1' : '0'); } catch (e) {}
+}
+function initClDirSidebarState() {
+  const layout = document.getElementById('clDirLayout');
+  const restoreBtn = document.getElementById('clDirSidebarRestoreBtn');
+  if (!layout) return;
+  let hidden = false;
+  try { hidden = localStorage.getItem(CLDIR_SIDEBAR_KEY) === '1'; } catch (e) {}
+  layout.classList.toggle('sidebar-hidden', hidden);
+  if (restoreBtn) restoreBtn.style.display = hidden ? '' : 'none';
 }
 
 function jumpClDirToCompact(portfolioKey) {
