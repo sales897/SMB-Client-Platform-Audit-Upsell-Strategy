@@ -3473,7 +3473,7 @@ select.wfb-field-input { padding-right: 26px; }
         📋 Connect Sheets
       </button>
       <select id="onboardingPipelineSelect" class="field-input" style="display:none;height:36px;margin-bottom:0;width:auto" onchange="switchOnboardingPipeline(this.value)"></select>
-      <button class="btn btn-sm" id="topbarOnboardingPipelinesBtn" onclick="openManagePipelinesModal()" title="Create or edit pipelines" style="display:none"><span class="icon" data-icon="settings" data-icon-size="14"></span> <span data-i18n="onboarding_pipelines_btn">Pipelines</span></button>
+      <button class="btn btn-ghost btn-sm" id="topbarOnboardingPipelinesBtn" onclick="openManagePipelinesModal()" title="Create or edit pipelines" style="display:none"><span class="icon" data-icon="settings" data-icon-size="14"></span> <span data-i18n="onboarding_pipelines_btn">Pipelines</span></button>
       <button class="btn btn-primary btn-sm" id="topbarNewOnboardingBtn" onclick="openAddOnboardingModal()" style="display:none">＋ <span data-i18n="onboarding_new_btn">New Onboarding</span></button>
       <div class="goals-month-nav" id="goalsMonthNav" style="display:none;position:relative">
         <button class="goals-month-nav-arrow" onclick="shiftGoalsMonth(-1)" title="Previous month" aria-label="Previous month">‹</button>
@@ -3499,11 +3499,11 @@ select.wfb-field-input { padding-right: 26px; }
         <option value="">Company-wide</option>
       </select>
       <input type="file" id="goalsFileUploadInput" accept=".csv,.xlsx,.xls" style="display:none" onchange="handleGoalsFileUpload(event)">
-      <button class="btn btn-sm" id="topbarGoalsUploadBtn" onclick="document.getElementById('goalsFileUploadInput').click()" style="display:none">📁 Upload Goals</button>
-      <button class="btn btn-sm" id="topbarGoalsSmartPasteBtn" onclick="openGoalsSmartPasteModal()" style="display:none">✎ Smart Paste</button>
+      <button class="btn btn-ghost btn-sm" id="topbarGoalsUploadBtn" onclick="document.getElementById('goalsFileUploadInput').click()" style="display:none"><span class="icon" data-icon="folder" data-icon-size="13"></span> Upload Goals</button>
+      <button class="btn btn-ghost btn-sm" id="topbarGoalsSmartPasteBtn" onclick="openGoalsSmartPasteModal()" style="display:none"><span class="icon" data-icon="edit" data-icon-size="13"></span> Smart Paste</button>
       <button class="export-csv-btn" id="topbarGoalsExportBtn" onclick="exportGoalsTable()" title="Download the currently visible rows as a CSV file" style="display:none"><span class="icon" data-icon="download" data-icon-size="12"></span> Export CSV</button>
-      <button class="btn btn-sm" id="topbarGoalsCarryForwardBtn" onclick="openCarryForwardModal()" style="display:none">⟳ Copy to Next Month</button>
-      <button class="btn btn-primary btn-sm" id="topbarNewGoalBtn" onclick="openAddGoalModal()" style="display:none">＋ New Goal</button>
+      <button class="btn btn-ghost btn-sm" id="topbarGoalsCarryForwardBtn" onclick="openCarryForwardModal()" style="display:none"><span class="icon" data-icon="refresh" data-icon-size="13"></span> Copy to Next Month</button>
+      <button class="btn btn-primary btn-sm" id="topbarNewGoalBtn" onclick="openAddGoalModal()" style="display:none"><span class="icon" data-icon="plus" data-icon-size="13"></span> New Goal</button>
     </div>
   </div>
 
@@ -6535,7 +6535,7 @@ select.wfb-field-input { padding-right: 26px; }
     <input type="text" id="cnTypeIcon" class="field-input" placeholder="📱" maxlength="4">
     <label class="field-label">Fields this node type needs</label>
     <div id="cnFieldsList"></div>
-    <button class="btn btn-sm" style="margin:8px 0" onclick="addCustomNodeTypeFieldRow()">＋ Add Field</button>
+    <button class="btn btn-ghost btn-sm" style="margin:8px 0" onclick="addCustomNodeTypeFieldRow()"><span class="icon" data-icon="plus" data-icon-size="12"></span> Add Field</button>
     <div class="modal-btns">
       <button class="btn btn-ghost" onclick="closeCreateCustomNodeTypeModal()">Cancel</button>
       <button class="btn btn-primary" onclick="saveCustomNodeType()">Create</button>
@@ -6578,7 +6578,7 @@ select.wfb-field-input { padding-right: 26px; }
     <input type="text" id="newPipelineName" class="field-input" placeholder="e.g. White Label Fast-Track">
     <label class="field-label">Stages (in order)</label>
     <div id="newPipelineStages"></div>
-    <button class="btn btn-sm" style="margin:var(--space-2) 0" onclick="addNewPipelineStageRow()">＋ Add Stage</button>
+    <button class="btn btn-ghost btn-sm" style="margin:var(--space-2) 0" onclick="addNewPipelineStageRow()"><span class="icon" data-icon="plus" data-icon-size="12"></span> Add Stage</button>
     <div class="modal-btns">
       <button class="btn btn-ghost" onclick="closeManagePipelinesModal()">Close</button>
       <button class="btn btn-primary" onclick="createNewPipelineFromModal()">Create Pipeline</button>
@@ -18704,7 +18704,7 @@ function renderOnboardingDetail(r, products) {
         </div>`).join('')}
       <div style="display:flex;gap:var(--space-2);margin-top:4px">
         <input type="text" id="obChecklistAdd-${stage_key}" class="field-input" style="height:32px;margin-bottom:0;font-size:var(--font-xs)" placeholder="Add a checklist item… (Admin only)" onkeydown="if(event.key==='Enter'){event.preventDefault();addOnboardingChecklistItem('${r.id}','${stage_key}');}">
-        <button class="btn btn-sm" onclick="addOnboardingChecklistItem('${r.id}','${stage_key}')">＋</button>
+        <button class="btn btn-ghost btn-sm" onclick="addOnboardingChecklistItem('${r.id}','${stage_key}')"><span class="icon" data-icon="plus" data-icon-size="12"></span></button>
       </div>
     </div>`;
   }).join('');
