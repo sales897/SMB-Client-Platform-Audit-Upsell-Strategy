@@ -4077,35 +4077,27 @@ select.wfb-field-input { padding-right: 26px; }
         <div id="vaFlaggedList"></div>
       </div>
 
-      <div style="display:grid;grid-template-columns:1fr 2fr;gap:var(--space-4);align-items:start">
-        <div class="card" style="width:100%">
-          <div class="card-header">
-            <div class="card-title"><span class="icon" data-icon="filter" data-icon-size="14"></span> Smart Filters</div>
-            <button class="vital-ask" onclick="askNirvanaAboutVoiceAgentFilters()" title="Ask Nirvana about the current filters"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
-          </div>
-          <label class="field-label" style="display:block;font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:5px">Portfolio</label>
-          <select class="field-input" id="vaSmartFilterPortfolio" style="margin-bottom:14px" onchange="setVoiceAgentSmartFilterPortfolio(this.value)">
-            <option value="all">All Portfolios</option>
-            <option value="smb">SMB</option>
-            <option value="whitelabel">White Label</option>
-            <option value="support">Support</option>
-          </select>
-          <label class="field-label" style="display:block;font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:5px">Activity Feed Date Range</label>
-          <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
-            <input type="date" class="field-input" id="vaSmartFilterStart" style="margin-bottom:0" onchange="setVoiceAgentSmartFilterDateRange()">
-            <span style="color:var(--text3);font-size:11px">to</span>
-            <input type="date" class="field-input" id="vaSmartFilterEnd" style="margin-bottom:0" onchange="setVoiceAgentSmartFilterDateRange()">
-          </div>
-          <div style="font-size:10px;color:var(--text3);line-height:1.5">Only affects Activity Feed — KPIs, the chart, and flagged clients reflect current state.</div>
-        </div>
+      <div class="table-controls" style="align-items:center">
+        <span style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:6px;white-space:nowrap"><span class="icon" data-icon="filter" data-icon-size="13"></span> Portfolio</span>
+        <select class="field-input" id="vaSmartFilterPortfolio" style="width:auto;max-width:160px;height:32px;margin-bottom:0" onchange="setVoiceAgentSmartFilterPortfolio(this.value)">
+          <option value="all">All Portfolios</option>
+          <option value="smb">SMB</option>
+          <option value="whitelabel">White Label</option>
+          <option value="support">Support</option>
+        </select>
+        <span style="font-size:11px;color:var(--text3);white-space:nowrap" title="Only affects Activity Feed — KPIs, the chart, and flagged clients reflect current state">Activity feed date range</span>
+        <input type="date" class="field-input" id="vaSmartFilterStart" style="width:auto;height:32px;margin-bottom:0" onchange="setVoiceAgentSmartFilterDateRange()" title="Only affects Activity Feed">
+        <span style="color:var(--text3);font-size:11px">to</span>
+        <input type="date" class="field-input" id="vaSmartFilterEnd" style="width:auto;height:32px;margin-bottom:0" onchange="setVoiceAgentSmartFilterDateRange()" title="Only affects Activity Feed">
+        <button class="vital-ask" onclick="askNirvanaAboutVoiceAgentFilters()" title="Ask Nirvana about the current filters" style="margin-left:auto"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
+      </div>
 
-        <div class="card" style="width:100%">
-          <div class="card-header">
-            <div><div class="card-title"><span class="icon" data-icon="alert" data-icon-size="14"></span> Flagged Review Records</div><div class="card-sub">Top 5, most recently added</div></div>
-            <button class="vital-ask" onclick="askNirvanaQuick('Which Voice Agent clients are flagged for review, and what should we prioritize?')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
-          </div>
-          <div id="va-flagged-records"></div>
+      <div class="card" style="width:100%">
+        <div class="card-header">
+          <div><div class="card-title"><span class="icon" data-icon="alert" data-icon-size="14"></span> Flagged Review Records</div><div class="card-sub">Top 5, most recently added</div></div>
+          <button class="vital-ask" onclick="askNirvanaQuick('Which Voice Agent clients are flagged for review, and what should we prioritize?')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
         </div>
+        <div id="va-flagged-records"></div>
       </div>
     </div>
 
@@ -4232,44 +4224,36 @@ select.wfb-field-input { padding-right: 26px; }
         <div id="taStaleList"></div>
       </div>
 
-      <div style="display:grid;grid-template-columns:1fr 2fr;gap:var(--space-4);align-items:start">
-        <div class="card" style="width:100%">
-          <div class="card-header">
-            <div class="card-title"><span class="icon" data-icon="filter" data-icon-size="14"></span> Smart Filters</div>
-            <button class="vital-ask" onclick="askNirvanaAboutTextAgentFilters()" title="Ask Nirvana about the current filters"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
-          </div>
-          <label style="display:block;font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:5px">Portfolio</label>
-          <select class="field-input" id="taSmartFilterPortfolioSelect" style="margin-bottom:14px" onchange="setTaSmartFilterPortfolio(this.value)">
-            <option value="all">All Portfolios</option>
-            <option value="smb">SMB</option>
-            <option value="whitelabel">White Label</option>
-            <option value="support">Support</option>
-          </select>
-          <label style="display:block;font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:5px">Product</label>
-          <select class="field-input" id="taSmartFilterProductSelect" style="margin-bottom:14px" onchange="setTaSmartFilterProduct(this.value)">
-            <option value="all">All Products</option>
-            <option value="yelp">Yelp</option>
-            <option value="google_lsa">Google LSA</option>
-            <option value="thumbtack">Thumbtack</option>
-          </select>
-          <label style="display:block;font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:5px">Date Range</label>
-          <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
-            <input type="date" class="field-input" id="taSmartFilterStart" style="margin-bottom:0" onchange="setTaSmartFilterDateRange()">
-            <span style="color:var(--text3);font-size:11px">to</span>
-            <input type="date" class="field-input" id="taSmartFilterEnd" style="margin-bottom:0" onchange="setTaSmartFilterDateRange()">
-          </div>
-          <div style="font-size:10px;color:var(--text3);line-height:1.5">Affects Activity Feed and Flagged Review Records.</div>
-        </div>
+      <div class="table-controls" style="align-items:center">
+        <span style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:6px;white-space:nowrap"><span class="icon" data-icon="filter" data-icon-size="13"></span> Portfolio</span>
+        <select class="field-input" id="taSmartFilterPortfolioSelect" style="width:auto;max-width:150px;height:32px;margin-bottom:0" onchange="setTaSmartFilterPortfolio(this.value)">
+          <option value="all">All Portfolios</option>
+          <option value="smb">SMB</option>
+          <option value="whitelabel">White Label</option>
+          <option value="support">Support</option>
+        </select>
+        <span style="font-size:11px;color:var(--text3);white-space:nowrap">Product</span>
+        <select class="field-input" id="taSmartFilterProductSelect" style="width:auto;max-width:140px;height:32px;margin-bottom:0" onchange="setTaSmartFilterProduct(this.value)">
+          <option value="all">All Products</option>
+          <option value="yelp">Yelp</option>
+          <option value="google_lsa">Google LSA</option>
+          <option value="thumbtack">Thumbtack</option>
+        </select>
+        <span style="font-size:11px;color:var(--text3);white-space:nowrap" title="Affects Activity Feed and Flagged Review Records">Date range</span>
+        <input type="date" class="field-input" id="taSmartFilterStart" style="width:auto;height:32px;margin-bottom:0" onchange="setTaSmartFilterDateRange()" title="Affects Activity Feed and Flagged Review Records">
+        <span style="color:var(--text3);font-size:11px">to</span>
+        <input type="date" class="field-input" id="taSmartFilterEnd" style="width:auto;height:32px;margin-bottom:0" onchange="setTaSmartFilterDateRange()" title="Affects Activity Feed and Flagged Review Records">
+        <button class="vital-ask" onclick="askNirvanaAboutTextAgentFilters()" title="Ask Nirvana about the current filters" style="margin-left:auto"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
+      </div>
 
-        <div class="card" style="width:100%">
-          <div class="card-header">
-            <div><div class="card-title"><span class="icon" data-icon="alert" data-icon-size="14"></span> Flagged Review Records</div><div class="card-sub">Oldest stale leads first</div></div>
-            <button class="vital-ask" onclick="askNirvanaQuick('Which stale leads need the most urgent follow-up right now?')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
-          </div>
+      <div class="card" style="width:100%">
+        <div class="card-header">
+          <div><div class="card-title"><span class="icon" data-icon="alert" data-icon-size="14"></span> Flagged Review Records</div><div class="card-sub">Oldest stale leads first</div></div>
+          <button class="vital-ask" onclick="askNirvanaQuick('Which stale leads need the most urgent follow-up right now?')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
+        </div>
           <div id="ta-flagged-records"></div>
         </div>
       </div>
-    </div>
 
     <div class="hub-tab-panel" data-group="taTabs" data-tab="notes">
       <div class="card" style="width:100%">
