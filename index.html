@@ -209,7 +209,7 @@ body {
   background: var(--bg);
   color: var(--text);
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   min-height: 100vh;
   overflow-x: hidden;
   transition: background-color var(--transition-slow) ease, color var(--transition-slow) ease;
@@ -222,42 +222,52 @@ body {
    orange-black palette pass is a separate, later block. */
 .top-nav {
   background: var(--bg2);
-  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
   display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: 0 var(--space-5);
-  height: 56px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-1);
+  padding: var(--space-4) var(--space-3);
+  width: 210px;
+  height: 100vh;
   position: sticky;
   top: 0;
   z-index: 100;
-  transition: margin-right var(--transition-slower) ease;
+  flex-shrink: 0;
+  transition: width var(--transition-slower) ease;
+  overflow: hidden;
 }
+.top-nav.collapsed { width: 56px; padding-left: var(--space-2); padding-right: var(--space-2); }
 .top-nav-logo {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding-right: var(--space-4);
-  margin-right: var(--space-2);
-  border-right: 1px solid var(--border);
+  padding-bottom: var(--space-3);
+  margin-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
-.top-nav-logo img { width: 28px; height: 28px; object-fit: contain; filter: drop-shadow(0 0 8px rgba(226,84,31,.5)); }
-.top-nav-logo-text { line-height: 1.2; }
+.top-nav.collapsed .top-nav-logo { justify-content: center; }
+.top-nav.collapsed .top-nav-logo-text { display: none; }
+.top-nav-logo img { width: 28px; height: 28px; object-fit: contain; filter: drop-shadow(0 0 8px rgba(226,84,31,.5)); flex-shrink: 0; }
+.top-nav-logo-text { line-height: 1.2; white-space: nowrap; }
 .top-nav-logo-text .brand { font-size: 13px; font-weight: 800; color: var(--text); letter-spacing: .3px; }
 .top-nav-logo-text .sub { font-size: var(--font-2xs); color: var(--orange); font-weight: 600; letter-spacing: .5px; text-transform: uppercase; }
 
 .top-nav-items {
   flex: 1;
   display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  min-width: 0;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .nav-item {
   display: flex; align-items: center; gap: 8px;
-  padding: 8px 12px;
+  padding: 8px 10px;
   border-radius: var(--radius-sm);
   cursor: pointer;
   font-size: 13px; font-weight: 500;
@@ -267,6 +277,8 @@ body {
   user-select: none;
   white-space: nowrap;
 }
+.top-nav.collapsed .nav-item span:not(.icon) { display: none; }
+.top-nav.collapsed .nav-item { justify-content: center; }
 .nav-item:hover { background: var(--bg3); color: var(--text); }
 .nav-item.active { background: var(--orange-dim); color: var(--orange); border-color: rgba(226,84,31,.25); font-weight: 600; }
 .nav-item .icon { font-size: 14px; flex-shrink: 0; }
@@ -280,32 +292,49 @@ body {
   border-radius: var(--radius-sm);
   min-width: 18px;
   text-align: center;
+  margin-left: auto;
 }
 .nav-item .badge.red { background: var(--red); }
 .nav-item .badge.green { background: var(--green); }
 
-/* Dropdowns -- desktop opens on hover/focus; mobile expands inline (see the
-   768px breakpoint below), so no JS is needed to open/close these. */
+/* Expanded: accordion-in-place -- clicking a category expands its
+   sub-items inline (real document flow, pushes the rest of the list down),
+   no hover/flyout involved. Collapsed: no room for an inline accordion, so
+   falls back to a CSS-only hover flyout instead (see further down). */
 .nav-dropdown { position: relative; }
-.nav-dropdown-trigger .caret { font-size: 10px; color: var(--text3); transition: transform var(--transition-base); }
+.nav-dropdown-trigger .caret { font-size: 10px; color: var(--text3); transition: transform var(--transition-base); margin-left: auto; }
+.top-nav.collapsed .nav-dropdown-trigger .caret { display: none; }
 .nav-dropdown-menu {
   display: none;
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  min-width: 200px;
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: var(--space-2);
-  z-index: 110;
   flex-direction: column;
   gap: 2px;
+  padding-left: 18px;
+  margin-top: 2px;
 }
-.nav-dropdown-menu .nav-item { width: 100%; }
+.nav-dropdown-menu .nav-item { width: 100%; font-size: 12.5px; }
 .nav-dropdown.open .nav-dropdown-menu { display: flex; }
 .nav-dropdown.open .nav-dropdown-trigger .caret { transform: rotate(180deg); }
+/* Collapsed-only hover flyout -- the accordion above is hidden entirely
+   when collapsed (no room for it), this replaces it. */
+.top-nav.collapsed .nav-dropdown-menu { padding-left: 0; display: none; }
+.top-nav.collapsed .nav-dropdown:hover .nav-dropdown-menu {
+  display: flex; position: absolute; left: calc(100% + 8px); top: 0;
+  min-width: 190px; background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow); padding: var(--space-2); z-index: 110;
+}
+.top-nav.collapsed .nav-dropdown-menu .nav-item span:not(.icon) { display: inline; }
+.top-nav.collapsed .nav-dropdown-menu .nav-item { justify-content: flex-start; }
+
+.nav-collapse-toggle {
+  display: flex; align-items: center; gap: 8px; justify-content: flex-start;
+  background: none; border: none; border-top: 1px solid var(--border);
+  color: var(--text3); font-size: 12px; font-family: inherit; cursor: pointer;
+  padding: 10px; margin-top: var(--space-2); border-radius: var(--radius-sm);
+  transition: color var(--transition-base), background var(--transition-base);
+}
+.nav-collapse-toggle:hover { color: var(--orange); background: var(--bg3); }
+.top-nav.collapsed .nav-collapse-toggle { justify-content: center; }
+.top-nav.collapsed .nav-collapse-toggle span:not(.icon) { display: none; }
 
 .nav-toggle {
   display: none;
@@ -319,9 +348,9 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  min-width: 0;
   transition: margin-right var(--transition-slower) ease;
 }
-body.ai-panel-open .top-nav,
 body.ai-panel-open .main {
   margin-right: 400px;
 }
@@ -584,7 +613,6 @@ body.ai-panel-open .main {
 .cmdboard-sidebar-left { width: 250px; flex-shrink: 0; }
 .cmdboard-sidebar-right { width: 280px; flex-shrink: 0; }
 @media (max-width: 900px) { .cmdboard-sidebar-left, .cmdboard-sidebar-right { position: static; width: 100%; } }
-.cmdboard-sidebar-restore { position: absolute; left: -4px; top: 0; }
 .cmdboard-main { position: relative; }
 .cmdboard-section { margin-bottom: var(--space-4); }
 .cmdboard-section:last-child { margin-bottom: 0; }
@@ -2403,7 +2431,12 @@ tr.pg-hidden-row { display: none; }
 
 @media (max-width: 768px) {
   .nav-toggle { display: block; }
-  body.ai-panel-open .top-nav,
+  .top-nav {
+    flex-direction: row; width: 100%; height: 56px; position: sticky;
+    border-right: none; border-bottom: 1px solid var(--border);
+    align-items: center; padding: 0 var(--space-4); overflow: visible;
+  }
+  .top-nav-logo { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
   body.ai-panel-open .main {
     margin-right: 0;
   }
@@ -2436,6 +2469,7 @@ tr.pg-hidden-row { display: none; }
   }
   .nav-dropdown-trigger { cursor: default; }
   .nav-dropdown-trigger .caret { display: none; }
+  .top-nav.collapsed .nav-dropdown-menu { display: flex; }
   .grid-2, .phase-steps, .upsell-grid { grid-template-columns: 1fr; }
   .grid-3 { grid-template-columns: 1fr; }
   .kpi-row { grid-template-columns: repeat(2, 1fr); }
@@ -3088,8 +3122,8 @@ select.wfb-field-input { padding-right: 26px; }
       <span class="icon" data-icon="home"></span> <span data-i18n="nav_home">Home</span>
     </div>
 
-    <div class="nav-dropdown" onmouseenter="openNavDropdown(this)" onmouseleave="closeNavDropdown(this)">
-      <div class="nav-item nav-dropdown-trigger" onclick="toggleNavDropdown(this)"><span data-i18n="nav_portfolios">Portfolios</span> <span class="caret">▾</span></div>
+    <div class="nav-dropdown">
+      <div class="nav-item nav-dropdown-trigger" onclick="toggleNavDropdown(this)"><span class="icon" data-icon="store"></span> <span data-i18n="nav_portfolios">Portfolios</span> <span class="caret">▾</span></div>
       <div class="nav-dropdown-menu">
         <div class="nav-item" onclick="showPage('clients')">
           <span class="icon" data-icon="users"></span> All Clients
@@ -3115,8 +3149,8 @@ select.wfb-field-input { padding-right: 26px; }
       <span class="badge" id="navOnboardingBadge" style="display:none">0</span>
     </div>
 
-    <div class="nav-dropdown" onmouseenter="openNavDropdown(this)" onmouseleave="closeNavDropdown(this)">
-      <div class="nav-item nav-dropdown-trigger" onclick="toggleNavDropdown(this)"><span data-i18n="nav_performance">Performance</span> <span class="caret">▾</span></div>
+    <div class="nav-dropdown">
+      <div class="nav-item nav-dropdown-trigger" onclick="toggleNavDropdown(this)"><span class="icon" data-icon="trending"></span> <span data-i18n="nav_performance">Performance</span> <span class="caret">▾</span></div>
       <div class="nav-dropdown-menu">
         <div class="nav-item" onclick="showPage('voice')">
           <span class="icon" data-icon="mic"></span> Voice Agent
@@ -3131,8 +3165,8 @@ select.wfb-field-input { padding-right: 26px; }
       </div>
     </div>
 
-    <div class="nav-dropdown" onmouseenter="openNavDropdown(this)" onmouseleave="closeNavDropdown(this)">
-      <div class="nav-item nav-dropdown-trigger" onclick="toggleNavDropdown(this)"><span data-i18n="nav_growth_tools">Growth Tools</span> <span class="caret">▾</span></div>
+    <div class="nav-dropdown">
+      <div class="nav-item nav-dropdown-trigger" onclick="toggleNavDropdown(this)"><span class="icon" data-icon="rocket"></span> <span data-i18n="nav_growth_tools">Growth Tools</span> <span class="caret">▾</span></div>
       <div class="nav-dropdown-menu">
         <div class="nav-item" onclick="showPage('upsell')">
           <span class="icon" data-icon="target"></span> Goals
@@ -3155,8 +3189,8 @@ select.wfb-field-input { padding-right: 26px; }
       </div>
     </div>
 
-    <div class="nav-dropdown" onmouseenter="openNavDropdown(this)" onmouseleave="closeNavDropdown(this)">
-      <div class="nav-item nav-dropdown-trigger" onclick="toggleNavDropdown(this)"><span data-i18n="nav_finance">Finance</span> <span class="caret">▾</span></div>
+    <div class="nav-dropdown">
+      <div class="nav-item nav-dropdown-trigger" onclick="toggleNavDropdown(this)"><span class="icon" data-icon="dollar"></span> <span data-i18n="nav_finance">Finance</span> <span class="caret">▾</span></div>
       <div class="nav-dropdown-menu">
         <div class="nav-item" onclick="showPage('adspend')">
           <span class="icon" data-icon="dollar"></span> Ad Spend Management
@@ -3173,6 +3207,10 @@ select.wfb-field-input { padding-right: 26px; }
       </div>
     </div>
   </div>
+
+  <button class="nav-collapse-toggle" id="navCollapseToggle" onclick="toggleNavCollapse()" title="Collapse navigation" aria-label="Collapse navigation">
+    <span class="icon" data-icon="sidebarPanel" data-icon-size="15"></span> <span>Collapse</span>
+  </button>
 
   <div style="position:relative;display:flex;align-items:center;gap:10px">
     <div class="user-badge" id="userBadge" onclick="toggleProfileMenu()" title="Account">
@@ -3505,7 +3543,7 @@ select.wfb-field-input { padding-right: 26px; }
         <div class="cmdboard-section">
           <div class="cmdboard-section-hd" style="display:flex;align-items:center;justify-content:space-between">
             <span>Command Filters</span>
-            <button class="vital-ask" onclick="toggleClDirSidebar()" title="Hide Command Filters" aria-label="Hide Command Filters"><span class="icon" data-icon="arrowBack" data-icon-size="13"></span></button>
+            <button class="vital-ask" onclick="toggleClDirSidebar()" title="Hide Command Filters" aria-label="Hide Command Filters"><span class="icon" data-icon="sidebarPanel" data-icon-size="13"></span></button>
           </div>
           <div style="position:relative">
             <input type="text" class="search-box" id="clientsSearch" placeholder="Search all clients..." oninput="debouncedFilterClientsDirectory()" style="width:100%">
@@ -3526,9 +3564,11 @@ select.wfb-field-input { padding-right: 26px; }
       </div>
 
       <div class="cmdboard-main">
-        <button class="vital-ask cmdboard-sidebar-restore" id="clDirSidebarRestoreBtn" onclick="toggleClDirSidebar()" title="Show Command Filters" aria-label="Show Command Filters" style="display:none"><span class="icon" data-icon="arrowBack" data-icon-size="13" style="display:inline-block;transform:rotate(180deg)"></span></button>
         <div class="cmdboard-toolbar">
-          <div>Viewing: <b id="clDirViewingLabel">All Clients</b> · <span class="row-count" id="clientsRowCount">0 clients</span></div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <button class="vital-ask" id="clDirSidebarRestoreBtn" onclick="toggleClDirSidebar()" title="Show Command Filters" aria-label="Show Command Filters" style="display:none"><span class="icon" data-icon="sidebarPanel" data-icon-size="14"></span></button>
+            <div>Viewing: <b id="clDirViewingLabel">All Clients</b> · <span class="row-count" id="clientsRowCount">0 clients</span></div>
+          </div>
           <div class="cmdboard-toolbar-right">
             <select id="clientsProductFilter" onchange="filterClientsByProduct(this.value)" style="width:auto;max-width:170px;height:32px">
               <option value="all">All Products</option>
@@ -6883,6 +6923,7 @@ const HUB_ICONS = {
   close: '<path d="M6 6l12 12M18 6L6 18"/>',
   download: '<path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 19h16"/>',
   arrowBack: '<path d="M19 12H5M11 18l-6-6 6-6"/>',
+  sidebarPanel: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/>',
   user: '<circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0116 0v1"/>',
   calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/>',
   building: '<rect x="4" y="3" width="16" height="18" rx="1"/><path d="M9 8h1M14 8h1M9 12h1M14 12h1M9 16h1M14 16h1"/>',
@@ -7039,6 +7080,39 @@ document.addEventListener('click', (e) => {
     document.querySelectorAll('.nav-dropdown.open').forEach(d => d.classList.remove('open'));
   }
 });
+
+const NAV_COLLAPSE_KEY = 'csh_nav_collapsed_v1';
+function toggleNavCollapse() {
+  const nav = document.getElementById('topNav');
+  if (!nav) return;
+  const collapsed = !nav.classList.contains('collapsed');
+  nav.classList.toggle('collapsed', collapsed);
+  const btn = document.getElementById('navCollapseToggle');
+  if (btn) {
+    btn.title = collapsed ? 'Expand navigation' : 'Collapse navigation';
+    btn.setAttribute('aria-label', btn.title);
+    btn.querySelector('span:not(.icon)').textContent = collapsed ? 'Expand' : 'Collapse';
+  }
+  // Collapsing while a category was open in accordion mode would otherwise
+  // leave it visually "stuck open" underneath the icon-only rail.
+  if (collapsed) document.querySelectorAll('.nav-dropdown.open').forEach(d => d.classList.remove('open'));
+  try { localStorage.setItem(NAV_COLLAPSE_KEY, collapsed ? '1' : '0'); } catch (e) {}
+}
+function initNavCollapseState() {
+  const nav = document.getElementById('topNav');
+  if (!nav) return;
+  let collapsed = false; // expanded by default for everyone
+  try { collapsed = localStorage.getItem(NAV_COLLAPSE_KEY) === '1'; } catch (e) {}
+  nav.classList.toggle('collapsed', collapsed);
+  const btn = document.getElementById('navCollapseToggle');
+  if (btn) {
+    btn.title = collapsed ? 'Expand navigation' : 'Collapse navigation';
+    btn.setAttribute('aria-label', btn.title);
+    const label = btn.querySelector('span:not(.icon)');
+    if (label) label.textContent = collapsed ? 'Expand' : 'Collapse';
+  }
+}
+initNavCollapseState();
 
 function showPage(id) {
   if (id === 'products' && !requirePermission('admin')) return;
