@@ -3824,47 +3824,36 @@ select.wfb-field-input { padding-right: 26px; }
   ════════════════════════════════════════════════════════════════════════ -->
   <div class="page" id="page-whitelabel">
 
-    <div class="hub-grid grid-stack" id="grid-whitelabel">
-
-    <!-- KPIs -->
-    <div class="grid-stack-item" gs-id="wl-kpi-total" gs-x="0" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
-      <div class="kpi kpi-theme-orange">
+    <div class="hub-mini-grid" style="grid-template-columns:repeat(7,1fr)">
+    <div class="kpi kpi-theme-orange">
         <div class="kpi-icon"><span class="icon" data-icon="users" data-icon-size="16"></span></div>
         <div class="kpi-val" id="kpi-whitelabel-total">12</div>
         <div class="kpi-lbl" data-i18n="kpi_total_clients">Total Clients</div>
         <div class="kpi-sub" data-i18n="kpi_active_platform">Active in platform</div>
         <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 130 100 C 150 95, 160 80, 172 75 C 184 70, 190 50, 200 45 C 212 39, 220 20, 232 12"/><circle cx="172" cy="75"/><circle cx="200" cy="45"/><circle cx="232" cy="12" r="3"/><circle r="3"><animateMotion dur="2.6s" repeatCount="indefinite" path="M 130 100 C 150 95, 160 80, 172 75 C 184 70, 190 50, 200 45 C 212 39, 220 20, 232 12"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.9;1" dur="2.6s" repeatCount="indefinite"/></circle></svg>
       </div>
-    </div></div>
-    <div class="grid-stack-item" gs-id="wl-kpi-multiloc" gs-x="2" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
-      <div class="kpi kpi-theme-blue">
+    <div class="kpi kpi-theme-blue">
         <div class="kpi-icon"><span class="icon" data-icon="store" data-icon-size="14"></span></div>
         <div class="kpi-val orange" id="kpi-whitelabel-multiloc">0</div>
         <div class="kpi-lbl" data-i18n="kpi_whitelabel_multiloc">White Label / Multilocation</div>
         <div class="kpi-sub" data-i18n="kpi_multiloc_sub">Businesses with 2+ locations</div>
         <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><line x1="195" y1="45" x2="175" y2="75"/><line x1="195" y1="45" x2="200" y2="80"/><line x1="195" y1="45" x2="222" y2="72"/><circle class="mesh-node" cx="195" cy="45" r="3.2" style="animation-delay:0s"/><circle class="mesh-node" cx="175" cy="75" r="2.2" style="animation-delay:.25s"/><circle class="mesh-node" cx="200" cy="80" r="2.2" style="animation-delay:.5s"/><circle class="mesh-node" cx="222" cy="72" r="2.2" style="animation-delay:.75s"/></svg>
       </div>
-    </div></div>
-    <div class="grid-stack-item" gs-id="wl-kpi-products" gs-x="4" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
-      <div class="kpi kpi-theme-orange">
+    <div class="kpi kpi-theme-orange">
         <div class="kpi-icon"><span class="icon" data-icon="package" data-icon-size="16"></span></div>
         <div class="kpi-val orange" id="kpi-whitelabel-products">0</div>
         <div class="kpi-lbl" data-i18n="kpi_products_tracked">Products Tracked</div>
         <div class="kpi-sub" data-i18n="kpi_across_clients">Across all clients</div>
         <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><line class="bar bar-grow" x1="150" y1="105" x2="150" y2="80" style="animation-delay:0s"/><line class="bar bar-grow" x1="170" y1="105" x2="170" y2="60" style="animation-delay:.15s"/><line class="bar bar-grow" x1="190" y1="105" x2="190" y2="70" style="animation-delay:.3s"/><line class="bar bar-grow" x1="210" y1="105" x2="210" y2="40" style="animation-delay:.45s"/><line class="bar bar-grow" x1="230" y1="105" x2="230" y2="20" style="animation-delay:.6s"/></svg>
       </div>
-    </div></div>
-    <div class="grid-stack-item" gs-id="wl-kpi-avg" gs-x="6" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
-      <div class="kpi kpi-theme-blue">
+    <div class="kpi kpi-theme-blue">
         <div class="kpi-icon"><span class="icon" data-icon="trending" data-icon-size="14"></span></div>
         <div class="kpi-val" id="kpi-whitelabel-avg">0</div>
         <div class="kpi-lbl" data-i18n="kpi_avg_products">Avg Products / Client</div>
         <div class="kpi-sub" data-i18n="kpi_upside">Significant upside potential</div>
         <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 185 78 L 200 78 L 200 60 L 212 60 L 212 40 L 223 40 L 223 18 L 232 18"/><circle r="3"><animateMotion dur="2.4s" repeatCount="indefinite" path="M 185 78 L 200 78 L 200 60 L 212 60 L 212 40 L 223 40 L 223 18 L 232 18"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.9;1" dur="2.4s" repeatCount="indefinite"/></circle></svg>
       </div>
-    </div></div>
-    <div class="grid-stack-item" gs-id="wl-kpi-opps" gs-x="8" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
-      <div class="kpi kpi-theme-orange">
+    <div class="kpi kpi-theme-orange">
         <div class="kpi-icon"><span class="icon" data-icon="target" data-icon-size="16"></span></div>
         <div class="kpi-val orange" id="kpi-whitelabel-opps">0</div>
         <div class="kpi-lbl" data-i18n="kpi_upsell_opps">Upsell Opportunities</div>
@@ -3874,18 +3863,14 @@ select.wfb-field-input { padding-right: 26px; }
           <circle class="gauge-fill" id="kpi-whitelabel-opps-arc" cx="60" cy="60" r="46" stroke-dasharray="0 289" stroke-dashoffset="72" transform="rotate(-90 60 60)"/>
         </svg>
       </div>
-    </div></div>
-    <div class="grid-stack-item" gs-id="wl-kpi-untouched" gs-x="10" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
-      <div class="kpi kpi-theme-red">
+    <div class="kpi kpi-theme-red">
         <div class="kpi-icon"><span class="icon" data-icon="alert" data-icon-size="16"></span></div>
         <div class="kpi-val red" id="kpi-whitelabel-untouched">0 / 0</div>
         <div class="kpi-lbl" id="kpi-whitelabel-untouched-lbl">Products Untouched</div>
         <div class="kpi-sub" id="kpi-whitelabel-untouched-sub">—</div>
         <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><circle class="ring" cx="205" cy="60" r="10"/><circle class="ring pulse-1" cx="205" cy="60" r="10"/><circle class="ring pulse-2" cx="205" cy="60" r="10"/><circle cx="205" cy="60" r="3"/></svg>
       </div>
-    </div></div>
-    <div class="grid-stack-item" gs-id="wl-kpi-top" gs-x="0" gs-y="2" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
-      <div class="kpi kpi-theme-green">
+    <div class="kpi kpi-theme-green">
         <div class="kpi-icon"><span class="icon" data-icon="check" data-icon-size="16"></span></div>
         <div class="kpi-val green" id="kpi-whitelabel-top">0%</div>
         <div class="kpi-lbl" id="kpi-whitelabel-top-lbl" data-i18n="kpi_top_adoption">Top Adoption</div>
@@ -3895,15 +3880,78 @@ select.wfb-field-input { padding-right: 26px; }
           <circle class="gauge-fill" id="kpi-whitelabel-top-arc" cx="60" cy="60" r="46" stroke-dasharray="0 289" stroke-dashoffset="72" transform="rotate(-90 60 60)"/>
         </svg>
       </div>
-    </div></div>
+    </div>
 
-    <div class="grid-stack-item" gs-id="wl-spotlight" gs-x="0" gs-y="4" gs-w="3" gs-h="8" gs-min-w="2" gs-min-h="5"><div class="grid-stack-item-content">
-      <div id="spotlight-whitelabel" style="width:100%"></div>
-    </div></div>
+    <div id="spotlight-whitelabel" style="width:100%;margin-bottom:var(--space-4)"></div>
 
-    <div class="grid-stack-item" gs-id="wl-matrix" gs-x="3" gs-y="4" gs-w="6" gs-h="8" gs-min-w="4" gs-min-h="5"><div class="grid-stack-item-content" style="flex-direction:column;gap:12px">
+    <div class="hub-tabs">
+      <button class="hub-tab active" data-group="wlTabs" data-tab="overview" onclick="switchHubTab('wlTabs','overview')">Overview</button>
+      <button class="hub-tab" data-group="wlTabs" data-tab="adoption" onclick="switchHubTab('wlTabs','adoption')">Product Adoption</button>
+      <button class="hub-tab" data-group="wlTabs" data-tab="matrix" onclick="switchHubTab('wlTabs','matrix')">Client Matrix</button>
+    </div>
+
+    <div class="hub-tab-panel active" data-group="wlTabs" data-tab="overview">
+      <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:var(--space-4);align-items:start">
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">Recommended Next Moves</div></div>
+            <button class="vital-ask" onclick="askNirvanaAboutPortfolioChart('whitelabel','opportunity')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
+          </div>
+          <div id="nextMoves-whitelabel"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title"><span class="icon" data-icon="sparkle" data-icon-size="14"></span> Nirvana Suggestions</div></div>
+          </div>
+          <div id="nirvanaSuggestions-whitelabel"></div>
+          <button class="btn btn-ghost btn-sm spotlight-ai-btn" style="width:100%;margin-top:10px" onclick="askNirvanaAboutPortfolioChart('whitelabel','opportunity')">Ask Nirvana for More <span class="icon" data-icon="chevronRight" data-icon-size="13"></span></button>
+          <div style="border-top:1px solid var(--border);margin-top:12px;padding-top:12px">
+            <div style="font-size:11px;color:var(--text3);margin-bottom:8px">AI Opportunity Radar · top white-space products</div>
+            <div id="oppRadar-whitelabel"></div>
+            <div class="opp-radar-foot" id="oppRadarFoot-whitelabel"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hub-tab-panel" data-group="wlTabs" data-tab="adoption">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-4)">
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title" data-i18n="chart_product_adoption">Product Adoption Rate</div><div class="card-sub" id="sub-whitelabel-adoption" data-i18n="chart_pct_clients_using">% of clients using each product</div></div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <button class="vital-ask" onclick="askNirvanaAboutPortfolioChart('whitelabel','adoption')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
+              <span class="card-badge" id="badge-whitelabel-products"><span class="icon" data-icon="chart" data-icon-size="16"></span> 0 Products</span>
+            </div>
+          </div>
+          <div class="chart-wrap h200"><canvas id="adoptionBar-whitelabel"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title" data-i18n="chart_upsell_gap">Upsell Gap</div><div class="card-sub" data-i18n="chart_upsell_gap_sub">Bigger bar = bigger opportunity</div></div>
+            <span class="card-badge" id="badge-whitelabel-opps"><span class="icon" data-icon="target" data-icon-size="16"></span> 0 Opportunities</span>
+          </div>
+          <div class="chart-wrap h200"><canvas id="gapBar-whitelabel"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title" data-i18n="chart_products_per_client">Products Per Client</div><div class="card-sub" data-i18n="chart_distribution">Distribution of product count</div></div>
+            <span class="card-badge" id="badge-whitelabel-clients"><span class="icon" data-icon="users" data-icon-size="16"></span> 0 Clients</span>
+          </div>
+          <div class="chart-wrap h200" style="position:relative">
+            <canvas id="distPie-whitelabel"></canvas>
+            <div style="position:absolute;top:50%;left:36%;transform:translate(-50%,-50%);text-align:center;pointer-events:none">
+              <div id="distCenterNum-whitelabel" style="font-size:18px;font-weight:700;color:var(--text);line-height:1">0</div>
+              <div style="font-size:9px;color:var(--text3);margin-top:2px">clients</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hub-tab-panel" data-group="wlTabs" data-tab="matrix">
       <div class="card" id="orgRollup-whitelabel" style="display:none"></div>
-      <div class="card" style="flex:1;display:flex;flex-direction:column;min-height:0">
+      <div class="card" style="display:flex;flex-direction:column;min-height:0">
         <div class="card-header">
           <div><div class="card-title" data-i18n="matrix_whitelabel_title">Full White Label Partner Matrix</div><div class="card-sub" id="rowCount-whitelabel">0 clients</div></div>
           <button class="reset-columns-btn" onclick="resetColumnPrefs('client-whitelabel'); rebuildPortfolio('whitelabel')" title="Reset column order and widths back to default">↺ <span data-i18n="reset_columns">Columns</span></button>
@@ -3945,79 +3993,6 @@ select.wfb-field-input { padding-right: 26px; }
           <button id="clientTableNextBtn-whitelabel" onclick="changeClientTablePage('whitelabel', 1)" aria-label="Next page">›</button>
         </div>
       </div>
-    </div></div>
-
-    <div class="grid-stack-item" gs-id="wl-adoption-chart" gs-x="9" gs-y="4" gs-w="3" gs-h="3" gs-min-w="2" gs-min-h="3"><div class="grid-stack-item-content">
-      <div class="card" style="width:100%">
-        <div class="card-header">
-          <div><div class="card-title" data-i18n="chart_product_adoption">Product Adoption Rate</div><div class="card-sub" id="sub-whitelabel-adoption" data-i18n="chart_pct_clients_using">% of clients using each product</div></div>
-          <div style="display:flex;align-items:center;gap:6px">
-            <button class="vital-ask" onclick="askNirvanaAboutPortfolioChart('whitelabel','adoption')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
-            <span class="card-badge" id="badge-whitelabel-products"><span class="icon" data-icon="chart" data-icon-size="16"></span> 0 Products</span>
-          </div>
-        </div>
-        <div class="chart-wrap h260"><canvas id="adoptionBar-whitelabel"></canvas></div>
-      </div>
-    </div></div>
-    <div class="grid-stack-item" gs-id="wl-distribution-chart" gs-x="9" gs-y="7" gs-w="3" gs-h="3" gs-min-w="2" gs-min-h="3"><div class="grid-stack-item-content">
-      <div class="card" style="width:100%">
-        <div class="card-header">
-          <div><div class="card-title" data-i18n="chart_products_per_client">Products Per Client</div><div class="card-sub" data-i18n="chart_distribution">Distribution of product count</div></div>
-          <div style="display:flex;align-items:center;gap:6px">
-            <button class="vital-ask" onclick="askNirvanaAboutPortfolioChart('whitelabel','distribution')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
-            <span class="card-badge" id="badge-whitelabel-clients"><span class="icon" data-icon="users" data-icon-size="16"></span> 0 Clients</span>
-          </div>
-        </div>
-        <div class="chart-wrap h260" style="position:relative">
-          <canvas id="distPie-whitelabel"></canvas>
-          <div style="position:absolute;top:50%;left:36%;transform:translate(-50%,-50%);text-align:center;pointer-events:none">
-            <div id="distCenterNum-whitelabel" style="font-size:26px;font-weight:800;color:var(--text);line-height:1">0</div>
-            <div style="font-size:10px;color:var(--text3);margin-top:2px">clients</div>
-          </div>
-        </div>
-      </div>
-    </div></div>
-    <div class="grid-stack-item" gs-id="wl-opportunity-radar" gs-x="9" gs-y="10" gs-w="3" gs-h="4" gs-min-w="2" gs-min-h="3"><div class="grid-stack-item-content">
-      <div class="card" style="width:100%">
-        <div class="card-header">
-          <div><div class="card-title">AI Opportunity Radar</div><div class="card-sub">Top white-space products</div></div>
-          <button class="vital-ask" onclick="askNirvanaAboutPortfolioChart('whitelabel','opportunity')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
-        </div>
-        <div id="oppRadar-whitelabel"></div>
-        <div class="opp-radar-foot" id="oppRadarFoot-whitelabel"></div>
-      </div>
-    </div></div>
-
-    <div class="grid-stack-item" gs-id="wl-gap-chart" gs-x="0" gs-y="12" gs-w="5" gs-h="5" gs-min-w="3" gs-min-h="3"><div class="grid-stack-item-content">
-      <div class="card" style="width:100%">
-        <div class="card-header">
-          <div><div class="card-title" data-i18n="chart_upsell_gap">Upsell Gap — Clients NOT Using Each Product</div><div class="card-sub" data-i18n="chart_upsell_gap_sub">Bigger bar = bigger revenue opportunity</div></div>
-          <span class="card-badge" id="badge-whitelabel-opps"><span class="icon" data-icon="target" data-icon-size="16"></span> 0 Total Opportunities</span>
-        </div>
-        <div class="chart-wrap h300"><canvas id="gapBar-whitelabel"></canvas></div>
-      </div>
-    </div></div>
-
-    <div class="grid-stack-item" gs-id="wl-next-moves" gs-x="5" gs-y="12" gs-w="4" gs-h="5" gs-min-w="3" gs-min-h="3"><div class="grid-stack-item-content">
-      <div class="card" style="width:100%">
-        <div class="card-header">
-          <div><div class="card-title">Recommended Next Moves</div></div>
-          <button class="vital-ask" onclick="askNirvanaAboutPortfolioChart('whitelabel','opportunity')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
-        </div>
-        <div id="nextMoves-whitelabel"></div>
-      </div>
-    </div></div>
-
-    <div class="grid-stack-item" gs-id="wl-nirvana-suggestions" gs-x="9" gs-y="12" gs-w="3" gs-h="5" gs-min-w="2" gs-min-h="3"><div class="grid-stack-item-content">
-      <div class="card" style="width:100%">
-        <div class="card-header">
-          <div><div class="card-title"><span class="icon" data-icon="sparkle" data-icon-size="14"></span> Nirvana Suggestions</div></div>
-        </div>
-        <div id="nirvanaSuggestions-whitelabel"></div>
-        <button class="btn btn-ghost btn-sm spotlight-ai-btn" style="width:100%;margin-top:10px" onclick="askNirvanaAboutPortfolioChart('whitelabel','opportunity')">Ask Nirvana for More <span class="icon" data-icon="chevronRight" data-icon-size="13"></span></button>
-      </div>
-    </div></div>
-
     </div>
 
     <div class="page-footer"><span class="org-brand-inline">The HUB · Niche Inc.</span> · White Label Partner · v2.0 · Confidential</div>
@@ -4490,38 +4465,29 @@ select.wfb-field-input { padding-right: 26px; }
   ════════════════════════════════════════════════════════════════════════ -->
   <div class="page" id="page-support">
 
-    <div class="hub-grid grid-stack" id="grid-support">
-
-    <!-- KPIs -->
-    <div class="grid-stack-item" gs-id="sup-kpi-total" gs-x="0" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
-      <div class="kpi kpi-theme-orange">
+    <div class="hub-mini-grid" style="grid-template-columns:repeat(6,1fr)">
+    <div class="kpi kpi-theme-orange">
         <div class="kpi-icon"><span class="icon" data-icon="users" data-icon-size="16"></span></div>
         <div class="kpi-val" id="kpi-support-total">28</div>
         <div class="kpi-lbl" data-i18n="kpi_total_clients">Total Clients</div>
         <div class="kpi-sub" data-i18n="kpi_active_platform">Active in platform</div>
         <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 130 100 C 150 95, 160 80, 172 75 C 184 70, 190 50, 200 45 C 212 39, 220 20, 232 12"/><circle cx="172" cy="75"/><circle cx="200" cy="45"/><circle cx="232" cy="12" r="3"/><circle r="3"><animateMotion dur="2.6s" repeatCount="indefinite" path="M 130 100 C 150 95, 160 80, 172 75 C 184 70, 190 50, 200 45 C 212 39, 220 20, 232 12"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.9;1" dur="2.6s" repeatCount="indefinite"/></circle></svg>
       </div>
-    </div></div>
-    <div class="grid-stack-item" gs-id="sup-kpi-products" gs-x="2" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
-      <div class="kpi kpi-theme-orange">
+    <div class="kpi kpi-theme-orange">
         <div class="kpi-icon"><span class="icon" data-icon="package" data-icon-size="16"></span></div>
         <div class="kpi-val orange" id="kpi-support-products">0</div>
         <div class="kpi-lbl" data-i18n="kpi_products_tracked">Products Tracked</div>
         <div class="kpi-sub" data-i18n="kpi_across_clients">Across all clients</div>
         <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><line class="bar bar-grow" x1="150" y1="105" x2="150" y2="80" style="animation-delay:0s"/><line class="bar bar-grow" x1="170" y1="105" x2="170" y2="60" style="animation-delay:.15s"/><line class="bar bar-grow" x1="190" y1="105" x2="190" y2="70" style="animation-delay:.3s"/><line class="bar bar-grow" x1="210" y1="105" x2="210" y2="40" style="animation-delay:.45s"/><line class="bar bar-grow" x1="230" y1="105" x2="230" y2="20" style="animation-delay:.6s"/></svg>
       </div>
-    </div></div>
-    <div class="grid-stack-item" gs-id="sup-kpi-avg" gs-x="4" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
-      <div class="kpi kpi-theme-blue">
+    <div class="kpi kpi-theme-blue">
         <div class="kpi-icon"><span class="icon" data-icon="trending" data-icon-size="14"></span></div>
         <div class="kpi-val" id="kpi-support-avg">0</div>
         <div class="kpi-lbl" data-i18n="kpi_avg_products">Avg Products / Client</div>
         <div class="kpi-sub" data-i18n="kpi_upside">Significant upside potential</div>
         <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 185 78 L 200 78 L 200 60 L 212 60 L 212 40 L 223 40 L 223 18 L 232 18"/><circle r="3"><animateMotion dur="2.4s" repeatCount="indefinite" path="M 185 78 L 200 78 L 200 60 L 212 60 L 212 40 L 223 40 L 223 18 L 232 18"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.9;1" dur="2.4s" repeatCount="indefinite"/></circle></svg>
       </div>
-    </div></div>
-    <div class="grid-stack-item" gs-id="sup-kpi-opps" gs-x="6" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
-      <div class="kpi kpi-theme-orange">
+    <div class="kpi kpi-theme-orange">
         <div class="kpi-icon"><span class="icon" data-icon="target" data-icon-size="16"></span></div>
         <div class="kpi-val orange" id="kpi-support-opps">0</div>
         <div class="kpi-lbl" data-i18n="kpi_upsell_opps">Upsell Opportunities</div>
@@ -4531,18 +4497,14 @@ select.wfb-field-input { padding-right: 26px; }
           <circle class="gauge-fill" id="kpi-support-opps-arc" cx="60" cy="60" r="46" stroke-dasharray="0 289" stroke-dashoffset="72" transform="rotate(-90 60 60)"/>
         </svg>
       </div>
-    </div></div>
-    <div class="grid-stack-item" gs-id="sup-kpi-untouched" gs-x="8" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
-      <div class="kpi kpi-theme-red">
+    <div class="kpi kpi-theme-red">
         <div class="kpi-icon"><span class="icon" data-icon="alert" data-icon-size="16"></span></div>
         <div class="kpi-val red" id="kpi-support-untouched">0 / 0</div>
         <div class="kpi-lbl" id="kpi-support-untouched-lbl">Products Untouched</div>
         <div class="kpi-sub" id="kpi-support-untouched-sub">—</div>
         <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><circle class="ring" cx="205" cy="60" r="10"/><circle class="ring pulse-1" cx="205" cy="60" r="10"/><circle class="ring pulse-2" cx="205" cy="60" r="10"/><circle cx="205" cy="60" r="3"/></svg>
       </div>
-    </div></div>
-    <div class="grid-stack-item" gs-id="sup-kpi-top" gs-x="10" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
-      <div class="kpi kpi-theme-green">
+    <div class="kpi kpi-theme-green">
         <div class="kpi-icon"><span class="icon" data-icon="check" data-icon-size="16"></span></div>
         <div class="kpi-val green" id="kpi-support-top">0%</div>
         <div class="kpi-lbl" id="kpi-support-top-lbl" data-i18n="kpi_top_adoption">Top Adoption</div>
@@ -4552,15 +4514,78 @@ select.wfb-field-input { padding-right: 26px; }
           <circle class="gauge-fill" id="kpi-support-top-arc" cx="60" cy="60" r="46" stroke-dasharray="0 289" stroke-dashoffset="72" transform="rotate(-90 60 60)"/>
         </svg>
       </div>
-    </div></div>
+    </div>
 
-    <div class="grid-stack-item" gs-id="sup-spotlight" gs-x="0" gs-y="2" gs-w="3" gs-h="8" gs-min-w="2" gs-min-h="5"><div class="grid-stack-item-content">
-      <div id="spotlight-support" style="width:100%"></div>
-    </div></div>
+    <div id="spotlight-support" style="width:100%;margin-bottom:var(--space-4)"></div>
 
-    <div class="grid-stack-item" gs-id="sup-matrix" gs-x="3" gs-y="2" gs-w="6" gs-h="8" gs-min-w="4" gs-min-h="5"><div class="grid-stack-item-content" style="flex-direction:column;gap:12px">
+    <div class="hub-tabs">
+      <button class="hub-tab active" data-group="supTabs" data-tab="overview" onclick="switchHubTab('supTabs','overview')">Overview</button>
+      <button class="hub-tab" data-group="supTabs" data-tab="adoption" onclick="switchHubTab('supTabs','adoption')">Product Adoption</button>
+      <button class="hub-tab" data-group="supTabs" data-tab="matrix" onclick="switchHubTab('supTabs','matrix')">Client Matrix</button>
+    </div>
+
+    <div class="hub-tab-panel active" data-group="supTabs" data-tab="overview">
+      <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:var(--space-4);align-items:start">
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">Recommended Next Moves</div></div>
+            <button class="vital-ask" onclick="askNirvanaAboutPortfolioChart('support','opportunity')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
+          </div>
+          <div id="nextMoves-support"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title"><span class="icon" data-icon="sparkle" data-icon-size="14"></span> Nirvana Suggestions</div></div>
+          </div>
+          <div id="nirvanaSuggestions-support"></div>
+          <button class="btn btn-ghost btn-sm spotlight-ai-btn" style="width:100%;margin-top:10px" onclick="askNirvanaAboutPortfolioChart('support','opportunity')">Ask Nirvana for More <span class="icon" data-icon="chevronRight" data-icon-size="13"></span></button>
+          <div style="border-top:1px solid var(--border);margin-top:12px;padding-top:12px">
+            <div style="font-size:11px;color:var(--text3);margin-bottom:8px">AI Opportunity Radar · top white-space products</div>
+            <div id="oppRadar-support"></div>
+            <div class="opp-radar-foot" id="oppRadarFoot-support"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hub-tab-panel" data-group="supTabs" data-tab="adoption">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-4)">
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title" data-i18n="chart_product_adoption">Product Adoption Rate</div><div class="card-sub" id="sub-support-adoption" data-i18n="chart_pct_clients_using">% of clients using each product</div></div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <button class="vital-ask" onclick="askNirvanaAboutPortfolioChart('support','adoption')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
+              <span class="card-badge" id="badge-support-products"><span class="icon" data-icon="chart" data-icon-size="16"></span> 0 Products</span>
+            </div>
+          </div>
+          <div class="chart-wrap h200"><canvas id="adoptionBar-support"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title" data-i18n="chart_upsell_gap">Upsell Gap</div><div class="card-sub" data-i18n="chart_upsell_gap_sub">Bigger bar = bigger opportunity</div></div>
+            <span class="card-badge" id="badge-support-opps"><span class="icon" data-icon="target" data-icon-size="16"></span> 0 Opportunities</span>
+          </div>
+          <div class="chart-wrap h200"><canvas id="gapBar-support"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title" data-i18n="chart_products_per_client">Products Per Client</div><div class="card-sub" data-i18n="chart_distribution">Distribution of product count</div></div>
+            <span class="card-badge" id="badge-support-clients"><span class="icon" data-icon="users" data-icon-size="16"></span> 0 Clients</span>
+          </div>
+          <div class="chart-wrap h200" style="position:relative">
+            <canvas id="distPie-support"></canvas>
+            <div style="position:absolute;top:50%;left:36%;transform:translate(-50%,-50%);text-align:center;pointer-events:none">
+              <div id="distCenterNum-support" style="font-size:18px;font-weight:700;color:var(--text);line-height:1">0</div>
+              <div style="font-size:9px;color:var(--text3);margin-top:2px">clients</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hub-tab-panel" data-group="supTabs" data-tab="matrix">
       <div class="card" id="orgRollup-support" style="display:none"></div>
-      <div class="card" style="flex:1;display:flex;flex-direction:column;min-height:0">
+      <div class="card" style="display:flex;flex-direction:column;min-height:0">
         <div class="card-header">
           <div><div class="card-title" data-i18n="matrix_support_title">Full Support Client Matrix</div><div class="card-sub" id="rowCount-support">0 clients</div></div>
           <button class="reset-columns-btn" onclick="resetColumnPrefs('client-support'); rebuildPortfolio('support')" title="Reset column order and widths back to default">↺ <span data-i18n="reset_columns">Columns</span></button>
@@ -4602,79 +4627,6 @@ select.wfb-field-input { padding-right: 26px; }
           <button id="clientTableNextBtn-support" onclick="changeClientTablePage('support', 1)" aria-label="Next page">›</button>
         </div>
       </div>
-    </div></div>
-
-    <div class="grid-stack-item" gs-id="sup-adoption-chart" gs-x="9" gs-y="2" gs-w="3" gs-h="3" gs-min-w="2" gs-min-h="3"><div class="grid-stack-item-content">
-      <div class="card" style="width:100%">
-        <div class="card-header">
-          <div><div class="card-title" data-i18n="chart_product_adoption">Product Adoption Rate</div><div class="card-sub" id="sub-support-adoption" data-i18n="chart_pct_clients_using">% of clients using each product</div></div>
-          <div style="display:flex;align-items:center;gap:6px">
-            <button class="vital-ask" onclick="askNirvanaAboutPortfolioChart('support','adoption')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
-            <span class="card-badge" id="badge-support-products"><span class="icon" data-icon="chart" data-icon-size="16"></span> 0 Products</span>
-          </div>
-        </div>
-        <div class="chart-wrap h260"><canvas id="adoptionBar-support"></canvas></div>
-      </div>
-    </div></div>
-    <div class="grid-stack-item" gs-id="sup-distribution-chart" gs-x="9" gs-y="5" gs-w="3" gs-h="3" gs-min-w="2" gs-min-h="3"><div class="grid-stack-item-content">
-      <div class="card" style="width:100%">
-        <div class="card-header">
-          <div><div class="card-title" data-i18n="chart_products_per_client">Products Per Client</div><div class="card-sub" data-i18n="chart_distribution">Distribution of product count</div></div>
-          <div style="display:flex;align-items:center;gap:6px">
-            <button class="vital-ask" onclick="askNirvanaAboutPortfolioChart('support','distribution')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
-            <span class="card-badge" id="badge-support-clients"><span class="icon" data-icon="users" data-icon-size="16"></span> 0 Clients</span>
-          </div>
-        </div>
-        <div class="chart-wrap h260" style="position:relative">
-          <canvas id="distPie-support"></canvas>
-          <div style="position:absolute;top:50%;left:36%;transform:translate(-50%,-50%);text-align:center;pointer-events:none">
-            <div id="distCenterNum-support" style="font-size:26px;font-weight:800;color:var(--text);line-height:1">0</div>
-            <div style="font-size:10px;color:var(--text3);margin-top:2px">clients</div>
-          </div>
-        </div>
-      </div>
-    </div></div>
-    <div class="grid-stack-item" gs-id="sup-opportunity-radar" gs-x="9" gs-y="8" gs-w="3" gs-h="4" gs-min-w="2" gs-min-h="3"><div class="grid-stack-item-content">
-      <div class="card" style="width:100%">
-        <div class="card-header">
-          <div><div class="card-title">AI Opportunity Radar</div><div class="card-sub">Top white-space products</div></div>
-          <button class="vital-ask" onclick="askNirvanaAboutPortfolioChart('support','opportunity')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
-        </div>
-        <div id="oppRadar-support"></div>
-        <div class="opp-radar-foot" id="oppRadarFoot-support"></div>
-      </div>
-    </div></div>
-
-    <div class="grid-stack-item" gs-id="sup-gap-chart" gs-x="0" gs-y="10" gs-w="5" gs-h="5" gs-min-w="3" gs-min-h="3"><div class="grid-stack-item-content">
-      <div class="card" style="width:100%">
-        <div class="card-header">
-          <div><div class="card-title" data-i18n="chart_upsell_gap">Upsell Gap — Clients NOT Using Each Product</div><div class="card-sub" data-i18n="chart_upsell_gap_sub">Bigger bar = bigger revenue opportunity</div></div>
-          <span class="card-badge" id="badge-support-opps"><span class="icon" data-icon="target" data-icon-size="16"></span> 0 Total Opportunities</span>
-        </div>
-        <div class="chart-wrap h300"><canvas id="gapBar-support"></canvas></div>
-      </div>
-    </div></div>
-
-    <div class="grid-stack-item" gs-id="sup-next-moves" gs-x="5" gs-y="10" gs-w="4" gs-h="5" gs-min-w="3" gs-min-h="3"><div class="grid-stack-item-content">
-      <div class="card" style="width:100%">
-        <div class="card-header">
-          <div><div class="card-title">Recommended Next Moves</div></div>
-          <button class="vital-ask" onclick="askNirvanaAboutPortfolioChart('support','opportunity')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
-        </div>
-        <div id="nextMoves-support"></div>
-      </div>
-    </div></div>
-
-    <div class="grid-stack-item" gs-id="sup-nirvana-suggestions" gs-x="9" gs-y="10" gs-w="3" gs-h="5" gs-min-w="2" gs-min-h="3"><div class="grid-stack-item-content">
-      <div class="card" style="width:100%">
-        <div class="card-header">
-          <div><div class="card-title"><span class="icon" data-icon="sparkle" data-icon-size="14"></span> Nirvana Suggestions</div></div>
-        </div>
-        <div id="nirvanaSuggestions-support"></div>
-        <button class="btn btn-ghost btn-sm spotlight-ai-btn" style="width:100%;margin-top:10px" onclick="askNirvanaAboutPortfolioChart('support','opportunity')">Ask Nirvana for More <span class="icon" data-icon="chevronRight" data-icon-size="13"></span></button>
-      </div>
-    </div></div>
-
     </div>
 
     <div class="page-footer"><span class="org-brand-inline">The HUB · Niche Inc.</span> · Support Client · v2.0 · Confidential</div>
