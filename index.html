@@ -4590,8 +4590,8 @@ select.wfb-field-input { padding-right: 26px; }
        PAGE 6: UPSELL PLAYBOOK
   ════════════════════════════════════════════════════════════════════════ -->
   <div class="page" id="page-upsell">
-    <div class="kpi-row">
-      <div class="kpi kpi-theme-orange">
+    <div class="hub-mini-grid" style="grid-template-columns:repeat(6,1fr)">
+    <div class="kpi kpi-theme-orange">
         <div class="kpi-icon"><span class="icon" data-icon="target" data-icon-size="16"></span></div>
         <div class="kpi-val orange" id="goals-monthly-progress">0%</div>
         <div class="kpi-lbl">Monthly Goal Progress</div>
@@ -4601,35 +4601,35 @@ select.wfb-field-input { padding-right: 26px; }
           <circle class="gauge-fill" id="goals-monthly-progress-arc" cx="60" cy="60" r="46" stroke-dasharray="0 289" stroke-dashoffset="72" transform="rotate(-90 60 60)"/>
         </svg>
       </div>
-      <div class="kpi kpi-theme-green">
+    <div class="kpi kpi-theme-green">
         <div class="kpi-icon"><span class="icon" data-icon="check" data-icon-size="16"></span></div>
         <div class="kpi-val green" id="goals-ontrack-count">0</div>
         <div class="kpi-lbl">Goals On Track</div>
         <div class="kpi-sub" id="goals-ontrack-sub">0% of total goals</div>
         <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 130 100 C 150 95, 160 80, 172 75 C 184 70, 190 50, 200 45 C 212 39, 220 20, 232 12"/><circle cx="172" cy="75"/><circle cx="200" cy="45"/><circle cx="232" cy="12" r="3"/><circle r="3"><animateMotion dur="2.6s" repeatCount="indefinite" path="M 130 100 C 150 95, 160 80, 172 75 C 184 70, 190 50, 200 45 C 212 39, 220 20, 232 12"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.9;1" dur="2.6s" repeatCount="indefinite"/></circle></svg>
       </div>
-      <div class="kpi" style="--kpi-accent:var(--red)">
+    <div class="kpi" style="--kpi-accent:var(--red)">
         <div class="kpi-icon"><span class="icon" data-icon="alert" data-icon-size="16"></span></div>
         <div class="kpi-val" style="color:var(--red)" id="goals-atrisk-count">0</div>
         <div class="kpi-lbl">Goals At Risk</div>
         <div class="kpi-sub" id="goals-atrisk-sub">0% of total goals</div>
         <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><circle class="ring" cx="205" cy="60" r="10"/><circle class="ring pulse-1" cx="205" cy="60" r="19"/><circle class="ring pulse-2" cx="205" cy="60" r="28"/><circle cx="205" cy="60" r="3"/></svg>
       </div>
-      <div class="kpi" style="--kpi-accent:var(--yellow)">
+    <div class="kpi" style="--kpi-accent:var(--yellow)">
         <div class="kpi-icon"><span class="icon" data-icon="trending" data-icon-size="14"></span></div>
         <div class="kpi-val" style="color:var(--yellow)" id="goals-offtrack-count">0</div>
         <div class="kpi-lbl">Goals Off Track</div>
         <div class="kpi-sub" id="goals-offtrack-sub">0% of total goals</div>
         <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 130 30 C 150 34, 160 55, 172 60 C 184 65, 190 90, 200 95 C 212 99, 220 108, 232 112"/><circle cx="232" cy="112" r="3"/></svg>
       </div>
-      <div class="kpi kpi-theme-purple">
+    <div class="kpi kpi-theme-purple">
         <div class="kpi-icon"><span class="icon" data-icon="chart" data-icon-size="16"></span></div>
         <div class="kpi-val" style="color:var(--purple)" id="goals-weekly-completion">0%</div>
         <div class="kpi-lbl">Weekly Completion Rate</div>
         <div class="kpi-sub">Avg. last 4 weeks</div>
         <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><line class="bar bar-grow" x1="150" y1="105" x2="150" y2="80" style="animation-delay:0s"/><line class="bar bar-grow" x1="170" y1="105" x2="170" y2="60" style="animation-delay:.15s"/><line class="bar bar-grow" x1="190" y1="105" x2="190" y2="70" style="animation-delay:.3s"/><line class="bar bar-grow" x1="210" y1="105" x2="210" y2="40" style="animation-delay:.45s"/><line class="bar bar-grow" x1="230" y1="105" x2="230" y2="20" style="animation-delay:.6s"/></svg>
       </div>
-      <div class="kpi kpi-theme-blue">
+    <div class="kpi kpi-theme-blue">
         <div class="kpi-icon"><span class="icon" data-icon="chart" data-icon-size="16"></span></div>
         <div class="kpi-val" style="color:var(--blue)" id="goals-biweekly-pace">1.00x</div>
         <div class="kpi-lbl">Bi-Weekly Pace</div>
@@ -4638,66 +4638,75 @@ select.wfb-field-input { padding-right: 26px; }
       </div>
     </div>
 
-    <div class="card">
-      <div class="card-header">
-        <div><div class="card-title" id="goalsTableTitle">Monthly Goals (0)</div></div>
-        <div class="goals-view-toggle" role="tablist" aria-label="Goals view">
-          <button class="goals-view-toggle-btn active" id="goalsViewToggleTable" onclick="setGoalsView('table')"><span class="icon" data-icon="clipboard" data-icon-size="12"></span> Table</button>
-          <button class="goals-view-toggle-btn" id="goalsViewToggleCalendar" onclick="setGoalsView('calendar')"><span class="icon" data-icon="calendar" data-icon-size="12"></span> Calendar</button>
+    <div class="hub-tabs">
+      <button class="hub-tab active" data-group="goalsTabs" data-tab="table" onclick="switchHubTab('goalsTabs','table')">Goals</button>
+      <button class="hub-tab" data-group="goalsTabs" data-tab="trends" onclick="switchHubTab('goalsTabs','trends')">Trends & History</button>
+    </div>
+
+    <div class="hub-tab-panel active" data-group="goalsTabs" data-tab="table">
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title" id="goalsTableTitle">Monthly Goals (0)</div></div>
+          <div class="goals-view-toggle" role="tablist" aria-label="Goals view">
+            <button class="goals-view-toggle-btn active" id="goalsViewToggleTable" onclick="setGoalsView('table')"><span class="icon" data-icon="clipboard" data-icon-size="12"></span> Table</button>
+            <button class="goals-view-toggle-btn" id="goalsViewToggleCalendar" onclick="setGoalsView('calendar')"><span class="icon" data-icon="calendar" data-icon-size="12"></span> Calendar</button>
+          </div>
         </div>
-      </div>
-      <div id="goalsTableWrap" style="overflow-x:auto">
-        <table class="pill-rows" id="goalsTable">
-          <thead><tr>
-            <th style="text-align:left;padding-left:var(--space-3)">Goal</th>
-            <th style="text-align:left">Owner / Team</th>
-            <th style="text-align:left">Target</th>
-            <th style="text-align:left">Current Progress</th>
-            <th>Status</th>
-            <th>Due Date</th>
-            <th></th>
-          </tr></thead>
-          <tbody id="goalsTableBody"></tbody>
-        </table>
-      </div>
-      <div id="goalsCalendarWrap" style="display:none">
-        <div class="goals-cal-sub-toggle">
-          <button class="goals-cal-sub-toggle-btn active" id="goalsCalModeDue" onclick="setGoalsCalendarMode('due')">Due Dates</button>
-          <button class="goals-cal-sub-toggle-btn" id="goalsCalModePeriods" onclick="setGoalsCalendarMode('periods')">Check-Ins (Weekly/Bi-Weekly)</button>
+        <div id="goalsTableWrap" style="overflow-x:auto">
+          <table class="pill-rows" id="goalsTable">
+            <thead><tr>
+              <th style="text-align:left;padding-left:var(--space-3)">Goal</th>
+              <th style="text-align:left">Owner / Team</th>
+              <th style="text-align:left">Target</th>
+              <th style="text-align:left">Current Progress</th>
+              <th>Status</th>
+              <th>Due Date</th>
+              <th></th>
+            </tr></thead>
+            <tbody id="goalsTableBody"></tbody>
+          </table>
         </div>
-        <div id="goalsCalendarGrid" class="goals-calendar-grid"></div>
+        <div id="goalsCalendarWrap" style="display:none">
+          <div class="goals-cal-sub-toggle">
+            <button class="goals-cal-sub-toggle-btn active" id="goalsCalModeDue" onclick="setGoalsCalendarMode('due')">Due Dates</button>
+            <button class="goals-cal-sub-toggle-btn" id="goalsCalModePeriods" onclick="setGoalsCalendarMode('periods')">Check-Ins (Weekly/Bi-Weekly)</button>
+          </div>
+          <div id="goalsCalendarGrid" class="goals-calendar-grid"></div>
+        </div>
       </div>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:var(--space-3);margin-top:var(--space-4)">
-      <div class="card" style="grid-column:span 2">
-        <div class="card-header">
-          <div><div class="card-title">Monthly Progress Trend</div><div class="card-sub">Average goal progress over time</div></div>
-          <button class="vital-ask" onclick="askNirvanaQuick('Looking at the monthly goal progress trend, are we pacing well for this month?')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
+    <div class="hub-tab-panel" data-group="goalsTabs" data-tab="trends">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:var(--space-3);margin-bottom:var(--space-4)">
+        <div class="card" style="grid-column:span 2">
+          <div class="card-header">
+            <div><div class="card-title">Monthly Progress Trend</div><div class="card-sub">Average goal progress over time</div></div>
+            <button class="vital-ask" onclick="askNirvanaQuick('Looking at the monthly goal progress trend, are we pacing well for this month?')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
+          </div>
+          <div class="chart-wrap h200"><canvas id="goalsProgressTrendChart"></canvas></div>
         </div>
-        <div class="chart-wrap h260"><canvas id="goalsProgressTrendChart"></canvas></div>
-      </div>
-      <div class="card">
-        <div class="card-header">
-          <div><div class="card-title">Weekly vs Bi-Weekly</div></div>
-          <button class="vital-ask" onclick="askNirvanaQuick('How is weekly and bi-weekly execution tracking against target across our goals?')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">Weekly vs Bi-Weekly</div></div>
+            <button class="vital-ask" onclick="askNirvanaQuick('How is weekly and bi-weekly execution tracking against target across our goals?')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
+          </div>
+          <div class="chart-wrap h200"><canvas id="goalsPeriodChart"></canvas></div>
         </div>
-        <div class="chart-wrap h260"><canvas id="goalsPeriodChart"></canvas></div>
+        <div class="card">
+          <div class="card-header"><div><div class="card-title">Goal Completion Mix</div></div></div>
+          <div class="chart-wrap h200"><canvas id="goalsCompletionMixChart"></canvas></div>
+        </div>
       </div>
-      <div class="card">
-        <div class="card-header"><div><div class="card-title">Goal Completion Mix</div></div></div>
-        <div class="chart-wrap h260"><canvas id="goalsCompletionMixChart"></canvas></div>
-      </div>
-    </div>
 
-    <div class="card" style="margin-top:var(--space-4)">
-      <div class="card-header">
-        <div><div class="card-title">Goal History</div><div class="card-sub">Real version audit trail</div></div>
-        <select class="field-input" id="goalsHistoryFilter" style="width:auto;margin-bottom:0" onchange="renderGoalsHistoryList()">
-          <option value="">All Goals</option>
-        </select>
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">Goal History</div><div class="card-sub">Real version audit trail</div></div>
+          <select class="field-input" id="goalsHistoryFilter" style="width:auto;margin-bottom:0" onchange="renderGoalsHistoryList()">
+            <option value="">All Goals</option>
+          </select>
+        </div>
+        <div id="goalsHistoryList" style="max-height:260px;overflow-y:auto"></div>
       </div>
-      <div id="goalsHistoryList" style="max-height:260px;overflow-y:auto"></div>
     </div>
 
     <div class="card" id="goalsBreakdownCard" style="display:none;margin-top:var(--space-4)">
