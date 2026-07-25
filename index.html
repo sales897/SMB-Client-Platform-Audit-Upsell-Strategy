@@ -689,11 +689,7 @@ body.ai-panel-open .main {
   font-size: var(--font-2xs); font-weight: 700;
   padding: var(--space-1) var(--space-2); border-radius: var(--radius-pill);
 }
-.chart-wrap { position: relative; animation: chartGlowPulse 3.4s ease-in-out infinite; }
-@keyframes chartGlowPulse {
-  0%, 100% { filter: drop-shadow(0 0 8px rgba(226,84,31,.14)); }
-  50% { filter: drop-shadow(0 0 16px rgba(226,84,31,.3)); }
-}
+.chart-wrap { position: relative; }
 .chart-wrap.h260 { height: 260px; }
 /* AI Opportunity Radar (2026-07-17) -- a custom glowing bar-list, distinct
    in shape from the Chart.js bar chart and donut already in this column. */
@@ -3622,38 +3618,29 @@ select.wfb-field-input { padding-right: 26px; }
   ════════════════════════════════════════════════════════════════════════ -->
   <div class="page" id="page-smb">
 
-    <div class="hub-grid grid-stack" id="grid-smb">
-
-    <!-- KPIs -->
-    <div class="grid-stack-item" gs-id="smb-kpi-total" gs-x="0" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
-      <div class="kpi kpi-theme-orange">
+    <div class="hub-mini-grid" style="grid-template-columns:repeat(6,1fr)">
+    <div class="kpi kpi-theme-orange">
         <div class="kpi-icon"><span class="icon" data-icon="users" data-icon-size="16"></span></div>
         <div class="kpi-val" id="kpi-smb-total">63</div>
         <div class="kpi-lbl" data-i18n="kpi_total_clients">Total Clients</div>
         <div class="kpi-sub" data-i18n="kpi_active_platform">Active in platform</div>
         <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 130 100 C 150 95, 160 80, 172 75 C 184 70, 190 50, 200 45 C 212 39, 220 20, 232 12"/><circle cx="172" cy="75"/><circle cx="200" cy="45"/><circle cx="232" cy="12" r="3"/><circle r="3"><animateMotion dur="2.6s" repeatCount="indefinite" path="M 130 100 C 150 95, 160 80, 172 75 C 184 70, 190 50, 200 45 C 212 39, 220 20, 232 12"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.9;1" dur="2.6s" repeatCount="indefinite"/></circle></svg>
       </div>
-    </div></div>
-    <div class="grid-stack-item" gs-id="smb-kpi-products" gs-x="2" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
-      <div class="kpi kpi-theme-orange">
+    <div class="kpi kpi-theme-orange">
         <div class="kpi-icon"><span class="icon" data-icon="package" data-icon-size="16"></span></div>
         <div class="kpi-val orange" id="kpi-smb-products">0</div>
         <div class="kpi-lbl" data-i18n="kpi_products_tracked">Products Tracked</div>
         <div class="kpi-sub" data-i18n="kpi_across_clients">Across all clients</div>
         <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><line class="bar bar-grow" x1="150" y1="105" x2="150" y2="80" style="animation-delay:0s"/><line class="bar bar-grow" x1="170" y1="105" x2="170" y2="60" style="animation-delay:.15s"/><line class="bar bar-grow" x1="190" y1="105" x2="190" y2="70" style="animation-delay:.3s"/><line class="bar bar-grow" x1="210" y1="105" x2="210" y2="40" style="animation-delay:.45s"/><line class="bar bar-grow" x1="230" y1="105" x2="230" y2="20" style="animation-delay:.6s"/></svg>
       </div>
-    </div></div>
-    <div class="grid-stack-item" gs-id="smb-kpi-avg" gs-x="4" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
-      <div class="kpi kpi-theme-blue">
+    <div class="kpi kpi-theme-blue">
         <div class="kpi-icon"><span class="icon" data-icon="trending" data-icon-size="14"></span></div>
         <div class="kpi-val" id="kpi-smb-avg">0</div>
         <div class="kpi-lbl" data-i18n="kpi_avg_products">Avg Products / Client</div>
         <div class="kpi-sub" data-i18n="kpi_upside">Significant upside potential</div>
         <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 185 78 L 200 78 L 200 60 L 212 60 L 212 40 L 223 40 L 223 18 L 232 18"/><circle r="3"><animateMotion dur="2.4s" repeatCount="indefinite" path="M 185 78 L 200 78 L 200 60 L 212 60 L 212 40 L 223 40 L 223 18 L 232 18"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.9;1" dur="2.4s" repeatCount="indefinite"/></circle></svg>
       </div>
-    </div></div>
-    <div class="grid-stack-item" gs-id="smb-kpi-opps" gs-x="6" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
-      <div class="kpi kpi-theme-orange">
+    <div class="kpi kpi-theme-orange">
         <div class="kpi-icon"><span class="icon" data-icon="target" data-icon-size="16"></span></div>
         <div class="kpi-val orange" id="kpi-smb-opps">0</div>
         <div class="kpi-lbl" data-i18n="kpi_upsell_opps">Upsell Opportunities</div>
@@ -3663,18 +3650,14 @@ select.wfb-field-input { padding-right: 26px; }
           <circle class="gauge-fill" id="kpi-smb-opps-arc" cx="60" cy="60" r="46" stroke-dasharray="0 289" stroke-dashoffset="72" transform="rotate(-90 60 60)"/>
         </svg>
       </div>
-    </div></div>
-    <div class="grid-stack-item" gs-id="smb-kpi-untouched" gs-x="8" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
-      <div class="kpi kpi-theme-red">
+    <div class="kpi kpi-theme-red">
         <div class="kpi-icon"><span class="icon" data-icon="alert" data-icon-size="16"></span></div>
         <div class="kpi-val red" id="kpi-smb-untouched">0 / 0</div>
         <div class="kpi-lbl" id="kpi-smb-untouched-lbl">Products Untouched</div>
         <div class="kpi-sub" id="kpi-smb-untouched-sub">—</div>
         <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><circle class="ring" cx="205" cy="60" r="10"/><circle class="ring pulse-1" cx="205" cy="60" r="19"/><circle class="ring pulse-2" cx="205" cy="60" r="28"/><circle cx="205" cy="60" r="3"/></svg>
       </div>
-    </div></div>
-    <div class="grid-stack-item" gs-id="smb-kpi-top" gs-x="10" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
-      <div class="kpi kpi-theme-green">
+    <div class="kpi kpi-theme-green">
         <div class="kpi-icon"><span class="icon" data-icon="check" data-icon-size="16"></span></div>
         <div class="kpi-val green" id="kpi-smb-top">0%</div>
         <div class="kpi-lbl" id="kpi-smb-top-lbl" data-i18n="kpi_top_adoption">Top Adoption</div>
@@ -3684,15 +3667,78 @@ select.wfb-field-input { padding-right: 26px; }
           <circle class="gauge-fill" id="kpi-smb-top-arc" cx="60" cy="60" r="46" stroke-dasharray="0 289" stroke-dashoffset="72" transform="rotate(-90 60 60)"/>
         </svg>
       </div>
-    </div></div>
+    </div>
 
-    <div class="grid-stack-item" gs-id="smb-spotlight" gs-x="0" gs-y="2" gs-w="3" gs-h="8" gs-min-w="2" gs-min-h="5"><div class="grid-stack-item-content">
-      <div id="spotlight-smb" style="width:100%"></div>
-    </div></div>
+    <div id="spotlight-smb" style="width:100%;margin-bottom:var(--space-4)"></div>
 
-    <div class="grid-stack-item" gs-id="smb-matrix" gs-x="3" gs-y="2" gs-w="6" gs-h="8" gs-min-w="4" gs-min-h="5"><div class="grid-stack-item-content" style="flex-direction:column;gap:12px">
+    <div class="hub-tabs">
+      <button class="hub-tab active" data-group="smbTabs" data-tab="overview" onclick="switchHubTab('smbTabs','overview')">Overview</button>
+      <button class="hub-tab" data-group="smbTabs" data-tab="adoption" onclick="switchHubTab('smbTabs','adoption')">Product Adoption</button>
+      <button class="hub-tab" data-group="smbTabs" data-tab="matrix" onclick="switchHubTab('smbTabs','matrix')">Client Matrix</button>
+    </div>
+
+    <div class="hub-tab-panel active" data-group="smbTabs" data-tab="overview">
+      <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:var(--space-4);align-items:start">
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title">Recommended Next Moves</div></div>
+            <button class="vital-ask" onclick="askNirvanaAboutPortfolioChart('smb','opportunity')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
+          </div>
+          <div id="nextMoves-smb"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title"><span class="icon" data-icon="sparkle" data-icon-size="14"></span> Nirvana Suggestions</div></div>
+          </div>
+          <div id="nirvanaSuggestions-smb"></div>
+          <button class="btn btn-ghost btn-sm spotlight-ai-btn" style="width:100%;margin-top:10px" onclick="askNirvanaAboutPortfolioChart('smb','opportunity')">Ask Nirvana for More <span class="icon" data-icon="chevronRight" data-icon-size="13"></span></button>
+          <div style="border-top:1px solid var(--border);margin-top:12px;padding-top:12px">
+            <div style="font-size:11px;color:var(--text3);margin-bottom:8px">AI Opportunity Radar · top white-space products</div>
+            <div id="oppRadar-smb"></div>
+            <div class="opp-radar-foot" id="oppRadarFoot-smb"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hub-tab-panel" data-group="smbTabs" data-tab="adoption">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:var(--space-4)">
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title" data-i18n="chart_product_adoption">Product Adoption Rate</div><div class="card-sub" id="sub-smb-adoption" data-i18n="chart_pct_clients_using">% of clients using each product</div></div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <button class="vital-ask" onclick="askNirvanaAboutPortfolioChart('smb','adoption')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
+              <span class="card-badge" id="badge-smb-products"><span class="icon" data-icon="chart" data-icon-size="16"></span> 0 Products</span>
+            </div>
+          </div>
+          <div class="chart-wrap h200"><canvas id="adoptionBar-smb"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title" data-i18n="chart_upsell_gap">Upsell Gap</div><div class="card-sub" data-i18n="chart_upsell_gap_sub">Bigger bar = bigger opportunity</div></div>
+            <span class="card-badge" id="badge-smb-opps"><span class="icon" data-icon="target" data-icon-size="16"></span> 0 Opportunities</span>
+          </div>
+          <div class="chart-wrap h200"><canvas id="gapBar-smb"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title" data-i18n="chart_products_per_client">Products Per Client</div><div class="card-sub" data-i18n="chart_distribution">Distribution of product count</div></div>
+            <span class="card-badge" id="badge-smb-clients"><span class="icon" data-icon="users" data-icon-size="16"></span> 0 Clients</span>
+          </div>
+          <div class="chart-wrap h200" style="position:relative">
+            <canvas id="distPie-smb"></canvas>
+            <div style="position:absolute;top:50%;left:36%;transform:translate(-50%,-50%);text-align:center;pointer-events:none">
+              <div id="distCenterNum-smb" style="font-size:18px;font-weight:700;color:var(--text);line-height:1">0</div>
+              <div style="font-size:9px;color:var(--text3);margin-top:2px">clients</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hub-tab-panel" data-group="smbTabs" data-tab="matrix">
       <div class="card" id="orgRollup-smb" style="display:none"></div>
-      <div class="card" style="flex:1;display:flex;flex-direction:column;min-height:0">
+      <div class="card" style="display:flex;flex-direction:column;min-height:0">
         <div class="card-header">
           <div><div class="card-title" data-i18n="matrix_smb_title">Full SMB Client Platform Matrix</div><div class="card-sub" id="rowCount-smb">0 clients</div></div>
           <button class="reset-columns-btn" onclick="resetColumnPrefs('client-smb'); rebuildPortfolio('smb')" title="Reset column order and widths back to default">↺ <span data-i18n="reset_columns">Columns</span></button>
@@ -3734,80 +3780,8 @@ select.wfb-field-input { padding-right: 26px; }
           <button id="clientTableNextBtn-smb" onclick="changeClientTablePage('smb', 1)" aria-label="Next page">›</button>
         </div>
       </div>
-    </div></div>
-
-    <div class="grid-stack-item" gs-id="smb-adoption-chart" gs-x="9" gs-y="2" gs-w="3" gs-h="3" gs-min-w="2" gs-min-h="3"><div class="grid-stack-item-content">
-      <div class="card" style="width:100%">
-        <div class="card-header">
-          <div><div class="card-title" data-i18n="chart_product_adoption">Product Adoption Rate</div><div class="card-sub" id="sub-smb-adoption" data-i18n="chart_pct_clients_using">% of clients using each product</div></div>
-          <div style="display:flex;align-items:center;gap:6px">
-            <button class="vital-ask" onclick="askNirvanaAboutPortfolioChart('smb','adoption')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
-            <span class="card-badge" id="badge-smb-products"><span class="icon" data-icon="chart" data-icon-size="16"></span> 0 Products</span>
-          </div>
-        </div>
-        <div class="chart-wrap h260"><canvas id="adoptionBar-smb"></canvas></div>
-      </div>
-    </div></div>
-    <div class="grid-stack-item" gs-id="smb-distribution-chart" gs-x="9" gs-y="5" gs-w="3" gs-h="3" gs-min-w="2" gs-min-h="3"><div class="grid-stack-item-content">
-      <div class="card" style="width:100%">
-        <div class="card-header">
-          <div><div class="card-title" data-i18n="chart_products_per_client">Products Per Client</div><div class="card-sub" data-i18n="chart_distribution">Distribution of product count</div></div>
-          <div style="display:flex;align-items:center;gap:6px">
-            <button class="vital-ask" onclick="askNirvanaAboutPortfolioChart('smb','distribution')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
-            <span class="card-badge" id="badge-smb-clients"><span class="icon" data-icon="users" data-icon-size="16"></span> 0 Clients</span>
-          </div>
-        </div>
-        <div class="chart-wrap h260" style="position:relative">
-          <canvas id="distPie-smb"></canvas>
-          <div style="position:absolute;top:50%;left:36%;transform:translate(-50%,-50%);text-align:center;pointer-events:none">
-            <div id="distCenterNum-smb" style="font-size:26px;font-weight:800;color:var(--text);line-height:1">0</div>
-            <div style="font-size:10px;color:var(--text3);margin-top:2px">clients</div>
-          </div>
-        </div>
-      </div>
-    </div></div>
-    <div class="grid-stack-item" gs-id="smb-opportunity-radar" gs-x="9" gs-y="8" gs-w="3" gs-h="4" gs-min-w="2" gs-min-h="3"><div class="grid-stack-item-content">
-      <div class="card" style="width:100%">
-        <div class="card-header">
-          <div><div class="card-title">AI Opportunity Radar</div><div class="card-sub">Top white-space products</div></div>
-          <button class="vital-ask" onclick="askNirvanaAboutPortfolioChart('smb','opportunity')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
-        </div>
-        <div id="oppRadar-smb"></div>
-        <div class="opp-radar-foot" id="oppRadarFoot-smb"></div>
-      </div>
-    </div></div>
-
-    <div class="grid-stack-item" gs-id="smb-gap-chart" gs-x="0" gs-y="10" gs-w="5" gs-h="5" gs-min-w="3" gs-min-h="3"><div class="grid-stack-item-content">
-      <div class="card" style="width:100%">
-        <div class="card-header">
-          <div><div class="card-title" data-i18n="chart_upsell_gap">Upsell Gap — Clients NOT Using Each Product</div><div class="card-sub" data-i18n="chart_upsell_gap_sub">Bigger bar = bigger revenue opportunity</div></div>
-          <span class="card-badge" id="badge-smb-opps"><span class="icon" data-icon="target" data-icon-size="16"></span> 0 Total Opportunities</span>
-        </div>
-        <div class="chart-wrap h300"><canvas id="gapBar-smb"></canvas></div>
-      </div>
-    </div></div>
-
-    <div class="grid-stack-item" gs-id="smb-next-moves" gs-x="5" gs-y="10" gs-w="4" gs-h="5" gs-min-w="3" gs-min-h="3"><div class="grid-stack-item-content">
-      <div class="card" style="width:100%">
-        <div class="card-header">
-          <div><div class="card-title">Recommended Next Moves</div></div>
-          <button class="vital-ask" onclick="askNirvanaAboutPortfolioChart('smb','opportunity')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
-        </div>
-        <div id="nextMoves-smb"></div>
-      </div>
-    </div></div>
-
-    <div class="grid-stack-item" gs-id="smb-nirvana-suggestions" gs-x="9" gs-y="10" gs-w="3" gs-h="5" gs-min-w="2" gs-min-h="3"><div class="grid-stack-item-content">
-      <div class="card" style="width:100%">
-        <div class="card-header">
-          <div><div class="card-title"><span class="icon" data-icon="sparkle" data-icon-size="14"></span> Nirvana Suggestions</div></div>
-        </div>
-        <div id="nirvanaSuggestions-smb"></div>
-        <button class="btn btn-ghost btn-sm spotlight-ai-btn" style="width:100%;margin-top:10px" onclick="askNirvanaAboutPortfolioChart('smb','opportunity')">Ask Nirvana for More <span class="icon" data-icon="chevronRight" data-icon-size="13"></span></button>
-      </div>
-    </div></div>
-
     </div>
+
     <div class="page-footer"><span class="org-brand-inline">The HUB · Niche Inc.</span> · SMB Client Platform · v2.0 · Confidential</div>
   </div>
 
@@ -7507,7 +7481,7 @@ const seriesGlowPlugin = {
     if (typeof color !== 'string') color = 'rgba(226,84,31,.5)';
     chart.ctx.save();
     chart.ctx.shadowColor = resolveCssColor(color);
-    chart.ctx.shadowBlur = 14;
+    chart.ctx.shadowBlur = 5;
   },
   afterDatasetDraw(chart) {
     chart.ctx.restore();
@@ -10141,7 +10115,7 @@ function rebuildAdoptionBar(pk) {
   // glow, so this toggles a canvas shadow just around the dataset draw.
   const barGlowPlugin = {
     id: 'barGlow-' + pk,
-    beforeDatasetsDraw(chart) { chart.ctx.shadowColor = 'rgba(226,84,31,.6)'; chart.ctx.shadowBlur = 12; },
+    beforeDatasetsDraw(chart) { chart.ctx.shadowColor = 'rgba(226,84,31,.6)'; chart.ctx.shadowBlur = 5; },
     afterDatasetsDraw(chart) { chart.ctx.shadowBlur = 0; }
   };
 
@@ -10387,7 +10361,7 @@ function rebuildGapBar(pk) {
   };
   const barGlowPlugin = {
     id: 'gapGlow-' + pk,
-    beforeDatasetsDraw(chart) { chart.ctx.shadowColor = 'rgba(239,68,68,.55)'; chart.ctx.shadowBlur = 10; },
+    beforeDatasetsDraw(chart) { chart.ctx.shadowColor = 'rgba(239,68,68,.55)'; chart.ctx.shadowBlur = 5; },
     afterDatasetsDraw(chart) { chart.ctx.shadowBlur = 0; }
   };
 
@@ -12650,6 +12624,10 @@ function renderMiniDonut(segments, opts) {
 function switchHubTab(groupId, tabKey) {
   document.querySelectorAll(`.hub-tab[data-group="${groupId}"]`).forEach(t => t.classList.toggle('active', t.dataset.tab === tabKey));
   document.querySelectorAll(`.hub-tab-panel[data-group="${groupId}"]`).forEach(p => p.classList.toggle('active', p.dataset.tab === tabKey));
+  // Charts built while their tab was hidden (display:none) can end up with a
+  // broken zero-size layout in Chart.js -- a resize event is what makes it
+  // recompute against the now-visible container.
+  setTimeout(() => window.dispatchEvent(new Event('resize')), 0);
 }
 
 function themifySelect(selectId, { fullWidth = false } = {}) {
