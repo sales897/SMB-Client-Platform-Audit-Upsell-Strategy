@@ -5699,12 +5699,7 @@ select.wfb-field-input { padding-right: 26px; }
           <div style="display:flex;gap:20px;align-items:flex-start;flex-wrap:wrap">
             <div style="flex-shrink:0">
               <div id="ledgerMonthlyTracker"></div>
-              <div class="ledger-tracker-legend">
-                <div><span class="dot" style="background:var(--green)"></span> Recouped</div>
-                <div><span class="dot" style="background:var(--blue)"></span> Charge Activity</div>
-                <div><span class="dot" style="background:var(--yellow)"></span> Overage Question</div>
-                <div><span class="dot" style="background:var(--bg4)"></span> No Activity</div>
-              </div>
+              <div class="ledger-tracker-legend" id="ledgerTrackerLegend"></div>
             </div>
             <div style="flex:1;min-width:180px;border-left:1px solid var(--border);padding-left:20px">
               <div style="font-size:10.5px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px" id="ledgerMonthActivityLabel">This Month's Activity</div>
@@ -15142,6 +15137,7 @@ function renderLedgerHealthScore() {
 // Monthly Record Tracker -- real calendar heatmap from actual created_at
 // timestamps, not a mockup grid.
 let ledgerTrackerMonth = new Date();
+let ledgerMonthActivityExpanded = false; // collapsed by default -- a full month can have 30+ entries
 function changeLedgerTrackerMonth(delta) {
   ledgerTrackerMonth = new Date(ledgerTrackerMonth.getFullYear(), ledgerTrackerMonth.getMonth() + delta, 1);
   renderLedgerMonthlyTracker();
@@ -15157,16 +15153,24 @@ function renderLedgerMonthlyTracker() {
   const today = new Date();
 
   // For each day, find entries created that day and pick a representative
-  // color: recouped > overage question > any other activity > none.
+  // color using the SAME real category colors as the activity list below
+  // (LEDGER_CATEGORIES) -- previously this used its own invented 3-color
+  // scheme (green/yellow/blue) that didn't match any actual category,
+  // which is why the calendar dots and the list dots looked inconsistent.
+  // Priority order when a day has multiple entries: recouped and overage
+  // questions are the ones worth flagging first at a glance.
+  const DAY_DOT_PRIORITY = ['recouped', 'overage_question', 'taxes', 'charges_to_bill', 'not_charged_yet'];
   const dayColor = (d) => {
     const dayEntries = LEDGER_ENTRIES.filter(e => {
       const c = new Date(e.created_at);
       return c.getFullYear() === year && c.getMonth() === month && c.getDate() === d;
     });
     if (!dayEntries.length) return null;
-    if (dayEntries.some(e => e.category === 'recouped')) return 'var(--green)';
-    if (dayEntries.some(e => e.category === 'overage_question')) return 'var(--yellow)';
-    return 'var(--blue)';
+    for (const key of DAY_DOT_PRIORITY) {
+      const match = dayEntries.find(e => e.category === key);
+      if (match) return ledgerCategoryMeta(key).color;
+    }
+    return ledgerCategoryMeta(dayEntries[0].category).color;
   };
 
   let html = ['Su','Mo','Tu','We','Th','Fr','Sa'].map(d => `<div class="ledger-tracker-dow">${d}</div>`).join('');
@@ -15178,6 +15182,13 @@ function renderLedgerMonthlyTracker() {
   }
   wrap.innerHTML = `<div class="ledger-tracker-grid">${html}</div>`;
 
+  const legendEl = document.getElementById('ledgerTrackerLegend');
+  if (legendEl) {
+    legendEl.innerHTML = LEDGER_CATEGORIES.map(c =>
+      `<div><span class="dot" style="background:${c.color}"></span> ${escAttr(c.label)}</div>`
+    ).join('') + `<div><span class="dot" style="background:var(--bg4)"></span> No Activity</div>`;
+  }
+
   // This Month's Activity — the actual dated entries behind the dots above,
   // so a quiet month (a handful of dots on an otherwise-empty grid) still
   // has something real to read rather than dead whitespace next to it.
@@ -15188,7 +15199,10 @@ function renderLedgerMonthlyTracker() {
   if (labelEl) labelEl.textContent = monthEntries.length ? `This Month's Activity (${monthEntries.length})` : `This Month's Activity`;
   const listEl = document.getElementById('ledgerMonthActivityList');
   if (listEl) {
-    listEl.innerHTML = monthEntries.length ? monthEntries.map(e => {
+    const PREVIEW_COUNT = 6;
+    const showToggle = monthEntries.length > PREVIEW_COUNT;
+    const visibleEntries = ledgerMonthActivityExpanded ? monthEntries : monthEntries.slice(0, PREVIEW_COUNT);
+    const rowsHtml = visibleEntries.map(e => {
       const cat = ledgerCategoryMeta(e.category);
       const d = new Date(e.created_at);
       return `<div class="ledger-inbox-item" style="cursor:default">
@@ -15199,8 +15213,21 @@ function renderLedgerMonthlyTracker() {
         </div>
         <span class="ledger-inbox-amount">$${(e.amount || 0).toLocaleString('en-US', { maximumFractionDigits: 0 })}</span>
       </div>`;
-    }).join('') : `<div class="cnt-empty-contacts-hint" style="padding:4px 0">No records logged this month yet.</div>`;
+    }).join('');
+    const listBody = monthEntries.length
+      ? rowsHtml
+      : `<div class="cnt-empty-contacts-hint" style="padding:4px 0">No records logged this month yet.</div>`;
+    // Expanded state caps at a scrollable height rather than growing forever --
+    // a busy month can have 30+ entries, and this keeps the card itself a
+    // fixed, predictable size no matter how many records exist.
+    const wrapStyle = ledgerMonthActivityExpanded ? 'max-height:340px;overflow-y:auto' : '';
+    listEl.innerHTML = `<div style="${wrapStyle}">${listBody}</div>` +
+      (showToggle ? `<button class="btn btn-ghost btn-sm" style="width:100%;margin-top:8px" onclick="toggleLedgerMonthActivity()">${ledgerMonthActivityExpanded ? 'Show less' : `Show all ${monthEntries.length}`} <span class="icon" data-icon="${ledgerMonthActivityExpanded ? 'chevronUp' : 'chevronDown'}" data-icon-size="12"></span></button>` : '');
   }
+}
+function toggleLedgerMonthActivity() {
+  ledgerMonthActivityExpanded = !ledgerMonthActivityExpanded;
+  renderLedgerMonthlyTracker();
 }
 
 // Year to Date Impact + Top Categories -- same numbers as the KPI row,
@@ -25633,6 +25660,8 @@ function searchKnowledgeBase(query, limit) {
 // is a separate, much larger follow-up, not attempted here.
 const CW_ICONS = {
   chevronRight: '<path d="M9 6l6 6-6 6"/>',
+  chevronDown: '<path d="M6 9l6 6 6-6"/>',
+  chevronUp: '<path d="M6 15l6-6 6 6"/>',
   chat: '<path d="M4 4h16v12H8l-4 4V4z"/>',
   inbox: '<path d="M3 8l2-4h14l2 4M3 8v10h18V8M3 8h6l1.5 3h3L15 8h6"/>',
   settings: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1-1.6 1.7 1.7 0 00-1.9.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1 1.7 1.7 0 00-.3-1.9l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.9.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.9-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.9V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z"/>',
