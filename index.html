@@ -1961,7 +1961,16 @@ tr.pg-hidden-row { display: none; }
 }
 .user-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
 .profile-menu {
-  position: absolute; bottom: calc(100% + 8px); right: 0; z-index: 200;
+  /* Anchored via JS (see toggleProfileMenu) using getBoundingClientRect() on
+     the trigger badge, not CSS offsets relative to the sidebar. The sidebar's
+     content box (~186px expanded, ~40px collapsed) is narrower than this
+     menu's fixed 240px width, so any absolute left/right/bottom offset here
+     runs the menu off one edge of the screen depending on which side it's
+     anchored to -- that was the actual bug (was right:0, ran off the left
+     edge by ~43-55px depending on sidebar state; left:0 alone would run it
+     off the right edge instead). position:fixed + JS-computed, clamped
+     coordinates sidesteps the sidebar's width and overflow entirely. */
+  position: fixed; z-index: 200;
   background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
   box-shadow: var(--shadow); width: 240px; padding: 8px;
   max-height: min(70vh, 520px); overflow-y: auto;
@@ -13630,10 +13639,32 @@ function applyPermissionsToUI() {
 }
 
 // ─── Profile menu (avatar dropdown: change picture, sign out) ─────────────────
+// position:fixed + coordinates computed here from the badge's actual screen
+// position (not CSS left/right offsets relative to the sidebar -- see the
+// comment on .profile-menu for why that broke). Recomputed on every open so
+// it's correct whether the sidebar is expanded or collapsed.
+function positionProfileMenu() {
+  const menu = document.getElementById('profileMenu');
+  const badge = document.getElementById('userBadge');
+  if (!menu || !badge) return;
+  const r = badge.getBoundingClientRect();
+  const menuW = 240;
+  const margin = 8;
+  let left = r.left;
+  // Clamp so the menu never runs off either edge of the viewport.
+  left = Math.min(left, window.innerWidth - menuW - margin);
+  left = Math.max(left, margin);
+  let bottom = window.innerHeight - r.top + margin;
+  menu.style.left = left + 'px';
+  menu.style.bottom = bottom + 'px';
+  menu.style.top = 'auto';
+}
 function toggleProfileMenu() {
   const menu = document.getElementById('profileMenu');
   if (!menu) return;
-  menu.style.display = menu.style.display === 'none' ? '' : 'none';
+  const opening = menu.style.display === 'none';
+  if (opening) positionProfileMenu();
+  menu.style.display = opening ? '' : 'none';
 }
 document.addEventListener('click', (e) => {
   const menu = document.getElementById('profileMenu');
