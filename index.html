@@ -1265,6 +1265,22 @@ select:focus { border-color: var(--orange); }
 }
 .field-input:focus, .field-select:focus { border-color: var(--orange); }
 .field-input::placeholder { color: var(--text3); }
+/* The calendar popup itself is native browser UI and cannot be restyled by
+   CSS in any browser -- but the small trigger icon inside the field can be,
+   and by default it renders dark-on-dark (nearly invisible) against this
+   theme's background. */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(60%) sepia(0%) saturate(0%);
+  cursor: pointer;
+  opacity: .8;
+  border-radius: 4px;
+  transition: opacity var(--transition-base), filter var(--transition-base);
+}
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+  filter: invert(56%) sepia(66%) saturate(1200%) hue-rotate(345deg) brightness(1.05);
+}
+input[type="date"] { color-scheme: dark; }
 /* Native <select> dropdown popups (2026-07-15) -- color-scheme:dark at
    :root is already set, but that alone doesn't reliably force a dark
    native select popup on every browser/OS combination (a known Chromium-
@@ -4325,7 +4341,7 @@ select.wfb-field-input { padding-right: 26px; }
 
     <div class="card brand-section-card" style="margin-bottom:var(--space-4) !important">
       <div class="card-title" style="font-size:14px">Answer the Key Questions</div>
-      <div class="card-sub" style="font-size:11px;margin-bottom:10px">The reason this page exists — quick, consistent, confident answers, not a data dig.</div>
+      <div class="card-sub" style="font-size:11px;margin-bottom:16px">The reason this page exists — quick, consistent, confident answers, not a data dig.</div>
       <div id="bhAnswersList"></div>
     </div>
 
@@ -21628,9 +21644,9 @@ function renderBhAnswers(rep) {
     ['Where do we still have gaps?', `${rep.activeUnbilled} active-but-unbilled · ${rep.payingInactive} paying-but-inactive · ${rep.noOwner} unowned. Also: ${notConfident.join('; ')}.`],
   ];
   el.innerHTML = qas.map(([q, a]) => `
-    <div style="margin-bottom:11px;padding-bottom:11px;border-bottom:1px solid var(--border)">
-      <div style="font-weight:700;font-size:12.5px;color:var(--text)">${q}</div>
-      <div style="font-size:12px;color:var(--text2);margin-top:3px">${a}</div>
+    <div style="margin-bottom:16px">
+      <div style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.03em;margin-bottom:4px">${q}</div>
+      <div style="font-size:13px;color:var(--text);line-height:1.5">${a}</div>
     </div>`).join('');
 }
 
