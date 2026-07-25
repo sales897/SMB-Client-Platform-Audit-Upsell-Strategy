@@ -1733,29 +1733,27 @@ tr.pg-hidden-row { display: none; }
      theme-correct background now, matching how every other card in the app
      already works. */
   background: var(--gradient-card);
-  border: 1px solid var(--border); border-radius: var(--radius); padding: 22px;
+  border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px;
   transition: background var(--transition-slower), border-color var(--transition-slower), box-shadow var(--transition-slower);
 }
 /* Dynamic tone by health category — the card's urgency is now visually honest
-   instead of always the same color regardless of the situation. A real glow
-   (colored box-shadow), not just a border tint, on all three tiers now --
-   requested specifically for the healthy/low-risk case ("catch the team's
-   attention" with a green glow), applied to high/medium too for visual
-   consistency rather than only one tier looking distinctly different. */
-.spotlight-card.risk-high { border-color: rgba(239,68,68,.5); box-shadow: 0 0 24px rgba(239,68,68,.25); }
-.spotlight-card.risk-medium { border-color: rgba(245,158,11,.5); box-shadow: 0 0 24px rgba(245,158,11,.22); }
-.spotlight-card.risk-low { border-color: rgba(34,197,94,.6); box-shadow: 0 0 28px rgba(34,197,94,.35); }
+   instead of always the same color regardless of the situation. Glow kept
+   (not removed) but brought down to the same subtle level used everywhere
+   else in this redesign, not the original 24-28px blur. */
+.spotlight-card.risk-high { border-color: rgba(239,68,68,.5); box-shadow: 0 0 12px -6px rgba(239,68,68,.35); }
+.spotlight-card.risk-medium { border-color: rgba(245,158,11,.5); box-shadow: 0 0 12px -6px rgba(245,158,11,.3); }
+.spotlight-card.risk-low { border-color: rgba(34,197,94,.6); box-shadow: 0 0 12px -6px rgba(34,197,94,.4); }
 .spotlight-featured-pill { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; background: var(--orange-dim); color: var(--orange2); padding: 4px 10px; border-radius: 20px; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
 .spotlight-status-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-.spotlight-grid-1 { display: flex; flex-direction: column; gap: 12px; margin-bottom: 12px; }
-.spotlight-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+.spotlight-grid-1 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; }
+.spotlight-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
 .spotlight-action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
 .spotlight-ai-btn { background: rgba(20,184,166,.12); border-color: rgba(20,184,166,.4) !important; color: #2dd4bf !important; }
 .spotlight-ai-btn:hover { background: rgba(20,184,166,.22); border-color: #2dd4bf !important; }
-.spotlight-hd { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
-.spotlight-title { font-size: 13px; font-weight: 800; color: var(--orange); text-transform: uppercase; letter-spacing: .04em; display: flex; align-items: center; gap: 8px; }
-.spotlight-name-row { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
-.spotlight-name { font-size: 22px; font-weight: 800; color: var(--text); }
+.spotlight-hd { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 10px; }
+.spotlight-title { font-size: 11px; font-weight: 700; color: var(--text3); display: flex; align-items: center; gap: 8px; }
+.spotlight-name-row { display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-bottom: 8px; }
+.spotlight-name { font-size: 17px; font-weight: 700; color: var(--text); }
 .spotlight-org { font-size: 12px; color: var(--text3); margin-top: 2px; }
 .spotlight-worked-badge { font-size: var(--font-2xs); font-weight: 700; padding: 4px 10px; border-radius: 12px; white-space: nowrap; }
 .spotlight-worked-yes { background: rgba(34,197,94,.15); color: var(--green); }
@@ -1771,16 +1769,16 @@ tr.pg-hidden-row { display: none; }
      .kpi-why-box already handles this identical "hint box with a risk/
      category tint" pattern elsewhere in the app; only the border stays
      color-coded by tier. */
-  font-size: 12.5px; color: var(--text2); line-height: 1.6; border-radius: var(--radius-sm); padding: 12px 14px;
-  margin-bottom: 16px; border: 1px solid; background: var(--bg3);
+  font-size: 12.5px; color: var(--text2); line-height: 1.5; border-radius: var(--radius-sm); padding: 9px 12px;
+  margin-bottom: 10px; border: 1px solid; background: var(--bg3);
 }
 .spotlight-why-box b { color: var(--text); }
 .spotlight-why-risk-high { border-color: rgba(239,68,68,.35); }
 .spotlight-why-risk-medium { border-color: rgba(245,158,11,.35); }
 .spotlight-why-risk-low { border-color: rgba(34,197,94,.4); }
 .spotlight-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
-.spotlight-block-label { font-size: var(--font-2xs); font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--text3); margin-bottom: 8px; }
-.spotlight-block { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; }
+.spotlight-block-label { font-size: 10px; font-weight: 700; color: var(--text3); margin-bottom: 6px; }
+.spotlight-block { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; }
 .spotlight-empty-line { font-size: 12px; color: var(--text3); }
 .spotlight-note-line { font-size: 12px; color: var(--text2); line-height: 1.5; margin-bottom: 8px; }
 .spotlight-note-line:last-child { margin-bottom: 0; }
@@ -1944,6 +1942,9 @@ tr.pg-hidden-row { display: none; }
   transition: border-color var(--transition-base);
 }
 .user-badge:hover { border-color: var(--orange); }
+.top-nav.collapsed .user-badge { padding: 5px; }
+.top-nav.collapsed .user-badge #userBadgeName,
+.top-nav.collapsed .user-badge #userBadgeRole { display: none; }
 .user-avatar {
   width: 22px; height: 22px; border-radius: 50%; background: var(--orange); overflow: hidden;
   color: #fff; font-size: var(--font-2xs); font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
@@ -8252,13 +8253,11 @@ async function renderClientSpotlight(pk) {
       </div>
 
       <button class="btn btn-primary btn-sm" style="width:100%" onclick="openClientNotesTasksModal('${safe}')"><span class="icon" data-icon="user" data-icon-size="14"></span> Open Full Profile</button>
-      <div class="spotlight-action-row">
-        <button class="btn btn-ghost btn-sm" onclick="toggleSpotlightQuickForm('${pk}','note')"><span class="icon" data-icon="note" data-icon-size="14"></span> Quick Note</button>
-        <button class="btn btn-ghost btn-sm" onclick="toggleSpotlightQuickForm('${pk}','task')"><span class="icon" data-icon="check" data-icon-size="16"></span> Quick Task</button>
-      </div>
-      <div class="spotlight-action-row">
-        <button class="btn btn-ghost btn-sm spotlight-ai-btn" onclick="askNirvanaAboutSpotlight('${pk}')"><span class="icon" data-icon="sparkle" data-icon-size="13"></span> Ask Nirvana</button>
-        <button class="btn btn-ghost btn-sm spotlight-ai-btn" id="spotlightSuggestBtn-${pk}" onclick="getSpotlightAiSuggestion('${pk}', this)"><span class="icon" data-icon="lightbulb" data-icon-size="14"></span> Get a Suggestion</button>
+      <div class="spotlight-action-row" style="grid-template-columns:repeat(4,1fr)">
+        <button class="btn btn-ghost btn-sm" onclick="toggleSpotlightQuickForm('${pk}','note')"><span class="icon" data-icon="note" data-icon-size="14"></span> Note</button>
+        <button class="btn btn-ghost btn-sm" onclick="toggleSpotlightQuickForm('${pk}','task')"><span class="icon" data-icon="check" data-icon-size="16"></span> Task</button>
+        <button class="btn btn-ghost btn-sm spotlight-ai-btn" onclick="askNirvanaAboutSpotlight('${pk}')"><span class="icon" data-icon="sparkle" data-icon-size="13"></span> Ask</button>
+        <button class="btn btn-ghost btn-sm spotlight-ai-btn" id="spotlightSuggestBtn-${pk}" onclick="getSpotlightAiSuggestion('${pk}', this)"><span class="icon" data-icon="lightbulb" data-icon-size="14"></span> Suggest</button>
       </div>
 
       <div class="spotlight-quick-form" id="spotlightNoteForm-${pk}">
