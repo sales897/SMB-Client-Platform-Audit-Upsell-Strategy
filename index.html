@@ -4213,7 +4213,7 @@ select.wfb-field-input { padding-right: 26px; }
           <button class="vital-ask" onclick="askNirvanaQuick('Which businesses have a stale last lead on Yelp, Google LSA, or Thumbtack, and what should we do about them?')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
         </div>
         <div class="table-controls">
-          <input type="text" class="search-box" id="taStaleSearch" placeholder="Search clients..." data-i18n-placeholder="search_clients" oninput="debouncedRebuildTextAgentStale()">
+          <input type="text" class="search-box" id="taStaleSearch" placeholder="Search clients..." data-i18n-placeholder="search_clients" oninput="listPaginationState.taStale=1;debouncedRebuildTextAgentStale()">
           <div style="display:flex;gap:var(--space-2);flex-wrap:wrap" id="taStalePortfolioPills">
             <button class="filter-pill active" onclick="setTextAgentStaleFilter('all',this)" data-i18n="cl_all_portfolios">All Portfolios</button>
             <button class="filter-pill" onclick="setTextAgentStaleFilter('smb',this)"><span class="icon" data-icon="chart" data-icon-size="16"></span> SMB</button>
@@ -9821,6 +9821,7 @@ function setTextAgentStaleFilter(pk, btn) {
   textAgentStaleFilter = pk;
   document.querySelectorAll('#taStalePortfolioPills .filter-pill').forEach(p => p.classList.remove('active'));
   if (btn) btn.classList.add('active');
+  listPaginationState.taStale = 1;
   rebuildTextAgentStale();
 }
 
@@ -9842,7 +9843,7 @@ function rebuildTextAgentStale() {
     return;
   }
 
-  wrap.innerHTML = stale.map(e => {
+  renderPaginatedList(wrap, stale, 'taStale', e => {
     const meta = TA_PORTFOLIO_META[e.pk];
     const product = TEXT_AGENT_PRODUCTS.find(p => p.key === e.productKey);
     const daysLabel = e.days >= 30 ? `${Math.round(e.days / 30)} mo ago` : `${e.days}d ago`;
@@ -9855,7 +9856,7 @@ function rebuildTextAgentStale() {
       <span class="status-pill" style="background:linear-gradient(90deg, rgba(245,158,11,.32), rgba(245,158,11,.1));color:var(--yellow);margin-right:8px">${daysLabel}</span>
       <span class="portfolio-chip ${meta.chip}">${meta.label}</span>
     </div>`;
-  }).join('');
+  }, rebuildTextAgentStale);
 }
 
 let textAgentProductFilter = 'all';
