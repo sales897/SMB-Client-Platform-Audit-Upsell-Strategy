@@ -2557,10 +2557,10 @@ tr.pg-hidden-row { display: none; }
 .cw-glow-btn {
   display: flex; align-items: center; gap: 7px; background: linear-gradient(135deg, var(--orange), var(--orange2));
   color: #fff; border: none; border-radius: var(--radius-pill); padding: 9px 18px; font-size: var(--font-sm); font-weight: 700;
-  cursor: pointer; box-shadow: 0 0 18px rgba(226,84,31,.5); transition: box-shadow var(--transition-base), transform var(--transition-fast);
+  cursor: pointer; box-shadow: 0 0 10px -2px rgba(226,84,31,.4); transition: box-shadow var(--transition-base), transform var(--transition-fast);
   z-index: 1; flex-shrink: 0;
 }
-.cw-glow-btn:hover { box-shadow: 0 0 28px rgba(226,84,31,.75); transform: translateY(-1px); }
+.cw-glow-btn:hover { box-shadow: 0 0 14px -2px rgba(226,84,31,.55); transform: translateY(-1px); }
 
 .cw-workspace { flex: 1; display: flex; gap: var(--space-3); min-height: 0; }
 .cw-conv-list-col { width: 320px; flex-shrink: 0; display: flex; flex-direction: column; }
@@ -2806,7 +2806,7 @@ tr.pg-hidden-row { display: none; }
 .cw-panel-title .icon { color: var(--orange); }
 .cw-panel-sublabel { font-size: 9px; font-weight: 800; color: var(--text3); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; }
 .cw-leads-chart-body { display: flex; gap: var(--space-4); }
-.cw-chart-wrap { flex: 1; height: 220px; animation: chartGlowPulse 3.4s ease-in-out infinite; }
+.cw-chart-wrap { flex: 1; height: 180px; }
 .cw-source-breakdown { width: 190px; flex-shrink: 0; text-align: center; }
 .cw-donut-wrap { position: relative; height: 140px; animation: chartGlowPulse 3.4s ease-in-out infinite; }
 .cw-donut-legend { text-align: left; margin-top: 10px; }
@@ -3414,7 +3414,7 @@ select.wfb-field-input { padding-right: 26px; }
           </select>
         </div>
         <div style="display:flex;justify-content:flex-end">
-          <button class="btn btn-primary btn-sm" id="cntTasksSubmitBtn" onclick="addClientTask()">＋ Add Task</button>
+          <button class="btn btn-primary btn-sm" id="cntTasksSubmitBtn" onclick="addClientTask()"><span class="icon" data-icon="plus" data-icon-size="13"></span> Add Task</button>
         </div>
       </div>
     </div>
@@ -3480,7 +3480,7 @@ select.wfb-field-input { padding-right: 26px; }
       <button class="btn btn-ghost btn-sm" id="topbarResetLayoutBtn" style="display:none" title="Reset back to the default layout"><span class="icon" data-icon="refresh" data-icon-size="13"></span> Reset Layout</button>
       <button class="btn btn-ghost btn-sm hub-edit-layout-btn" id="topbarEditLayoutBtn" style="display:none"><span class="icon" data-icon="edit" data-icon-size="13"></span> Edit Layout</button>
       <button class="export-csv-btn" id="topbarClientsExportBtn" onclick="exportAllClientsTable()" title="Download the currently visible rows as a CSV file" style="display:none"><span class="icon" data-icon="download" data-icon-size="12"></span> Export CSV</button>
-      <button class="btn btn-primary btn-sm" id="topbarAddClientBtn" onclick="openAddClientModal()" style="display:none">＋ Add Client</button>
+      <button class="btn btn-primary btn-sm" id="topbarAddClientBtn" onclick="openAddClientModal()" style="display:none"><span class="icon" data-icon="plus" data-icon-size="13"></span> Add Client</button>
       <label class="upload-btn" id="uploadBtnLabel" title="Uploads into the currently open dashboard" style="display:none">
         📁 Upload File
         <input type="file" id="fileUpload" accept=".xlsx,.xls,.csv" onchange="handleFileUpload(event)">
@@ -3490,7 +3490,7 @@ select.wfb-field-input { padding-right: 26px; }
       </button>
       <select id="onboardingPipelineSelect" class="field-input" style="display:none;height:36px;margin-bottom:0;width:auto" onchange="switchOnboardingPipeline(this.value)"></select>
       <button class="btn btn-ghost btn-sm" id="topbarOnboardingPipelinesBtn" onclick="openManagePipelinesModal()" title="Create or edit pipelines" style="display:none"><span class="icon" data-icon="settings" data-icon-size="14"></span> <span data-i18n="onboarding_pipelines_btn">Pipelines</span></button>
-      <button class="btn btn-primary btn-sm" id="topbarNewOnboardingBtn" onclick="openAddOnboardingModal()" style="display:none">＋ <span data-i18n="onboarding_new_btn">New Onboarding</span></button>
+      <button class="btn btn-primary btn-sm" id="topbarNewOnboardingBtn" onclick="openAddOnboardingModal()" style="display:none"><span class="icon" data-icon="plus" data-icon-size="13"></span> <span data-i18n="onboarding_new_btn">New Onboarding</span></button>
       <div class="goals-month-nav" id="goalsMonthNav" style="display:none;position:relative">
         <button class="goals-month-nav-arrow" onclick="shiftGoalsMonth(-1)" title="Previous month" aria-label="Previous month">‹</button>
         <button class="goals-month-nav-label" id="goalsMonthNavLabel" onclick="openGoalsMonthPicker()" title="Click to jump to any month"></button>
@@ -4749,7 +4749,7 @@ select.wfb-field-input { padding-right: 26px; }
         </div>
       </div>
       <div style="display:flex;justify-content:flex-end;margin-bottom:10px">
-        <button class="btn btn-primary btn-sm" onclick="openAddPeriodModal()">＋ Add Period</button>
+        <button class="btn btn-primary btn-sm" onclick="openAddPeriodModal()"><span class="icon" data-icon="plus" data-icon-size="13"></span> Add Period</button>
       </div>
       <div style="overflow-x:auto">
         <table class="pill-rows">
@@ -5022,7 +5022,7 @@ select.wfb-field-input { padding-right: 26px; }
         <div class="wfb-node-group">
           <div class="wfb-node-group-hd" data-i18n="wfb_group_custom">CUSTOM</div>
           <div id="wfbCustomNodeTypesList"></div>
-          <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:4px" onclick="openCreateCustomNodeTypeModal()">＋ Custom Node Type</button>
+          <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:4px" onclick="openCreateCustomNodeTypeModal()"><span class="icon" data-icon="plus" data-icon-size="13"></span> Custom Node Type</button>
         </div>
         <div class="wfb-sidebar-tip"><span class="icon" data-icon="lightbulb" data-icon-size="14"></span> Tip: Click any node in the canvas to edit or delete it.<br>Drag from a node's dot to connect it to another.</div>
         </div>
@@ -5287,7 +5287,7 @@ select.wfb-field-input { padding-right: 26px; }
     <div class="card" style="margin-bottom:var(--space-5)">
       <div class="card-header">
         <div><div class="card-title" data-i18n="kb_what_nirvana_knows">What Nirvana Knows</div><div class="card-sub" data-i18n="kb_ask_things">Ask it things like "What's our SOP for onboarding?" or "What does our website say about pricing?"</div></div>
-        <button class="btn btn-primary btn-sm" id="addKnowledgeBtn" onclick="openAddKnowledgeModal()">＋ <span data-i18n="kb_add_knowledge">Add Knowledge</span></button>
+        <button class="btn btn-primary btn-sm" id="addKnowledgeBtn" onclick="openAddKnowledgeModal()"><span class="icon" data-icon="plus" data-icon-size="13"></span> <span data-i18n="kb_add_knowledge">Add Knowledge</span></button>
       </div>
       <input type="text" id="kbSearchBox" class="search-box" placeholder="Search entries…" data-i18n-placeholder="kb_search_placeholder" style="margin-bottom:var(--space-4)" oninput="debouncedRebuildKnowledgePage()">
       <div id="knowledgeList"></div>
@@ -5337,7 +5337,7 @@ select.wfb-field-input { padding-right: 26px; }
             <option value="low">Targeted Priority</option>
           </select>
         </div>
-        <button class="btn btn-primary" onclick="addProduct()">＋ Add Product</button>
+        <button class="btn btn-primary" onclick="addProduct()"><span class="icon" data-icon="plus" data-icon-size="13"></span> Add Product</button>
       </div>
       <div>
         <label for="newProductDesc" class="field-label">Upsell Description <span style="color:var(--text3)">(optional — shown on the Upsell Playbook card)</span></label>
@@ -5434,7 +5434,7 @@ select.wfb-field-input { padding-right: 26px; }
           <label for="asRecs" class="field-label">Recommendations</label>
           <input type="text" id="asRecs" placeholder="e.g. Increase budget 20% after 30 days" class="field-input">
         </div>
-        <button class="btn btn-primary" onclick="addAdSpendBusiness()">＋ Add Business</button>
+        <button class="btn btn-primary" onclick="addAdSpendBusiness()"><span class="icon" data-icon="plus" data-icon-size="13"></span> Add Business</button>
       </div>
     </div>
 
@@ -5631,7 +5631,7 @@ select.wfb-field-input { padding-right: 26px; }
           <div><div class="card-title">Reconciliation Board</div><div class="card-sub" id="ledgerBoardSub">0 records</div></div>
           <div style="display:flex;gap:8px">
             <button class="btn btn-ghost btn-sm" onclick="openBulkReconcileModal()"><span class="icon" data-icon="sparkle" data-icon-size="13"></span> Bulk Reconcile Import</button>
-            <button class="btn btn-primary btn-sm" onclick="openAddLedgerModal('charges_to_bill')">＋ Add Record</button>
+            <button class="btn btn-primary btn-sm" onclick="openAddLedgerModal('charges_to_bill')"><span class="icon" data-icon="plus" data-icon-size="13"></span> Add Record</button>
           </div>
         </div>
         <div id="ledgerFilterBar" style="display:none;align-items:center;gap:10px;margin-bottom:10px;padding:6px 10px;background:var(--orange-dim);border-radius:var(--radius-sm);font-size:11px;color:var(--orange2)">
@@ -5766,7 +5766,7 @@ select.wfb-field-input { padding-right: 26px; }
           <label for="colStatus" class="field-label">Status</label>
           <select id="colStatus" class="field-input"></select>
         </div>
-        <button class="btn btn-primary" onclick="addCollectionsAccount()">＋ Add Account</button>
+        <button class="btn btn-primary" onclick="addCollectionsAccount()"><span class="icon" data-icon="plus" data-icon-size="13"></span> Add Account</button>
       </div>
     </div>
 
@@ -6698,7 +6698,7 @@ select.wfb-field-input { padding-right: 26px; }
 
     <div class="modal-btns">
       <button class="btn btn-ghost" onclick="closeAddClientModal()" data-i18n="btn_cancel">Cancel</button>
-      <button class="btn btn-primary" onclick="saveNewClient()">＋ <span data-i18n="ac_title">Add Client</span></button>
+      <button class="btn btn-primary" onclick="saveNewClient()"><span class="icon" data-icon="plus" data-icon-size="13"></span> <span data-i18n="ac_title">Add Client</span></button>
     </div>
   </div>
 </div>
@@ -18793,7 +18793,7 @@ function renderOnboardingDetail(r, products) {
         <input type="text" id="obNoteInput" class="field-input" style="height:38px;margin-bottom:0" placeholder="Add a note… Type @ to tag a teammate" oninput="handleObNoteMentionInput(event)" onkeydown="handleObNoteMentionKeydown(event)">
         <div id="obMentionDropdown" class="mention-dropdown" style="display:none"></div>
       </div>
-      <button class="btn btn-primary btn-sm" onclick="addOnboardingNoteFromModal()">＋ Add</button>
+      <button class="btn btn-primary btn-sm" onclick="addOnboardingNoteFromModal()"><span class="icon" data-icon="plus" data-icon-size="13"></span> Add</button>
     </div>
   `;
 }
