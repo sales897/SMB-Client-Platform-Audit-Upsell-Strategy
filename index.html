@@ -4300,7 +4300,7 @@ select.wfb-field-input { padding-right: 26px; }
        PAGE: BUSINESS HEALTH FRAMEWORK
   ════════════════════════════════════════════════════════════════════════ -->
   <div class="page" id="page-businesshealth">
-    <div class="card brand-section-card" style="margin-bottom:var(--space-5)">
+    <div class="card brand-section-card" style="margin-bottom:var(--space-5) !important">
       <div class="card-header" style="margin-bottom:var(--space-3)">
         <div><div class="card-title">Business Health Report</div><div class="card-sub" id="bhPeriodLabel">Monthly · last 30 days</div></div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -4323,7 +4323,7 @@ select.wfb-field-input { padding-right: 26px; }
       <div class="card-sub" style="font-size:10.5px">Every metric below updates to this period. Reports are generated fresh from live data — nothing is pre-baked.</div>
     </div>
 
-    <div class="card brand-section-card" style="margin-bottom:var(--space-4)">
+    <div class="card brand-section-card" style="margin-bottom:var(--space-4) !important">
       <div class="card-title" style="font-size:14px">Answer the Key Questions</div>
       <div class="card-sub" style="font-size:11px;margin-bottom:10px">The reason this page exists — quick, consistent, confident answers, not a data dig.</div>
       <div id="bhAnswersList"></div>
@@ -4337,9 +4337,9 @@ select.wfb-field-input { padding-right: 26px; }
     </div>
 
     <div class="hub-tab-panel active" data-group="bhTabs" data-tab="overview">
-      <div class="int-stat-bar" id="bhStatBar"></div>
+      <div class="int-stat-bar" id="bhStatBar" style="margin-bottom:var(--space-4)"></div>
 
-      <div class="card brand-section-card" style="margin-bottom:var(--space-4)">
+      <div class="card brand-section-card" style="margin-bottom:var(--space-4) !important">
         <div class="card-title" style="font-size:13px">Customer Segmentation</div>
         <div class="card-sub" style="font-size:11px;margin-bottom:8px">Reuses the same health scoring already used for individual client risk flags across the Hub — engagement, task backlog, and billing friction combined into one score per organization.</div>
         <div id="bhSegmentationBar" class="int-stat-bar"></div>
@@ -21619,7 +21619,7 @@ function renderBhAnswers(rep) {
   const qas = [
     ['How many customers do we have?', `${rep.total.toLocaleString()} total.`],
     ['How many paying customers do we have?', `${rep.paying.toLocaleString()}.`],
-    ['How many active customers do we have?', `${rep.active90.toLocaleString()} active within the last 90 days (30d: ${rep.active30} · 180d: ${rep.active180} · 365d: ${rep.active365}).`],
+    ['How many active customers do we have?', `${rep.active90.toLocaleString()} active within the last 90 days. For comparison, that's ${rep.active30} in the last 30 days, ${rep.active180} in the last 180 days, and ${rep.active365} in the last 365 days.`],
     ['How many new customers did we add?', `${rep.newInPeriod.toLocaleString()} in the selected period.`],
     ['How many customers churned?', `${rep.churnedInPeriod.toLocaleString()} in the selected period.`],
     ['How are customers engaging with the platform?', `Based on CSH-recorded activity as a proxy (not yet real platform usage): ${rep.active90} of ${rep.total} organizations active in the last 90 days.`],
