@@ -676,9 +676,8 @@ body.ai-panel-open .main {
 .cmdboard-bottombar b { color: var(--text); }
 .kpi-glow-green {
   border-color: rgba(34,197,94,.5);
-  box-shadow: 0 0 0 1px rgba(34,197,94,.3), 0 0 24px rgba(34,197,94,.35);
+  box-shadow: 0 0 10px -3px rgba(34,197,94,.4);
 }
-.kpi-glow-green::before { background: linear-gradient(90deg, var(--green), #16a34a); }
 .kpi-trend { position: absolute; top: var(--space-4); right: var(--space-4); font-size: var(--font-xs); font-weight: 700; }
 .kpi-trend.up { color: var(--green); }
 .kpi-trend.down { color: var(--red); }
@@ -967,7 +966,7 @@ body.ai-panel-open .main {
 .onboarding-card {
   background: var(--gradient-card); border: 1px solid var(--border); border-radius: var(--radius-sm);
   padding: var(--space-2) var(--space-3); cursor: pointer; transition: border-color var(--transition-base), transform var(--transition-fast);
-  box-shadow: 0 0 14px -2px var(--stage-color, var(--orange)), inset 0 0 20px -10px var(--stage-color, var(--orange));
+  box-shadow: 0 0 8px -3px var(--stage-color, var(--orange));
 }
 .onboarding-card:hover { border-color: var(--stage-color, var(--orange)); transform: translateY(-1px); }
 .onboarding-card.dragging { opacity: .4; }
@@ -1965,8 +1964,9 @@ tr.pg-hidden-row { display: none; }
   position: absolute; bottom: calc(100% + 8px); right: 0; z-index: 200;
   background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
   box-shadow: var(--shadow); width: 240px; padding: 8px;
+  max-height: min(70vh, 520px); overflow-y: auto;
 }
-.profile-menu-header { display: flex; align-items: center; gap: 10px; padding: 10px 8px 14px; border-bottom: 1px solid var(--border); margin-bottom: 6px; }
+.profile-menu-header { display: flex; align-items: center; gap: 10px; padding: 10px 8px 14px; border-bottom: 1px solid var(--border); margin-bottom: 6px; position: sticky; top: 0; background: var(--bg2); z-index: 1; }
 .profile-menu-header .user-avatar { width: 40px; height: 40px; font-size: 15px; }
 .profile-menu-name { font-size: 13px; font-weight: 700; color: var(--text); }
 .profile-menu-email { font-size: 11px; color: var(--text3); word-break: break-all; }
@@ -3482,7 +3482,7 @@ select.wfb-field-input { padding-right: 26px; }
       <button class="export-csv-btn" id="topbarClientsExportBtn" onclick="exportAllClientsTable()" title="Download the currently visible rows as a CSV file" style="display:none"><span class="icon" data-icon="download" data-icon-size="12"></span> Export CSV</button>
       <button class="btn btn-primary btn-sm" id="topbarAddClientBtn" onclick="openAddClientModal()" style="display:none"><span class="icon" data-icon="plus" data-icon-size="13"></span> Add Client</button>
       <label class="upload-btn" id="uploadBtnLabel" title="Uploads into the currently open dashboard" style="display:none">
-        📁 Upload File
+        <span class="icon" data-icon="folder" data-icon-size="13"></span> Upload File
         <input type="file" id="fileUpload" accept=".xlsx,.xls,.csv" onchange="handleFileUpload(event)">
       </label>
       <button class="sheets-btn" id="sheetsConnectTopBtn" onclick="openSheetsModal()" title="Connects a sheet into the currently open dashboard" style="display:none">
@@ -5381,17 +5381,17 @@ select.wfb-field-input { padding-right: 26px; }
           <div><div class="card-title" data-i18n="adspend_budget_chart">Budget by Business</div><div class="card-sub" data-i18n="adspend_budget_chart_sub">Top businesses by monthly ad spend</div></div>
           <span class="card-badge" id="badge-adspend-budget"><span class="icon" data-icon="dollar" data-icon-size="16"></span> $0 Total</span>
         </div>
-        <div class="chart-wrap h300"><canvas id="adSpendBudgetBar"></canvas></div>
+        <div class="chart-wrap h200"><canvas id="adSpendBudgetBar"></canvas></div>
       </div>
       <div class="card">
         <div class="card-header">
           <div><div class="card-title">Promo Eligibility</div><div class="card-sub">Breakdown across all businesses</div></div>
           <span class="card-badge" id="badge-adspend-count"><span class="icon" data-icon="building" data-icon-size="14"></span> 0 Businesses</span>
         </div>
-        <div class="chart-wrap h300" style="position:relative">
+        <div class="chart-wrap h200" style="position:relative">
           <canvas id="adSpendPromoDonut"></canvas>
           <div style="position:absolute;top:50%;left:36%;transform:translate(-50%,-50%);text-align:center;pointer-events:none">
-            <div id="adSpendPromoCenterNum" style="font-family:var(--font-mono);font-size:var(--font-2xl);font-weight:800;color:var(--text);line-height:1">0</div>
+            <div id="adSpendPromoCenterNum" style="font-family:var(--font-display);font-size:20px;font-weight:700;color:var(--text);line-height:1">0</div>
             <div style="font-size:var(--font-2xs);color:var(--text3);margin-top:2px">businesses</div>
           </div>
         </div>
@@ -5402,7 +5402,7 @@ select.wfb-field-input { padding-right: 26px; }
       <div class="card-header">
         <div><div class="card-title">Add a Business</div><div class="card-sub">Tracks budget, add-ons, promo status, and internal notes per business — add one at a time or upload a list</div></div>
         <label class="upload-btn" style="position:relative">
-          📁 Upload File
+          <span class="icon" data-icon="folder" data-icon-size="13"></span> Upload File
           <input type="file" id="asFileUpload" accept=".xlsx,.xls,.csv" onchange="handleAdSpendFileUpload(event)">
         </label>
       </div>
@@ -5614,8 +5614,29 @@ select.wfb-field-input { padding-right: 26px; }
     </div>
 
 
-    <div class="ledger-layout">
-      <div class="ledger-sidebar">
+    <div class="card ledger-smartpaste-zone" id="ledgerSmartPasteZone" contenteditable="true" data-placeholder="Paste anything here — an email, a spreadsheet row, a quick note — and Nirvana will fill in the record for you." onpaste="handleLedgerSmartPaste(event)"></div>
+
+    <div class="card-header" style="margin-bottom:var(--space-3)">
+      <div><div class="card-title">Reconciliation Board</div><div class="card-sub" id="ledgerBoardSub">0 records</div></div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost btn-sm" onclick="openBulkReconcileModal()"><span class="icon" data-icon="sparkle" data-icon-size="13"></span> Bulk Reconcile Import</button>
+        <button class="btn btn-primary btn-sm" onclick="openAddLedgerModal('charges_to_bill')"><span class="icon" data-icon="plus" data-icon-size="13"></span> Add Record</button>
+      </div>
+    </div>
+    <div id="ledgerFilterBar" style="display:none;align-items:center;gap:10px;margin-bottom:10px;padding:6px 10px;background:var(--orange-dim);border-radius:var(--radius-sm);font-size:11px;color:var(--orange2)">
+      <span></span>
+      <button class="btn btn-ghost btn-sm" style="margin-left:auto;padding:2px 8px" onclick="clearLedgerBoardFilter()">Clear ✕</button>
+    </div>
+    <div class="ledger-board" id="ledgerBoard" style="margin-bottom:var(--space-4)"></div>
+
+    <div class="hub-tabs">
+      <button class="hub-tab active" data-group="ledgerTabs" data-tab="inbox" onclick="switchHubTab('ledgerTabs','inbox')">Inbox & Notes</button>
+      <button class="hub-tab" data-group="ledgerTabs" data-tab="insights" onclick="switchHubTab('ledgerTabs','insights')">Insights & Billing</button>
+      <button class="hub-tab" data-group="ledgerTabs" data-tab="reports" onclick="switchHubTab('ledgerTabs','reports')">Reports</button>
+    </div>
+
+    <div class="hub-tab-panel active" data-group="ledgerTabs" data-tab="inbox">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);align-items:start">
         <div class="card">
           <div class="card-header">
             <div><div class="card-title" style="font-size:13px">Inbox & Imported Notes</div><div class="card-sub" id="ledgerInboxSub">0</div></div>
@@ -5631,25 +5652,10 @@ select.wfb-field-input { padding-right: 26px; }
           <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:8px" onclick="showAllLedgerUnresolved()">View all unresolved <span class="icon" data-icon="chevronRight" data-icon-size="12"></span></button>
         </div>
       </div>
+    </div>
 
-      <div class="ledger-main">
-        <div class="card ledger-smartpaste-zone" id="ledgerSmartPasteZone" contenteditable="true" data-placeholder="Paste anything here — an email, a spreadsheet row, a quick note — and Nirvana will fill in the record for you." onpaste="handleLedgerSmartPaste(event)"></div>
-
-        <div class="card-header" style="margin-bottom:var(--space-3)">
-          <div><div class="card-title">Reconciliation Board</div><div class="card-sub" id="ledgerBoardSub">0 records</div></div>
-          <div style="display:flex;gap:8px">
-            <button class="btn btn-ghost btn-sm" onclick="openBulkReconcileModal()"><span class="icon" data-icon="sparkle" data-icon-size="13"></span> Bulk Reconcile Import</button>
-            <button class="btn btn-primary btn-sm" onclick="openAddLedgerModal('charges_to_bill')"><span class="icon" data-icon="plus" data-icon-size="13"></span> Add Record</button>
-          </div>
-        </div>
-        <div id="ledgerFilterBar" style="display:none;align-items:center;gap:10px;margin-bottom:10px;padding:6px 10px;background:var(--orange-dim);border-radius:var(--radius-sm);font-size:11px;color:var(--orange2)">
-          <span></span>
-          <button class="btn btn-ghost btn-sm" style="margin-left:auto;padding:2px 8px" onclick="clearLedgerBoardFilter()">Clear ✕</button>
-        </div>
-        <div class="ledger-board" id="ledgerBoard"></div>
-      </div>
-
-      <div class="ledger-sidebar-right">
+    <div class="hub-tab-panel" data-group="ledgerTabs" data-tab="insights">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--space-4);align-items:start">
         <div class="card">
           <div class="card-header">
             <div><div class="card-title" style="font-size:13px"><span class="icon" data-icon="sparkle" data-icon-size="12"></span> AI Recommendations</div></div>
@@ -5671,31 +5677,33 @@ select.wfb-field-input { padding-right: 26px; }
       </div>
     </div>
 
-    <div class="ledger-bottom-row">
-      <div class="card">
-        <div class="card-header">
-          <div><div class="card-title" id="ledgerTrackerTitle">Monthly Record Tracker</div></div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <button class="row-action-btn" onclick="changeLedgerTrackerMonth(-1)" aria-label="Previous month">‹</button>
-            <button class="row-action-btn" onclick="changeLedgerTrackerMonth(1)" aria-label="Next month">›</button>
+    <div class="hub-tab-panel" data-group="ledgerTabs" data-tab="reports">
+      <div class="ledger-bottom-row" style="margin:0">
+        <div class="card">
+          <div class="card-header">
+            <div><div class="card-title" id="ledgerTrackerTitle">Monthly Record Tracker</div></div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <button class="row-action-btn" onclick="changeLedgerTrackerMonth(-1)" aria-label="Previous month">‹</button>
+              <button class="row-action-btn" onclick="changeLedgerTrackerMonth(1)" aria-label="Next month">›</button>
+            </div>
+          </div>
+          <div id="ledgerMonthlyTracker"></div>
+          <div class="ledger-tracker-legend">
+            <div><span class="dot" style="background:var(--green)"></span> Recouped</div>
+            <div><span class="dot" style="background:var(--blue)"></span> Charge Activity</div>
+            <div><span class="dot" style="background:var(--yellow)"></span> Overage Question</div>
+            <div><span class="dot" style="background:var(--bg4)"></span> No Activity</div>
           </div>
         </div>
-        <div id="ledgerMonthlyTracker"></div>
-        <div class="ledger-tracker-legend">
-          <div><span class="dot" style="background:var(--green)"></span> Recouped</div>
-          <div><span class="dot" style="background:var(--blue)"></span> Charge Activity</div>
-          <div><span class="dot" style="background:var(--yellow)"></span> Overage Question</div>
-          <div><span class="dot" style="background:var(--bg4)"></span> No Activity</div>
+        <div class="card">
+          <div class="card-header"><div><div class="card-title" style="font-size:13px">Year to Date Impact</div></div></div>
+          <div class="ledger-ytd-num" id="ledgerYtdImpact">$0.00</div>
+          <div class="ledger-ytd-sub" id="ledgerYtdSub">Total non-standard billings</div>
         </div>
-      </div>
-      <div class="card">
-        <div class="card-header"><div><div class="card-title" style="font-size:13px">Year to Date Impact</div></div></div>
-        <div class="ledger-ytd-num" id="ledgerYtdImpact">$0.00</div>
-        <div class="ledger-ytd-sub" id="ledgerYtdSub">Total non-standard billings</div>
-      </div>
-      <div class="card">
-        <div class="card-header"><div><div class="card-title" style="font-size:13px">Top Categories YTD</div></div></div>
-        <div id="ledgerTopCategories"></div>
+        <div class="card">
+          <div class="card-header"><div><div class="card-title" style="font-size:13px">Top Categories YTD</div></div></div>
+          <div id="ledgerTopCategories"></div>
+        </div>
       </div>
     </div>
 
@@ -5726,10 +5734,10 @@ select.wfb-field-input { padding-right: 26px; }
           <div><div class="card-title" data-i18n="collections_by_status_chart">Accounts by Status</div><div class="card-sub" id="colStatusDonutSub">Breakdown of this tab's accounts</div></div>
           <span class="card-badge" id="badge-collections-count"><span class="icon" data-icon="receipt" data-icon-size="14"></span> 0 Accounts</span>
         </div>
-        <div class="chart-wrap h300" style="position:relative">
+        <div class="chart-wrap h200" style="position:relative">
           <canvas id="collectionsStatusDonut"></canvas>
           <div style="position:absolute;top:50%;left:36%;transform:translate(-50%,-50%);text-align:center;pointer-events:none">
-            <div id="collectionsStatusCenterNum" style="font-family:var(--font-mono);font-size:var(--font-2xl);font-weight:800;color:var(--text);line-height:1">0</div>
+            <div id="collectionsStatusCenterNum" style="font-family:var(--font-display);font-size:20px;font-weight:700;color:var(--text);line-height:1">0</div>
             <div style="font-size:var(--font-2xs);color:var(--text3);margin-top:2px">accounts</div>
           </div>
         </div>
@@ -5739,7 +5747,7 @@ select.wfb-field-input { padding-right: 26px; }
           <div><div class="card-title">Amount by Status</div><div class="card-sub" id="colAmountBarSub">Dollar total per status</div></div>
           <span class="card-badge" id="badge-collections-amount"><span class="icon" data-icon="dollar" data-icon-size="16"></span> $0 Total</span>
         </div>
-        <div class="chart-wrap h300"><canvas id="collectionsAmountBar"></canvas></div>
+        <div class="chart-wrap h200"><canvas id="collectionsAmountBar"></canvas></div>
       </div>
     </div>
 
@@ -5747,7 +5755,7 @@ select.wfb-field-input { padding-right: 26px; }
       <div class="card-header">
         <div><div class="card-title" id="colAddTitle">Add Outstanding Balance</div><div class="card-sub">Or upload a list below — every account gets a status and a running note history</div></div>
         <label class="upload-btn" id="colUploadBtnLabel" style="position:relative">
-          📁 Upload List
+          <span class="icon" data-icon="folder" data-icon-size="13"></span> Upload List
           <input type="file" id="colFileUpload" accept=".xlsx,.xls,.csv" onchange="handleCollectionsFileUpload(event)">
         </label>
       </div>
@@ -7961,7 +7969,7 @@ function applyTranslations() {
 applyLanguage(getSavedLanguage());
 
 const prioMeta = {
-  high:   { ptag: 'prio-high', plbl: '🔥 High Priority' },
+  high:   { ptag: 'prio-high', plbl: 'High Priority' },
   medium: { ptag: 'prio-med',  plbl: 'Medium Priority' },
   low:    { ptag: 'prio-low',  plbl: 'Targeted Priority' },
 };
@@ -8246,7 +8254,7 @@ async function renderClientSpotlight(pk) {
         ${client.org ? `<span class="spotlight-org"><span class="icon" data-icon="building" data-icon-size="14"></span> ${escAttr(client.org)}</span>` : ''}
       </div>
       <div class="spotlight-status-row">
-        <span class="spotlight-worked-badge ${workedToday ? 'spotlight-worked-yes' : 'spotlight-worked-no'}">${workedToday ? '✅ Worked today' : '⏳ Not touched yet today'}</span>
+        <span class="spotlight-worked-badge ${workedToday ? 'spotlight-worked-yes' : 'spotlight-worked-no'}">${workedToday ? '<span class="icon" data-icon="check" data-icon-size="12"></span> Worked today' : '<span class="icon" data-icon="clock" data-icon-size="12"></span> Not touched yet today'}</span>
         <span class="spotlight-health-badge spotlight-health-${riskClass}"><span class="icon" data-icon="building" data-icon-size="13"></span> ${health.score}/100 · ${health.category}</span>
       </div>
 
@@ -17485,7 +17493,7 @@ function rebuildGoalsPage() {
           <td>${formatGoalValue(g.current_value, g.metric_type)}<div class="progress-bar"><div class="progress-fill" style="width:${pctDisplay}%;background:${barColor}"></div></div></td>
           <td style="text-align:center"><span class="status-pill ${meta.cls}">${meta.label}</span>${overrideBadge}</td>
           <td style="text-align:center">${g.due_date ? new Date(g.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}</td>
-          <td><div class="row-actions"><button class="icon-btn" onclick="showGoalBreakdown('${g.id}')" title="Weekly/Bi-Weekly Breakdown">📊</button><button class="icon-btn" onclick="openEditGoalModal('${g.id}')" title="Edit">✎</button><button class="icon-btn" onclick="deleteGoal('${g.id}')" title="Delete">🗑</button></div></td>
+          <td><div class="row-actions"><button class="icon-btn" onclick="showGoalBreakdown('${g.id}')" title="Weekly/Bi-Weekly Breakdown"><span class="icon" data-icon="chart" data-icon-size="14"></span></button><button class="icon-btn" onclick="openEditGoalModal('${g.id}')" title="Edit"><span class="icon" data-icon="edit" data-icon-size="14"></span></button><button class="icon-btn" onclick="deleteGoal('${g.id}')" title="Delete"><span class="icon" data-icon="trash" data-icon-size="14"></span></button></div></td>
         </tr>`;
       };
 
