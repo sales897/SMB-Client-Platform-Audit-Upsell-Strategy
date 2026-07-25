@@ -4323,92 +4323,107 @@ select.wfb-field-input { padding-right: 26px; }
       <div class="card-sub" style="font-size:10.5px">Every metric below updates to this period. Reports are generated fresh from live data — nothing is pre-baked.</div>
     </div>
 
-    <div class="card brand-section-card" style="margin-bottom:var(--space-5)">
+    <div class="card brand-section-card" style="margin-bottom:var(--space-4)">
       <div class="card-title" style="font-size:14px">Answer the Key Questions</div>
       <div class="card-sub" style="font-size:11px;margin-bottom:10px">The reason this page exists — quick, consistent, confident answers, not a data dig.</div>
       <div id="bhAnswersList"></div>
     </div>
 
-    <div class="int-stat-bar" id="bhStatBar"></div>
-
-    <div class="card brand-section-card" style="margin-bottom:var(--space-5)">
-      <div class="card-title" style="font-size:13px">Customer Segmentation</div>
-      <div class="card-sub" style="font-size:11px;margin-bottom:8px">Reuses the same health scoring already used for individual client risk flags across the Hub — engagement, task backlog, and billing friction combined into one score per organization.</div>
-      <div id="bhSegmentationBar" class="int-stat-bar"></div>
+    <div class="hub-tabs">
+      <button class="hub-tab active" data-group="bhTabs" data-tab="overview" onclick="switchHubTab('bhTabs','overview')">Overview</button>
+      <button class="hub-tab" data-group="bhTabs" data-tab="inventory" onclick="switchHubTab('bhTabs','inventory')">Customer Inventory</button>
+      <button class="hub-tab" data-group="bhTabs" data-tab="revenue" onclick="switchHubTab('bhTabs','revenue')">Revenue & Adoption</button>
+      <button class="hub-tab" data-group="bhTabs" data-tab="methodology" onclick="switchHubTab('bhTabs','methodology')">Methodology</button>
     </div>
 
-    <div class="card brand-section-card" style="margin-bottom:var(--space-5)">
-      <div class="card-header" style="margin-bottom:var(--space-3)">
-        <div><div class="card-title">Customer Inventory</div><div class="card-sub" id="bhInventoryCountSub">0 organizations</div></div>
-        <div style="display:flex;gap:8px">
-          <input type="text" id="bhInventorySearch" class="field-input" placeholder="Search organizations…" style="height:32px;width:180px;margin-bottom:0" oninput="onBhInventoryFilterChange()">
-          <select id="bhStatusFilter" class="field-select" style="height:32px" onchange="onBhInventoryFilterChange()">
-            <option value="all">All Statuses</option>
-            <option value="trial">Trial</option>
-            <option value="active">Active</option>
-            <option value="complimentary">Complimentary</option>
-            <option value="cancelled">Cancelled</option>
-            <option value="internal">Internal</option>
-          </select>
-          <select id="bhPortfolioFilter" class="field-select" style="height:32px" onchange="onBhInventoryFilterChange()">
-            <option value="all">All Portfolios</option>
-            <option value="smb">SMB</option>
-            <option value="whitelabel">White Label</option>
-            <option value="support">Support</option>
-          </select>
+    <div class="hub-tab-panel active" data-group="bhTabs" data-tab="overview">
+      <div class="int-stat-bar" id="bhStatBar"></div>
+
+      <div class="card brand-section-card" style="margin-bottom:var(--space-4)">
+        <div class="card-title" style="font-size:13px">Customer Segmentation</div>
+        <div class="card-sub" style="font-size:11px;margin-bottom:8px">Reuses the same health scoring already used for individual client risk flags across the Hub — engagement, task backlog, and billing friction combined into one score per organization.</div>
+        <div id="bhSegmentationBar" class="int-stat-bar"></div>
+      </div>
+
+      <div class="card brand-section-card">
+        <div class="card-title" style="font-size:13px">Customer Health</div>
+        <div class="int-stat-bar" id="bhCustomerHealthBar" style="margin-top:8px"></div>
+      </div>
+    </div>
+
+    <div class="hub-tab-panel" data-group="bhTabs" data-tab="inventory">
+      <div class="card brand-section-card">
+        <div class="card-header" style="margin-bottom:var(--space-3)">
+          <div><div class="card-title">Customer Inventory</div><div class="card-sub" id="bhInventoryCountSub">0 organizations</div></div>
+          <div style="display:flex;gap:8px">
+            <input type="text" id="bhInventorySearch" class="field-input" placeholder="Search organizations…" style="height:32px;width:180px;margin-bottom:0" oninput="onBhInventoryFilterChange()">
+            <select id="bhStatusFilter" class="field-select" style="height:32px" onchange="onBhInventoryFilterChange()">
+              <option value="all">All Statuses</option>
+              <option value="trial">Trial</option>
+              <option value="active">Active</option>
+              <option value="complimentary">Complimentary</option>
+              <option value="cancelled">Cancelled</option>
+              <option value="internal">Internal</option>
+            </select>
+            <select id="bhPortfolioFilter" class="field-select" style="height:32px" onchange="onBhInventoryFilterChange()">
+              <option value="all">All Portfolios</option>
+              <option value="smb">SMB</option>
+              <option value="whitelabel">White Label</option>
+              <option value="support">Support</option>
+            </select>
+          </div>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="pill-rows" style="width:100%">
+            <thead><tr>
+              <th style="text-align:left;padding-left:var(--space-3)">Organization</th>
+              <th style="text-align:left">Status</th>
+              <th style="text-align:left">Owner</th>
+              <th style="text-align:left">Billing</th>
+              <th style="text-align:left">Last Activity</th>
+              <th>Monthly Rate</th>
+              <th></th>
+            </tr></thead>
+            <tbody id="bhInventoryBody"></tbody>
+          </table>
+        </div>
+        <div id="bhInventoryPagination" style="display:flex;justify-content:center;gap:6px;margin-top:12px"></div>
+      </div>
+    </div>
+
+    <div class="hub-tab-panel" data-group="bhTabs" data-tab="revenue">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);align-items:start">
+        <div class="card brand-section-card">
+          <div class="card-title" style="font-size:13px">Revenue</div>
+          <div class="card-sub" style="font-size:11px;margin-bottom:8px" id="bhRevenueSub">Based on manually-entered monthly rates.</div>
+          <div id="bhRevenuePanel"></div>
+        </div>
+        <div class="card brand-section-card">
+          <div class="card-title" style="font-size:13px">Platform Adoption</div>
+          <div class="card-sub" style="font-size:11px;margin-bottom:8px">Workflow runs and AI actions — real client usage of the Niche platform itself.</div>
+          <div id="bhAdoptionPanel"></div>
         </div>
       </div>
-      <div style="overflow-x:auto">
-        <table class="pill-rows" style="width:100%">
-          <thead><tr>
-            <th style="text-align:left;padding-left:var(--space-3)">Organization</th>
-            <th style="text-align:left">Status</th>
-            <th style="text-align:left">Owner</th>
-            <th style="text-align:left">Billing</th>
-            <th style="text-align:left">Last Activity</th>
-            <th>Monthly Rate</th>
-            <th></th>
-          </tr></thead>
-          <tbody id="bhInventoryBody"></tbody>
-        </table>
-      </div>
-      <div id="bhInventoryPagination" style="display:flex;justify-content:center;gap:6px;margin-top:12px"></div>
     </div>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);margin-bottom:var(--space-5);align-items:start">
-      <div class="card brand-section-card">
-        <div class="card-title" style="font-size:13px">Reconciliation</div>
-        <div class="card-sub" style="font-size:11px;margin-bottom:8px">Documenting what doesn't line up — not forcing the data to fit.</div>
-        <div id="bhReconciliationList"></div>
+    <div class="hub-tab-panel" data-group="bhTabs" data-tab="methodology">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);align-items:start;margin-bottom:var(--space-4)">
+        <div class="card brand-section-card">
+          <div class="card-title" style="font-size:13px">Reconciliation</div>
+          <div class="card-sub" style="font-size:11px;margin-bottom:8px">Documenting what doesn't line up — not forcing the data to fit.</div>
+          <div id="bhReconciliationList"></div>
+        </div>
+        <div class="card brand-section-card">
+          <div class="card-title" style="font-size:13px">Working Definitions</div>
+          <div class="card-sub" style="font-size:11px;margin-bottom:8px">Common language for the whole team, so reporting means the same thing to everyone.</div>
+          <div id="bhDefinitionsList"></div>
+        </div>
       </div>
-      <div class="card brand-section-card">
-        <div class="card-title" style="font-size:13px">Working Definitions</div>
-        <div class="card-sub" style="font-size:11px;margin-bottom:8px">Common language for the whole team, so reporting means the same thing to everyone.</div>
-        <div id="bhDefinitionsList"></div>
-      </div>
-    </div>
 
-    <div class="card brand-section-card" style="margin-bottom:var(--space-5)">
-      <div class="card-title" style="font-size:13px">Customer Health</div>
-      <div class="int-stat-bar" id="bhCustomerHealthBar" style="margin-top:8px"></div>
-    </div>
-
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);margin-bottom:var(--space-5);align-items:start">
       <div class="card brand-section-card">
-        <div class="card-title" style="font-size:13px">Revenue</div>
-        <div class="card-sub" style="font-size:11px;margin-bottom:8px" id="bhRevenueSub">Based on manually-entered monthly rates.</div>
-        <div id="bhRevenuePanel"></div>
+        <div class="card-title" style="font-size:13px">What Can We Report With Confidence Today?</div>
+        <div id="bhConfidencePanel" style="margin-top:8px"></div>
       </div>
-      <div class="card brand-section-card">
-        <div class="card-title" style="font-size:13px">Platform Adoption</div>
-        <div class="card-sub" style="font-size:11px;margin-bottom:8px">Workflow runs and AI actions — real client usage of the Niche platform itself.</div>
-        <div id="bhAdoptionPanel"></div>
-      </div>
-    </div>
-
-    <div class="card brand-section-card" style="margin-bottom:var(--space-5)">
-      <div class="card-title" style="font-size:13px">What Can We Report With Confidence Today?</div>
-      <div id="bhConfidencePanel" style="margin-top:8px"></div>
     </div>
 
     <div class="page-footer"><span class="org-brand-inline">The HUB · Niche Inc.</span> · Business Health Framework</div>
