@@ -3501,32 +3501,12 @@ select.wfb-field-input { padding-right: 26px; }
       </div>
       <button class="ai-insights-refresh" id="clDirNirvanaRefreshBtn" onclick="loadClDirNirvanaInsight()" title="Get a new insight" aria-label="Get a new insight">↻</button>
     </div>
-    <div class="hub-grid grid-stack" id="grid-clients">
-      <div class="grid-stack-item" gs-id="cl-kpi-total" gs-x="0" gs-y="0" gs-w="3" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
-      <div class="kpi kpi-theme-orange"><div class="kpi-icon"><span class="icon" data-icon="users" data-icon-size="16"></span></div><div class="kpi-val orange" id="cl-total">0</div><div class="kpi-lbl" data-i18n="cl_unique_clients">Unique Clients</div><div class="kpi-sub" data-i18n="cl_across_portfolios">Across all portfolios</div>
-        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 130 105 C 160 95, 175 72, 192 55 C 207 40, 216 26, 232 12"/><circle cx="150" cy="97"/><circle cx="192" cy="55"/><circle cx="232" cy="12" r="3"/><circle r="3"><animateMotion dur="2.6s" repeatCount="indefinite" path="M 130 105 C 160 95, 175 72, 192 55 C 207 40, 216 26, 232 12"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.9;1" dur="2.6s" repeatCount="indefinite"/></circle></svg>
-      </div>
-      </div></div>
-      <div class="grid-stack-item" gs-id="cl-kpi-smb" gs-x="3" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
-      <div class="kpi kpi-theme-blue"><div class="kpi-icon"><span class="icon" data-icon="chart" data-icon-size="16"></span></div><div class="kpi-val blue" id="cl-smb-count">0</div><div class="kpi-lbl" data-i18n="cl_smb_clients">SMB Clients</div>
-        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><line x1="148" y1="92" x2="188" y2="52"/><line x1="188" y1="52" x2="226" y2="70"/><line x1="188" y1="52" x2="212" y2="18"/><line x1="148" y1="92" x2="198" y2="102"/><circle class="mesh-node" cx="148" cy="92" r="2.2" style="animation-delay:0s"/><circle class="mesh-node" cx="188" cy="52" r="3" style="animation-delay:.3s"/><circle class="mesh-node" cx="226" cy="70" r="2.2" style="animation-delay:.6s"/><circle class="mesh-node" cx="212" cy="18" r="2.2" style="animation-delay:.9s"/><circle class="mesh-node" cx="198" cy="102" r="2" style="animation-delay:1.2s"/></svg>
-      </div>
-      </div></div>
-      <div class="grid-stack-item" gs-id="cl-kpi-wl" gs-x="5" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
-      <div class="kpi kpi-theme-green"><div class="kpi-icon"><span class="icon" data-icon="tag" data-icon-size="14"></span></div><div class="kpi-val green" id="cl-wl-count">0</div><div class="kpi-lbl" data-i18n="cl_wl_partners">White Label Partners</div>
-        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><circle class="ring" cx="205" cy="48" r="12"/><circle class="ring pulse-1" cx="205" cy="48" r="12"/><circle class="ring pulse-2" cx="205" cy="48" r="12"/><circle cx="205" cy="48" r="3"/></svg>
-      </div>
-      </div></div>
-      <div class="grid-stack-item" gs-id="cl-kpi-support" gs-x="7" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
-      <div class="kpi kpi-theme-red"><div class="kpi-icon"><span class="icon" data-icon="ticket" data-icon-size="14"></span></div><div class="kpi-val red" id="cl-support-count">0</div><div class="kpi-lbl" data-i18n="cl_support_clients">Support Clients</div>
-        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><polyline points="128,68 152,68 162,42 173,96 184,58 194,68 232,68"/><circle r="3"><animateMotion dur="2.2s" repeatCount="indefinite" path="M128,68 L152,68 L162,42 L173,96 L184,58 L194,68 L232,68"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.9;1" dur="2.2s" repeatCount="indefinite"/></circle></svg>
-      </div>
-      </div></div>
-      <div class="grid-stack-item" gs-id="cl-kpi-multi" gs-x="9" gs-y="0" gs-w="3" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
-      <div class="kpi kpi-theme-purple"><div class="kpi-icon"><span class="icon" data-icon="link" data-icon-size="13"></span></div><div class="kpi-val purple" id="cl-multi-count">0</div><div class="kpi-lbl" data-i18n="cl_multi_portfolio">In 2+ Portfolios</div><div class="kpi-sub" data-i18n="cl_cross_sold">Cross-sold accounts</div>
-        <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><circle class="ring" cx="188" cy="55" r="24"/><circle class="ring pulse-1" cx="188" cy="55" r="24"/><circle class="ring" cx="220" cy="55" r="24"/><circle class="ring pulse-2" cx="220" cy="55" r="24"/><circle cx="204" cy="55" r="2.5"/></svg>
-      </div>
-      </div></div>
+    <div class="hub-mini-grid" id="clDirStatGrid" style="grid-template-columns:repeat(5,1fr)">
+      <div class="hub-mini-card accent-left" style="--hub-accent:var(--orange)"><div class="hub-mini-label">Unique Clients</div><div class="hub-mini-value" id="cl-total">0</div><div class="vital-stat-sub">Across all portfolios</div></div>
+      <div class="hub-mini-card accent-left" style="--hub-accent:var(--blue)"><div class="hub-mini-label">SMB Clients</div><div class="hub-mini-value" id="cl-smb-count">0</div></div>
+      <div class="hub-mini-card accent-left" style="--hub-accent:var(--green)"><div class="hub-mini-label">White Label Partners</div><div class="hub-mini-value" id="cl-wl-count">0</div></div>
+      <div class="hub-mini-card accent-left" style="--hub-accent:var(--red)"><div class="hub-mini-label">Support Clients</div><div class="hub-mini-value" id="cl-support-count">0</div></div>
+      <div class="hub-mini-card accent-left" style="--hub-accent:var(--purple)"><div class="hub-mini-label">In 2+ Portfolios</div><div class="hub-mini-value" id="cl-multi-count">0</div><div class="vital-stat-sub">Cross-sold accounts</div></div>
     </div>
     <div class="cmdboard-layout" style="margin-top:var(--space-4)">
       <div class="cmdboard-sidebar-left">
@@ -22333,19 +22313,19 @@ function renderClDirAiInsights(rows) {
   detectDuplicateClientGroups().then(groups => {
     const mergeCount = groups.length;
     const crossSellCount = rows.filter(r => r.pks.length === 1 && r.total > 0 && r.total < 3).length;
-    wrap.innerHTML = `
-      <div class="cmdboard-insight-card">
-        <div class="cmdboard-insight-hd" onclick="showPage('settings')" style="cursor:pointer"><span class="icon" data-icon="puzzle" data-icon-size="12"></span> Merge Suggestions <span class="cmdboard-insight-count">${mergeCount}</span><button class="vital-ask" onclick="event.stopPropagation();askNirvanaAboutClDir('merge')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button></div>
-        <div class="cmdboard-insight-desc" onclick="showPage('settings')" style="cursor:pointer">Clients with matching names across portfolios that can be merged.</div>
-      </div>
-      <div class="cmdboard-insight-card">
-        <div class="cmdboard-insight-hd" onclick="showPage('settings')" style="cursor:pointer"><span class="icon" data-icon="link" data-icon-size="12"></span> Duplicate Detection <span class="cmdboard-insight-count">${mergeCount}</span><button class="vital-ask" onclick="event.stopPropagation();askNirvanaAboutClDir('merge')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button></div>
-        <div class="cmdboard-insight-desc" onclick="showPage('settings')" style="cursor:pointer">Potential duplicate rows detected across your directory.</div>
-      </div>
-      <div class="cmdboard-insight-card">
-        <div class="cmdboard-insight-hd" onclick="applyClDirSavedView('all')" style="cursor:pointer"><span class="icon" data-icon="trending" data-icon-size="12"></span> Cross-Sell Opportunities <span class="cmdboard-insight-count">${crossSellCount}</span><button class="vital-ask" onclick="event.stopPropagation();askNirvanaAboutClDir('crosssell')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button></div>
-        <div class="cmdboard-insight-desc" onclick="applyClDirSavedView('all')" style="cursor:pointer">Single-portfolio clients using fewer than 3 products — room to expand.</div>
-      </div>`;
+    const items = [
+      { icon: 'puzzle', label: 'Merge Suggestions', count: mergeCount, onclick: "showPage('settings')", topic: 'merge' },
+      { icon: 'link', label: 'Duplicate Detection', count: mergeCount, onclick: "showPage('settings')", topic: 'merge' },
+      { icon: 'trending', label: 'Cross-Sell Opportunities', count: crossSellCount, onclick: "applyClDirSavedView('all')", topic: 'crosssell' },
+    ];
+    wrap.innerHTML = items.map(it => `
+      <div class="brand-acc-row" style="margin-bottom:6px;cursor:pointer" onclick="${it.onclick}">
+        <span style="font-size:11.5px;color:var(--text2);display:flex;align-items:center;gap:6px"><span class="icon" data-icon="${it.icon}" data-icon-size="12"></span>${it.label}</span>
+        <span style="display:flex;align-items:center;gap:6px">
+          <span style="font-weight:700;color:var(--orange)">${it.count}</span>
+          <button class="vital-ask" onclick="event.stopPropagation();askNirvanaAboutClDir('${it.topic}')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
+        </span>
+      </div>`).join('');
   }).catch(e => {
     wrap.innerHTML = `<div class="cmdboard-insight-desc">Couldn't load insights right now (${escAttr(e.message)}).</div>`;
   });
