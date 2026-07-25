@@ -368,8 +368,6 @@ body.ai-panel-open .main {
   top: 0;
   z-index: 50;
 }
-.topbar-title { display: none; }
-.topbar-sub { font-size: 10.5px; color: var(--text3); opacity: .75; margin-left: 0; }
 .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
 
 /* Upload button */
@@ -3462,10 +3460,6 @@ select.wfb-field-input { padding-right: 26px; }
 
   <!-- TOP BAR -->
   <div class="topbar">
-    <div>
-      <div class="topbar-title" id="topbarTitle">Home</div>
-      <div class="topbar-sub" id="topbarSub">Your daily snapshot across the Hub</div>
-    </div>
     <div class="topbar-right">
       <div id="hubGridAddCardWrap" style="display:none;position:relative">
         <button class="btn btn-ghost btn-sm" id="hubGridAddCardBtn" style="display:none" onclick="toggleHubGridAddCardMenu()"><span class="icon" data-icon="plus" data-icon-size="13"></span> Add Card</button>
@@ -7057,6 +7051,15 @@ const pageMeta = {
   settings:   { title: 'Settings',             sub: 'Manage Hub-wide settings, integrations, and your team' },
   onboarding: { title: 'Onboarding',           sub: 'Track new clients from contract signature through go-live' },
 };
+// Minimalist redesign (2026-07-25) -- the page description used to sit as
+// persistent text in the topbar; moved to a native hover tooltip on each
+// nav item instead, since it's useful context but doesn't need permanent
+// screen space. Set once for every item here; showPage() keeps the active
+// one in sync too, though the text never actually changes per-item.
+Object.keys(pageMeta).forEach(id => {
+  const item = document.querySelector(`.nav-item[onclick="showPage('${id}')"]`);
+  if (item) item.title = pageMeta[id].sub;
+});
 
 // Top-nav dropdowns (Portfolios, Performance, Growth Tools, Finance) --
 // click to open, moving the pointer off the dropdown closes it again. Only
@@ -7120,9 +7123,11 @@ function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + id).classList.add('active');
-  document.querySelector(`.nav-item[onclick="showPage('${id}')"]`).classList.add('active');
-  document.getElementById('topbarTitle').textContent = pageMeta[id].title;
-  document.getElementById('topbarSub').textContent = pageMeta[id].sub;
+  const activeNavItem = document.querySelector(`.nav-item[onclick="showPage('${id}')"]`);
+  if (activeNavItem) {
+    activeNavItem.classList.add('active');
+    if (pageMeta[id]) activeNavItem.title = pageMeta[id].sub;
+  }
 
   // Drag/resize grids need the page to actually be visible (non-zero size)
   // before GridStack can measure it, so this only runs once the page is
