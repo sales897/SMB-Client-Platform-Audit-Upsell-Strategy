@@ -333,8 +333,8 @@ body.ai-panel-open .main {
   top: 0;
   z-index: 50;
 }
-.topbar-title { font-size: 16px; font-weight: 700; color: var(--text); }
-.topbar-sub { font-size: 12px; color: var(--text3); margin-left: 4px; }
+.topbar-title { display: none; }
+.topbar-sub { font-size: 10.5px; color: var(--text3); opacity: .75; margin-left: 0; }
 .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
 
 /* Upload button */
@@ -8953,11 +8953,11 @@ const HOME_WIDGET_DEFS = {
   },
   dataQuality: {
     labelKey: 'Data Quality', dot: 'var(--red)', subKey: 'Potential duplicates from the last scan',
-    body: '<div class="hub-mini-row"><div id="vitalDataQualityBody"></div></div>',
+    body: '<div class="hub-mini-row" id="vitalDataQualityBody"></div>',
   },
   goals: {
     labelKey: 'Goals This Month', dot: 'var(--green)', subKey: 'On track vs. off track',
-    body: '<div class="hub-mini-row"><div id="vitalGoalsBody"></div></div>',
+    body: '<div class="hub-mini-row" id="vitalGoalsBody"></div>',
   },
 };
 const HOME_LAYOUT_DEFAULT = ['tasks', 'reminders', 'attention', 'onboarding', 'adspend', 'collections', 'kpi', 'adoption'];
