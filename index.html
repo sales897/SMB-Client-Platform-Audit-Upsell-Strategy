@@ -4003,30 +4003,22 @@ select.wfb-field-input { padding-right: 26px; }
        PAGE 3: VOICE AGENT PERFORMANCE
   ════════════════════════════════════════════════════════════════════════ -->
   <div class="page" id="page-voice">
-    <div class="hub-grid grid-stack" id="grid-voice">
-
-    <div class="grid-stack-item" gs-id="va-kpi-using" gs-x="0" gs-y="0" gs-w="3" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
-      <div class="kpi kpi-theme-green">
+    <div class="hub-mini-grid" style="grid-template-columns:repeat(4,1fr)">
+    <div class="kpi kpi-theme-green">
         <div class="kpi-icon"><span class="icon" data-icon="mic" data-icon-size="13"></span></div>
         <div class="kpi-val green" id="va-using">0</div>
         <div class="kpi-lbl" data-i18n="voice_using">Clients with Voice Agent</div>
         <div class="kpi-sub" id="va-using-pct">0% of all clients</div>
         <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 130 100 C 150 95, 160 80, 172 75 C 184 70, 190 50, 200 45 C 212 39, 220 20, 232 12"/><circle cx="172" cy="75"/><circle cx="200" cy="45"/><circle cx="232" cy="12" r="3"/><circle r="3"><animateMotion dur="2.6s" repeatCount="indefinite" path="M 130 100 C 150 95, 160 80, 172 75 C 184 70, 190 50, 200 45 C 212 39, 220 20, 232 12"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.9;1" dur="2.6s" repeatCount="indefinite"/></circle></svg>
       </div>
-    </div></div>
-
-    <div class="grid-stack-item" gs-id="va-kpi-notusing" gs-x="3" gs-y="0" gs-w="3" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
-      <div class="kpi kpi-theme-red">
+    <div class="kpi kpi-theme-red">
         <div class="kpi-icon"><span class="icon" data-icon="download" data-icon-size="13"></span></div>
         <div class="kpi-val red" id="va-not-using">0</div>
         <div class="kpi-lbl" data-i18n="voice_not_using">Clients NOT on Voice Agent</div>
         <div class="kpi-sub" data-i18n="voice_upsell_targets">Upsell targets</div>
         <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><line class="bar bar-grow" x1="150" y1="105" x2="150" y2="80" style="animation-delay:0s"/><line class="bar bar-grow" x1="170" y1="105" x2="170" y2="60" style="animation-delay:.15s"/><line class="bar bar-grow" x1="190" y1="105" x2="190" y2="70" style="animation-delay:.3s"/><line class="bar bar-grow" x1="210" y1="105" x2="210" y2="40" style="animation-delay:.45s"/><line class="bar bar-grow" x1="230" y1="105" x2="230" y2="20" style="animation-delay:.6s"/></svg>
       </div>
-    </div></div>
-
-    <div class="grid-stack-item" gs-id="va-kpi-adoption" gs-x="6" gs-y="0" gs-w="3" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
-      <div class="kpi kpi-theme-orange">
+    <div class="kpi kpi-theme-orange">
         <div class="kpi-icon"><span class="icon" data-icon="chart" data-icon-size="16"></span></div>
         <div class="kpi-val orange" id="va-adoption-pct">0%</div>
         <div class="kpi-lbl" data-i18n="voice_adoption_rate">Adoption Rate</div>
@@ -4036,30 +4028,30 @@ select.wfb-field-input { padding-right: 26px; }
           <circle class="gauge-fill" id="va-adoption-arc" cx="60" cy="60" r="46" stroke-dasharray="0 289" stroke-dashoffset="72" transform="rotate(-90 60 60)"/>
         </svg>
       </div>
-    </div></div>
-
-    <div class="grid-stack-item" gs-id="va-kpi-flagged" gs-x="9" gs-y="0" gs-w="3" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
-      <div class="kpi" style="--kpi-accent:var(--yellow)">
+    <div class="kpi" style="--kpi-accent:var(--yellow)">
         <div class="kpi-icon"><span class="icon" data-icon="alert" data-icon-size="16"></span></div>
         <div class="kpi-val" style="color:var(--yellow)" id="va-flagged">0</div>
         <div class="kpi-lbl" data-i18n="voice_flagged">Flagged for Review</div>
         <div class="kpi-sub" data-i18n="voice_has_note">Have a note attached</div>
         <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><circle class="ring" cx="205" cy="60" r="10"/><circle class="ring pulse-1" cx="205" cy="60" r="19"/><circle class="ring pulse-2" cx="205" cy="60" r="28"/><circle cx="205" cy="60" r="3"/></svg>
       </div>
-    </div></div>
+    </div>
 
-    <div class="grid-stack-item" gs-id="va-adoption-chart" gs-x="0" gs-y="2" gs-w="12" gs-h="7" gs-min-w="5" gs-min-h="4"><div class="grid-stack-item-content">
-      <div class="card" style="width:100%">
-        <div class="card-header">
-          <div><div class="card-title" data-i18n="voice_adoption_chart">Voice Agent Adoption by Portfolio</div><div class="card-sub" data-i18n="voice_adoption_chart_sub">How many clients in each portfolio use Voice Agent, vs. don't</div></div>
-          <button class="vital-ask" onclick="askNirvanaQuick('Looking at Voice Agent adoption by portfolio, what stands out and where should we focus upsell efforts?')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
-        </div>
-        <div class="chart-wrap h260"><canvas id="voiceBar"></canvas></div>
+    <div class="card" style="width:100%;margin-bottom:var(--space-4)">
+      <div class="card-header">
+        <div><div class="card-title" data-i18n="voice_adoption_chart">Voice Agent Adoption by Portfolio</div><div class="card-sub" data-i18n="voice_adoption_chart_sub">How many clients in each portfolio use Voice Agent, vs. don't</div></div>
+        <button class="vital-ask" onclick="askNirvanaQuick('Looking at Voice Agent adoption by portfolio, what stands out and where should we focus upsell efforts?')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
       </div>
-    </div></div>
+      <div class="chart-wrap h200"><canvas id="voiceBar"></canvas></div>
+    </div>
 
-    <div class="grid-stack-item" gs-id="va-flagged-card" gs-x="0" gs-y="9" gs-w="12" gs-h="7" gs-min-w="5" gs-min-h="4"><div class="grid-stack-item-content">
-      <div class="card" style="width:100%">
+    <div class="hub-tabs">
+      <button class="hub-tab active" data-group="vaTabs" data-tab="records" onclick="switchHubTab('vaTabs','records')">Client Records</button>
+      <button class="hub-tab" data-group="vaTabs" data-tab="insights" onclick="switchHubTab('vaTabs','insights')">Insights & Activity</button>
+    </div>
+
+    <div class="hub-tab-panel active" data-group="vaTabs" data-tab="records">
+      <div class="card" style="width:100%;margin-bottom:var(--space-4)">
         <div class="card-header">
           <div><div class="card-title" data-i18n="voice_notes"><span class="icon" data-icon="alert" data-icon-size="14"></span> Voice Agent Notes</div><div class="card-sub" id="va-flagged-sub">Pulled from comments attached to the Voice Agent column during upload</div></div>
           <button class="vital-ask" onclick="askNirvanaQuick('Which Voice Agent clients are flagged for review right now, and what should we do about them?')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
@@ -4089,57 +4081,52 @@ select.wfb-field-input { padding-right: 26px; }
         </div>
         <div id="vaFlaggedList"></div>
       </div>
-    </div></div>
 
-    <div class="grid-stack-item" gs-id="va-smart-filters" gs-x="0" gs-y="16" gs-w="3" gs-h="6" gs-min-w="2" gs-min-h="4"><div class="grid-stack-item-content">
-      <div class="card" style="width:100%">
-        <div class="card-header">
-          <div class="card-title"><span class="icon" data-icon="filter" data-icon-size="14"></span> Smart Filters</div>
-          <button class="vital-ask" onclick="askNirvanaAboutVoiceAgentFilters()" title="Ask Nirvana about the current filters"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
+      <div style="display:grid;grid-template-columns:1fr 2fr;gap:var(--space-4);align-items:start">
+        <div class="card" style="width:100%">
+          <div class="card-header">
+            <div class="card-title"><span class="icon" data-icon="filter" data-icon-size="14"></span> Smart Filters</div>
+            <button class="vital-ask" onclick="askNirvanaAboutVoiceAgentFilters()" title="Ask Nirvana about the current filters"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
+          </div>
+          <label class="field-label" style="display:block;font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:5px">Portfolio</label>
+          <select class="field-input" id="vaSmartFilterPortfolio" style="margin-bottom:14px" onchange="setVoiceAgentSmartFilterPortfolio(this.value)">
+            <option value="all">All Portfolios</option>
+            <option value="smb">SMB</option>
+            <option value="whitelabel">White Label</option>
+            <option value="support">Support</option>
+          </select>
+          <label class="field-label" style="display:block;font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:5px">Activity Feed Date Range</label>
+          <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
+            <input type="date" class="field-input" id="vaSmartFilterStart" style="margin-bottom:0" onchange="setVoiceAgentSmartFilterDateRange()">
+            <span style="color:var(--text3);font-size:11px">to</span>
+            <input type="date" class="field-input" id="vaSmartFilterEnd" style="margin-bottom:0" onchange="setVoiceAgentSmartFilterDateRange()">
+          </div>
+          <div style="font-size:10px;color:var(--text3);line-height:1.5">Only affects Activity Feed — KPIs, the chart, and flagged clients reflect current state.</div>
         </div>
-        <label class="field-label" style="display:block;font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:5px">Portfolio</label>
-        <select class="field-input" id="vaSmartFilterPortfolio" style="margin-bottom:14px" onchange="setVoiceAgentSmartFilterPortfolio(this.value)">
-          <option value="all">All Portfolios</option>
-          <option value="smb">SMB</option>
-          <option value="whitelabel">White Label</option>
-          <option value="support">Support</option>
-        </select>
-        <label class="field-label" style="display:block;font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:5px">Activity Feed Date Range</label>
-        <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
-          <input type="date" class="field-input" id="vaSmartFilterStart" style="margin-bottom:0" onchange="setVoiceAgentSmartFilterDateRange()">
-          <span style="color:var(--text3);font-size:11px">to</span>
-          <input type="date" class="field-input" id="vaSmartFilterEnd" style="margin-bottom:0" onchange="setVoiceAgentSmartFilterDateRange()">
+
+        <div class="card" style="width:100%">
+          <div class="card-header">
+            <div><div class="card-title"><span class="icon" data-icon="alert" data-icon-size="14"></span> Flagged Review Records</div><div class="card-sub">Top 5, most recently added</div></div>
+            <button class="vital-ask" onclick="askNirvanaQuick('Which Voice Agent clients are flagged for review, and what should we prioritize?')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
+          </div>
+          <div id="va-flagged-records"></div>
         </div>
-        <div style="font-size:10px;color:var(--text3);line-height:1.5">Only affects Activity Feed below — KPIs, the chart, and flagged clients reflect current state and aren't retroactively date-filterable (no historical per-client record is stored for those).</div>
       </div>
-    </div></div>
-
-
-    <div class="grid-stack-item" gs-id="va-flagged-records" gs-x="3" gs-y="16" gs-w="5" gs-h="6" gs-min-w="3" gs-min-h="4"><div class="grid-stack-item-content">
-      <div class="card" style="width:100%">
-        <div class="card-header">
-          <div><div class="card-title"><span class="icon" data-icon="alert" data-icon-size="14"></span> Flagged Review Records</div><div class="card-sub">Top 5, most recently added</div></div>
-          <button class="vital-ask" onclick="askNirvanaQuick('Which Voice Agent clients are flagged for review, and what should we prioritize?')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
-        </div>
-        <div id="va-flagged-records"></div>
-      </div>
-    </div></div>
-
-    <div class="grid-stack-item" gs-id="va-insights" gs-x="8" gs-y="16" gs-w="4" gs-h="3" gs-min-w="3" gs-min-h="2"><div class="grid-stack-item-content">
-      <div class="card" style="width:100%">
-        <div class="card-header"><div class="card-title"><span class="icon" data-icon="sparkle" data-icon-size="14"></span> Insights</div></div>
-        <div id="va-insights"></div>
-      </div>
-    </div></div>
-
-    <div class="grid-stack-item" gs-id="va-activity-feed" gs-x="8" gs-y="19" gs-w="4" gs-h="3" gs-min-w="3" gs-min-h="2"><div class="grid-stack-item-content">
-      <div class="card" style="width:100%">
-        <div class="card-header"><div class="card-title"><span class="icon" data-icon="chart" data-icon-size="14"></span> Activity Feed</div></div>
-        <div id="va-activity-feed"></div>
-      </div>
-    </div></div>
-
     </div>
+
+    <div class="hub-tab-panel" data-group="vaTabs" data-tab="insights">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);align-items:start">
+        <div class="card" style="width:100%">
+          <div class="card-header"><div class="card-title"><span class="icon" data-icon="sparkle" data-icon-size="14"></span> Insights</div></div>
+          <div id="va-insights"></div>
+        </div>
+        <div class="card" style="width:100%">
+          <div class="card-header"><div class="card-title"><span class="icon" data-icon="chart" data-icon-size="14"></span> Activity Feed</div></div>
+          <div id="va-activity-feed"></div>
+        </div>
+      </div>
+    </div>
+
     <div class="page-footer"><span class="org-brand-inline">The HUB · Niche Inc.</span> · Voice Agent Performance</div>
   </div>
 
@@ -4148,40 +4135,29 @@ select.wfb-field-input { padding-right: 26px; }
        PAGE 4: AD SPEND & REVENUE
   ════════════════════════════════════════════════════════════════════════ -->
   <div class="page" id="page-textagent">
-    <div class="hub-grid grid-stack" id="grid-textagent">
-
-    <div class="grid-stack-item" gs-id="ta-kpi-yelp" gs-x="0" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
-      <div class="kpi kpi-theme-blue">
+    <div class="hub-mini-grid" style="grid-template-columns:repeat(5,1fr)">
+    <div class="kpi kpi-theme-blue">
         <div class="kpi-icon" id="ta-yelp-icon"><span class="icon" data-icon="star" data-icon-size="14"></span></div>
         <div class="kpi-val" id="ta-yelp">0</div>
         <div class="kpi-lbl" data-i18n="ta_using_yelp">Using Yelp</div>
         <div class="kpi-sub" data-i18n="cl_across_portfolios">Across all portfolios</div>
         <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 130 100 C 150 95, 160 80, 172 75 C 184 70, 190 50, 200 45 C 212 39, 220 20, 232 12"/><circle cx="172" cy="75"/><circle cx="200" cy="45"/><circle cx="232" cy="12" r="3"/><circle r="3"><animateMotion dur="2.6s" repeatCount="indefinite" path="M 130 100 C 150 95, 160 80, 172 75 C 184 70, 190 50, 200 45 C 212 39, 220 20, 232 12"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.9;1" dur="2.6s" repeatCount="indefinite"/></circle></svg>
       </div>
-    </div></div>
-
-    <div class="grid-stack-item" gs-id="ta-kpi-lsa" gs-x="2" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
-      <div class="kpi kpi-theme-purple">
+    <div class="kpi kpi-theme-purple">
         <div class="kpi-icon" id="ta-lsa-icon"><span class="icon" data-icon="search" data-icon-size="14"></span></div>
         <div class="kpi-val" id="ta-lsa">0</div>
         <div class="kpi-lbl" data-i18n="ta_using_lsa">Using Google LSA</div>
         <div class="kpi-sub" data-i18n="cl_across_portfolios">Across all portfolios</div>
         <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><line x1="148" y1="92" x2="188" y2="52"/><line x1="188" y1="52" x2="226" y2="70"/><line x1="188" y1="52" x2="212" y2="18"/><line x1="148" y1="92" x2="198" y2="102"/><circle class="mesh-node" cx="148" cy="92" r="2.2" style="animation-delay:0s"/><circle class="mesh-node" cx="188" cy="52" r="3" style="animation-delay:.3s"/><circle class="mesh-node" cx="226" cy="70" r="2.2" style="animation-delay:.6s"/><circle class="mesh-node" cx="212" cy="18" r="2.2" style="animation-delay:.9s"/><circle class="mesh-node" cx="198" cy="102" r="2" style="animation-delay:1.2s"/></svg>
       </div>
-    </div></div>
-
-    <div class="grid-stack-item" gs-id="ta-kpi-thumbtack" gs-x="4" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
-      <div class="kpi kpi-theme-green">
+    <div class="kpi kpi-theme-green">
         <div class="kpi-icon" id="ta-thumbtack-icon"><span class="icon" data-icon="pin" data-icon-size="13"></span></div>
         <div class="kpi-val" id="ta-thumbtack">0</div>
         <div class="kpi-lbl" data-i18n="ta_using_thumbtack">Using Thumbtack</div>
         <div class="kpi-sub" data-i18n="cl_across_portfolios">Across all portfolios</div>
         <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><line class="bar bar-grow" x1="150" y1="105" x2="150" y2="80" style="animation-delay:0s"/><line class="bar bar-grow" x1="170" y1="105" x2="170" y2="60" style="animation-delay:.15s"/><line class="bar bar-grow" x1="190" y1="105" x2="190" y2="70" style="animation-delay:.3s"/><line class="bar bar-grow" x1="210" y1="105" x2="210" y2="40" style="animation-delay:.45s"/><line class="bar bar-grow" x1="230" y1="105" x2="230" y2="20" style="animation-delay:.6s"/></svg>
       </div>
-    </div></div>
-
-    <div class="grid-stack-item" gs-id="ta-kpi-any" gs-x="6" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
-      <div class="kpi kpi-theme-orange">
+    <div class="kpi kpi-theme-orange">
         <div class="kpi-icon"><span class="icon" data-icon="chart" data-icon-size="16"></span></div>
         <div class="kpi-val orange" id="ta-any">0</div>
         <div class="kpi-lbl" data-i18n="ta_using_atleast_one">Using At Least One</div>
@@ -4191,30 +4167,32 @@ select.wfb-field-input { padding-right: 26px; }
           <circle class="gauge-fill" id="ta-any-arc" cx="60" cy="60" r="46" stroke-dasharray="0 289" stroke-dashoffset="72" transform="rotate(-90 60 60)"/>
         </svg>
       </div>
-    </div></div>
-
-    <div class="grid-stack-item" gs-id="ta-kpi-stale" gs-x="8" gs-y="0" gs-w="2" gs-h="2" gs-min-w="2" gs-min-h="2"><div class="grid-stack-item-content">
-      <div class="kpi" style="--kpi-accent:var(--yellow)">
+    <div class="kpi" style="--kpi-accent:var(--yellow)">
         <div class="kpi-icon"><span class="icon" data-icon="alert" data-icon-size="16"></span></div>
         <div class="kpi-val" style="color:var(--yellow)" id="ta-stale">0</div>
         <div class="kpi-lbl" data-i18n="ta_flagged_review">Flagged for Review</div>
         <div class="kpi-sub" data-i18n="ta_stale_leads_sub">Stale leads: 7 days–6 months</div>
         <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><circle class="ring" cx="205" cy="60" r="10"/><circle class="ring pulse-1" cx="205" cy="60" r="19"/><circle class="ring pulse-2" cx="205" cy="60" r="28"/><circle cx="205" cy="60" r="3"/></svg>
       </div>
-    </div></div>
+    </div>
 
-    <div class="grid-stack-item" gs-id="ta-adoption-chart" gs-x="0" gs-y="2" gs-w="12" gs-h="7" gs-min-w="5" gs-min-h="4"><div class="grid-stack-item-content">
-      <div class="card" style="width:100%">
-        <div class="card-header">
-          <div><div class="card-title" data-i18n="ta_adoption_chart">Adoption Rate by Product &amp; Portfolio</div><div class="card-sub" data-i18n="ta_adoption_chart_sub">% of each portfolio's clients using each product</div></div>
-          <button class="vital-ask" onclick="askNirvanaQuick('Looking at Yelp/Google LSA/Thumbtack adoption by portfolio, what stands out and where should we focus?')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
-        </div>
-        <div class="chart-wrap h260"><canvas id="textAgentAdoptionChart"></canvas></div>
+    <div class="card" style="width:100%;margin-bottom:var(--space-4)">
+      <div class="card-header">
+        <div><div class="card-title" data-i18n="ta_adoption_chart">Adoption Rate by Product &amp; Portfolio</div><div class="card-sub" data-i18n="ta_adoption_chart_sub">% of each portfolio's clients using each product</div></div>
+        <button class="vital-ask" onclick="askNirvanaQuick('Looking at Yelp/Google LSA/Thumbtack adoption by portfolio, what stands out and where should we focus?')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
       </div>
-    </div></div>
+      <div class="chart-wrap h200"><canvas id="textAgentAdoptionChart"></canvas></div>
+    </div>
 
-    <div class="grid-stack-item" gs-id="ta-breakdown-table" gs-x="0" gs-y="9" gs-w="12" gs-h="4" gs-min-w="5" gs-min-h="3"><div class="grid-stack-item-content" style="flex-direction:column;gap:12px">
-      <div class="card" style="width:100%">
+    <div class="hub-tabs">
+      <button class="hub-tab active" data-group="taTabs" data-tab="breakdown" onclick="switchHubTab('taTabs','breakdown')">Adoption Breakdown</button>
+      <button class="hub-tab" data-group="taTabs" data-tab="stale" onclick="switchHubTab('taTabs','stale')">Stale Leads</button>
+      <button class="hub-tab" data-group="taTabs" data-tab="notes" onclick="switchHubTab('taTabs','notes')">Notes</button>
+      <button class="hub-tab" data-group="taTabs" data-tab="insights" onclick="switchHubTab('taTabs','insights')">Insights & Activity</button>
+    </div>
+
+    <div class="hub-tab-panel active" data-group="taTabs" data-tab="breakdown">
+      <div class="card" style="width:100%;margin-bottom:var(--space-4)">
         <div class="card-header">
           <div><div class="card-title" data-i18n="ta_breakdown_chart">Breakdown by Product &amp; Portfolio</div><div class="card-sub" data-i18n="ta_breakdown_chart_sub">How many clients use each product, split by dashboard — click a number to see who</div></div>
           <button class="vital-ask" onclick="askNirvanaQuick('Break down Yelp, Google LSA, and Thumbtack adoption by portfolio for me.')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
@@ -4239,10 +4217,10 @@ select.wfb-field-input { padding-right: 26px; }
         </div>
         <div id="taClientList"></div>
       </div>
-    </div></div>
+    </div>
 
-    <div class="grid-stack-item" gs-id="ta-stale-card" gs-x="0" gs-y="13" gs-w="12" gs-h="7" gs-min-w="5" gs-min-h="4"><div class="grid-stack-item-content">
-      <div class="card" style="width:100%">
+    <div class="hub-tab-panel" data-group="taTabs" data-tab="stale">
+      <div class="card" style="width:100%;margin-bottom:var(--space-4)">
         <div class="card-header">
           <div><div class="card-title" style="color:var(--yellow)"><span class="icon" data-icon="alert" data-icon-size="14"></span> <span data-i18n="ta_stale_card_title">Businesses with a Stale Last Lead</span></div><div class="card-sub" data-i18n="ta_stale_card_sub">Automatically detected from comments mentioning when the last lead was handled — flagged when that's anywhere from 7 days to 6 months ago</div></div>
           <button class="vital-ask" onclick="askNirvanaQuick('Which businesses have a stale last lead on Yelp, Google LSA, or Thumbtack, and what should we do about them?')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
@@ -4258,9 +4236,47 @@ select.wfb-field-input { padding-right: 26px; }
         </div>
         <div id="taStaleList"></div>
       </div>
-    </div></div>
 
-    <div class="grid-stack-item" gs-id="ta-notes-card" gs-x="0" gs-y="20" gs-w="12" gs-h="7" gs-min-w="5" gs-min-h="4"><div class="grid-stack-item-content">
+      <div style="display:grid;grid-template-columns:1fr 2fr;gap:var(--space-4);align-items:start">
+        <div class="card" style="width:100%">
+          <div class="card-header">
+            <div class="card-title"><span class="icon" data-icon="filter" data-icon-size="14"></span> Smart Filters</div>
+            <button class="vital-ask" onclick="askNirvanaAboutTextAgentFilters()" title="Ask Nirvana about the current filters"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
+          </div>
+          <label style="display:block;font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:5px">Portfolio</label>
+          <select class="field-input" id="taSmartFilterPortfolioSelect" style="margin-bottom:14px" onchange="setTaSmartFilterPortfolio(this.value)">
+            <option value="all">All Portfolios</option>
+            <option value="smb">SMB</option>
+            <option value="whitelabel">White Label</option>
+            <option value="support">Support</option>
+          </select>
+          <label style="display:block;font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:5px">Product</label>
+          <select class="field-input" id="taSmartFilterProductSelect" style="margin-bottom:14px" onchange="setTaSmartFilterProduct(this.value)">
+            <option value="all">All Products</option>
+            <option value="yelp">Yelp</option>
+            <option value="google_lsa">Google LSA</option>
+            <option value="thumbtack">Thumbtack</option>
+          </select>
+          <label style="display:block;font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:5px">Date Range</label>
+          <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
+            <input type="date" class="field-input" id="taSmartFilterStart" style="margin-bottom:0" onchange="setTaSmartFilterDateRange()">
+            <span style="color:var(--text3);font-size:11px">to</span>
+            <input type="date" class="field-input" id="taSmartFilterEnd" style="margin-bottom:0" onchange="setTaSmartFilterDateRange()">
+          </div>
+          <div style="font-size:10px;color:var(--text3);line-height:1.5">Affects Activity Feed and Flagged Review Records.</div>
+        </div>
+
+        <div class="card" style="width:100%">
+          <div class="card-header">
+            <div><div class="card-title"><span class="icon" data-icon="alert" data-icon-size="14"></span> Flagged Review Records</div><div class="card-sub">Oldest stale leads first</div></div>
+            <button class="vital-ask" onclick="askNirvanaQuick('Which stale leads need the most urgent follow-up right now?')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
+          </div>
+          <div id="ta-flagged-records"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hub-tab-panel" data-group="taTabs" data-tab="notes">
       <div class="card" style="width:100%">
         <div class="card-header">
           <div><div class="card-title" style="color:var(--blue)"><span class="icon" data-icon="chat" data-icon-size="14"></span> <span data-i18n="ta_notes_card_title">Yelp / Google LSA / Thumbtack Notes</span></div><div class="card-sub" id="ta-notes-sub" data-i18n="ta_notes_card_sub">Pulled from comments attached to these columns during upload, across SMB, White Label, and Support</div></div>
@@ -4283,63 +4299,21 @@ select.wfb-field-input { padding-right: 26px; }
         </div>
         <div id="taNotesList"></div>
       </div>
-    </div></div>
-
-    <div class="grid-stack-item" gs-id="ta-smart-filters" gs-x="0" gs-y="27" gs-w="3" gs-h="6" gs-min-w="2" gs-min-h="4"><div class="grid-stack-item-content">
-      <div class="card" style="width:100%">
-        <div class="card-header">
-          <div class="card-title"><span class="icon" data-icon="filter" data-icon-size="14"></span> Smart Filters</div>
-          <button class="vital-ask" onclick="askNirvanaAboutTextAgentFilters()" title="Ask Nirvana about the current filters"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
-        </div>
-        <label style="display:block;font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:5px">Portfolio</label>
-        <select class="field-input" id="taSmartFilterPortfolioSelect" style="margin-bottom:14px" onchange="setTaSmartFilterPortfolio(this.value)">
-          <option value="all">All Portfolios</option>
-          <option value="smb">SMB</option>
-          <option value="whitelabel">White Label</option>
-          <option value="support">Support</option>
-        </select>
-        <label style="display:block;font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:5px">Product</label>
-        <select class="field-input" id="taSmartFilterProductSelect" style="margin-bottom:14px" onchange="setTaSmartFilterProduct(this.value)">
-          <option value="all">All Products</option>
-          <option value="yelp">Yelp</option>
-          <option value="google_lsa">Google LSA</option>
-          <option value="thumbtack">Thumbtack</option>
-        </select>
-        <label style="display:block;font-size:10px;color:var(--text3);text-transform:uppercase;margin-bottom:5px">Date Range</label>
-        <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
-          <input type="date" class="field-input" id="taSmartFilterStart" style="margin-bottom:0" onchange="setTaSmartFilterDateRange()">
-          <span style="color:var(--text3);font-size:11px">to</span>
-          <input type="date" class="field-input" id="taSmartFilterEnd" style="margin-bottom:0" onchange="setTaSmartFilterDateRange()">
-        </div>
-        <div style="font-size:10px;color:var(--text3);line-height:1.5">Affects Activity Feed and Flagged Review Records (using each lead's real last-handled date). KPIs and the chart reflect current state and aren't retroactively date-filterable.</div>
-      </div>
-    </div></div>
-
-    <div class="grid-stack-item" gs-id="ta-flagged-records" gs-x="3" gs-y="27" gs-w="5" gs-h="6" gs-min-w="3" gs-min-h="4"><div class="grid-stack-item-content">
-      <div class="card" style="width:100%">
-        <div class="card-header">
-          <div><div class="card-title"><span class="icon" data-icon="alert" data-icon-size="14"></span> Flagged Review Records</div><div class="card-sub">Oldest stale leads first</div></div>
-          <button class="vital-ask" onclick="askNirvanaQuick('Which stale leads need the most urgent follow-up right now?')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
-        </div>
-        <div id="ta-flagged-records"></div>
-      </div>
-    </div></div>
-
-    <div class="grid-stack-item" gs-id="ta-insights" gs-x="8" gs-y="27" gs-w="4" gs-h="3" gs-min-w="3" gs-min-h="2"><div class="grid-stack-item-content">
-      <div class="card" style="width:100%">
-        <div class="card-header"><div class="card-title"><span class="icon" data-icon="sparkle" data-icon-size="14"></span> Insights</div></div>
-        <div id="ta-insights"></div>
-      </div>
-    </div></div>
-
-    <div class="grid-stack-item" gs-id="ta-activity-feed" gs-x="8" gs-y="30" gs-w="4" gs-h="3" gs-min-w="3" gs-min-h="2"><div class="grid-stack-item-content">
-      <div class="card" style="width:100%">
-        <div class="card-header"><div class="card-title"><span class="icon" data-icon="chart" data-icon-size="14"></span> Activity Feed</div></div>
-        <div id="ta-activity-feed"></div>
-      </div>
-    </div></div>
-
     </div>
+
+    <div class="hub-tab-panel" data-group="taTabs" data-tab="insights">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);align-items:start">
+        <div class="card" style="width:100%">
+          <div class="card-header"><div class="card-title"><span class="icon" data-icon="sparkle" data-icon-size="14"></span> Insights</div></div>
+          <div id="ta-insights"></div>
+        </div>
+        <div class="card" style="width:100%">
+          <div class="card-header"><div class="card-title"><span class="icon" data-icon="chart" data-icon-size="14"></span> Activity Feed</div></div>
+          <div id="ta-activity-feed"></div>
+        </div>
+      </div>
+    </div>
+
     <div class="page-footer"><span class="org-brand-inline">The HUB · Niche Inc.</span> · Yelp / Google LSA / Thumbtack Adoption</div>
   </div>
 
@@ -6129,13 +6103,13 @@ select.wfb-field-input { padding-right: 26px; }
     </div>
 
     <div id="settingsTab-cleanup" style="display:none">
-      <div class="card dq-studio-banner" style="margin-bottom:var(--space-5)">
+      <div class="card dq-studio-banner" style="margin-bottom:var(--space-4);padding:16px 20px">
         <div class="dq-studio-banner-text">
-          <div class="card-title" style="display:flex;align-items:center;gap:10px">Data Quality Studio <span class="int-coming-soon-badge" style="color:var(--orange);background:var(--orange-dim)">AI POWERED</span></div>
-          <div class="card-sub">AI continuously scans your client data to detect duplicates, conflicts, and anomalies so you can maintain a single source of truth.</div>
-          <button class="btn btn-primary btn-sm" style="margin-top:14px" onclick="runDataQualityScan(true)"><span class="icon" data-icon="search" data-icon-size="14"></span> <span data-i18n="settings_scan_btn">Scan for Duplicates</span></button>
+          <div class="card-title" style="display:flex;align-items:center;gap:10px;font-size:14px">Data Quality Studio <span class="int-coming-soon-badge" style="color:var(--orange);background:var(--orange-dim)">AI POWERED</span></div>
+          <div class="card-sub" style="font-size:11px">Continuously scans your client data to detect duplicates, conflicts, and anomalies.</div>
+          <button class="btn btn-primary btn-sm" style="margin-top:10px" onclick="runDataQualityScan(true)"><span class="icon" data-icon="search" data-icon-size="14"></span> <span data-i18n="settings_scan_btn">Scan for Duplicates</span></button>
         </div>
-        <svg class="dq-orb" viewBox="0 0 320 150" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <svg class="dq-orb" viewBox="0 0 320 150" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="max-height:90px">
           <defs>
             <radialGradient id="dqCoreGlow" cx="50%" cy="50%" r="50%">
               <stop offset="0%" stop-color="var(--orange2)" stop-opacity=".9"/>
@@ -6172,7 +6146,7 @@ select.wfb-field-input { padding-right: 26px; }
 
       <div class="int-stat-bar" id="dqStatBar"></div>
 
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--space-4);margin-bottom:var(--space-5)">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:var(--space-4);margin-bottom:var(--space-4)">
         <div class="card brand-section-card">
           <div class="card-title" style="font-size:13px">Duplicate Distribution</div>
           <div style="position:relative;height:150px;margin-top:8px;display:flex;align-items:center;justify-content:center" id="dqDistributionChart"></div>
@@ -6190,7 +6164,13 @@ select.wfb-field-input { padding-right: 26px; }
         </div>
       </div>
 
-      <div style="display:grid;grid-template-columns:1fr 340px;gap:var(--space-4);align-items:start;margin-bottom:var(--space-5)">
+      <div class="hub-tabs">
+        <button class="hub-tab active" data-group="dqTabs" data-tab="clusters" onclick="switchHubTab('dqTabs','clusters')">Clusters</button>
+        <button class="hub-tab" data-group="dqTabs" data-tab="rules" onclick="switchHubTab('dqTabs','rules')">Rules & Policies</button>
+        <button class="hub-tab" data-group="dqTabs" data-tab="activity" onclick="switchHubTab('dqTabs','activity')">Activity</button>
+      </div>
+
+      <div class="hub-tab-panel active" data-group="dqTabs" data-tab="clusters">
         <div class="card brand-section-card">
           <div class="card-header" style="margin-bottom:var(--space-3)">
             <div><div class="card-title">Duplicate Clusters</div><div class="card-sub" id="dqClusterCountSub">0 groups</div></div>
@@ -6208,7 +6188,9 @@ select.wfb-field-input { padding-right: 26px; }
           <div id="dqClustersList"></div>
           <div id="dqClusterPagination" style="display:flex;justify-content:center;gap:6px;margin-top:12px"></div>
         </div>
+      </div>
 
+      <div class="hub-tab-panel" data-group="dqTabs" data-tab="rules">
         <div class="card brand-section-card">
           <div class="card-header" style="margin-bottom:var(--space-3)">
             <div class="card-title" style="font-size:13px">Rule Builder / Cleanup Policies</div>
@@ -6219,9 +6201,11 @@ select.wfb-field-input { padding-right: 26px; }
         </div>
       </div>
 
-      <div class="card brand-section-card">
-        <div class="card-title" style="font-size:13px">Recent Activity</div>
-        <div id="dqActivityList" style="margin-top:8px"></div>
+      <div class="hub-tab-panel" data-group="dqTabs" data-tab="activity">
+        <div class="card brand-section-card">
+          <div class="card-title" style="font-size:13px">Recent Activity</div>
+          <div id="dqActivityList" style="margin-top:8px"></div>
+        </div>
       </div>
     </div>
 
