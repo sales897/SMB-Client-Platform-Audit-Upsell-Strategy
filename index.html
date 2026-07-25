@@ -476,33 +476,24 @@ body.ai-panel-open .main {
 
 .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
 .kpi {
-  background: var(--gradient-card);
+  background: var(--bg2);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: var(--space-5);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
   position: relative;
   overflow: hidden;
-  transition: border-color var(--transition-slow), transform var(--transition-base);
+  transition: border-color var(--transition-slow);
 }
-.kpi:hover { border-color: var(--orange); transform: translateY(-2px); }
-.kpi::before {
-  content: '';
-  position: absolute; top: 0; left: 0; right: 0; height: 3px;
-  background: linear-gradient(90deg, var(--orange), var(--orange2));
-}
-.kpi::after {
-  content: ''; position: absolute; bottom: -1px; right: -1px; width: 14px; height: 14px;
-  border-color: var(--orange); border-style: solid; border-width: 0 2px 2px 0; opacity: .75;
-}
-.kpi-icon { font-size: 22px; margin-bottom: 10px; }
-.kpi-val { font-family: var(--font-mono); font-size: var(--font-3xl); font-weight: 800; color: var(--text); line-height: 1; }
+.kpi:hover { border-color: var(--orange); }
+.kpi-icon { font-size: 16px; margin-bottom: 6px; color: var(--text3); }
+.kpi-val { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: var(--text); line-height: 1; }
 .kpi-val.orange { color: var(--orange); }
 .kpi-val.green { color: var(--green); }
 .kpi-val.red { color: var(--red); }
 .kpi-val.blue { color: var(--blue); }
 .kpi-val.purple { color: var(--purple); }
-.kpi-lbl { font-size: 12px; color: var(--text2); margin-top: 6px; }
-.kpi-sub { font-size: 11px; color: var(--text3); margin-top: 3px; max-width: 62%; }
+.kpi-lbl { font-size: 11px; color: var(--text2); margin-top: 4px; }
+.kpi-sub { font-size: 10px; color: var(--text3); margin-top: 2px; max-width: 62%; }
 /* Per-metric color theme (2026-07-17, Command Board redesign) -- sets one
    CSS var that both the top-border gradient and the comet-trail decoration
    below read from, so a themed card is a single class instead of repeating
@@ -512,28 +503,20 @@ body.ai-panel-open .main {
 .kpi-theme-green { --kpi-accent: var(--green); --kpi-accent2: #16a34a; }
 .kpi-theme-red { --kpi-accent: var(--red); --kpi-accent2: #dc2626; }
 .kpi-theme-purple { --kpi-accent: var(--purple); --kpi-accent2: #c084fc; }
-.kpi[class*="kpi-theme-"]::before { background: linear-gradient(90deg, var(--kpi-accent), var(--kpi-accent2)); }
-.kpi[class*="kpi-theme-"]::after { border-color: var(--kpi-accent); }
 .kpi[class*="kpi-theme-"]:hover { border-color: var(--kpi-accent); }
-.kpi-comet { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; opacity: .8; }
-.kpi-comet path, .kpi-comet polyline { fill: none; stroke: var(--kpi-accent, var(--orange)); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0 5px var(--kpi-accent, var(--orange))); }
-.kpi-comet circle:not(.ring):not(.gauge-fill) { fill: var(--kpi-accent, var(--orange)); filter: drop-shadow(0 0 4px var(--kpi-accent, var(--orange))); }
-.kpi-comet circle.ring { fill: none; stroke: var(--kpi-accent, var(--orange)); stroke-width: 1.4; opacity: .55; filter: drop-shadow(0 0 3px var(--kpi-accent, var(--orange))); }
-.kpi-comet line { stroke: var(--kpi-accent, var(--orange)); stroke-width: 1.2; opacity: .5; }
-.kpi-comet line.bar { stroke-width: 6; stroke-linecap: round; opacity: .85; filter: drop-shadow(0 0 4px var(--kpi-accent, var(--orange))); }
-.kpi-comet line.bar-grow { transform-box: fill-box; transform-origin: bottom; animation: barGrow 1.8s ease-in-out infinite; }
-@keyframes barGrow { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(.55); } }
+/* Minimalist redesign (2026-07-25) -- the comet-trail paths/lines/pulses
+   below were always decorative (fixed shapes, not plotted from real data),
+   so hiding them is an honest simplification, not just a style choice --
+   same reasoning applied to Home's old comet SVGs and All Clients' KPI
+   cards earlier in this pass. */
+.kpi-comet { display: none; }
 /* Corner radial gauge (2026-07-17) -- used where a card's number IS a real
    percentage/coverage ratio, so the arc fill is computed from the actual
-   value in JS (see rebuildKPIs), not just decorative. */
-.kpi-gauge { position: absolute; top: 8px; right: 8px; bottom: auto; left: auto; width: 60px; height: 60px; opacity: 1; }
+   value in JS (see rebuildKPIs), not just decorative. Kept visible, but the
+   constant glow-pulse is gone -- a real chart doesn't need a heartbeat. */
+.kpi-gauge { position: absolute; top: 10px; right: 10px; bottom: auto; left: auto; width: 40px; height: 40px; opacity: 1; display: block !important; }
 .kpi-gauge .ring { stroke: var(--border); opacity: 1; filter: none; stroke-width: 8; }
-.kpi-gauge .gauge-fill { fill: none; stroke: var(--kpi-accent, var(--orange)); stroke-width: 8; stroke-linecap: round; animation: gaugeGlowPulse 2.2s ease-in-out infinite; transition: stroke-dasharray var(--transition-slower); }
-@keyframes gaugeGlowPulse { 0%, 100% { filter: drop-shadow(0 0 4px var(--kpi-accent, var(--orange))); } 50% { filter: drop-shadow(0 0 11px var(--kpi-accent, var(--orange))); } }
-/* Alert sonar ping (Products Untouched) -- rings expand and fade on a loop */
-.kpi-comet .pulse-1 { animation: kpiPulse 2.4s ease-out infinite; transform-box: fill-box; transform-origin: center; }
-.kpi-comet .pulse-2 { animation: kpiPulse 2.4s ease-out infinite; animation-delay: .5s; transform-box: fill-box; transform-origin: center; }
-@keyframes kpiPulse { 0% { opacity: .6; transform: scale(.8); } 100% { opacity: 0; transform: scale(1.25); } }
+.kpi-gauge .gauge-fill { fill: none; stroke: var(--kpi-accent, var(--orange)); stroke-width: 8; stroke-linecap: round; transition: stroke-dasharray var(--transition-slower); }
 
 /* ---- Data Quality Studio banner + animated orb ---- */
 .dq-studio-banner { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); background: linear-gradient(120deg, var(--bg2) 0%, var(--bg3) 100%); overflow: hidden; }
@@ -588,16 +571,17 @@ body.ai-panel-open .main {
 .cmdboard-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: var(--space-4); }
 .cmdboard-outer { display: flex; gap: 16px; align-items: flex-start; }
 .cmdboard-content-col { flex: 1; min-width: 0; }
-.cmdboard-layout { display: grid; grid-template-columns: 250px 1fr 280px; gap: 16px; align-items: start; transition: grid-template-columns var(--transition-base); }
-.cmdboard-layout.sidebar-hidden { grid-template-columns: 0 1fr 280px; }
+.cmdboard-layout { display: flex; gap: 16px; align-items: flex-start; }
+.cmdboard-layout .cmdboard-main { flex: 1; min-width: 0; }
 .cmdboard-layout.sidebar-hidden .cmdboard-sidebar-left { display: none; }
-@media (max-width: 1300px) { .cmdboard-layout { grid-template-columns: 250px 1fr; } .cmdboard-layout .cmdboard-sidebar-right { grid-column: 1 / -1; position: static; width: 100%; } }
-@media (max-width: 900px) { .cmdboard-layout { grid-template-columns: 1fr; } .cmdboard-outer { flex-direction: column; } }
+@media (max-width: 1300px) { .cmdboard-layout { flex-wrap: wrap; } .cmdboard-layout .cmdboard-sidebar-right { width: 100%; position: static; order: 3; } .cmdboard-layout .cmdboard-main { order: 2; min-width: 260px; } .cmdboard-layout .cmdboard-sidebar-left { order: 1; } }
+@media (max-width: 900px) { .cmdboard-layout { flex-direction: column; } .cmdboard-outer { flex-direction: column; } }
 .cmdboard-sidebar-left, .cmdboard-sidebar-right {
   background: var(--gradient-card); border: 1px solid var(--border); border-radius: var(--radius);
   padding: var(--space-4); display: flex; flex-direction: column; gap: 4px;
 }
 .cmdboard-sidebar-left, .cmdboard-sidebar-right { position: sticky; top: 16px; }
+.cmdboard-sidebar-left { width: 250px; flex-shrink: 0; }
 .cmdboard-sidebar-right { width: 280px; flex-shrink: 0; }
 @media (max-width: 900px) { .cmdboard-sidebar-left, .cmdboard-sidebar-right { position: static; width: 100%; } }
 .cmdboard-sidebar-restore { position: absolute; left: -4px; top: 0; }
