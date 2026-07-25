@@ -4945,13 +4945,13 @@ select.wfb-field-input { padding-right: 26px; }
         <div class="card-header">
           <div><div class="card-title" data-i18n="kpi_current_scores">Current Scores</div><div class="card-sub" data-i18n="kpi_current_scores_sub">All three KPIs side by side — target is 5 stars across the board</div></div>
         </div>
-        <div class="chart-wrap h260"><canvas id="kpiCurrentBar"></canvas></div>
+        <div class="chart-wrap h200"><canvas id="kpiCurrentBar"></canvas></div>
       </div>
       <div class="card">
         <div class="card-header">
           <div><div class="card-title" data-i18n="kpi_score_trend">Score Trend Over Time</div><div class="card-sub" data-i18n="kpi_score_trend_sub">Every logged update, tracked automatically</div></div>
         </div>
-        <div class="chart-wrap h260"><canvas id="kpiTrendLine"></canvas></div>
+        <div class="chart-wrap h200"><canvas id="kpiTrendLine"></canvas></div>
       </div>
     </div>
 
@@ -11527,12 +11527,16 @@ function rebuildKpiHeroRow() {
 function rebuildKpiPlaybooks() {
   const container = document.getElementById('kpiPlaybooksContainer');
   if (!container) return;
-  container.innerHTML = KPI_KEYS.map(key => {
+  const tabs = KPI_KEYS.map((key, i) => {
+    const meta = getKpiMeta()[key];
+    return `<button class="hub-tab${i === 0 ? ' active' : ''}" data-group="kpiPlaybookTabs" data-tab="${key}" onclick="switchHubTab('kpiPlaybookTabs','${key}')">${meta.icon} ${meta.label}</button>`;
+  }).join('');
+  const panels = KPI_KEYS.map((key, i) => {
     const meta = getKpiMeta()[key];
     const score = getLatestKpiScore(key);
-    const sopSteps = meta.sop.map((s, i) => `
+    const sopSteps = meta.sop.map((s, j) => `
       <div class="action-step">
-        <div class="step-num" style="background:${meta.color}">${i + 1}</div>
+        <div class="step-num" style="background:${meta.color}">${j + 1}</div>
         <div class="step-body"><strong>${s.title}</strong>${s.body}</div>
       </div>`).join('');
     const signalIcon = meta.signalIcon || hubIcon('alert', 13);
@@ -11540,18 +11544,21 @@ function rebuildKpiPlaybooks() {
     const chipClass = meta.signalIcon ? 'opportunity-chip' : 'warning-chip';
     const signals = meta.signals.map(s => `<div class="${chipClass}">${signalIcon} ${s}</div>`).join('');
     return `
-      <div class="kpi-playbook-card" id="kpi-${key}" style="--kpi-accent:${meta.color}">
-        <div class="kpi-playbook-hd">
-          <div class="kpi-playbook-title">${meta.icon} ${meta.label}</div>
-          ${starPickerHtml(key, score)}
+      <div class="hub-tab-panel${i === 0 ? ' active' : ''}" data-group="kpiPlaybookTabs" data-tab="${key}">
+        <div class="kpi-playbook-card" id="kpi-${key}" style="--kpi-accent:${meta.color}">
+          <div class="kpi-playbook-hd">
+            <div class="kpi-playbook-title">${meta.icon} ${meta.label}</div>
+            ${starPickerHtml(key, score)}
+          </div>
+          <div class="kpi-why-box"><strong style="color:var(--text)">${t('kpi_why_matters')}</strong> ${meta.why}</div>
+          <div class="kpi-subhead">${t('kpi_sop_label')}</div>
+          <div class="kpi-sop-grid">${sopSteps}</div>
+          <div class="kpi-subhead">${signalsLabel}</div>
+          <div class="warning-list">${signals}</div>
         </div>
-        <div class="kpi-why-box"><strong style="color:var(--text)">${t('kpi_why_matters')}</strong> ${meta.why}</div>
-        <div class="kpi-subhead">${t('kpi_sop_label')}</div>
-        <div class="kpi-sop-grid">${sopSteps}</div>
-        <div class="kpi-subhead">${signalsLabel}</div>
-        <div class="warning-list">${signals}</div>
       </div>`;
   }).join('');
+  container.innerHTML = `<div class="hub-tabs">${tabs}</div>${panels}`;
 }
 
 function rebuildKpiCharts() {
@@ -11708,23 +11715,26 @@ function rebuildActionPlan() {
       </div>`;
   }
 
-  ac.innerHTML = '';
-  phases.forEach(ph => {
+  const tabs = phases.map((ph, i) => `<button class="hub-tab${i === 0 ? ' active' : ''}" data-group="roadmapPhaseTabs" data-tab="phase${i}" onclick="switchHubTab('roadmapPhaseTabs','phase${i}')">${ph.tag}: ${ph.title}</button>`).join('');
+  const panels = phases.map((ph, i) => {
     const steps = ph.steps.map(s => `
       <div class="action-step">
         <div class="step-num">${s.n}</div>
         <div class="step-body"><strong>${s.title}</strong>${s.body}</div>
       </div>`).join('');
-    ac.innerHTML += `
-      <div class="phase-card">
-        <div class="phase-hd">
-          <span class="phase-tag">${ph.tag}</span>
-          <span class="phase-title">${ph.title}</span>
-          <span class="phase-time">${ph.time}</span>
+    return `
+      <div class="hub-tab-panel${i === 0 ? ' active' : ''}" data-group="roadmapPhaseTabs" data-tab="phase${i}">
+        <div class="phase-card">
+          <div class="phase-hd">
+            <span class="phase-tag">${ph.tag}</span>
+            <span class="phase-title">${ph.title}</span>
+            <span class="phase-time">${ph.time}</span>
+          </div>
+          <div class="phase-steps">${steps}</div>
         </div>
-        <div class="phase-steps">${steps}</div>
       </div>`;
-  });
+  }).join('');
+  ac.innerHTML = `<div class="hub-tabs">${tabs}</div>${panels}`;
 }
 
 // ════════════════════════════════════════════════════════════════════════
