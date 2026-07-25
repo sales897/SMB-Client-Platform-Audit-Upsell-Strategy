@@ -2700,7 +2700,7 @@ tr.pg-hidden-row { display: none; }
 .cw-kb-doc-row:last-child { border-bottom: none; }
 .cw-kb-doc-name { flex: 1; color: var(--text2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-.cw-settings-cards-grid { display: flex; flex-direction: column; gap: var(--space-3); margin-bottom: var(--space-3); }
+.cw-settings-cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); margin-bottom: var(--space-3); align-items: start; }
 .cw-settings-card { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: var(--space-3); cursor: grab; transition: border-color var(--transition-base), box-shadow var(--transition-base); }
 .cw-settings-card.dragging { opacity: .4; }
 .cw-settings-card:hover { border-color: rgba(226,84,31,.4); }
@@ -2800,8 +2800,8 @@ tr.pg-hidden-row { display: none; }
 .cw-ai-impact-label { font-weight: 800; color: var(--orange); text-transform: uppercase; font-size: 10px; letter-spacing: .04em; display: flex; align-items: center; gap: 5px; }
 .cw-overview-grid-1 { display: grid; grid-template-columns: 2fr 1fr; gap: var(--space-3); margin-bottom: var(--space-3); }
 .cw-overview-grid-2 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: var(--space-3); }
-.cw-panel { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-4); }
-.cw-panel-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-3); }
+.cw-panel { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: var(--space-3) var(--space-4); }
+.cw-panel-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--space-2); }
 .cw-panel-title { display: flex; align-items: center; gap: 7px; font-weight: 700; font-size: var(--font-sm); color: var(--text); }
 .cw-panel-title .icon { color: var(--orange); }
 .cw-panel-sublabel { font-size: 9px; font-weight: 800; color: var(--text3); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 8px; }
@@ -2811,7 +2811,7 @@ tr.pg-hidden-row { display: none; }
 .cw-donut-wrap { position: relative; height: 140px; animation: chartGlowPulse 3.4s ease-in-out infinite; }
 .cw-donut-legend { text-align: left; margin-top: 10px; }
 .cw-donut-legend-row { display: flex; align-items: center; justify-content: space-between; font-size: var(--font-2xs); color: var(--text2); padding: 3px 0; }
-.cw-activity-list { display: flex; flex-direction: column; gap: 2px; max-height: 260px; overflow-y: auto; }
+.cw-activity-list { display: flex; flex-direction: column; gap: 2px; max-height: 160px; overflow-y: auto; }
 .cw-activity-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--border); font-size: var(--font-xs); }
 .cw-activity-row:last-child { border-bottom: none; }
 .cw-activity-avatar { width: 26px; height: 26px; border-radius: 50%; background: var(--bg4); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; color: var(--text2); flex-shrink: 0; }
@@ -5237,20 +5237,28 @@ select.wfb-field-input { padding-right: 26px; }
                 </div>
               </div>
             </div>
-            <div class="cw-builder-card">
-              <div class="cw-builder-card-hd"><span class="cw-builder-card-title"><span id="cwPersonalityIcon"></span> Personality</span></div>
-              <textarea id="cwPersonalitySummary" class="field-input cw-personality-summary" rows="3" style="resize:vertical;font-family:inherit;background:none;border:1px solid var(--border);padding:8px"></textarea>
-              <div class="cw-tag-group"><div class="cw-tag-group-label">Tone</div><div id="cwToneTags"></div></div>
-              <div class="cw-tag-group"><div class="cw-tag-group-label">Style</div><div id="cwStyleTags"></div></div>
-              <div class="cw-tag-group"><div class="cw-tag-group-label">Traits</div><div id="cwTraitTags"></div></div>
+            <div class="hub-tabs">
+              <button class="hub-tab active" data-group="cwSideTabs" data-tab="personality" onclick="switchHubTab('cwSideTabs','personality')">Personality</button>
+              <button class="hub-tab" data-group="cwSideTabs" data-tab="tools" onclick="switchHubTab('cwSideTabs','tools')">Tools</button>
+              <button class="hub-tab" data-group="cwSideTabs" data-tab="kb" onclick="switchHubTab('cwSideTabs','kb')">Knowledge Base</button>
             </div>
-            <div class="cw-builder-card">
-              <div class="cw-builder-card-hd"><span class="cw-builder-card-title"><span id="cwToolsIcon"></span> Tools</span></div>
-              <div id="cwToolsList"></div>
+            <div class="hub-tab-panel active" data-group="cwSideTabs" data-tab="personality">
+              <div class="cw-builder-card">
+                <textarea id="cwPersonalitySummary" class="field-input cw-personality-summary" rows="3" style="resize:vertical;font-family:inherit;background:none;border:1px solid var(--border);padding:8px"></textarea>
+                <div class="cw-tag-group"><div class="cw-tag-group-label">Tone</div><div id="cwToneTags"></div></div>
+                <div class="cw-tag-group"><div class="cw-tag-group-label">Style</div><div id="cwStyleTags"></div></div>
+                <div class="cw-tag-group"><div class="cw-tag-group-label">Traits</div><div id="cwTraitTags"></div></div>
+              </div>
             </div>
-            <div class="cw-builder-card">
-              <div class="cw-builder-card-hd"><span class="cw-builder-card-title"><span id="cwKbIcon"></span> Knowledge Base</span></div>
-              <div id="cwKbDocsList"></div>
+            <div class="hub-tab-panel" data-group="cwSideTabs" data-tab="tools">
+              <div class="cw-builder-card">
+                <div id="cwToolsList"></div>
+              </div>
+            </div>
+            <div class="hub-tab-panel" data-group="cwSideTabs" data-tab="kb">
+              <div class="cw-builder-card">
+                <div id="cwKbDocsList"></div>
+              </div>
             </div>
           </div>
         </div>
