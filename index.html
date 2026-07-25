@@ -695,12 +695,6 @@ body.ai-panel-open .main {
   box-shadow: var(--shadow);
   position: relative;
 }
-.card::before, .card::after {
-  content: ''; position: absolute; width: 14px; height: 14px;
-  border-color: var(--orange); border-style: solid; opacity: .75;
-}
-.card::before { top: -1px; left: -1px; border-width: 2px 0 0 2px; }
-.card::after { bottom: -1px; right: -1px; border-width: 0 2px 2px 0; }
 .card-header {
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: var(--space-4);
@@ -806,6 +800,7 @@ body.ai-panel-open .main {
 .chart-wrap.h300 { height: 300px; }
 .chart-wrap.h340 { height: 340px; }
 .chart-wrap.h200 { height: 200px; }
+.chart-wrap.h150 { height: 150px; }
 
 /* ─── TABLE ────────────────────────────────────────────────────────────── */
 .table-controls {
@@ -3746,21 +3741,21 @@ select.wfb-field-input { padding-right: 26px; }
               <span class="card-badge" id="badge-smb-products"><span class="icon" data-icon="chart" data-icon-size="16"></span> 0 Products</span>
             </div>
           </div>
-          <div class="chart-wrap h200"><canvas id="adoptionBar-smb"></canvas></div>
+          <div class="chart-wrap h150"><canvas id="adoptionBar-smb"></canvas></div>
         </div>
         <div class="card">
           <div class="card-header">
             <div><div class="card-title" data-i18n="chart_upsell_gap">Upsell Gap</div><div class="card-sub" data-i18n="chart_upsell_gap_sub">Bigger bar = bigger opportunity</div></div>
             <span class="card-badge" id="badge-smb-opps"><span class="icon" data-icon="target" data-icon-size="16"></span> 0 Opportunities</span>
           </div>
-          <div class="chart-wrap h200"><canvas id="gapBar-smb"></canvas></div>
+          <div class="chart-wrap h150"><canvas id="gapBar-smb"></canvas></div>
         </div>
         <div class="card">
           <div class="card-header">
             <div><div class="card-title" data-i18n="chart_products_per_client">Products Per Client</div><div class="card-sub" data-i18n="chart_distribution">Distribution of product count</div></div>
             <span class="card-badge" id="badge-smb-clients"><span class="icon" data-icon="users" data-icon-size="16"></span> 0 Clients</span>
           </div>
-          <div class="chart-wrap h200" style="position:relative">
+          <div class="chart-wrap h150" style="position:relative">
             <canvas id="distPie-smb"></canvas>
             <div style="position:absolute;top:50%;left:36%;transform:translate(-50%,-50%);text-align:center;pointer-events:none">
               <div id="distCenterNum-smb" style="font-size:18px;font-weight:700;color:var(--text);line-height:1">0</div>
@@ -3925,21 +3920,21 @@ select.wfb-field-input { padding-right: 26px; }
               <span class="card-badge" id="badge-whitelabel-products"><span class="icon" data-icon="chart" data-icon-size="16"></span> 0 Products</span>
             </div>
           </div>
-          <div class="chart-wrap h200"><canvas id="adoptionBar-whitelabel"></canvas></div>
+          <div class="chart-wrap h150"><canvas id="adoptionBar-whitelabel"></canvas></div>
         </div>
         <div class="card">
           <div class="card-header">
             <div><div class="card-title" data-i18n="chart_upsell_gap">Upsell Gap</div><div class="card-sub" data-i18n="chart_upsell_gap_sub">Bigger bar = bigger opportunity</div></div>
             <span class="card-badge" id="badge-whitelabel-opps"><span class="icon" data-icon="target" data-icon-size="16"></span> 0 Opportunities</span>
           </div>
-          <div class="chart-wrap h200"><canvas id="gapBar-whitelabel"></canvas></div>
+          <div class="chart-wrap h150"><canvas id="gapBar-whitelabel"></canvas></div>
         </div>
         <div class="card">
           <div class="card-header">
             <div><div class="card-title" data-i18n="chart_products_per_client">Products Per Client</div><div class="card-sub" data-i18n="chart_distribution">Distribution of product count</div></div>
             <span class="card-badge" id="badge-whitelabel-clients"><span class="icon" data-icon="users" data-icon-size="16"></span> 0 Clients</span>
           </div>
-          <div class="chart-wrap h200" style="position:relative">
+          <div class="chart-wrap h150" style="position:relative">
             <canvas id="distPie-whitelabel"></canvas>
             <div style="position:absolute;top:50%;left:36%;transform:translate(-50%,-50%);text-align:center;pointer-events:none">
               <div id="distCenterNum-whitelabel" style="font-size:18px;font-weight:700;color:var(--text);line-height:1">0</div>
@@ -4042,7 +4037,7 @@ select.wfb-field-input { padding-right: 26px; }
         <div><div class="card-title" data-i18n="voice_adoption_chart">Voice Agent Adoption by Portfolio</div><div class="card-sub" data-i18n="voice_adoption_chart_sub">How many clients in each portfolio use Voice Agent, vs. don't</div></div>
         <button class="vital-ask" onclick="askNirvanaQuick('Looking at Voice Agent adoption by portfolio, what stands out and where should we focus upsell efforts?')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
       </div>
-      <div class="chart-wrap h200"><canvas id="voiceBar"></canvas></div>
+      <div class="chart-wrap h150"><canvas id="voiceBar"></canvas></div>
     </div>
 
     <div class="hub-tabs">
@@ -4181,7 +4176,7 @@ select.wfb-field-input { padding-right: 26px; }
         <div><div class="card-title" data-i18n="ta_adoption_chart">Adoption Rate by Product &amp; Portfolio</div><div class="card-sub" data-i18n="ta_adoption_chart_sub">% of each portfolio's clients using each product</div></div>
         <button class="vital-ask" onclick="askNirvanaQuick('Looking at Yelp/Google LSA/Thumbtack adoption by portfolio, what stands out and where should we focus?')" title="Ask Nirvana about this"><span class="icon" data-icon="sparkle" data-icon-size="12"></span></button>
       </div>
-      <div class="chart-wrap h200"><canvas id="textAgentAdoptionChart"></canvas></div>
+      <div class="chart-wrap h150"><canvas id="textAgentAdoptionChart"></canvas></div>
     </div>
 
     <div class="hub-tabs">
@@ -4533,21 +4528,21 @@ select.wfb-field-input { padding-right: 26px; }
               <span class="card-badge" id="badge-support-products"><span class="icon" data-icon="chart" data-icon-size="16"></span> 0 Products</span>
             </div>
           </div>
-          <div class="chart-wrap h200"><canvas id="adoptionBar-support"></canvas></div>
+          <div class="chart-wrap h150"><canvas id="adoptionBar-support"></canvas></div>
         </div>
         <div class="card">
           <div class="card-header">
             <div><div class="card-title" data-i18n="chart_upsell_gap">Upsell Gap</div><div class="card-sub" data-i18n="chart_upsell_gap_sub">Bigger bar = bigger opportunity</div></div>
             <span class="card-badge" id="badge-support-opps"><span class="icon" data-icon="target" data-icon-size="16"></span> 0 Opportunities</span>
           </div>
-          <div class="chart-wrap h200"><canvas id="gapBar-support"></canvas></div>
+          <div class="chart-wrap h150"><canvas id="gapBar-support"></canvas></div>
         </div>
         <div class="card">
           <div class="card-header">
             <div><div class="card-title" data-i18n="chart_products_per_client">Products Per Client</div><div class="card-sub" data-i18n="chart_distribution">Distribution of product count</div></div>
             <span class="card-badge" id="badge-support-clients"><span class="icon" data-icon="users" data-icon-size="16"></span> 0 Clients</span>
           </div>
-          <div class="chart-wrap h200" style="position:relative">
+          <div class="chart-wrap h150" style="position:relative">
             <canvas id="distPie-support"></canvas>
             <div style="position:absolute;top:50%;left:36%;transform:translate(-50%,-50%);text-align:center;pointer-events:none">
               <div id="distCenterNum-support" style="font-size:18px;font-weight:700;color:var(--text);line-height:1">0</div>
@@ -7056,7 +7051,6 @@ initNavCollapseState();
 
 function showPage(id) {
   if (id === 'products' && !requirePermission('admin')) return;
-  document.querySelectorAll('.nav-dropdown.open').forEach(d => d.classList.remove('open'));
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + id).classList.add('active');
@@ -9491,8 +9485,15 @@ function rebuildVoicePage() {
 
   const portfolios = ['smb', 'whitelabel', 'support'];
   const labels = portfolios.map(pk => PORTFOLIOS[pk].name);
+  const totals = portfolios.map(pk => getClients(pk).length || 1);
   const usingCounts = portfolios.map(pk => getClients(pk).filter(c => c.voice_agent).length);
   const notUsingCounts = portfolios.map(pk => getClients(pk).filter(c => !c.voice_agent).length);
+  // Percent-of-portfolio, not raw counts -- with raw counts, one portfolio's
+  // sheer client volume dwarfed the axis scale and made the other two look
+  // like empty slivers, even though their actual adoption ratio might be
+  // higher. A 100%-stacked view makes all three directly comparable.
+  const usingPct = usingCounts.map((n, i) => Math.round(n / totals[i] * 1000) / 10);
+  const notUsingPct = notUsingCounts.map((n, i) => Math.round(n / totals[i] * 1000) / 10);
 
   destroyChart('voiceBar');
   const ctx = document.getElementById('voiceBar');
@@ -9502,19 +9503,20 @@ function rebuildVoicePage() {
       data: {
         labels,
         datasets: [
-          { label: 'Using Voice Agent', data: usingCounts, backgroundColor: (ctx) => verticalGradient(ctx.chart.ctx, ctx.chart.chartArea, C.green), _glowColor: resolveCssColor(C.green), borderRadius: 6 },
-          { label: 'Not Using', data: notUsingCounts, backgroundColor: (ctx) => verticalGradient(ctx.chart.ctx, ctx.chart.chartArea, '#ef4444'), _glowColor: '#ef4444', borderRadius: 6 },
+          { label: 'Using Voice Agent', data: usingPct, backgroundColor: (ctx) => verticalGradient(ctx.chart.ctx, ctx.chart.chartArea, C.green), _glowColor: resolveCssColor(C.green), borderRadius: 4, stack: 'adoption', _counts: usingCounts },
+          { label: 'Not Using', data: notUsingPct, backgroundColor: (ctx) => verticalGradient(ctx.chart.ctx, ctx.chart.chartArea, '#ef4444'), _glowColor: '#ef4444', borderRadius: 4, stack: 'adoption', _counts: notUsingCounts },
         ],
       },
       options: {
         responsive: true, maintainAspectRatio: false,
         plugins: {
-          legend: { labels: { color: C.text } },
-          tooltip: { backgroundColor: C.tooltipBg, borderColor: C.tooltipBorder, borderWidth: 1, titleColor: C.tooltipTitle, padding: 12, cornerRadius: 8 },
+          legend: { labels: { color: C.text, boxWidth: 10, font: { size: 10 } } },
+          tooltip: { backgroundColor: C.tooltipBg, borderColor: C.tooltipBorder, borderWidth: 1, titleColor: C.tooltipTitle, padding: 12, cornerRadius: 8,
+            callbacks: { label: c => ` ${c.dataset.label}: ${c.parsed.y}% (${c.dataset._counts[c.dataIndex]} clients)` } },
         },
         scales: {
-          x: { grid: { color: C.grid }, ticks: { color: C.tick } },
-          y: { grid: { color: C.grid }, ticks: { color: C.tick }, beginAtZero: true },
+          x: { stacked: true, grid: { display: false }, ticks: { color: C.tick } },
+          y: { stacked: true, min: 0, max: 100, grid: { color: C.grid }, ticks: { color: C.tick, callback: v => v + '%' } },
         },
       },
     });
