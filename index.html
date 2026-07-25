@@ -112,6 +112,12 @@
      .resizable-table (Client Directory, SMB/White Label/Support, Ad Spend,
      Collections all use this class, so this lands everywhere at once). */
   --font-mono: 'JetBrains Mono', 'Consolas', monospace;
+  /* Minimalist redesign (2026-07-24) -- the mockups used a clean system
+     sans-serif for all body text/labels/headers, not the monospace look.
+     font-mono stays defined and still used explicitly by .resizable-table
+     (data tables keep their tabular-numbers monospace look on purpose),
+     but the body default moves off mono entirely. */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
 }
 /* Section headers (h2 is used throughout for "Quick Access", "Today's
    Focus", etc.) previously had zero shared base styling — relying entirely
@@ -199,7 +205,7 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   box-shadow: var(--focus-ring);
 }
 body {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   background: var(--bg);
   color: var(--text);
   display: flex;
@@ -616,8 +622,8 @@ body.ai-panel-open .main {
 .cmdboard-view-toggle button.active { background: var(--gradient-accent); color: #fff; }
 .cmdboard-group { margin-bottom: var(--space-5); }
 .cmdboard-group-hd { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-.cmdboard-group-title { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: var(--text); }
-.cmdboard-group-count { font-family: var(--font-mono); font-size: 10.5px; color: var(--text3); font-weight: 400; text-transform: none; letter-spacing: 0; }
+.cmdboard-group-title { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; color: var(--text2); }
+.cmdboard-group-count { font-family: var(--font-mono); font-size: 10.5px; color: var(--text3); font-weight: 400; }
 .cmdboard-group-actions { display: flex; align-items: center; gap: 10px; font-size: 11px; }
 .cmdboard-group-actions a { color: var(--text3); text-decoration: none; cursor: pointer; }
 .cmdboard-group-actions a:hover { color: var(--orange); }
@@ -625,16 +631,16 @@ body.ai-panel-open .main {
 .cmdboard-health-pill.healthy { background: rgba(34,197,94,.15); color: var(--green); }
 .cmdboard-health-pill.watch { background: rgba(245,158,11,.15); color: var(--yellow); }
 .cmdboard-health-pill.risk { background: rgba(239,68,68,.15); color: var(--red); }
-.cmdboard-card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+.cmdboard-card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
 .cmdboard-client-card {
-  background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px;
+  background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px;
   cursor: pointer; transition: border-color var(--transition-base), transform var(--transition-base);
 }
 .cmdboard-client-card:hover { border-color: var(--orange); transform: translateY(-1px); }
-.cc-name { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 12.5px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.cc-name { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
 .cc-name .cc-menu { color: var(--text3); font-weight: 400; }
-.cc-products { font-size: 10.5px; color: var(--text3); margin-bottom: 8px; }
-.cc-tags { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.cc-products { font-size: 10.5px; color: var(--text3); }
+.cc-tags { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-top: 6px; }
 .cc-product-icons { display: flex; gap: 3px; margin-left: auto; }
 .cmdboard-beta { font-size: 8.5px; font-weight: 800; background: var(--orange-dim); color: var(--orange2); padding: 2px 6px; border-radius: 10px; margin-left: 4px; vertical-align: middle; }
 .cmdboard-insight-card { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; margin-bottom: 8px; cursor: pointer; transition: border-color var(--transition-base); }
@@ -22065,13 +22071,14 @@ function clHealthPill(rows) {
   return { cls: 'risk', label: 'At Risk' };
 }
 
-function renderClDirBoardClientCard(r) {
+function renderClDirBoardClientCard(r, currentGroupKey) {
   const safe = escOnclickArg(r.row.displayName);
-  const chips = r.pks.map(pk => `<span class="portfolio-chip chip-${pk}">${PORTFOLIO_ICONS[pk]} ${PORTFOLIO_LABELS[pk]}</span>`).join('');
+  const otherPks = currentGroupKey ? r.pks.filter(pk => pk !== currentGroupKey) : r.pks;
+  const chips = otherPks.map(pk => `<span class="portfolio-chip chip-${pk}">${PORTFOLIO_ICONS[pk]} ${PORTFOLIO_LABELS[pk]}</span>`).join('');
   return `<div class="cmdboard-client-card" onclick="openClientNotesTasksModal('${safe}')">
     <div class="cc-name"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escAttr(r.row.displayName)}</span><span class="cc-menu">⋮</span></div>
     <div class="cc-products">${r.total} product${r.total === 1 ? '' : 's'}</div>
-    <div class="cc-tags">${chips}</div>
+    ${chips ? `<div class="cc-tags">${chips}</div>` : ''}
   </div>`;
 }
 
@@ -22090,14 +22097,14 @@ function renderClientBoardView(rows) {
     const shown = groupRows.slice(0, 10);
     html += `<div class="cmdboard-group">
       <div class="cmdboard-group-hd">
-        <span class="cmdboard-group-title">${PORTFOLIO_ICONS[g.key]} ${g.label.toUpperCase()} <span class="cmdboard-group-count">${groupRows.length} clients</span></span>
+        <span class="cmdboard-group-title">${PORTFOLIO_ICONS[g.key]} ${g.label} <span class="cmdboard-group-count">${groupRows.length} clients</span></span>
         <div class="cmdboard-group-actions">
           <a onclick="jumpClDirToCompact('${g.key}')">View all ›</a>
           <span class="cmdboard-health-pill ${health.cls}">${health.label}</span>
           <button class="vital-ask" onclick="askNirvanaAboutClDir('group_${g.key}')" title="Ask Nirvana about this group"><span class="icon" data-icon="sparkle" data-icon-size="13"></span></button>
         </div>
       </div>
-      <div class="cmdboard-card-grid">${shown.map(renderClDirBoardClientCard).join('')}</div>
+      <div class="cmdboard-card-grid">${shown.map(r => renderClDirBoardClientCard(r, g.key)).join('')}</div>
     </div>`;
   });
   const crossSold = rows.filter(r => r.pks.length >= 2);
@@ -22105,14 +22112,14 @@ function renderClientBoardView(rows) {
     const shown = crossSold.slice(0, 10);
     html += `<div class="cmdboard-group">
       <div class="cmdboard-group-hd">
-        <span class="cmdboard-group-title" style="color:var(--purple)">${hubIcon('link',13)} CROSS-SOLD (2+ PORTFOLIOS) <span class="cmdboard-group-count">${crossSold.length} clients</span></span>
+        <span class="cmdboard-group-title" style="color:var(--purple)">${hubIcon('link',13)} Cross-Sold (2+ Portfolios) <span class="cmdboard-group-count">${crossSold.length} clients</span></span>
         <div class="cmdboard-group-actions">
           <a onclick="jumpClDirToCompact('multi')">View all ›</a>
           <span class="cmdboard-health-pill healthy">Opportunity</span>
           <button class="vital-ask" onclick="askNirvanaAboutClDir('group_crosssold')" title="Ask Nirvana about this group"><span class="icon" data-icon="sparkle" data-icon-size="13"></span></button>
         </div>
       </div>
-      <div class="cmdboard-card-grid">${shown.map(renderClDirBoardClientCard).join('')}</div>
+      <div class="cmdboard-card-grid">${shown.map(r => renderClDirBoardClientCard(r, null)).join('')}</div>
     </div>`;
   }
   wrap.innerHTML = html;
