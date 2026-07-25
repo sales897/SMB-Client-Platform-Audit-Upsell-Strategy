@@ -27801,7 +27801,7 @@ const AI_AGENT_TOOLS = [
   {
     name: 'navigate_to',
     description: 'Switch the Hub to a different page for the user.',
-    input_schema: { type: 'object', properties: { page: { type: 'string', enum: ['home', 'smb', 'whitelabel', 'support', 'clients', 'collections', 'adspend', 'action', 'workflows', 'knowledge', 'voice', 'textagent', 'upsell', 'products', 'settings', 'onboarding'] } }, required: ['page'] },
+    input_schema: { type: 'object', properties: { page: { type: 'string', enum: ['home', 'smb', 'whitelabel', 'support', 'clients', 'collections', 'adspend', 'action', 'workflows', 'knowledge', 'voice', 'textagent', 'upsell', 'products', 'settings', 'onboarding', 'ledger', 'chatwidget', 'businesshealth'] } }, required: ['page'] },
   },
   {
     name: 'open_client_profile',
@@ -28192,7 +28192,7 @@ const AI_AGENT_TOOLS = [
   },
 ];
 
-const AI_ACTION_TOOLS = ['add_note', 'create_task', 'log_kpi_score', 'create_workflow', 'update_workflow', 'delete_workflow', 'bulk_create_tasks', 'bulk_add_note', 'create_client', 'update_client_contact', 'create_reminder', 'create_onboarding', 'update_onboarding_stage', 'add_onboarding_note', 'activate_onboarding_as_client', 'delete_onboarding', 'add_onboarding_checklist_item', 'remove_onboarding_checklist_item', 'create_onboarding_pipeline', 'merge_duplicate_clients', 'create_goal', 'update_goal_progress', 'update_goal_period']; // tools that change data — always confirmed
+const AI_ACTION_TOOLS = ['add_note', 'create_task', 'log_kpi_score', 'create_workflow', 'update_workflow', 'delete_workflow', 'bulk_create_tasks', 'bulk_add_note', 'create_client', 'update_client_contact', 'create_reminder', 'create_onboarding', 'update_onboarding_stage', 'add_onboarding_note', 'activate_onboarding_as_client', 'delete_onboarding', 'add_onboarding_checklist_item', 'remove_onboarding_checklist_item', 'create_onboarding_pipeline', 'merge_duplicate_clients', 'create_goal', 'update_goal_progress', 'update_goal_period', 'add_client_contact', 'delete_client_contact', 'merge_duplicate_cluster', 'publish_branding', 'update_branding_draft']; // tools that change data — always confirmed
 
 // Strips everything except letters/digits, so "1-800 Water Damage" and
 // "1800 Water Damage" (or "Chung, DDS" vs "Chung DDS") compare equal. Used
