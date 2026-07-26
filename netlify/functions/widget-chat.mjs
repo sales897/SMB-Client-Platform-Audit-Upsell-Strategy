@@ -30,7 +30,7 @@
 // public marketing site's lead-capture chat), not appropriate to lean on
 // for anything requiring real security guarantees.
 
-const SUPABASE_URL = "https://banmahudemvjkygwihsd.supabase.co";
+const SUPABASE_URL = Netlify.env.get("SUPABASE_URL") || "https://banmahudemvjkygwihsd.supabase.co";
 const GOOGLE_CALENDAR_CLIENT_ID = "512550241298-me0g34krgime9v61pij5ir9610h7iqlo.apps.googleusercontent.com";
 
 const CORS_HEADERS = {

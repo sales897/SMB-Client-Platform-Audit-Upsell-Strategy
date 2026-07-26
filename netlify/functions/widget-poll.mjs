@@ -14,7 +14,7 @@
 // endpoint only ever returns messages for the ONE conversation_id given,
 // via the service-role key server-side, never a list of conversations.
 
-const SUPABASE_URL = "https://banmahudemvjkygwihsd.supabase.co";
+const SUPABASE_URL = Netlify.env.get("SUPABASE_URL") || "https://banmahudemvjkygwihsd.supabase.co";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
