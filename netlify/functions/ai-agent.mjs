@@ -26,20 +26,27 @@
 // questions is the workaround (there's no config to raise this limit
 // ourselves; it's a platform-level ceiling).
 
-// Error logging (operational readiness, 2026-07-25) -- reports genuine
-// backend failures (can't reach Anthropic, Anthropic itself errors) to the
-// same client_errors table the browser logs to. Fire-and-forget: a logging
-// failure must never affect the actual response to the user.
+// Error logging (operational readiness, 2026-07-25; fixed 2026-07-26) -- reports
+// genuine backend failures to the same client_errors table the browser logs to.
+// IMPORTANT: this must be awaited by every caller. It was originally
+// fire-and-forget (not awaited), on the theory that logging shouldn't slow
+// down the response -- but real production testing showed it never actually
+// wrote anything: this Edge Function runtime tears down the execution context
+// the instant a Response is returned, killing any in-flight, un-awaited fetch
+// before it completes. Every call site here is on an already-slow,
+// already-broken error path (never the successful streaming path), so the
+// small added latency from actually awaiting it is the right tradeoff for
+// getting real error visibility instead of a logger that silently never worked.
 const SUPABASE_URL = Netlify.env.get("SUPABASE_URL") || "https://banmahudemvjkygwihsd.supabase.co";
 const SUPABASE_ANON_KEY = Netlify.env.get("SUPABASE_ANON_KEY") || "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJhbm1haHVkZW12amt5Z3dpaHNkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI5MjIzOTIsImV4cCI6MjA5ODQ5ODM5Mn0.01Y4i_nAFt-wmN-YNcE3dw_3od0NoU4HgvjwSCWw0cc";
-function logServerError(message) {
+async function logServerError(message) {
   try {
-    fetch(`${SUPABASE_URL}/rest/v1/client_errors`, {
+    await fetch(`${SUPABASE_URL}/rest/v1/client_errors`, {
       method: 'POST',
       headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ source: 'ai-agent', message: String(message).slice(0, 2000) }),
-    }).catch(() => {});
-  } catch (e) { /* never let the error logger itself throw */ }
+    });
+  } catch (e) { /* never let the error logger itself throw or block the real response */ }
 }
 
 export default async (req, context) => {
@@ -94,17 +101,17 @@ export default async (req, context) => {
     // which sent people down the wrong troubleshooting path (re-logging in
     // does nothing for a transient network issue).
     if (!userRes.ok && userRes.status !== 401 && userRes.status !== 403) {
-      logServerError(`Auth check got ${userRes.status} on first try, retrying once`);
+      await logServerError(`Auth check got ${userRes.status} on first try, retrying once`);
       userRes = await verifyToken();
     }
   } catch (e) {
     // The fetch itself threw (DNS/timeout/connection reset) -- also transient,
     // also worth one retry before treating it as a real failure.
     try {
-      logServerError('Auth check network error on first try, retrying once: ' + e.message);
+      await logServerError('Auth check network error on first try, retrying once: ' + e.message);
       userRes = await verifyToken();
     } catch (e2) {
-      logServerError('Auth check failed twice, giving up: ' + e2.message);
+      await logServerError('Auth check failed twice, giving up: ' + e2.message);
       return new Response(JSON.stringify({ error: 'Having trouble verifying your session right now -- this is likely temporary, please try again in a moment.' }), {
         status: 503,
         headers: { 'Content-Type': 'application/json' },
@@ -124,7 +131,7 @@ export default async (req, context) => {
     }
     // Still failing after a retry, and not a real rejection -- an actual
     // outage on Supabase's side, not something logging in again would fix.
-    logServerError(`Auth check still failing after retry: status ${userRes.status}`);
+    await logServerError(`Auth check still failing after retry: status ${userRes.status}`);
     return new Response(JSON.stringify({ error: 'Having trouble verifying your session right now -- this is likely temporary, please try again in a moment.' }), {
       status: 503,
       headers: { 'Content-Type': 'application/json' },
@@ -141,7 +148,7 @@ export default async (req, context) => {
       });
     }
   } catch (e) {
-    logServerError('Auth verification response could not be parsed: ' + e.message);
+    await logServerError('Auth verification response could not be parsed: ' + e.message);
     return new Response(JSON.stringify({ error: 'Could not verify your session right now. Please try again.' }), {
       status: 401,
       headers: { 'Content-Type': 'application/json' },
@@ -173,10 +180,10 @@ export default async (req, context) => {
     // than blocking every legitimate user because of an unrelated outage --
     // logged so it's visible, but doesn't take Nirvana down with it.
     else {
-      logServerError('Rate limit check failed with status ' + rlRes.status + ', failing open');
+      await logServerError('Rate limit check failed with status ' + rlRes.status + ', failing open');
     }
   } catch (e) {
-    logServerError('Rate limit check errored, failing open: ' + e.message);
+    await logServerError('Rate limit check errored, failing open: ' + e.message);
   }
 
   let payload;
@@ -216,7 +223,7 @@ export default async (req, context) => {
       }),
     });
   } catch (e) {
-    logServerError('Could not reach Anthropic API: ' + e.message);
+    await logServerError('Could not reach Anthropic API: ' + e.message);
     return new Response(JSON.stringify({ error: 'Could not reach Anthropic API: ' + e.message }), {
       status: 502,
       headers: { 'Content-Type': 'application/json' },
@@ -227,7 +234,7 @@ export default async (req, context) => {
     // Anthropic rejected the request (bad input, rate limit, etc.) — pass its
     // real error body straight through so the frontend shows the actual reason.
     const errBody = await anthropicRes.text();
-    logServerError(`Anthropic API returned ${anthropicRes.status}: ${errBody.slice(0, 500)}`);
+    await logServerError(`Anthropic API returned ${anthropicRes.status}: ${errBody.slice(0, 500)}`);
     return new Response(errBody, {
       status: anthropicRes.status,
       headers: { 'Content-Type': 'application/json' },
