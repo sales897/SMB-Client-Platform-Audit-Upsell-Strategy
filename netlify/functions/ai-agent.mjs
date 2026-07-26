@@ -112,7 +112,11 @@ export default async (req, context) => {
       userRes = await verifyToken();
     } catch (e2) {
       await logServerError('Auth check failed twice, giving up: ' + e2.message);
-      return new Response(JSON.stringify({ error: 'Having trouble verifying your session right now -- this is likely temporary, please try again in a moment.' }), {
+      // TEMPORARY DIAGNOSTIC (2026-07-26): exposing the raw exception message
+      // directly in the response, since indirect logging to client_errors has
+      // not been landing and we need to see the actual failure to root-cause
+      // it. Revert this to the generic message once resolved.
+      return new Response(JSON.stringify({ error: `[DIAG] Auth check threw twice: ${e2.message}` }), {
         status: 503,
         headers: { 'Content-Type': 'application/json' },
       });
@@ -132,7 +136,11 @@ export default async (req, context) => {
     // Still failing after a retry, and not a real rejection -- an actual
     // outage on Supabase's side, not something logging in again would fix.
     await logServerError(`Auth check still failing after retry: status ${userRes.status}`);
-    return new Response(JSON.stringify({ error: 'Having trouble verifying your session right now -- this is likely temporary, please try again in a moment.' }), {
+    // TEMPORARY DIAGNOSTIC (2026-07-26): include the real status and response
+    // body directly in what the user sees, for the same reason as above.
+    let bodyText = '';
+    try { bodyText = (await userRes.text()).slice(0, 300); } catch (e3) { bodyText = '(could not read body: ' + e3.message + ')'; }
+    return new Response(JSON.stringify({ error: `[DIAG] Auth check status ${userRes.status}, body: ${bodyText}` }), {
       status: 503,
       headers: { 'Content-Type': 'application/json' },
     });
