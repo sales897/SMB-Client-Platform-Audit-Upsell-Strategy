@@ -19823,7 +19823,7 @@ function showPolishButton(targetId) {
 async function quickAiCompletion(systemPrompt, userText) {
   const res = await fetch(AI_AGENT_ENDPOINT, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'Authorization': SB_HEADERS['Authorization'] || '' },
     body: JSON.stringify({ system: systemPrompt, messages: [{ role: 'user', content: userText }] }),
   });
   const contentType = res.headers.get('content-type') || '';
@@ -24376,7 +24376,7 @@ const WORKFLOW_BUILD_TOOLS = [
 async function runWorkflowBuildTurn(systemPrompt, messages, tools) {
   const res = await fetch(AI_AGENT_ENDPOINT, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'Authorization': SB_HEADERS['Authorization'] || '' },
     body: JSON.stringify({ system: systemPrompt, messages, tools }),
   });
   const contentType = res.headers.get('content-type') || '';
@@ -30165,7 +30165,7 @@ function finalizeStreamingBubble(streamRef) {
 async function streamAiAgentResponse(systemPrompt, onTextDelta) {
   const res = await fetch(AI_AGENT_ENDPOINT, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'Authorization': SB_HEADERS['Authorization'] || '' },
     body: JSON.stringify({ system: systemPrompt, messages: aiAgentMessages, tools: AI_AGENT_TOOLS }),
   });
 
