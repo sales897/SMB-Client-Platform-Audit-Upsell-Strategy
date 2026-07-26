@@ -58,6 +58,80 @@ export default async (req, context) => {
     );
   }
 
+  // ─── Auth check (2026-07-25) ────────────────────────────────────────────
+  // This endpoint previously accepted requests from anyone who knew the URL
+  // -- no session check at all, despite holding a real, billed API key.
+  // The frontend now sends the user's actual Supabase session token in the
+  // Authorization header (the same token already used for every other
+  // Supabase call, via SB_HEADERS.Authorization); verify it here before
+  // doing anything else.
+  const authHeader = req.headers.get('authorization') || '';
+  const callerToken = authHeader.replace(/^Bearer\s+/i, '');
+  if (!callerToken) {
+    return new Response(JSON.stringify({ error: 'Not signed in. Please log in and try again.' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  let callerEmail;
+  try {
+    const userRes = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${callerToken}` },
+    });
+    if (!userRes.ok) {
+      return new Response(JSON.stringify({ error: 'Your session has expired. Please log in again.' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+    const userData = await userRes.json();
+    callerEmail = userData && userData.email;
+    if (!callerEmail) {
+      return new Response(JSON.stringify({ error: 'Could not verify your session. Please log in again.' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+  } catch (e) {
+    logServerError('Auth verification failed: ' + e.message);
+    return new Response(JSON.stringify({ error: 'Could not verify your session right now. Please try again.' }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  // ─── Rate limit (2026-07-25) ────────────────────────────────────────────
+  // Per-minute cap catches a runaway loop; per-day cap catches sustained
+  // cost overrun. Checked and logged atomically in one RPC call.
+  try {
+    const rlRes = await fetch(`${SUPABASE_URL}/rest/v1/rpc/check_and_log_ai_usage`, {
+      method: 'POST',
+      headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${callerToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_email: callerEmail }),
+    });
+    if (rlRes.ok) {
+      const rl = await rlRes.json();
+      if (rl && rl.allowed === false) {
+        const msg = rl.reason === 'per_minute_limit_exceeded'
+          ? `You're sending requests too quickly (limit: ${rl.limit}/minute). Wait a moment and try again.`
+          : `Daily AI usage limit reached (${rl.limit}/day). This resets rolling, try again later.`;
+        return new Response(JSON.stringify({ error: msg }), {
+          status: 429,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+    }
+    // If the rate-limit check itself fails (rlRes not ok), fail OPEN rather
+    // than blocking every legitimate user because of an unrelated outage --
+    // logged so it's visible, but doesn't take Nirvana down with it.
+    else {
+      logServerError('Rate limit check failed with status ' + rlRes.status + ', failing open');
+    }
+  } catch (e) {
+    logServerError('Rate limit check errored, failing open: ' + e.message);
+  }
+
   let payload;
   try {
     payload = await req.json();
