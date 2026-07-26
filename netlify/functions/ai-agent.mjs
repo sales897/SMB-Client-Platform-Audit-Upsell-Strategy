@@ -75,16 +75,63 @@ export default async (req, context) => {
   }
 
   let callerEmail;
-  try {
-    const userRes = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+  async function verifyToken() {
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
       headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${callerToken}` },
     });
-    if (!userRes.ok) {
+    return res;
+  }
+
+  let userRes;
+  try {
+    userRes = await verifyToken();
+    // A genuine 401/403 means Supabase itself rejected the token -- that's a
+    // real "please log in again". Anything else non-ok (a 5xx from Supabase's
+    // own infrastructure, for instance) is much more likely a transient blip
+    // than a real rejection, so it gets one retry before we give up --
+    // conflating the two was the actual bug: a brief hiccup calling out to
+    // Supabase was previously indistinguishable from a truly expired session,
+    // which sent people down the wrong troubleshooting path (re-logging in
+    // does nothing for a transient network issue).
+    if (!userRes.ok && userRes.status !== 401 && userRes.status !== 403) {
+      logServerError(`Auth check got ${userRes.status} on first try, retrying once`);
+      userRes = await verifyToken();
+    }
+  } catch (e) {
+    // The fetch itself threw (DNS/timeout/connection reset) -- also transient,
+    // also worth one retry before treating it as a real failure.
+    try {
+      logServerError('Auth check network error on first try, retrying once: ' + e.message);
+      userRes = await verifyToken();
+    } catch (e2) {
+      logServerError('Auth check failed twice, giving up: ' + e2.message);
+      return new Response(JSON.stringify({ error: 'Having trouble verifying your session right now -- this is likely temporary, please try again in a moment.' }), {
+        status: 503,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+  }
+
+  if (!userRes.ok) {
+    if (userRes.status === 401 || userRes.status === 403) {
+      // A real rejection, confirmed on this attempt (or the retry) -- the
+      // token genuinely is invalid/expired. "Log in again" is the correct
+      // advice here.
       return new Response(JSON.stringify({ error: 'Your session has expired. Please log in again.' }), {
         status: 401,
         headers: { 'Content-Type': 'application/json' },
       });
     }
+    // Still failing after a retry, and not a real rejection -- an actual
+    // outage on Supabase's side, not something logging in again would fix.
+    logServerError(`Auth check still failing after retry: status ${userRes.status}`);
+    return new Response(JSON.stringify({ error: 'Having trouble verifying your session right now -- this is likely temporary, please try again in a moment.' }), {
+      status: 503,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  try {
     const userData = await userRes.json();
     callerEmail = userData && userData.email;
     if (!callerEmail) {
@@ -94,7 +141,7 @@ export default async (req, context) => {
       });
     }
   } catch (e) {
-    logServerError('Auth verification failed: ' + e.message);
+    logServerError('Auth verification response could not be parsed: ' + e.message);
     return new Response(JSON.stringify({ error: 'Could not verify your session right now. Please try again.' }), {
       status: 401,
       headers: { 'Content-Type': 'application/json' },
