@@ -30738,7 +30738,7 @@ async function selectNirvanaAvatarKey(key) {
   try {
     await saveNirvanaSettings({ nirvana_avatar_key: key });
     renderNirvanaAvatarPicker();
-    showToast(`Nirvana's picture updated.`, 'success');
+    showToast(`AI Agent picture updated.`, 'success');
   } catch (e) {
     showToast(`Couldn't update Nirvana's picture: ${e.message}`, 'error');
   }
@@ -30762,7 +30762,7 @@ function handleNirvanaAvatarUpload(event) {
       try {
         await saveNirvanaSettings({ nirvana_avatar_key: 'custom', nirvana_avatar_custom_url: dataUrl });
         renderNirvanaAvatarPicker();
-        showToast(`Nirvana's picture updated.`, 'success');
+        showToast(`AI Agent picture updated.`, 'success');
       } catch (e) {
         showToast(`Couldn't upload the photo: ${e.message}`, 'error');
       }
