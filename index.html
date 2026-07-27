@@ -21796,7 +21796,15 @@ function onBhCustomRangeChange() {
 // report can never silently drift from what's on the page.
 function computeBusinessHealthReport(period) {
   const { start, end } = bhPeriodRange(period);
-  const total = BH_INVENTORY.length;
+  // "Total customers" counts unique clients, not raw portfolio_clients rows --
+  // a client with both an SMB and a White Label relationship is one customer
+  // with two product relationships, not two customers. Matches the same
+  // name-normalization buildMergedClients() uses for the All Clients nav
+  // badge, so this number and that one can't drift apart again the way they
+  // did before (1,420 raw rows vs 1,386 unique clients).
+  const normName = (r) => (r.name || '').trim().toLowerCase();
+  const uniqueClientNames = new Set(BH_INVENTORY.map(normName).filter(Boolean));
+  const total = uniqueClientNames.size;
   const paying = BH_INVENTORY.filter(r => r.billing_status === 'billed').length;
   const active30 = BH_INVENTORY.filter(r => daysSinceLastClientNote(r.name) <= 30).length;
   const active90 = BH_INVENTORY.filter(r => daysSinceLastClientNote(r.name) <= 90).length;
@@ -21804,6 +21812,11 @@ function computeBusinessHealthReport(period) {
   const active365 = BH_INVENTORY.filter(r => daysSinceLastClientNote(r.name) <= 365).length;
   const newInPeriod = BH_INVENTORY.filter(r => bhInRange(r.created_at, start, end)).length;
   const churnedInPeriod = BH_INVENTORY.filter(r => r.customer_status === 'cancelled' && bhInRange(r.cancellation_date, start, end)).length;
+  // NOTE: paying/active*/newInPeriod/churnedInPeriod/activeUnbilled/payingInactive/noOwner
+  // below are still raw-row counts, not deduplicated by client -- left as-is
+  // deliberately, since "is a multi-portfolio client counted as paying if only
+  // one of their two relationships is billed?" is a separate judgment call
+  // nobody's made yet. Flagged for Oscar rather than silently decided here.
 
   // Reuses the SAME per-client health engine used everywhere else in the
   // Hub (Client Spotlight, get_client_health, get_at_risk_clients) --
@@ -21818,14 +21831,22 @@ function computeBusinessHealthReport(period) {
   const noOwner = BH_INVENTORY.filter(r => !r.account_owner).length;
 
   const withRate = BH_INVENTORY.filter(r => r.monthly_rate && r.customer_status !== 'cancelled');
+  // mrr already correctly sums across every one of a client's rows -- summing
+  // revenue across a multi-portfolio client's relationships is exactly the
+  // intended behavior, so this doesn't change.
   const mrr = withRate.reduce((s, r) => s + Number(r.monthly_rate), 0);
-  const rateCoverage = total ? Math.round(withRate.length / total * 100) : 0;
+  // rateCoverage and arpu now use the deduplicated rated-client count instead
+  // of a raw row count, so they stay meaningful against the new, deduplicated
+  // "total" above (a raw-row denominator here would let rateCoverage exceed
+  // 100% for a client rated in more than one portfolio).
+  const ratedClientNames = new Set(withRate.map(normName).filter(Boolean));
+  const rateCoverage = total ? Math.round(ratedClientNames.size / total * 100) : 0;
 
   return {
     period, start, end, total, paying, active30, active90, active180, active365,
     newInPeriod, churnedInPeriod, healthy, watch, atRisk,
     activeUnbilled, payingInactive, noOwner,
-    mrr, arr: mrr * 12, arpu: withRate.length ? mrr / withRate.length : 0, rateCoverage,
+    mrr, arr: mrr * 12, arpu: ratedClientNames.size ? mrr / ratedClientNames.size : 0, rateCoverage,
   };
 }
 
