@@ -19820,7 +19820,18 @@ function showPolishButton(targetId) {
 // text back." Since the backend always streams now (Block 3), this parses
 // that stream and returns the final accumulated text — used by both the
 // Notes "Polish with AI" button and the Client Spotlight's AI suggestion.
+let _lastQuickAiCompletionAt = 0;
+const QUICK_AI_COOLDOWN_MS = 300; // ~3/sec ceiling -- generous for any single legitimate feature,
+// but stops a burst (found 2026-07-27: 20 near-simultaneous calls from one
+// of this function's ~18 callers, tripping the server-side per-minute rate
+// limiter) at the source instead of relying on that limiter to reject the
+// overflow downstream.
 async function quickAiCompletion(systemPrompt, userText) {
+  const now = Date.now();
+  if (now - _lastQuickAiCompletionAt < QUICK_AI_COOLDOWN_MS) {
+    throw new Error('Too many quick AI requests in a row -- please wait a moment and try again.');
+  }
+  _lastQuickAiCompletionAt = now;
   const res = await fetch(AI_AGENT_ENDPOINT, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': SB_HEADERS['Authorization'] || '' },
