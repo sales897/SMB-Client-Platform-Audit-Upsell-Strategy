@@ -2049,7 +2049,13 @@ tr.pg-hidden-row { display: none; }
 [data-icon="star"] { color: var(--yellow); filter: drop-shadow(0 0 4px rgba(234,179,8,.7)); }
 .kpi-star-picker .star:not(.filled) [data-icon="star"] { color: var(--border); filter: none; }
 .notif-panel {
-  position: fixed; top: 70px; right: 24px; z-index: 2500;
+  /* Anchored via JS (see toggleNotificationPanel) using getBoundingClientRect()
+     on the bell button, not the old hardcoded top:70px;right:24px -- that was
+     a leftover from when the bell lived in a top-right topbar. It now lives
+     in the bottom-left sidebar next to the profile menu, so a fixed
+     top/right offset put the panel nowhere near its own trigger. Same fix
+     pattern already used for .profile-menu. */
+  position: fixed; z-index: 2500;
   width: 320px; max-height: 420px; overflow-y: auto;
   background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
   box-shadow: var(--shadow); padding: 10px;
@@ -19301,10 +19307,31 @@ function renderMyRemindersWidget() {
     </div>`).join('');
 }
 
+// Same fix pattern as positionProfileMenu (profile-menu) -- the bell moved
+// from a top-right topbar into the bottom-left sidebar at some point, but
+// this panel's positioning was never updated to follow it. Coordinates are
+// computed here from the bell's actual screen position, not hardcoded.
+function positionNotifPanel() {
+  const panel = document.getElementById('notificationPanel');
+  const bellBtn = document.getElementById('topbarBellBtn');
+  if (!panel || !bellBtn) return;
+  const r = bellBtn.getBoundingClientRect();
+  const panelW = 320;
+  const margin = 8;
+  let left = r.left;
+  left = Math.min(left, window.innerWidth - panelW - margin);
+  left = Math.max(left, margin);
+  let bottom = window.innerHeight - r.top + margin;
+  panel.style.left = left + 'px';
+  panel.style.bottom = bottom + 'px';
+  panel.style.top = 'auto';
+  panel.style.right = 'auto';
+}
 function toggleNotificationPanel() {
   const panel = document.getElementById('notificationPanel');
   if (!panel) return;
   const showing = panel.style.display !== 'none';
+  if (!showing) positionNotifPanel();
   panel.style.display = showing ? 'none' : '';
   if (!showing) renderNotificationList();
 }
