@@ -900,6 +900,8 @@ body.ai-panel-open .main {
   color: var(--text2);
   background: var(--bg3);
   transition: all var(--transition-base);
+  width: 150px; flex-shrink: 0;
+  text-overflow: ellipsis; white-space: nowrap; overflow: hidden;
 }
 .filter-pill-select:hover { border-color: var(--orange); color: var(--orange); }
 .filter-pill-select.active { background: var(--gradient-accent); border-color: var(--orange); color: white; }
@@ -957,6 +959,8 @@ body.ai-panel-open .main {
 .chip-whitelabel { background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.3); }
 .chip-support { background:rgba(239,68,68,.15);color:var(--red);border:1px solid rgba(239,68,68,.3); }
 .chip-addon { background:var(--bg4);color:var(--text2);border:1px solid var(--border); }
+.chip-addon-clickable { cursor: pointer; transition: all var(--transition-base); }
+.chip-addon-clickable:hover { border-color: var(--orange); color: var(--orange); }
 .row-action-btn { padding:5px 11px;font-size:10.5px;font-weight:700;border-radius:var(--radius-xs);cursor:pointer;border:1px solid var(--border);background:var(--bg3);color:var(--text2);margin-right:6px;transition:all var(--transition-base); }
 .row-action-btn:hover { border-color:var(--orange);color:var(--orange); }
 .row-action-btn.danger:hover { border-color:var(--red);color:var(--red);background:rgba(239,68,68,.08); }
@@ -11197,7 +11201,7 @@ function rebuildClientTable(pk, resortOnly = false) {
         return `<td>${escAttr(c.name) || '—'}${nameNote ? ` <span class="cell-note" data-tooltip="${escAttr(nameNote)}"><span class="icon" data-icon="chat" data-icon-size="14"></span></span>` : ''}</td>`;
       }
       if (col.key === 'org') {
-        return `<td>${c.org ? `<span class="portfolio-chip chip-addon"><span class="icon" data-icon="building" data-icon-size="14"></span> ${escAttr(c.org)}</span>` : '<span style="color:var(--text3)">—</span>'}</td>`;
+        return `<td>${c.org ? `<span class="portfolio-chip chip-addon chip-addon-clickable" onclick="filterByOrgFromCell('${pk}','${escAttr(c.org)}')" title="Show all clients under ${escAttr(c.org)}"><span class="icon" data-icon="building" data-icon-size="14"></span> ${escAttr(c.org)}</span>` : '<span style="color:var(--text3)">—</span>'}</td>`;
       }
       if (col.key === '__count') {
         return `<td><span class="pc-badge pc-${Math.min(pc,6)}">${pc}</span></td>`;
@@ -11269,6 +11273,15 @@ function filterByOrg(pk, orgVal) {
   activeOrgFilters[pk] = orgVal;
   filterTable(pk);
   renderOrgRollup(pk);
+}
+// Clicking an Organization chip directly in the table -- reuses filterByOrg
+// entirely (same filtering, same rollup card), just also keeps the "All
+// Businesses" dropdown in sync so it doesn't silently show the wrong state
+// while the table is actually filtered to one organization.
+function filterByOrgFromCell(pk, orgVal) {
+  const sel = document.getElementById('orgFilter-' + pk);
+  if (sel) sel.value = orgVal;
+  filterByOrg(pk, orgVal);
 }
 
 function renderOrgRollup(pk) {
