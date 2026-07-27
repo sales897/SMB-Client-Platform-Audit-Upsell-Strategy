@@ -6284,7 +6284,7 @@ select.wfb-field-input { padding-right: 26px; }
     <div id="settingsTab-ai" style="display:none">
       <div class="card" style="margin-bottom:var(--space-4)">
         <div class="card-header">
-          <div><div class="card-title"><span class="icon" data-icon="bot" data-icon-size="14"></span> Nirvana's Picture</div><div class="card-sub">Pick a curated character, or upload your own photo</div></div>
+          <div><div class="card-title"><span class="icon" data-icon="bot" data-icon-size="14"></span> AI Agent Picture</div><div class="card-sub">Pick a curated character, or upload your own photo</div></div>
         </div>
         <div id="nirvanaAvatarPicker" style="display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-bottom:12px"></div>
         <div style="display:flex;align-items:center;gap:10px">
@@ -6313,7 +6313,7 @@ select.wfb-field-input { padding-right: 26px; }
           <div>
             <label class="field-label">Color</label>
             <div style="display:flex;align-items:center;gap:10px">
-              <input type="color" id="nirvanaGlowColorInput" style="width:44px;height:36px;border-radius:8px;border:1px solid var(--border);background:none;cursor:pointer">
+              <input type="color" id="nirvanaGlowColorInput" oninput="syncNirvanaGlowColorFromSwatch()" style="width:44px;height:36px;border-radius:8px;border:1px solid var(--border);background:none;cursor:pointer">
               <input type="text" id="nirvanaGlowColorHex" class="field-input" placeholder="Default (brand orange)" style="margin-bottom:0" oninput="onNirvanaGlowHexChange()">
               <button class="btn btn-ghost btn-sm" onclick="resetNirvanaGlowColor()">Reset to brand color</button>
             </div>
@@ -30518,10 +30518,14 @@ function renderNirvanaAvatarPicker() {
   const hint = document.getElementById('nirvanaAvatarUploadHint');
   if (hint) hint.textContent = activeKey === 'custom' ? 'Using a custom uploaded photo' : '';
 }
-function selectNirvanaAvatarKey(key) {
-  saveNirvanaSettings({ nirvana_avatar_key: key });
-  renderNirvanaAvatarPicker();
-  showToast(`Nirvana's picture updated.`, 'success');
+async function selectNirvanaAvatarKey(key) {
+  try {
+    await saveNirvanaSettings({ nirvana_avatar_key: key });
+    renderNirvanaAvatarPicker();
+    showToast(`Nirvana's picture updated.`, 'success');
+  } catch (e) {
+    showToast(`Couldn't update Nirvana's picture: ${e.message}`, 'error');
+  }
 }
 function handleNirvanaAvatarUpload(event) {
   const file = event.target.files[0];
@@ -30539,9 +30543,13 @@ function handleNirvanaAvatarUpload(event) {
       const w = img.width * scale, h = img.height * scale;
       ctx.drawImage(img, (size - w) / 2, (size - h) / 2, w, h);
       const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-      await saveNirvanaSettings({ nirvana_avatar_key: 'custom', nirvana_avatar_custom_url: dataUrl });
-      renderNirvanaAvatarPicker();
-      showToast(`Nirvana's picture updated.`, 'success');
+      try {
+        await saveNirvanaSettings({ nirvana_avatar_key: 'custom', nirvana_avatar_custom_url: dataUrl });
+        renderNirvanaAvatarPicker();
+        showToast(`Nirvana's picture updated.`, 'success');
+      } catch (e) {
+        showToast(`Couldn't upload the photo: ${e.message}`, 'error');
+      }
     };
     img.src = e.target.result;
   };
@@ -30568,6 +30576,13 @@ function onNirvanaGlowHexChange() {
   const hex = document.getElementById('nirvanaGlowColorHex').value.trim();
   if (/^#[0-9a-fA-F]{6}$/.test(hex)) document.getElementById('nirvanaGlowColorInput').value = hex;
 }
+// The swatch and the hex text field were never actually connected -- picking
+// a color via the swatch updated its own value but nothing read that value
+// at save time (saveAiSettingsForm only reads the hex text field). This
+// keeps them in sync in the other direction too.
+function syncNirvanaGlowColorFromSwatch() {
+  document.getElementById('nirvanaGlowColorHex').value = document.getElementById('nirvanaGlowColorInput').value;
+}
 function resetNirvanaGlowColor() {
   document.getElementById('nirvanaGlowColorHex').value = '';
   const fallbackColor = (typeof C !== 'undefined' && C.orange) || '#e2541f';
@@ -30582,8 +30597,12 @@ async function saveAiSettingsForm() {
     nirvana_glow_opacity: Math.max(0, Math.min(1, opacityPct / 100)),
     nirvana_glow_color: /^#[0-9a-fA-F]{6}$/.test(hex) ? hex : null,
   };
-  await saveNirvanaSettings(patch);
-  showToast('AI Settings saved.', 'success');
+  try {
+    await saveNirvanaSettings(patch);
+    showToast('AI Settings saved.', 'success');
+  } catch (e) {
+    showToast(`Couldn't save AI Settings: ${e.message}`, 'error');
+  }
 }
 function applyOrgBranding() {
   const s = ORG_SETTINGS;
