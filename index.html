@@ -6240,6 +6240,7 @@ select.wfb-field-input { padding-right: 26px; }
         <button class="hub-tab active" data-group="dqTabs" data-tab="clusters" onclick="switchHubTab('dqTabs','clusters')">Clusters</button>
         <button class="hub-tab" data-group="dqTabs" data-tab="rules" onclick="switchHubTab('dqTabs','rules')">Rules & Policies</button>
         <button class="hub-tab" data-group="dqTabs" data-tab="activity" onclick="switchHubTab('dqTabs','activity')">Activity</button>
+        <button class="hub-tab" data-group="dqTabs" data-tab="closeenrich" onclick="switchHubTab('dqTabs','closeenrich'); renderCloseEnrichmentQueue(document.getElementById('closeEnrichPortfolioSelect').value)">Close Enrichment</button>
       </div>
 
       <div class="hub-tab-panel active" data-group="dqTabs" data-tab="clusters">
@@ -6277,6 +6278,28 @@ select.wfb-field-input { padding-right: 26px; }
         <div class="card brand-section-card">
           <div class="card-title" style="font-size:13px">Recent Activity</div>
           <div id="dqActivityList" style="margin-top:8px"></div>
+        </div>
+      </div>
+
+      <div class="hub-tab-panel" data-group="dqTabs" data-tab="closeenrich">
+        <div class="card brand-section-card">
+          <div class="card-header" style="margin-bottom:var(--space-3)">
+            <div><div class="card-title">Bulk Close CRM Enrichment</div><div class="card-sub">Pull contact info and notes from Close for every client in a portfolio — results always land here for review, nothing is saved automatically</div></div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px">
+            <select id="closeEnrichPortfolioSelect" class="field-select" style="height:36px;width:180px">
+              <option value="smb">SMB</option>
+              <option value="whitelabel">White Label</option>
+              <option value="support">Support</option>
+            </select>
+            <button class="btn btn-primary" onclick="startCloseBulkEnrichment(document.getElementById('closeEnrichPortfolioSelect').value)"><span class="icon" data-icon="refresh" data-icon-size="13"></span> Start Enrichment</button>
+            <button class="btn btn-ghost" id="closeEnrichCancelBtn" style="display:none" onclick="cancelCloseBulkEnrichment()">Stop</button>
+          </div>
+          <div id="closeEnrichProgress"></div>
+        </div>
+        <div class="card brand-section-card" style="margin-top:16px">
+          <div class="card-title" style="font-size:13px">Review Queue</div>
+          <div id="closeEnrichQueueList" style="margin-top:8px"></div>
         </div>
       </div>
     </div>
@@ -17150,6 +17173,199 @@ function closeConfidenceLabel(score) {
   if (score >= 0.92) return { cls: 'confidence-exact', label: 'Likely match' };
   if (score >= 0.55) return { cls: 'confidence-close', label: 'Possible match' };
   return { cls: 'confidence-low', label: 'Low confidence' };
+}
+
+// ─── Bulk Close CRM Enrichment (2026-07-27) ────────────────────────────────
+// Reuses the EXACT same matching logic as the enrich_client_from_close
+// Nirvana tool (same scoring thresholds, same "don't guess, flag ambiguity"
+// behavior) so a client processed here and one Nirvana enriches individually
+// can never disagree. Results are always queued for review -- nothing here
+// writes into client_contacts automatically, by design (Oscar's call).
+async function matchOneClientForCloseEnrichment(clientName) {
+  let leadId, leadName;
+  const existingLink = await getCloseCrmLink(clientName);
+  if (existingLink) {
+    leadId = existingLink.close_lead_id;
+    leadName = existingLink.close_lead_name;
+  } else {
+    let searchResult;
+    try { searchResult = await callCloseCrm('search', { q: clientName }); }
+    catch (e) { return { match_status: 'error', error_message: 'Close CRM search failed: ' + e.message }; }
+    const leads = searchResult.leads || [];
+    if (leads.length === 0) return { match_status: 'no_match' };
+    const scored = leads.map(l => ({ ...l, score: nameSimilarity(clientName, l.name) })).sort((a, b) => b.score - a.score);
+    if (scored[0].score >= 0.92 && (scored.length === 1 || scored[0].score - scored[1].score >= 0.15)) {
+      leadId = scored[0].id;
+      leadName = scored[0].name;
+    } else {
+      return {
+        match_status: 'ambiguous',
+        candidates: scored.slice(0, 5).map(l => ({ close_lead_id: l.id, name: l.name, status: l.status, contact_count: l.contact_count, confidence: closeConfidenceLabel(l.score).label })),
+      };
+    }
+  }
+  try {
+    const [lead, notesRes] = await Promise.all([callCloseCrm('lead', { leadId }), callCloseCrm('notes', { leadId })]);
+    return {
+      match_status: 'matched',
+      close_lead_id: leadId,
+      close_lead_name: leadName,
+      contacts: lead.contacts || [],
+      recent_notes: (notesRes.notes || []).slice(0, 5),
+    };
+  } catch (e) {
+    return { match_status: 'error', error_message: 'Could not fetch from Close: ' + e.message };
+  }
+}
+
+let closeBulkEnrichmentState = { running: false, cancelled: false };
+// Close allows 60 requests/min per org (see close-crm.mjs). Each client can
+// take up to 3 calls (search + lead + notes), so pacing one client every
+// 3.5s keeps total call volume safely under that ceiling even in the worst
+// case, without needing to count calls precisely.
+const CLOSE_ENRICHMENT_DELAY_MS = 3500;
+
+async function startCloseBulkEnrichment(pk) {
+  if (closeBulkEnrichmentState.running) { showToast('An enrichment run is already in progress.', 'warning'); return; }
+  const clients = getClients(pk);
+  if (clients.length === 0) { showToast('No clients in this portfolio.', 'warning'); return; }
+
+  // Resume an incomplete run for this portfolio if one exists, rather than
+  // reprocessing clients already done -- a full run can take 45+ minutes,
+  // losing that to an accidental refresh would be a real cost.
+  let runId, alreadyDone = new Set();
+  try {
+    const incomplete = await sbSelect('close_enrichment_queue', `portfolio=eq.${pk}&order=created_at.desc&limit=1`);
+    if (incomplete[0]) {
+      const rows = await sbSelect('close_enrichment_queue', `run_id=eq.${incomplete[0].run_id}`);
+      if (rows.length < clients.length) {
+        runId = incomplete[0].run_id;
+        rows.forEach(r => alreadyDone.add(r.client_name));
+      }
+    }
+  } catch (e) { /* fall through to a fresh run if this check fails */ }
+
+  if (runId) {
+    if (!confirm(`Resume the previous run for ${PORTFOLIO_LABELS[pk]}? ${alreadyDone.size} of ${clients.length} clients already processed.`)) {
+      runId = crypto.randomUUID();
+      alreadyDone = new Set();
+    }
+  } else {
+    runId = crypto.randomUUID();
+  }
+
+  const remaining = clients.filter(c => !alreadyDone.has(c.name));
+  closeBulkEnrichmentState = { running: true, cancelled: false };
+  renderCloseEnrichmentProgress(pk, alreadyDone.size, clients.length);
+
+  for (let i = 0; i < remaining.length; i++) {
+    if (closeBulkEnrichmentState.cancelled) break;
+    const client = remaining[i];
+    const result = await matchOneClientForCloseEnrichment(client.name);
+    try {
+      await sbUpsert('close_enrichment_queue', { run_id: runId, portfolio: pk, client_name: client.name, ...result });
+    } catch (e) { console.warn('Could not queue enrichment result for', client.name, e.message); }
+    renderCloseEnrichmentProgress(pk, alreadyDone.size + i + 1, clients.length);
+    if (i < remaining.length - 1) await new Promise(r => setTimeout(r, CLOSE_ENRICHMENT_DELAY_MS));
+  }
+
+  closeBulkEnrichmentState.running = false;
+  showToast(closeBulkEnrichmentState.cancelled ? 'Enrichment run stopped.' : 'Enrichment run complete — review the results below.', 'success');
+  renderCloseEnrichmentQueue(pk);
+}
+function cancelCloseBulkEnrichment() {
+  closeBulkEnrichmentState.cancelled = true;
+}
+function renderCloseEnrichmentProgress(pk, done, total) {
+  const wrap = document.getElementById('closeEnrichProgress');
+  const cancelBtn = document.getElementById('closeEnrichCancelBtn');
+  if (cancelBtn) cancelBtn.style.display = closeBulkEnrichmentState.running ? '' : 'none';
+  if (!wrap) return;
+  const pct = total ? Math.round(done / total * 100) : 0;
+  wrap.innerHTML = `
+    <div style="font-size:12px;color:var(--text2);margin-bottom:6px">${done} of ${total} clients processed ${closeBulkEnrichmentState.running ? '— running…' : ''}</div>
+    <div style="height:8px;background:var(--bg4);border-radius:99px;overflow:hidden"><div style="height:100%;width:${pct}%;background:var(--gradient-accent);transition:width .3s"></div></div>
+  `;
+}
+async function renderCloseEnrichmentQueue(pk) {
+  const wrap = document.getElementById('closeEnrichQueueList');
+  if (!wrap) return;
+  wrap.innerHTML = `<div style="color:var(--text3);font-size:12px">Loading…</div>`;
+  let rows;
+  try {
+    rows = await sbSelect('close_enrichment_queue', `portfolio=eq.${pk}&applied=eq.false&order=created_at.desc`);
+  } catch (e) { wrap.innerHTML = `<div style="color:var(--text3);font-size:12px">Could not load the review queue.</div>`; return; }
+  if (rows.length === 0) { wrap.innerHTML = `<div class="cnt-empty-contacts-hint">Nothing waiting for review — run an enrichment above, or everything's already been applied.</div>`; return; }
+  const matched = rows.filter(r => r.match_status === 'matched');
+  const ambiguous = rows.filter(r => r.match_status === 'ambiguous');
+  const other = rows.filter(r => r.match_status === 'no_match' || r.match_status === 'error');
+  let html = '';
+  if (matched.length) {
+    html += `<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;margin:12px 0 6px">Matched — ready to apply (${matched.length})</div>`;
+    html += matched.map(r => `
+      <div class="ledger-inbox-item" style="cursor:default">
+        <div class="ledger-inbox-body">
+          <div class="ledger-inbox-name">${escAttr(r.client_name)}</div>
+          <div class="ledger-inbox-sub">Close: ${escAttr(r.close_lead_name)} · ${(r.contacts||[]).length} contact${(r.contacts||[]).length!==1?'s':''} · ${(r.recent_notes||[]).length} recent note${(r.recent_notes||[]).length!==1?'s':''}</div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="applyCloseEnrichmentResult('${r.id}')">Apply</button>
+      </div>`).join('');
+  }
+  if (ambiguous.length) {
+    html += `<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;margin:16px 0 6px">Needs a human pick (${ambiguous.length})</div>`;
+    html += ambiguous.map(r => `
+      <div class="ledger-inbox-item" style="cursor:default">
+        <div class="ledger-inbox-body">
+          <div class="ledger-inbox-name">${escAttr(r.client_name)}</div>
+          <div class="ledger-inbox-sub">${(r.candidates||[]).map(c => escAttr(c.name)).join(' · ')} — open this client's profile and use the Close CRM section to pick the right one</div>
+        </div>
+      </div>`).join('');
+  }
+  if (other.length) {
+    html += `<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;margin:16px 0 6px">No match found (${other.length})</div>`;
+    html += other.map(r => `
+      <div class="ledger-inbox-item" style="cursor:default">
+        <div class="ledger-inbox-body">
+          <div class="ledger-inbox-name">${escAttr(r.client_name)}</div>
+          <div class="ledger-inbox-sub">${r.match_status === 'error' ? escAttr(r.error_message) : 'No Close lead found matching this name'}</div>
+        </div>
+      </div>`).join('');
+  }
+  wrap.innerHTML = html;
+}
+// Applying pulls every contact Close returned for that lead into
+// client_contacts (skipping anyone who looks like an existing contact by
+// name, same near-duplicate check add_client_contact uses), links the
+// client to that Close lead so future single-client lookups skip straight
+// to it, then marks this queue row done. Nothing here overwrites an
+// existing contact -- only adds new ones.
+async function applyCloseEnrichmentResult(queueId) {
+  try {
+    const rows = await sbSelect('close_enrichment_queue', `id=eq.${queueId}&limit=1`);
+    const row = rows[0];
+    if (!row || row.match_status !== 'matched') return;
+    const existingNames = new Set(getClientContacts(row.client_name).map(c => (c.contact_name || '').trim().toLowerCase()));
+    let added = 0;
+    for (const c of (row.contacts || [])) {
+      const name = (c.name || '').trim();
+      if (!name || existingNames.has(name.toLowerCase())) continue;
+      const contact = createClientContactRecord(row.client_name);
+      contact.contact_name = name;
+      contact.title = c.title || '';
+      contact.email = (c.emails && c.emails[0] && c.emails[0].email) || '';
+      contact.phone = (c.phones && c.phones[0] && c.phones[0].phone) || '';
+      await upsertClientContactRecord(contact);
+      added++;
+    }
+    try {
+      await sbUpsert('close_crm_links', { client_name: row.client_name, close_lead_id: row.close_lead_id, close_lead_name: row.close_lead_name, linked_at: new Date().toISOString(), linked_by: 'Bulk Enrichment' });
+    } catch (e) { /* linking is a nice-to-have here, don't block on it */ }
+    await sbPatch('close_enrichment_queue', `id=eq.${queueId}`, { applied: true });
+    showToast(`Added ${added} contact${added !== 1 ? 's' : ''} for ${row.client_name}.`, 'success');
+    renderCloseEnrichmentQueue(row.portfolio);
+  } catch (e) {
+    showToast(`Couldn't apply this: ${e.message}`, 'error');
+  }
 }
 
 async function renderCloseCrmSection() {
