@@ -891,6 +891,19 @@ body.ai-panel-open .main {
 }
 .filter-pill:hover { border-color: var(--orange); color: var(--orange); }
 .filter-pill.active { background: var(--gradient-accent); border-color: var(--orange); color: white; }
+.filter-pill-select {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-xs); font-weight: 600;
+  cursor: pointer;
+  color: var(--text2);
+  background: var(--bg3);
+  transition: all var(--transition-base);
+}
+.filter-pill-select:hover { border-color: var(--orange); color: var(--orange); }
+.filter-pill-select.active { background: var(--gradient-accent); border-color: var(--orange); color: white; }
+.filter-pill-select option { background: var(--bg2); color: var(--text); }
 
 /* Hub-wide date+time picker (2026-07) -- replaces every native date /
    datetime-local input across the app, which can't be restyled and looks
@@ -10124,9 +10137,13 @@ function rebuildFilterPills(pk) {
   const wrap = document.getElementById('filterPills-' + pk);
   if (!wrap) return;
   let html = `<button class="filter-pill active" onclick="filterByProduct('${pk}','all',this)"><span data-i18n="filter_all">All</span></button>`;
+  html += `<button class="filter-pill" onclick="filterByProduct('${pk}','zero',this)">0 Products</button>`;
+  html += `<select class="filter-pill-select" id="filterProductSelect-${pk}" onchange="filterByProductDropdown('${pk}',this)">`;
+  html += `<option value="">Missing a product…</option>`;
   getCatalog(pk).forEach(p => {
-    html += `<button class="filter-pill" onclick="filterByProduct('${pk}','${p.key}',this)">No ${p.label}</button>`;
+    html += `<option value="${p.key}">No ${escAttr(p.label)}</option>`;
   });
+  html += `</select>`;
   html += `<button class="filter-pill" onclick="filterByProduct('${pk}','multi',this)">3+ Products</button>`;
   wrap.innerHTML = html;
 }
@@ -11218,6 +11235,8 @@ function rebuildClientTable(pk, resortOnly = false) {
     const searchEl = document.getElementById('clientSearch-' + pk);
     if (searchEl) searchEl.value = '';
     document.querySelectorAll(`#filterPills-${pk} .filter-pill`).forEach((b,i) => b.classList.toggle('active', i===0));
+    const sel = document.getElementById(`filterProductSelect-${pk}`);
+    if (sel) { sel.value = ''; sel.classList.remove('active'); }
     activeFilters[pk] = 'all';
     filterTable(pk);
   }
@@ -11292,6 +11311,7 @@ function filterTable(pk) {
     if (show && orgVal) show = rowOrg === orgVal;
     if (show && filter !== 'all') {
       if (filter === 'multi') show = cnt >= 3;
+      else if (filter === 'zero') show = cnt === 0;
       else show = row.dataset[filter] === 'false';
     }
     row.classList.toggle('hidden-row', !show);
@@ -11338,6 +11358,23 @@ function filterByProduct(pk, p, btn) {
   activeFilters[pk] = p;
   document.querySelectorAll(`#filterPills-${pk} .filter-pill`).forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+  const sel = document.getElementById(`filterProductSelect-${pk}`);
+  if (sel) { sel.value = ''; sel.classList.remove('active'); }
+  filterTable(pk);
+}
+// Handles the "Missing a product" dropdown -- functionally identical to
+// clicking one of the old per-product pills, just collapsed into a select
+// so the filter row doesn't grow by one element per product in the catalog.
+function filterByProductDropdown(pk, selectEl) {
+  const val = selectEl.value;
+  activeFilters[pk] = val || 'all';
+  document.querySelectorAll(`#filterPills-${pk} .filter-pill`).forEach(b => b.classList.remove('active'));
+  selectEl.classList.toggle('active', !!val);
+  if (!val) {
+    // Reset to placeholder means "no product filter" -- same as clicking "All".
+    const allBtn = document.querySelector(`#filterPills-${pk} .filter-pill`);
+    if (allBtn) allBtn.classList.add('active');
+  }
   filterTable(pk);
 }
 
@@ -27773,6 +27810,11 @@ const AI_AGENT_TOOLS = [
     input_schema: { type: 'object', properties: { portfolio: { type: 'string', enum: ['smb', 'whitelabel', 'support'] } }, required: ['portfolio'] },
   },
   {
+    name: 'get_zero_product_clients',
+    description: 'List the actual clients in one portfolio (SMB, White Label, or Support) who have ZERO products assigned — not just a count, the real names, so the user can act on the list directly. Use this whenever asked things like "who has zero products in SMB" or "pull the list of clients using none of our products." Matches exactly what the "0 Products" filter pill on that portfolio\'s page shows.',
+    input_schema: { type: 'object', properties: { portfolio: { type: 'string', enum: ['smb', 'whitelabel', 'support'] } }, required: ['portfolio'] },
+  },
+  {
     name: 'get_product_adoption',
     description: 'Get cross-portfolio adoption for one specific product (e.g. voice_agent, yelp, google_lsa, thumbtack, chat_widget, contact_form, acculynx, builder_prime, ghl, housecall_pro) — how many clients in each of SMB/White Label/Support use it vs don\'t, and overall adoption %. This is exactly what the Voice Agent and Text Agent pages show — use this whenever asked to explain those charts.',
     input_schema: { type: 'object', properties: { product_key: { type: 'string' } }, required: ['product_key'] },
@@ -28651,6 +28693,19 @@ async function executeAiTool(name, input) {
         total_upsell_opportunities: counts.reduce((sum, n) => sum + (total - n), 0),
         products_fully_untouched: productAdoption.filter(p => p.clients_using === 0).map(p => p.product),
         product_adoption_breakdown: productAdoption,
+      };
+    }
+    case 'get_zero_product_clients': {
+      const pk = input.portfolio;
+      if (!['smb', 'whitelabel', 'support'].includes(pk)) return { error: 'portfolio must be smb, whitelabel, or support' };
+      const cl = getClients(pk);
+      const keys = getProdKeys(pk);
+      const zeroClients = cl.filter(c => keys.every(k => !c[k]));
+      return {
+        portfolio: PORTFOLIO_LABELS[pk],
+        total_clients: cl.length,
+        zero_product_count: zeroClients.length,
+        clients: zeroClients.map(c => ({ name: c.name, organization: c.organization || null, account_owner: c.account_owner || null })),
       };
     }
     case 'get_product_adoption': {
