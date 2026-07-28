@@ -273,7 +273,10 @@ body {
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* legacy Edge/IE */
 }
+.top-nav-items::-webkit-scrollbar { display: none; } /* Chrome/Safari/modern Edge -- scroll still works, just no visible bar */
 
 .nav-item {
   display: flex; align-items: center; gap: 8px;
