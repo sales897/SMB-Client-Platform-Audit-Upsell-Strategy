@@ -22541,8 +22541,8 @@ function renderBhInventoryTable() {
         <option value="unknown" ${r.billing_status === 'unknown' ? 'selected' : ''}>Unknown</option>
       </select></td>
       <td style="font-size:11px;color:var(--text3)">${lastActivityLabel}</td>
-      <td><input type="number" id="bh-rate-${r.id}" value="${r.monthly_rate || ''}" placeholder="—" style="width:80px" onchange="updateBhField('${r.id}','monthly_rate', this.value ? Number(this.value) : null)"></td>
-      <td>${renderBhTotalCell(r)}</td>
+      <td><input type="number" id="bh-rate-${r.id}" value="${r.monthly_rate || ''}" placeholder="—" style="width:80px" onkeydown="if(event.key==='Enter') this.blur()" onchange="updateBhField('${r.id}','monthly_rate', this.value ? Number(this.value) : null)"></td>
+      <td id="bh-total-${r.id}">${renderBhTotalCell(r)}</td>
       <td><button class="row-action-btn" onclick="openClientNotesTasksModal('${escAttr(r.name)}')" title="Open profile"><span class="icon" data-icon="eye" data-icon-size="13"></span></button></td>
     </tr>`;
   }).join('');
@@ -22586,6 +22586,12 @@ async function updateBhField(id, field, value) {
   row[field] = value;
   try { await sbPatch('portfolio_clients', `id=eq.${id}`, { [field]: value }); }
   catch (e) { row[field] = prev; showToast('Could not save: ' + e.message, 'error'); renderBhInventoryTable(); return; }
+  // Update just this row's Total cell directly -- monthly_rate is the field
+  // that actually feeds into it, but recomputing unconditionally here is
+  // cheap and keeps this correct even if another field affecting Total gets
+  // added later.
+  const totalCell = document.getElementById('bh-total-' + id);
+  if (totalCell) totalCell.innerHTML = renderBhTotalCell(row);
   renderBhReportPanels();
 }
 
