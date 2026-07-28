@@ -17276,14 +17276,15 @@ async function startCloseBulkEnrichment(pk) {
 function cancelCloseBulkEnrichment() {
   closeBulkEnrichmentState.cancelled = true;
 }
-function renderCloseEnrichmentProgress(pk, done, total) {
+function renderCloseEnrichmentProgress(pk, done, total, label, running) {
   const wrap = document.getElementById('closeEnrichProgress');
   const cancelBtn = document.getElementById('closeEnrichCancelBtn');
   if (cancelBtn) cancelBtn.style.display = closeBulkEnrichmentState.running ? '' : 'none';
   if (!wrap) return;
   const pct = total ? Math.round(done / total * 100) : 0;
+  const isRunning = running !== undefined ? running : closeBulkEnrichmentState.running;
   wrap.innerHTML = `
-    <div style="font-size:12px;color:var(--text2);margin-bottom:6px">${done} of ${total} clients processed ${closeBulkEnrichmentState.running ? '— running…' : ''}</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:6px">${done} of ${total} ${label || 'clients processed'} ${isRunning ? '— running…' : ''}</div>
     <div style="height:8px;background:var(--bg4);border-radius:99px;overflow:hidden"><div style="height:100%;width:${pct}%;background:var(--gradient-accent);transition:width .3s"></div></div>
   `;
 }
@@ -17301,9 +17302,12 @@ async function renderCloseEnrichmentQueue(pk) {
   const other = rows.filter(r => r.match_status === 'no_match' || r.match_status === 'error');
   let html = '';
   if (matched.length) {
-    html += `<div style="display:flex;justify-content:space-between;align-items:center;margin:12px 0 6px">
-      <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase">Matched — ready to apply (${matched.length})</div>
-      <button class="btn btn-primary btn-sm" onclick="applyAllMatchedCloseEnrichment('${pk}')">Apply All (${matched.length})</button>
+    html += `<div style="margin:12px 0 6px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase">Matched — ready to apply (${matched.length})</div>
+        <button class="btn btn-primary btn-sm" id="closeApplyAllBtn" onclick="applyAllMatchedCloseEnrichment('${pk}')">Apply All (${matched.length})</button>
+      </div>
+      <div id="closeApplyAllProgress" style="display:none;margin-top:8px"></div>
     </div>`;
     html += matched.map(r => `
       <div class="ledger-inbox-item" style="cursor:default">
@@ -17317,17 +17321,17 @@ async function renderCloseEnrichmentQueue(pk) {
   if (ambiguous.length) {
     html += `<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;margin:16px 0 6px">Needs a human pick (${ambiguous.length})</div>`;
     html += ambiguous.map(r => `
-      <div class="ledger-inbox-item" style="cursor:default">
+      <div class="ledger-inbox-item" style="cursor:pointer" onclick="openClientNotesTasksModal('${escOnclickArg(r.client_name)}')" title="Open ${escAttr(r.client_name)}'s profile">
         <div class="ledger-inbox-body">
           <div class="ledger-inbox-name">${escAttr(r.client_name)}</div>
-          <div class="ledger-inbox-sub">${(r.candidates||[]).map(c => escAttr(c.name)).join(' · ')} — open this client's profile and use the Close CRM section to pick the right one</div>
+          <div class="ledger-inbox-sub">${(r.candidates||[]).map(c => escAttr(c.name)).join(' · ')} — click to open this client's profile and use the Close CRM section to pick the right one</div>
         </div>
       </div>`).join('');
   }
   if (other.length) {
     html += `<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;margin:16px 0 6px">No match found (${other.length})</div>`;
     html += other.map(r => `
-      <div class="ledger-inbox-item" style="cursor:default">
+      <div class="ledger-inbox-item" style="cursor:pointer" onclick="openClientNotesTasksModal('${escOnclickArg(r.client_name)}')" title="Open ${escAttr(r.client_name)}'s profile">
         <div class="ledger-inbox-body">
           <div class="ledger-inbox-name">${escAttr(r.client_name)}</div>
           <div class="ledger-inbox-sub">${r.match_status === 'error' ? escAttr(r.error_message) : 'No Close lead found matching this name'}</div>
@@ -17382,6 +17386,20 @@ async function applyCloseEnrichmentResult(queueId) {
 // portfolio at once -- no rate limit to worry about here, unlike the
 // enrichment fetch itself, since applying is just local database writes,
 // not another call out to Close.
+function renderCloseApplyAllProgress(done, total) {
+  const wrap = document.getElementById('closeApplyAllProgress');
+  const btn = document.getElementById('closeApplyAllBtn');
+  if (!wrap) return;
+  const running = done < total;
+  if (btn) btn.disabled = running;
+  if (!running) { wrap.style.display = 'none'; return; }
+  wrap.style.display = '';
+  const pct = total ? Math.round(done / total * 100) : 0;
+  wrap.innerHTML = `
+    <div style="font-size:11px;color:var(--text2);margin-bottom:4px">Applying ${done} of ${total}…</div>
+    <div style="height:6px;background:var(--bg4);border-radius:99px;overflow:hidden"><div style="height:100%;width:${pct}%;background:var(--gradient-accent);transition:width .2s"></div></div>
+  `;
+}
 async function applyAllMatchedCloseEnrichment(pk) {
   let rows;
   try {
@@ -17389,9 +17407,12 @@ async function applyAllMatchedCloseEnrichment(pk) {
   } catch (e) { showToast(`Couldn't load the matched rows: ${e.message}`, 'error'); return; }
   if (rows.length === 0) return;
   let totalContacts = 0, failedClients = [];
-  for (const row of rows) {
+  renderCloseApplyAllProgress(0, rows.length);
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
     try { totalContacts += await applyCloseEnrichmentRow(row); }
     catch (e) { failedClients.push(row.client_name); }
+    renderCloseApplyAllProgress(i + 1, rows.length);
   }
   const succeeded = rows.length - failedClients.length;
   let msg = `Applied ${succeeded} of ${rows.length} clients, ${totalContacts} contact${totalContacts !== 1 ? 's' : ''} added.`;
