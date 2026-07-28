@@ -290,8 +290,18 @@ body {
   user-select: none;
   white-space: nowrap;
 }
-.top-nav.collapsed .nav-item { justify-content: center; font-size: 0; }
+.top-nav.collapsed .nav-item { justify-content: center; font-size: 0; position: relative; }
 .top-nav.collapsed .nav-item .icon { font-size: 14px; }
+.top-nav.collapsed .nav-item .badge {
+  /* Badges have their own explicit font-size, so the font-size:0 trick
+     above (which hides bare text labels) doesn't touch them -- they were
+     still laid out via margin-left:auto for the expanded row's full width,
+     which looked disconnected sitting in a narrow, centered icon column.
+     Repositioned as a small corner dot directly on the icon instead,
+     the familiar "notification badge on an app icon" pattern. */
+  position: absolute; top: 2px; right: 4px; margin-left: 0;
+  font-size: 8px; min-width: 14px; height: 14px; line-height: 14px; padding: 0 3px;
+}
 .nav-item:hover { background: var(--bg3); color: var(--text); }
 .nav-item.active { background: var(--orange-dim); color: var(--orange); border-color: rgba(226,84,31,.25); font-weight: 600; }
 .nav-item .icon { font-size: 14px; flex-shrink: 0; }
@@ -334,8 +344,12 @@ body {
      hover to reveal them. */
   padding-left: 0; display: flex;
 }
-.top-nav.collapsed .nav-dropdown-menu .nav-item { justify-content: center; font-size: 0; }
+.top-nav.collapsed .nav-dropdown-menu .nav-item { justify-content: center; font-size: 0; position: relative; }
 .top-nav.collapsed .nav-dropdown-menu .nav-item .icon { font-size: 14px; }
+.top-nav.collapsed .nav-dropdown-menu .nav-item .badge {
+  position: absolute; top: 2px; right: 4px; margin-left: 0;
+  font-size: 8px; min-width: 14px; height: 14px; line-height: 14px; padding: 0 3px;
+}
 
 .nav-collapse-toggle {
   display: flex; align-items: center; gap: 8px; justify-content: flex-start;
