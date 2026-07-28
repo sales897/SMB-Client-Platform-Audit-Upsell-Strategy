@@ -236,8 +236,17 @@ body {
   z-index: 100;
   flex-shrink: 0;
   transition: width var(--transition-slower) ease;
-  overflow-x: hidden; overflow-y: visible;
+  overflow-x: hidden;
+  /* Scrolls within its own fixed height instead of stretching the whole
+     page -- overflow-y:visible previously meant content that didn't fit
+     just pushed the document taller, and what looked like a sidebar
+     scrollbar was actually the browser's own page-level one. */
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* legacy Edge/IE */
 }
+.top-nav::-webkit-scrollbar { display: none; } /* Chrome/Safari/modern Edge -- scroll still works via wheel/trackpad, just no visible bar */
+
 .top-nav.collapsed { width: 56px; padding-left: var(--space-2); padding-right: var(--space-2); }
 .top-nav-logo {
   display: flex;
