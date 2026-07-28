@@ -3227,6 +3227,7 @@ select.wfb-field-input { padding-right: 26px; }
         </div>
         <div class="nav-item" onclick="showPage('textagent')" title="Text" data-collapsed-title="Text">
           <span class="icon" data-icon="chat"></span> Text Agent
+          <span class="badge red" id="navTextagentBadge" style="display:none">0</span>
         </div>
         <div class="nav-item" onclick="showPage('businesshealth')" title="Business Health" data-collapsed-title="Business Health">
           <span class="icon" data-icon="chart"></span> Business Health
@@ -9047,11 +9048,27 @@ function rebuildAll() {
 // page-rebuild function's side effects staying correct forever.
 function refreshNavBadges() {
   const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-  set('navSmbBadge', getClients('smb').length);
-  set('navWhitelabelBadge', getClients('whitelabel').length);
-  set('navSupportBadge', getClients('support').length);
-  set('navClientsBadge', Object.keys(buildMergedClients()).length);
-  set('navVoiceBadge', getAllClientsWithPortfolio().filter(x => x.client.voice_agent).length);
+  // navSmbBadge/navWhitelabelBadge/navSupportBadge/navClientsBadge are NOT
+  // set here anymore (2026-07-28) -- they were being overwritten with raw
+  // total client counts, silently conflicting with
+  // refreshPortfolioAndOnboardingNavBadges(), which is the actual intended,
+  // hide-at-zero, at-risk-count source of truth for these same badges.
+  const setBadgeHideAtZero = (id, count) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (count > 0) { el.style.display = ''; el.textContent = count; }
+    else el.style.display = 'none';
+  };
+  // Voice Agent's badge previously showed product-adoption count (how many
+  // clients have Voice Agent enabled) -- a real, different stat that just
+  // happened to look similar in magnitude to "Flagged for Review," which is
+  // what it's actually meant to represent. Now matches the same definition
+  // used on the Voice Agent page itself: a note attached under voice_agent.
+  setBadgeHideAtZero('navVoiceBadge', getAllClientsWithPortfolio().filter(x => x.client.cellNotes && x.client.cellNotes.voice_agent).length);
+  // Text Agent had no nav badge at all -- added here, using Text Agent's own
+  // "Flagged for Review" definition (stale leads, 7 days-6 months), the same
+  // function that page's own flagged list already uses.
+  setBadgeHideAtZero('navTextagentBadge', getTextAgentStaleLeads().length);
 }
 
 // ─── HOME — daily overview & quick access ────────────────────────────────────
