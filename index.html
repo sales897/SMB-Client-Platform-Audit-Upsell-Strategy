@@ -17511,6 +17511,10 @@ async function pickCloseCandidate(leadId, leadName) {
       linked_by: u ? u.name : null,
     });
   } catch (e) { showToast('Could not save the Close CRM link: ' + e.message, 'error'); return; }
+  // This client is resolved now, one way or another -- clear it out of the
+  // bulk enrichment review queue so it doesn't keep showing up there as
+  // still needing a pick, even though it's been manually handled here.
+  try { await sbDelete('close_enrichment_queue', `client_name=eq.${encodeURIComponent(cntActiveClientName)}&applied=eq.false`); } catch (e) { /* not critical to the link itself succeeding */ }
   renderCloseCrmSection();
 }
 
@@ -29616,6 +29620,7 @@ async function executeAiTool(name, input) {
       } catch (e) { return { error: 'Could not fetch from Close: ' + e.message }; }
       if (!existingLink) {
         try { await sbUpsert('close_crm_links', { client_name: entry.displayName, close_lead_id: leadId, close_lead_name: leadName, linked_at: new Date().toISOString(), linked_by: 'Nirvana' }); } catch (e) {}
+        try { await sbDelete('close_enrichment_queue', `client_name=eq.${encodeURIComponent(entry.displayName)}&applied=eq.false`); } catch (e) {}
         if (typeof cntActiveClientName !== 'undefined' && cntActiveClientName === entry.displayName) renderCloseCrmSection();
       }
       return {
