@@ -1,0 +1,134 @@
+GROWTH OPPORTUNITIES
+STANDARD OPERATING PROCEDURE
+========================================================================
+
+PURPOSE
+Create a repeatable, proactive process for identifying, validating, presenting, and tracking client growth opportunities before the client asks. The goal is to strengthen retention, increase client value, and position recommendations as strategic guidance backed by the client’s own results.
+
+WHY IT MATTERS
+Clients rarely ask what else they could be doing. Waiting for them to ask can mean missed expansion revenue, slower client growth, and an opportunity for competitors to step in. Growth conversations should come from us, be supported by measurable results, and feel like expert guidance rather than a generic sales pitch.
+
+SCOPE
+This SOP applies to all Client Success, Account Management, Operations, and leadership team members responsible for reviewing client performance, usage, product adoption, renewals, and expansion opportunities.
+
+PRIMARY OUTCOMES
+- Surface relevant growth opportunities before the client identifies them.
+- Increase adoption of services that solve a demonstrated client need.
+- Protect retention by showing continuous strategic value.
+- Create a consistent, documented pipeline of expansion opportunities.
+- Ensure recommendations are timely, specific, and supported by data.
+
+ROLES AND RESPONSIBILITIES
+- Client Success Manager / Account Owner: Owns the review, identifies opportunities, validates fit, leads outreach, and documents all activity.
+- Operations: Provides usage, performance, implementation, capacity, and service-delivery context.
+- Sales or Growth Lead: Supports pricing, proposals, demonstrations, commercial strategy, and closing when needed.
+- Leadership: Reviews strategic or high-value opportunities, removes blockers, and approves exceptions.
+- HUB / Nirvana: Surfaces account patterns, prompts follow-up, consolidates data, and helps anticipate relevant next steps. AI-supported findings must be validated by the account owner before client outreach.
+- Slack #operations-client-success-team: Used for internal coordination, validation, escalation, and sharing time-sensitive opportunity context.
+
+STANDARD OPERATING PROCEDURE
+
+1. Monthly Whitespace Review
+- Review every active client once per month.
+- Compare the client’s current products and services against the complete service catalog.
+- Identify products the client is not currently using and add them to the Upsell Opportunity list.
+- Rank each opportunity by fit with the client’s vertical, current goals, operational capacity, performance, and likely return.
+- Exclude recommendations that do not clearly solve a client problem or create measurable value.
+- Document the top one to three opportunities in the HUB.
+
+2. Results-Based Recommendation
+- Confirm that the client has strong results, healthy adoption, or clear unmet demand before presenting an expansion recommendation.
+- Build the recommendation around the client’s own numbers, such as call volume, lead volume, missed demand, conversion rate, response time, capacity, or ROI.
+- Present one specific next-product or next-service recommendation instead of a generic “have you considered” pitch.
+- Explain the business problem, the supporting data, the proposed solution, the expected outcome, and the next step.
+- Avoid presenting growth opportunities during unresolved service, billing, performance, or trust issues unless the recommendation directly resolves that issue.
+
+3. Trigger-Based Outreach
+- Monitor usage, lead flow, account notes, client conversations, and operational data for expansion triggers.
+- When a trigger appears, contact the client before the limitation becomes a complaint or lost opportunity.
+- Example: if a client is reaching a call-volume ceiling on Voice Agent, recommend Chat Widget, Contact Form, additional routing capacity, or another relevant solution before leads begin slipping through.
+- Complete outreach within five business days of identifying a qualified trigger; use a faster response when revenue or lead loss is already occurring.
+- Record the trigger, recommendation, owner, due date, and client response in the HUB.
+
+4. Quarterly Growth Conversation
+- Hold a dedicated growth conversation at least once per quarter for eligible clients.
+- Keep this separate from a standard health check or QBR when possible so the discussion remains focused on future growth.
+- Use adoption, performance, ROI, seasonality, business plans, and operational constraints as the foundation.
+- Discuss what the next stage of growth could look like, what may prevent it, and which service would have the strongest impact.
+- End with a clear action: proposal, pilot, demonstration, implementation review, follow-up date, or documented decision to revisit later.
+
+5. Track the Pitch, Not Just the Close
+- Log every proactive growth recommendation in the HUB, including recommendations that are declined or deferred.
+- Track the opportunity date, product or service, trigger, business case, estimated value, decision-maker, status, objections, next step, and follow-up date.
+- Do not measure performance only by closed expansions. Also measure how consistently the team identifies and presents qualified opportunities.
+- Review declined opportunities for patterns in timing, fit, messaging, pricing, or client readiness.
+- Revisit deferred opportunities when the original trigger becomes stronger or the client’s circumstances change.
+
+GROWTH SIGNALS TO WATCH FOR
+- A client has fully adopted one product, is achieving strong results, but uses no additional products. A single-product plateau is often the clearest sign that a second solution may be appropriate.
+- Usage, lead volume, call volume, or workload is trending upward and approaching the limits of the current setup.
+- The client mentions a new location, hiring, expansion, new market, new service line, seasonal demand, or another business-growth event that is not yet reflected in their current services.
+- The client has repeated missed calls, slow lead response, after-hours demand, overflow, or capacity constraints.
+- A client asks for reporting, automation, communication, conversion, or visibility capabilities that another product already provides.
+- The client is receiving strong ROI from the current service and has sufficient operational capacity to handle additional demand.
+- A competitor, market shift, or seasonal change creates a time-sensitive opportunity for the client.
+
+OPPORTUNITY QUALIFICATION CHECKLIST
+- Client Fit: Does the recommendation align with the client’s vertical, business model, priorities, and maturity?
+- Evidence: Is there a measurable trigger, gap, or opportunity supported by account data or client statements?
+- Timing: Can the client realistically adopt and benefit from the solution now?
+- Account Health: Is the relationship stable enough for a growth conversation?
+- Value: Can the team explain the likely outcome in business terms?
+- Operational Readiness: Does the client have the people, capacity, and process needed to use the solution successfully?
+
+RECOMMENDED CLIENT CONVERSATION STRUCTURE
+- Observation: State the relevant result, trend, or growth trigger.
+- Business Impact: Explain what the current trend means for revenue, leads, capacity, efficiency, or client experience.
+- Recommendation: Present one specific solution that addresses the opportunity.
+- Evidence: Connect the recommendation to the client’s data, goals, or stated plans.
+- Next Step: Agree on a demonstration, proposal, pilot, implementation review, or follow-up date.
+
+DOCUMENTATION REQUIREMENTS
+- Create or update an opportunity record in the HUB on the same business day the opportunity is identified.
+- Include the supporting trigger, relevant metrics, recommended solution, estimated business impact, owner, status, and next action.
+- Post in #operations-client-success-team when operational validation, leadership input, pricing support, or cross-functional action is required.
+- Use Nirvana to assist with trend detection, summaries, and next-step prompts, but verify all recommendations before contacting the client.
+- Set a follow-up date for every open, deferred, or declined opportunity.
+
+GUARDRAILS AND NON-NEGOTIABLES
+- Do not recommend a product solely because the client does not have it.
+- Do not use generic, high-pressure, or fear-based sales language.
+- Do not present an expansion while a major unresolved service or trust issue is active, unless the recommendation is part of the resolution.
+- Do not rely on AI-generated recommendations without human validation.
+- Do not leave opportunities undocumented or without a next action.
+- Always connect the recommendation to a client objective, measurable gap, or demonstrated result.
+
+PERFORMANCE MEASURES
+- Percentage of active clients receiving a monthly whitespace review.
+- Qualified growth opportunities identified per month.
+- Percentage of qualified opportunities presented to the client.
+- Time from trigger identification to outreach.
+- Opportunity-to-meeting and opportunity-to-close conversion rates.
+- Expansion revenue and average revenue per client.
+- Product adoption and multi-product penetration.
+- Retention rate for clients receiving proactive growth reviews.
+- Declined or deferred opportunity follow-up completion rate.
+
+QUALITY ASSURANCE REVIEW
+Managers should review a sample of opportunity records each month to confirm that recommendations are evidence-based, appropriately timed, clearly documented, and followed through. Coaching should address missed triggers, weak business cases, delayed outreach, generic pitches, and incomplete follow-up.
+
+QUICK-USE MONTHLY CHECKLIST
+[ ] Review every active client for product and service whitespace.
+[ ] Check adoption, usage, results, capacity, seasonality, and business updates.
+[ ] Identify and rank the top qualified growth opportunities.
+[ ] Validate operational fit with Suvarna or the appropriate team member when needed.
+[ ] Use the HUB and Nirvana to identify patterns and anticipate next steps.
+[ ] Coordinate in #operations-client-success-team when cross-functional input is required.
+[ ] Present qualified opportunities using the client’s own data.
+[ ] Log every pitch, outcome, objection, next step, and follow-up date.
+[ ] Review aging opportunities and re-engage when the timing or trigger improves.
+
+DOCUMENT CONTROL
+Owner: Client Success & Operations
+Review cadence: Quarterly
+Version: 1.0
