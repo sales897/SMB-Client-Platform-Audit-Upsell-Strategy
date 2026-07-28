@@ -3187,33 +3187,33 @@ select.wfb-field-input { padding-right: 26px; }
   <button class="nav-toggle" onclick="toggleMobileNav()" aria-label="Toggle navigation menu"><span class="icon" data-icon="menu" data-icon-size="15"></span></button>
 
   <div class="top-nav-items" id="topNavItems">
-    <div class="nav-item active" onclick="showPage('home')" style="font-weight:700" title="Home">
+    <div class="nav-item active" onclick="showPage('home')" style="font-weight:700" title="Home" data-collapsed-title="Home">
       <span class="icon" data-icon="home"></span> <span data-i18n="nav_home">Home</span>
     </div>
 
     <div class="nav-dropdown">
       <div class="nav-item nav-dropdown-trigger" onclick="toggleNavDropdown(this)" title="Portfolios"><span class="icon" data-icon="store"></span> <span data-i18n="nav_portfolios">Portfolios</span> <span class="caret">▾</span></div>
       <div class="nav-dropdown-menu">
-        <div class="nav-item" onclick="showPage('clients')" title="All Clients">
+        <div class="nav-item" onclick="showPage('clients')" title="All Clients" data-collapsed-title="All Clients">
           <span class="icon" data-icon="users"></span> All Clients
           <span class="badge" id="navClientsBadge" style="display:none">0</span>
         </div>
-        <div class="nav-item" onclick="showPage('smb')" title="SMB">
+        <div class="nav-item" onclick="showPage('smb')" title="SMB" data-collapsed-title="SMB">
           <span class="icon" data-icon="chart"></span> SMB Dashboard
           <span class="badge" id="navSmbBadge" style="display:none">0</span>
         </div>
-        <div class="nav-item" onclick="showPage('whitelabel')" title="White Label">
+        <div class="nav-item" onclick="showPage('whitelabel')" title="White Label" data-collapsed-title="White Label">
           <span class="icon" data-icon="tag"></span> White Label
           <span class="badge green" id="navWhitelabelBadge" style="display:none">0</span>
         </div>
-        <div class="nav-item" onclick="showPage('support')" title="Support">
+        <div class="nav-item" onclick="showPage('support')" title="Support" data-collapsed-title="Support">
           <span class="icon" data-icon="chart"></span> Support Dashboard
           <span class="badge red" id="navSupportBadge" style="display:none">0</span>
         </div>
       </div>
     </div>
 
-    <div class="nav-item" onclick="showPage('onboarding')" title="Onboarding">
+    <div class="nav-item" onclick="showPage('onboarding')" title="Onboarding" data-collapsed-title="Onboarding">
       <span class="icon" data-icon="compass"></span> <span data-i18n="nav_onboarding">Onboarding</span>
       <span class="badge" id="navOnboardingBadge" style="display:none">0</span>
     </div>
@@ -3221,14 +3221,14 @@ select.wfb-field-input { padding-right: 26px; }
     <div class="nav-dropdown">
       <div class="nav-item nav-dropdown-trigger" onclick="toggleNavDropdown(this)" title="Performance"><span class="icon" data-icon="trending"></span> <span data-i18n="nav_performance">Performance</span> <span class="caret">▾</span></div>
       <div class="nav-dropdown-menu">
-        <div class="nav-item" onclick="showPage('voice')" title="Voice">
+        <div class="nav-item" onclick="showPage('voice')" title="Voice" data-collapsed-title="Voice">
           <span class="icon" data-icon="mic"></span> Voice Agent
           <span class="badge red" id="navVoiceBadge" style="display:none">0</span>
         </div>
-        <div class="nav-item" onclick="showPage('textagent')" title="Text">
+        <div class="nav-item" onclick="showPage('textagent')" title="Text" data-collapsed-title="Text">
           <span class="icon" data-icon="chat"></span> Text Agent
         </div>
-        <div class="nav-item" onclick="showPage('businesshealth')" title="Business Health">
+        <div class="nav-item" onclick="showPage('businesshealth')" title="Business Health" data-collapsed-title="Business Health">
           <span class="icon" data-icon="chart"></span> Business Health
         </div>
       </div>
@@ -3237,22 +3237,22 @@ select.wfb-field-input { padding-right: 26px; }
     <div class="nav-dropdown">
       <div class="nav-item nav-dropdown-trigger" onclick="toggleNavDropdown(this)" title="Growth Tools"><span class="icon" data-icon="rocket"></span> <span data-i18n="nav_growth_tools">Growth Tools</span> <span class="caret">▾</span></div>
       <div class="nav-dropdown-menu">
-        <div class="nav-item" onclick="showPage('upsell')" title="Goals">
+        <div class="nav-item" onclick="showPage('upsell')" title="Goals" data-collapsed-title="Goals">
           <span class="icon" data-icon="target"></span> Goals
         </div>
-        <div class="nav-item" onclick="showPage('action')" title="Success OS">
+        <div class="nav-item" onclick="showPage('action')" title="Success OS" data-collapsed-title="Success OS">
           <span class="icon" data-icon="target"></span> SuccessOS
         </div>
-        <div class="nav-item" onclick="showPage('workflows')" title="Workflows">
+        <div class="nav-item" onclick="showPage('workflows')" title="Workflows" data-collapsed-title="Workflows">
           <span class="icon" data-icon="repeat"></span> Workflows
         </div>
-        <div class="nav-item" onclick="showPage('chatwidget')" title="Widget">
+        <div class="nav-item" onclick="showPage('chatwidget')" title="Widget" data-collapsed-title="Widget">
           <span class="icon" data-icon="chat"></span> Chat Widget <span class="badge" id="navChatWidgetBadge">0</span>
         </div>
-        <div class="nav-item" onclick="showPage('knowledge')" title="Knowledge">
+        <div class="nav-item" onclick="showPage('knowledge')" title="Knowledge" data-collapsed-title="Knowledge">
           <span class="icon" data-icon="book"></span> Knowledge Base
         </div>
-        <div class="nav-item" id="navProductsItem" onclick="showPage('products')" title="Catalog">
+        <div class="nav-item" id="navProductsItem" onclick="showPage('products')" title="Catalog" data-collapsed-title="Catalog">
           <span class="icon" data-icon="package"></span> Manage Products
         </div>
       </div>
@@ -3261,15 +3261,15 @@ select.wfb-field-input { padding-right: 26px; }
     <div class="nav-dropdown">
       <div class="nav-item nav-dropdown-trigger" onclick="toggleNavDropdown(this)" title="Finance"><span class="icon" data-icon="dollar"></span> <span data-i18n="nav_finance">Finance</span> <span class="caret">▾</span></div>
       <div class="nav-dropdown-menu">
-        <div class="nav-item" onclick="showPage('adspend')" title="Ad Spend">
+        <div class="nav-item" onclick="showPage('adspend')" title="Ad Spend" data-collapsed-title="Ad Spend">
           <span class="icon" data-icon="dollar"></span> Ad Spend Management
           <span class="badge" id="navAdSpendBadge" style="display:none">0</span>
         </div>
-        <div class="nav-item" onclick="showPage('collections')" title="Collections">
+        <div class="nav-item" onclick="showPage('collections')" title="Collections" data-collapsed-title="Collections">
           <span class="icon" data-icon="clipboard"></span> Collections
           <span class="badge red" id="navCollectionsBadge" style="display:none">0</span>
         </div>
-        <div class="nav-item" onclick="showPage('ledger')" title="Ledger">
+        <div class="nav-item" onclick="showPage('ledger')" title="Ledger" data-collapsed-title="Ledger">
           <span class="icon" data-icon="note"></span> Ledger
           <span class="badge" id="navLedgerBadge" style="display:none">0</span>
         </div>
@@ -7164,9 +7164,17 @@ const pageMeta = {
 // nav item instead, since it's useful context but doesn't need permanent
 // screen space. Set once for every item here; showPage() keeps the active
 // one in sync too, though the text never actually changes per-item.
+// Applied early here (before the title-setting block below checks collapsed
+// state) -- the actual function definition and its regular call further
+// down still run too, that's harmless, but without this early call the
+// collapsed class wouldn't be set yet when titles are first assigned below,
+// so a saved "collapsed" preference would show the wrong (descriptive)
+// titles until the next manual toggle.
+if (typeof initNavCollapseState === 'function') { try { initNavCollapseState(); } catch (e) {} }
 Object.keys(pageMeta).forEach(id => {
   const item = document.querySelector(`.nav-item[onclick="showPage('${id}')"]`);
-  if (item) item.title = pageMeta[id].sub;
+  const nav = document.getElementById('topNav');
+  if (item && !(nav && nav.classList.contains('collapsed'))) item.title = pageMeta[id].sub;
 });
 
 // Top-nav dropdowns (Portfolios, Performance, Growth Tools, Finance) --
@@ -7209,6 +7217,15 @@ function toggleNavCollapse() {
   // Collapsing while a category was open in accordion mode would otherwise
   // leave it visually "stuck open" underneath the icon-only rail.
   if (collapsed) document.querySelectorAll('.nav-dropdown.open').forEach(d => d.classList.remove('open'));
+  // Explicitly restore the right set of tooltips on every toggle, rather
+  // than assuming nothing overwrote them in the meantime -- navigating
+  // around while expanded sets the descriptive page text via showPage(),
+  // which would otherwise still be sitting there stale after collapsing.
+  document.querySelectorAll('.nav-item[data-collapsed-title]').forEach(item => {
+    if (collapsed) { item.title = item.dataset.collapsedTitle; return; }
+    const match = item.getAttribute('onclick')?.match(/showPage\('([^']+)'\)/);
+    if (match && pageMeta[match[1]]) item.title = pageMeta[match[1]].sub;
+  });
   try { localStorage.setItem(NAV_COLLAPSE_KEY, collapsed ? '1' : '0'); } catch (e) {}
 }
 function initNavCollapseState() {
@@ -7235,7 +7252,8 @@ function showPage(id) {
   const activeNavItem = document.querySelector(`.nav-item[onclick="showPage('${id}')"]`);
   if (activeNavItem) {
     activeNavItem.classList.add('active');
-    if (pageMeta[id]) activeNavItem.title = pageMeta[id].sub;
+    const nav = document.getElementById('topNav');
+    if (pageMeta[id] && !(nav && nav.classList.contains('collapsed'))) activeNavItem.title = pageMeta[id].sub;
   }
 
   // Drag/resize grids need the page to actually be visible (non-zero size)
