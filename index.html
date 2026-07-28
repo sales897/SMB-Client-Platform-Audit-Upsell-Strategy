@@ -2266,6 +2266,8 @@ tr.pg-hidden-row { display: none; }
 .activity-feed-headline { font-size: 12.5px; font-weight: 700; color: var(--text); }
 .activity-feed-detail { font-size: 11px; color: var(--text3); margin-top: 2px; }
 .view-all-records { text-align: center; font-size: 11px; color: var(--orange2); margin-top: 10px; cursor: pointer; }
+.client-name-link { cursor: pointer; transition: color var(--transition-base); }
+.client-name-link:hover { color: var(--orange); text-decoration: underline; }
 .status-pill { display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; padding: 4px 10px; border-radius: var(--radius-pill); white-space: nowrap; }
 .pill-ontrack { background: rgba(34,197,94,.14); color: var(--green); }
 .pill-atrisk { background: rgba(239,68,68,.14); color: var(--red); }
@@ -11293,7 +11295,7 @@ function rebuildClientTable(pk, resortOnly = false) {
     const cellByIdx = cols.map(col => {
       if (col.key === 'name') {
         const nameNote = c.cellNotes && c.cellNotes.name;
-        return `<td>${escAttr(c.name) || '—'}${nameNote ? ` <span class="cell-note" data-tooltip="${escAttr(nameNote)}"><span class="icon" data-icon="chat" data-icon-size="14"></span></span>` : ''}</td>`;
+        return `<td><span class="client-name-link" onclick="openClientNotesTasksModal('${safeName}')" title="Open ${escAttr(c.name)}'s profile">${escAttr(c.name) || '—'}</span>${nameNote ? ` <span class="cell-note" data-tooltip="${escAttr(nameNote)}"><span class="icon" data-icon="chat" data-icon-size="14"></span></span>` : ''}</td>`;
       }
       if (col.key === 'org') {
         return `<td>${c.org ? `<span class="portfolio-chip chip-addon chip-addon-clickable" onclick="filterByOrgFromCell('${pk}','${escAttr(c.org)}')" title="Show all clients under ${escAttr(c.org)}"><span class="icon" data-icon="building" data-icon-size="14"></span> ${escAttr(c.org)}</span>` : '<span style="color:var(--text3)">—</span>'}</td>`;
