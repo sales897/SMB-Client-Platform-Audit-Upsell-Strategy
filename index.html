@@ -17301,7 +17301,10 @@ async function renderCloseEnrichmentQueue(pk) {
   const other = rows.filter(r => r.match_status === 'no_match' || r.match_status === 'error');
   let html = '';
   if (matched.length) {
-    html += `<div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;margin:12px 0 6px">Matched — ready to apply (${matched.length})</div>`;
+    html += `<div style="display:flex;justify-content:space-between;align-items:center;margin:12px 0 6px">
+      <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase">Matched — ready to apply (${matched.length})</div>
+      <button class="btn btn-primary btn-sm" onclick="applyAllMatchedCloseEnrichment('${pk}')">Apply All (${matched.length})</button>
+    </div>`;
     html += matched.map(r => `
       <div class="ledger-inbox-item" style="cursor:default">
         <div class="ledger-inbox-body">
@@ -17339,33 +17342,62 @@ async function renderCloseEnrichmentQueue(pk) {
 // client to that Close lead so future single-client lookups skip straight
 // to it, then marks this queue row done. Nothing here overwrites an
 // existing contact -- only adds new ones.
+// Raw apply logic, shared by the single "Apply" button and "Apply All" --
+// no toast or re-render here, since a bulk apply of 35 rows shouldn't fire
+// 35 toasts and 35 full queue re-renders. Returns how many contacts got
+// added, so callers can report it however fits (one summary vs one each).
+async function applyCloseEnrichmentRow(row) {
+  const existingNames = new Set(getClientContacts(row.client_name).map(c => (c.contact_name || '').trim().toLowerCase()));
+  let added = 0;
+  for (const c of (row.contacts || [])) {
+    const name = (c.name || '').trim();
+    if (!name || existingNames.has(name.toLowerCase())) continue;
+    const contact = createClientContactRecord(row.client_name);
+    contact.contact_name = name;
+    contact.title = c.title || '';
+    contact.email = (c.emails && c.emails[0] && c.emails[0].email) || '';
+    contact.phone = (c.phones && c.phones[0] && c.phones[0].phone) || '';
+    await upsertClientContactRecord(contact);
+    added++;
+  }
+  try {
+    await sbUpsert('close_crm_links', { client_name: row.client_name, close_lead_id: row.close_lead_id, close_lead_name: row.close_lead_name, linked_at: new Date().toISOString(), linked_by: 'Bulk Enrichment' });
+  } catch (e) { /* linking is a nice-to-have here, don't block on it */ }
+  await sbPatch('close_enrichment_queue', `id=eq.${row.id}`, { applied: true });
+  return added;
+}
 async function applyCloseEnrichmentResult(queueId) {
   try {
     const rows = await sbSelect('close_enrichment_queue', `id=eq.${queueId}&limit=1`);
     const row = rows[0];
     if (!row || row.match_status !== 'matched') return;
-    const existingNames = new Set(getClientContacts(row.client_name).map(c => (c.contact_name || '').trim().toLowerCase()));
-    let added = 0;
-    for (const c of (row.contacts || [])) {
-      const name = (c.name || '').trim();
-      if (!name || existingNames.has(name.toLowerCase())) continue;
-      const contact = createClientContactRecord(row.client_name);
-      contact.contact_name = name;
-      contact.title = c.title || '';
-      contact.email = (c.emails && c.emails[0] && c.emails[0].email) || '';
-      contact.phone = (c.phones && c.phones[0] && c.phones[0].phone) || '';
-      await upsertClientContactRecord(contact);
-      added++;
-    }
-    try {
-      await sbUpsert('close_crm_links', { client_name: row.client_name, close_lead_id: row.close_lead_id, close_lead_name: row.close_lead_name, linked_at: new Date().toISOString(), linked_by: 'Bulk Enrichment' });
-    } catch (e) { /* linking is a nice-to-have here, don't block on it */ }
-    await sbPatch('close_enrichment_queue', `id=eq.${queueId}`, { applied: true });
+    const added = await applyCloseEnrichmentRow(row);
     showToast(`Added ${added} contact${added !== 1 ? 's' : ''} for ${row.client_name}.`, 'success');
     renderCloseEnrichmentQueue(row.portfolio);
   } catch (e) {
     showToast(`Couldn't apply this: ${e.message}`, 'error');
   }
+}
+// One click applies every currently-matched, unapplied row for this
+// portfolio at once -- no rate limit to worry about here, unlike the
+// enrichment fetch itself, since applying is just local database writes,
+// not another call out to Close.
+async function applyAllMatchedCloseEnrichment(pk) {
+  let rows;
+  try {
+    rows = await sbSelect('close_enrichment_queue', `portfolio=eq.${pk}&applied=eq.false&match_status=eq.matched`);
+  } catch (e) { showToast(`Couldn't load the matched rows: ${e.message}`, 'error'); return; }
+  if (rows.length === 0) return;
+  let totalContacts = 0, failedClients = [];
+  for (const row of rows) {
+    try { totalContacts += await applyCloseEnrichmentRow(row); }
+    catch (e) { failedClients.push(row.client_name); }
+  }
+  const succeeded = rows.length - failedClients.length;
+  let msg = `Applied ${succeeded} of ${rows.length} clients, ${totalContacts} contact${totalContacts !== 1 ? 's' : ''} added.`;
+  if (failedClients.length) msg += ` Couldn't apply: ${failedClients.slice(0, 3).join(', ')}${failedClients.length > 3 ? `, +${failedClients.length - 3} more` : ''}.`;
+  showToast(msg, failedClients.length ? 'warning' : 'success');
+  renderCloseEnrichmentQueue(pk);
 }
 
 async function renderCloseCrmSection() {
