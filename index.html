@@ -350,6 +350,7 @@ body {
   position: absolute; top: 2px; right: 4px; margin-left: 0;
   font-size: 8px; min-width: 14px; height: 14px; line-height: 14px; padding: 0 3px;
 }
+.top-nav.collapsed .nav-dropdown-trigger { cursor: default; }
 
 .nav-collapse-toggle {
   display: flex; align-items: center; gap: 8px; justify-content: flex-start;
@@ -3186,89 +3187,89 @@ select.wfb-field-input { padding-right: 26px; }
   <button class="nav-toggle" onclick="toggleMobileNav()" aria-label="Toggle navigation menu"><span class="icon" data-icon="menu" data-icon-size="15"></span></button>
 
   <div class="top-nav-items" id="topNavItems">
-    <div class="nav-item active" onclick="showPage('home')" style="font-weight:700">
+    <div class="nav-item active" onclick="showPage('home')" style="font-weight:700" title="Home">
       <span class="icon" data-icon="home"></span> <span data-i18n="nav_home">Home</span>
     </div>
 
     <div class="nav-dropdown">
-      <div class="nav-item nav-dropdown-trigger" onclick="toggleNavDropdown(this)"><span class="icon" data-icon="store"></span> <span data-i18n="nav_portfolios">Portfolios</span> <span class="caret">▾</span></div>
+      <div class="nav-item nav-dropdown-trigger" onclick="toggleNavDropdown(this)" title="Portfolios"><span class="icon" data-icon="store"></span> <span data-i18n="nav_portfolios">Portfolios</span> <span class="caret">▾</span></div>
       <div class="nav-dropdown-menu">
-        <div class="nav-item" onclick="showPage('clients')">
+        <div class="nav-item" onclick="showPage('clients')" title="All Clients">
           <span class="icon" data-icon="users"></span> All Clients
           <span class="badge" id="navClientsBadge" style="display:none">0</span>
         </div>
-        <div class="nav-item" onclick="showPage('smb')">
+        <div class="nav-item" onclick="showPage('smb')" title="SMB Dashboard">
           <span class="icon" data-icon="chart"></span> SMB Dashboard
           <span class="badge" id="navSmbBadge" style="display:none">0</span>
         </div>
-        <div class="nav-item" onclick="showPage('whitelabel')">
+        <div class="nav-item" onclick="showPage('whitelabel')" title="White Label">
           <span class="icon" data-icon="tag"></span> White Label
           <span class="badge green" id="navWhitelabelBadge" style="display:none">0</span>
         </div>
-        <div class="nav-item" onclick="showPage('support')">
+        <div class="nav-item" onclick="showPage('support')" title="Support Dashboard">
           <span class="icon" data-icon="chart"></span> Support Dashboard
           <span class="badge red" id="navSupportBadge" style="display:none">0</span>
         </div>
       </div>
     </div>
 
-    <div class="nav-item" onclick="showPage('onboarding')">
+    <div class="nav-item" onclick="showPage('onboarding')" title="Onboarding">
       <span class="icon" data-icon="compass"></span> <span data-i18n="nav_onboarding">Onboarding</span>
       <span class="badge" id="navOnboardingBadge" style="display:none">0</span>
     </div>
 
     <div class="nav-dropdown">
-      <div class="nav-item nav-dropdown-trigger" onclick="toggleNavDropdown(this)"><span class="icon" data-icon="trending"></span> <span data-i18n="nav_performance">Performance</span> <span class="caret">▾</span></div>
+      <div class="nav-item nav-dropdown-trigger" onclick="toggleNavDropdown(this)" title="Performance"><span class="icon" data-icon="trending"></span> <span data-i18n="nav_performance">Performance</span> <span class="caret">▾</span></div>
       <div class="nav-dropdown-menu">
-        <div class="nav-item" onclick="showPage('voice')">
+        <div class="nav-item" onclick="showPage('voice')" title="Voice Agent">
           <span class="icon" data-icon="mic"></span> Voice Agent
           <span class="badge red" id="navVoiceBadge" style="display:none">0</span>
         </div>
-        <div class="nav-item" onclick="showPage('textagent')">
+        <div class="nav-item" onclick="showPage('textagent')" title="Text Agent">
           <span class="icon" data-icon="chat"></span> Text Agent
         </div>
-        <div class="nav-item" onclick="showPage('businesshealth')">
+        <div class="nav-item" onclick="showPage('businesshealth')" title="Business Health">
           <span class="icon" data-icon="chart"></span> Business Health
         </div>
       </div>
     </div>
 
     <div class="nav-dropdown">
-      <div class="nav-item nav-dropdown-trigger" onclick="toggleNavDropdown(this)"><span class="icon" data-icon="rocket"></span> <span data-i18n="nav_growth_tools">Growth Tools</span> <span class="caret">▾</span></div>
+      <div class="nav-item nav-dropdown-trigger" onclick="toggleNavDropdown(this)" title="Growth Tools"><span class="icon" data-icon="rocket"></span> <span data-i18n="nav_growth_tools">Growth Tools</span> <span class="caret">▾</span></div>
       <div class="nav-dropdown-menu">
-        <div class="nav-item" onclick="showPage('upsell')">
+        <div class="nav-item" onclick="showPage('upsell')" title="Goals">
           <span class="icon" data-icon="target"></span> Goals
         </div>
-        <div class="nav-item" onclick="showPage('action')">
+        <div class="nav-item" onclick="showPage('action')" title="SuccessOS">
           <span class="icon" data-icon="target"></span> SuccessOS
         </div>
-        <div class="nav-item" onclick="showPage('workflows')">
+        <div class="nav-item" onclick="showPage('workflows')" title="Workflows">
           <span class="icon" data-icon="repeat"></span> Workflows
         </div>
-        <div class="nav-item" onclick="showPage('chatwidget')">
+        <div class="nav-item" onclick="showPage('chatwidget')" title="Chat Widget">
           <span class="icon" data-icon="chat"></span> Chat Widget <span class="badge" id="navChatWidgetBadge">0</span>
         </div>
-        <div class="nav-item" onclick="showPage('knowledge')">
+        <div class="nav-item" onclick="showPage('knowledge')" title="Knowledge Base">
           <span class="icon" data-icon="book"></span> Knowledge Base
         </div>
-        <div class="nav-item" id="navProductsItem" onclick="showPage('products')">
+        <div class="nav-item" id="navProductsItem" onclick="showPage('products')" title="Manage Products">
           <span class="icon" data-icon="package"></span> Manage Products
         </div>
       </div>
     </div>
 
     <div class="nav-dropdown">
-      <div class="nav-item nav-dropdown-trigger" onclick="toggleNavDropdown(this)"><span class="icon" data-icon="dollar"></span> <span data-i18n="nav_finance">Finance</span> <span class="caret">▾</span></div>
+      <div class="nav-item nav-dropdown-trigger" onclick="toggleNavDropdown(this)" title="Finance"><span class="icon" data-icon="dollar"></span> <span data-i18n="nav_finance">Finance</span> <span class="caret">▾</span></div>
       <div class="nav-dropdown-menu">
-        <div class="nav-item" onclick="showPage('adspend')">
+        <div class="nav-item" onclick="showPage('adspend')" title="Ad Spend Management">
           <span class="icon" data-icon="dollar"></span> Ad Spend Management
           <span class="badge" id="navAdSpendBadge" style="display:none">0</span>
         </div>
-        <div class="nav-item" onclick="showPage('collections')">
+        <div class="nav-item" onclick="showPage('collections')" title="Collections">
           <span class="icon" data-icon="clipboard"></span> Collections
           <span class="badge red" id="navCollectionsBadge" style="display:none">0</span>
         </div>
-        <div class="nav-item" onclick="showPage('ledger')">
+        <div class="nav-item" onclick="showPage('ledger')" title="Ledger">
           <span class="icon" data-icon="note"></span> Ledger
           <span class="badge" id="navLedgerBadge" style="display:none">0</span>
         </div>
@@ -7176,6 +7177,8 @@ function openNavDropdown(dropdownEl) {
   dropdownEl.classList.add('open');
 }
 function toggleNavDropdown(triggerEl) {
+  const nav = document.getElementById('topNav');
+  if (nav && nav.classList.contains('collapsed')) return; // sub-items are always shown when collapsed -- nothing to toggle
   const dropdown = triggerEl.closest('.nav-dropdown');
   if (!dropdown) return;
   const wasOpen = dropdown.classList.contains('open');
