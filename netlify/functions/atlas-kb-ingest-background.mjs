@@ -18,7 +18,13 @@ const SUPABASE_URL = Netlify.env.get("SUPABASE_URL");
 const SERVICE_ROLE_KEY = Netlify.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
 const ATLAS_EMBED_URL = `${SUPABASE_URL}/functions/v1/atlas-embed`;
-const EMBED_BATCH_SIZE = 32;
+// Lowered from 32 to 4 (2026-07-29): Supabase Edge Functions have a hard
+// 2-second CPU-time budget per request, and atlas-embed runs the model
+// once per text sequentially. Batches of 7+ texts reliably triggered a
+// 546 WORKER_LIMIT error. atlas-embed itself now enforces 4 as a hard
+// ceiling too -- this constant just avoids sending oversized batches
+// that would get rejected in the first place.
+const EMBED_BATCH_SIZE = 4;
 const CHUNK_CHARS = 1600; // ~400 tokens at ~4 chars/token, same sizing as note chunks
 const CHUNK_OVERLAP_CHARS = 200;
 

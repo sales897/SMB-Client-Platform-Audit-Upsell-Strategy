@@ -25,7 +25,14 @@ const ANTHROPIC_API_KEY = Netlify.env.get("ANTHROPIC_API_KEY");
 const ATLAS_EMBED_URL = `${SUPABASE_URL}/functions/v1/atlas-embed`;
 const CLAUDE_MODEL = "claude-haiku-4-5-20251001"; // cost-effective for structured extraction at volume
 const BATCH_SIZE = 20;          // notes processed per run, stays well inside the 15-min budget
-const EMBED_BATCH_SIZE = 32;    // atlas-embed's per-call max
+// Lowered from 32 to 4 (2026-07-29): Supabase Edge Functions have a hard
+// 2-second CPU-time budget per request, and atlas-embed runs the model
+// once per text sequentially. Batches of 7+ texts reliably triggered a
+// 546 WORKER_LIMIT error against two long Knowledge Base SOPs -- this
+// file hadn't hit it yet only because notes have stayed short so far
+// (mostly 1 chunk), but a long transcript would trigger the identical
+// failure. atlas-embed itself now enforces 4 as a hard ceiling too.
+const EMBED_BATCH_SIZE = 4;
 const CHUNK_CHARS = 1600;       // ~400 tokens at ~4 chars/token
 const CHUNK_OVERLAP_CHARS = 200; // ~50 tokens
 
