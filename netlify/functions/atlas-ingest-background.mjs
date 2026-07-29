@@ -22,6 +22,13 @@
 // required by Netlify) so it has a 15-minute execution budget instead of
 // the 30s limit scheduled functions are held to — needed because pacing
 // Close calls at ~3.5s apart across many clients easily exceeds 30s.
+//
+// AUTH: requires header x-atlas-trigger-secret to match the
+// ATLAS_TRIGGER_SECRET env var. Without this, this URL is a public,
+// unauthenticated endpoint that anyone (a browser refresh, a bot scanning
+// Netlify subdomains) can hit to trigger real Close/Claude/embedding API
+// calls for free. Learned this the hard way: a single manual test via
+// browser address bar fired 9 runs in ~30 minutes from page reloads.
 
 const SUPABASE_URL = Netlify.env.get("SUPABASE_URL");
 const SERVICE_ROLE_KEY = Netlify.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -147,7 +154,24 @@ async function logSync(detail) {
   }).catch(() => {});
 }
 
+// Shared-secret gate. Without this, ANY GET to this function's public URL
+// (a browser refresh, a security scanner, a bot indexing Netlify subdomains)
+// re-triggers a full Close pull + Claude enrichment pass + embedding calls —
+// real API cost, with no distinction between "cron" and "someone loaded the
+// page." Only atlas-ingest-schedule.mjs (which sends this header) and a
+// manual call with the secret can run this now.
+function isAuthorizedTrigger(req) {
+  const expected = Netlify.env.get("ATLAS_TRIGGER_SECRET");
+  if (!expected) return false; // fail closed if the secret isn't configured
+  return req.headers.get("x-atlas-trigger-secret") === expected;
+}
+
 export default async (req) => {
+  if (!isAuthorizedTrigger(req)) {
+    console.warn("atlas-ingest-background: rejected an unauthorized trigger attempt.");
+    return new Response("Forbidden", { status: 403 });
+  }
+
   if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
     console.error("atlas-ingest-background: missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
     return;
@@ -206,6 +230,7 @@ export default async (req) => {
   try {
     await fetch(`${new URL(req.url).origin}/.netlify/functions/atlas-enrich-background`, {
       method: "POST",
+      headers: { "x-atlas-trigger-secret": Netlify.env.get("ATLAS_TRIGGER_SECRET") || "" },
     });
   } catch (e) {
     console.error("atlas-ingest-background: failed to trigger enrichment:", e.message);

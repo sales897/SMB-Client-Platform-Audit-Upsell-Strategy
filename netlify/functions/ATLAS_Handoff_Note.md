@@ -110,6 +110,36 @@ server-to-server).
 
 ---
 
+## What changed since — 2026-07-29, security fix
+
+**Found:** `atlas-ingest-background` and `atlas-enrich-background` were
+deployed with no authentication — any GET to their public URLs (a browser
+refresh, a bot scanning Netlify subdomains) would re-trigger a full Close
+pull + Claude enrichment pass + embedding calls. Confirmed in practice: one
+manual browser test produced 9 runs in ~30 minutes from page reloads. No
+data damage (dedup on `content_hash` held), but real, avoidable API cost.
+
+**Fix:** both background functions now require a header
+`x-atlas-trigger-secret` matching a new env var, `ATLAS_TRIGGER_SECRET`
+(already set in Netlify — a 64-char random hex value, marked secret).
+`atlas-ingest-schedule.mjs` (the cron) sends it automatically.
+`atlas-ingest-background.mjs` also sends it when it fires
+`atlas-enrich-background.mjs` at the end of its run.
+
+**If you need to manually trigger either function now:** a plain
+browser GET/refresh will return `403 Forbidden` — that's correct, not a
+bug. Trigger with:
+```
+curl -X POST https://the-cs-hub.netlify.app/.netlify/functions/atlas-ingest-background \
+  -H "x-atlas-trigger-secret: <value from Netlify env vars>"
+```
+
+**Updated files (Oscar needs to redeploy — same as before, add to repo,
+commit, push):** `atlas-ingest-background.mjs`, `atlas-enrich-background.mjs`,
+`atlas-ingest-schedule.mjs`. All three changed; nothing else did.
+
+---
+
 ## What's coming next (not yet built)
 
 - Deploying the three Netlify function files above (Oscar to add to repo)

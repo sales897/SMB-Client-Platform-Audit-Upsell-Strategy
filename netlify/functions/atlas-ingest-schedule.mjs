@@ -13,7 +13,10 @@ export default async (req) => {
   const { next_run } = await req.json().catch(() => ({}));
   try {
     const origin = new URL(req.url).origin;
-    await fetch(`${origin}/.netlify/functions/atlas-ingest-background`, { method: "POST" });
+    await fetch(`${origin}/.netlify/functions/atlas-ingest-background`, {
+      method: "POST",
+      headers: { "x-atlas-trigger-secret": Netlify.env.get("ATLAS_TRIGGER_SECRET") || "" },
+    });
     console.log("atlas-ingest-schedule: triggered ingest. Next run:", next_run);
   } catch (e) {
     console.error("atlas-ingest-schedule: failed to trigger ingest:", e.message);

@@ -163,7 +163,21 @@ async function embedChunks(texts) {
   return embeddings;
 }
 
-export default async () => {
+// Same shared-secret gate as atlas-ingest-background.mjs — this function
+// runs Claude calls and embedding calls per note, so it's just as exposed
+// to an anonymous trigger racking up real API cost.
+function isAuthorizedTrigger(req) {
+  const expected = Netlify.env.get("ATLAS_TRIGGER_SECRET");
+  if (!expected) return false;
+  return req.headers.get("x-atlas-trigger-secret") === expected;
+}
+
+export default async (req) => {
+  if (!isAuthorizedTrigger(req)) {
+    console.warn("atlas-enrich-background: rejected an unauthorized trigger attempt.");
+    return new Response("Forbidden", { status: 403 });
+  }
+
   if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
     console.error("atlas-enrich-background: missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY");
     return;
