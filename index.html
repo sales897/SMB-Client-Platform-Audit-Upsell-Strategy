@@ -511,6 +511,14 @@ body.ai-panel-open .main {
 .vital-list-item .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; box-shadow: 0 0 6px currentColor; }
 .vital-list-item .title { color: var(--text); font-weight: 600; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .vital-list-item .meta { color: var(--text3); flex-shrink: 0; }
+.vital-task-pill {
+  font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .3px;
+  padding: 2px 7px; border-radius: 99px; flex-shrink: 0; white-space: nowrap;
+}
+.vital-task-pill-today { background: rgba(34,197,94,.15); color: var(--green); }
+.vital-task-pill-upcoming { background: rgba(245,158,11,.15); color: var(--yellow); }
+.vital-task-pill-overdue { background: rgba(239,68,68,.15); color: var(--red); }
+.vital-task-pill-pending { background: var(--bg4); color: var(--text3); }
 /* Task due-status glow (2026-07) -- shared by .vital-list-item (Home's My
    Tasks card) and .task-row (client Notes/Tasks modal) so both places use
    the exact same color story: today=green, upcoming=yellow, overdue=red. */
@@ -9314,15 +9322,16 @@ function renderVitalTasks() {
     return;
   }
   wrap.innerHTML = tasks.slice(0, 6).map(t => {
-    const status = getTaskDueStatus(t.due_date);
+    const status = getTaskDueStatus(t.due_date); // 'overdue' | 'today' | 'upcoming' | null
     const dotColor = status === 'overdue' ? 'var(--red)' : status === 'today' ? 'var(--green)' : status === 'upcoming' ? 'var(--yellow)' : 'var(--text3)';
     const statusClass = status ? ` task-status-${status}` : '';
-    const metaLabel = status === 'overdue' ? 'Overdue' : status === 'today' ? 'Today' : t.due_date ? fmtDate(t.due_date) : escAttr(t.client_name);
+    const pillKey = status || 'pending';
+    const pillLabel = status === 'overdue' ? 'Overdue' : status === 'today' ? 'Today' : status === 'upcoming' ? 'Coming Up' : 'Pending';
     const safeClient = escOnclickArg(t.client_name);
     return `<div class="vital-list-item${statusClass}" onclick="openClientNotesTasksModal('${safeClient}')" tabindex="0" role="button" aria-label="Open notes and tasks for ${escAttr(t.client_name)}">
       <span class="dot" style="background:${dotColor};color:${dotColor}"></span>
       <span class="title">${escAttr(t.title)}</span>
-      <span class="meta">${metaLabel}</span>
+      <span class="vital-task-pill vital-task-pill-${pillKey}">${pillLabel}</span>
     </div>`;
   }).join('');
 }
@@ -14537,7 +14546,12 @@ function updateMoneyToggleIcon() {
 
 function fmtDate(d) {
   if (!d) return '—';
-  const dt = new Date(d + 'T00:00:00');
+  // .slice(0,10) safely extracts just the date digits whether d is a plain
+  // "2026-08-12" or a full timestamptz value like "2026-08-12T00:00:00+00:00"
+  // -- appending another 'T00:00:00' onto an already-full timestamp (the
+  // previous bug here) produces a malformed, unparseable string, which is
+  // exactly why raw ISO text was showing up on the Home page task list.
+  const dt = new Date(d.slice(0, 10) + 'T00:00:00');
   if (isNaN(dt)) return d;
   return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
@@ -14580,7 +14594,7 @@ function getTaskDueStatus(dueDateStr) {
 function fmtDateTime(d) {
   if (!d) return '—';
   const hasTime = taskHasSpecificTime(d);
-  const dt = new Date(hasTime ? d : d + 'T00:00:00');
+  const dt = new Date(hasTime ? d : d.slice(0, 10) + 'T00:00:00');
   if (isNaN(dt)) return d;
   const dateStr = dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   if (!hasTime) return dateStr;
