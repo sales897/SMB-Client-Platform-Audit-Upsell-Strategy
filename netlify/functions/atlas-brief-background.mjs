@@ -161,20 +161,22 @@ const BRIEF_SYSTEM_PROMPT = `You are ATLAS, composing Oscar's daily morning brie
 
 {
   "sections": [
-    { "emoji": "one emoji that fits this section's actual content", "title": "short title, 2-4 words", "body": "the content, in Slack mrkdwn" }
+    { "emoji": "one emoji that fits this section's actual content", "title": "short title, 2-4 words", "body_lines": ["line one", "line two"] }
   ],
   "signoff": "one short warm closing line"
 }
 
-Formatting rules for "body" (this is Slack's mrkdwn, NOT standard markdown):
+"body_lines" is an array — one array entry per line, NOT one string with line breaks inside it. This matters: a raw line break inside a JSON string produces invalid JSON that fails to parse, so lines must be separate array entries instead.
+
+Formatting rules for each line in "body_lines" (this is Slack's mrkdwn, NOT standard markdown):
 - Bold is *single asterisks*, never **double asterisks** — double asterisks render as literal characters in Slack and look broken.
-- Bullets are a line starting with "- ", one item per line. No nested bullets.
-- No headers inside body text (## etc.) — the section's own "title" already serves that role.
+- A bullet line starts with "- ". No nested bullets.
+- No markdown headers (## etc.) inside lines — the section's own "title" already serves that role.
 
 Content rules:
 - Only include a section if there's real data for it. Omit sections entirely rather than writing "nothing today."
 - Choose each section's emoji to match its actual content — 📅 for scheduling, 💰 for money or collections, ⚠️ for risk or urgency, 📝 for notes/highlights, ✅ for things on track — not the same icon for everything.
-- Within a body, an inline emoji next to one specific flagged item (a risk, a dollar figure) is fine; don't add emoji to every line — sparing and purposeful, not decorative.
+- Within a line, an inline emoji next to one specific flagged item (a risk, a dollar figure) is fine; don't add emoji to every line — sparing and purposeful, not decorative.
 - Never invent anything not present in the data given.
 - Open commitments are an approximate flag, not a guarantee they're outstanding — phrase as "worth checking," not certainty.
 - Keep the whole thing readable in under a minute.
@@ -240,7 +242,15 @@ async function composeWithClaude({ calendarEvents, openCommitments, highlights }
   if (!textBlock) throw new Error("Claude response had no text block");
 
   const cleaned = textBlock.text.trim().replace(/^```json\s*/i, "").replace(/```$/, "");
-  return JSON.parse(cleaned);
+  try {
+    return JSON.parse(cleaned);
+  } catch (e) {
+    // If this ever fails again, the raw text (not just "invalid JSON") is
+    // what actually lets someone diagnose it from the function log alone.
+    console.error("atlas-brief-background: JSON.parse failed on Claude's response:", e.message);
+    console.error("atlas-brief-background: raw response was:", cleaned.slice(0, 2000));
+    throw e;
+  }
 }
 
 // ---- Turns the structured brief into real Slack Block Kit: a header,
@@ -259,7 +269,8 @@ function buildSlackBlocks(brief, greeting) {
   const blocks = [{ type: "header", text: { type: "plain_text", text: greeting, emoji: true } }];
 
   brief.sections.forEach((s, i) => {
-    blocks.push({ type: "section", text: { type: "mrkdwn", text: `*${s.emoji ? s.emoji + " " : ""}${s.title}*\n${s.body}` } });
+    const body = (s.body_lines || []).join("\n");
+    blocks.push({ type: "section", text: { type: "mrkdwn", text: `*${s.emoji ? s.emoji + " " : ""}${s.title}*\n${body}` } });
     if (i < brief.sections.length - 1) blocks.push({ type: "divider" });
   });
 
@@ -276,7 +287,7 @@ function buildSlackBlocks(brief, greeting) {
 function flattenBriefToText(brief, greeting) {
   const lines = [greeting];
   for (const s of brief.sections) {
-    lines.push("", `${s.emoji || ""} ${s.title}`.trim(), s.body);
+    lines.push("", `${s.emoji || ""} ${s.title}`.trim(), ...(s.body_lines || []));
   }
   if (brief.signoff) lines.push("", brief.signoff);
   return lines.join("\n");
