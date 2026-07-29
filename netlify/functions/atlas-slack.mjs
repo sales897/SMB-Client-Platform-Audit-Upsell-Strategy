@@ -33,22 +33,27 @@ function verifySlackSignature(rawBody, timestamp, signature) {
   return crypto.timingSafeEqual(a, b);
 }
 
-async function fireBackground(origin, payload) {
-  try {
-    await fetch(`${origin}/.netlify/functions/atlas-ask-background`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-atlas-trigger-secret": Netlify.env.get("ATLAS_TRIGGER_SECRET") || "",
-      },
-      body: JSON.stringify(payload),
-    });
-  } catch (e) {
+// Fires atlas-ask-background WITHOUT blocking the response to Slack.
+// Slack requires a reply within 3 seconds -- awaiting this fetch first
+// (network round trip + a cold start on the receiving function) can
+// easily blow past that, which is exactly what was happening before this
+// used context.waitUntil: Slack showed "the app did not respond" even
+// though nothing had actually errored.
+function fireBackground(context, origin, payload) {
+  const promise = fetch(`${origin}/.netlify/functions/atlas-ask-background`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-atlas-trigger-secret": Netlify.env.get("ATLAS_TRIGGER_SECRET") || "",
+    },
+    body: JSON.stringify(payload),
+  }).catch((e) => {
     console.error("atlas-slack: failed to trigger atlas-ask-background:", e.message);
-  }
+  });
+  context.waitUntil(promise);
 }
 
-export default async (req) => {
+export default async (req, context) => {
   const rawBody = await req.text();
   const timestamp = req.headers.get("x-slack-request-timestamp");
   const signature = req.headers.get("x-slack-signature");
@@ -81,7 +86,7 @@ export default async (req) => {
       const isRealUserMessage = !event.bot_id && !event.subtype;
 
       if (isDirectMessage && isRealUserMessage) {
-        await fireBackground(origin, {
+        fireBackground(context, origin, {
           source: "dm",
           question: event.text,
           user_id: event.user,
@@ -110,7 +115,7 @@ export default async (req) => {
     );
   }
 
-  await fireBackground(origin, {
+  fireBackground(context, origin, {
     source: "slash",
     question,
     user_id: userId,

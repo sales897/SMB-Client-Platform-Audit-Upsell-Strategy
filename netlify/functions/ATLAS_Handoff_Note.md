@@ -140,6 +140,61 @@ commit, push):** `atlas-ingest-background.mjs`, `atlas-enrich-background.mjs`,
 
 ---
 
+## What changed since — 2026-07-29, Slack Q&A pipeline
+
+**New Netlify function files (not yet deployed):**
+- `atlas-slack.mjs` — Slack entry point. Verifies Slack's own request
+  signature (HMAC, `SLACK_SIGNING_SECRET`), acks within Slack's 3-second
+  window, hands off the real work. Handles both the `/atlas` slash command
+  and Events API (DMs + the one-time `url_verification` handshake).
+- `atlas-ask-background.mjs` — the actual Q&A: embeds the question via
+  `atlas-embed`, retrieves chunks via `match_atlas_notes`, asks Claude
+  (`claude-sonnet-5`) to answer using ONLY those chunks with citations,
+  posts back to Slack. Gated by the same `ATLAS_TRIGGER_SECRET` header
+  as the ingest/enrich functions.
+
+**New Slack app manifest:** `atlas-slack-app-manifest.yaml` — slash
+command (`/atlas`) only for now. DM support (Events API) is deliberately
+left out of the initial manifest — enabling it there would make Slack try
+to verify the callback URL before the signing secret exists anywhere,
+which fails and blocks import. DMs are a manual follow-up step, documented
+inside the manifest file itself, once the slash command is confirmed
+working.
+
+**New env vars needed (not yet set — waiting on Oscar to create the Slack
+app and provide these):** `SLACK_SIGNING_SECRET`, `SLACK_BOT_TOKEN`.
+
+**If you're the next agent touching Netlify functions:** `atlas-slack.mjs`
+and `atlas-ask-background.mjs` are additive, same as the ingest/enrich
+pair. Nothing existing was touched.
+
+---
+
+## What changed since — 2026-07-29, Slack timeout fix
+
+**Found:** first real test of `/atlas` failed with Slack's "the app did not
+respond" error — this is Slack's specific 3-second-timeout message, not a
+crash. Root cause: `atlas-slack.mjs` was `await`-ing the full network round
+trip to trigger `atlas-ask-background` before replying to Slack. That round
+trip (plus a cold start on the receiving function) can easily exceed
+Slack's 3-second budget on a first invocation.
+
+**Fix:** switched to Netlify's `context.waitUntil()` — this lets the
+handler return its response to Slack immediately while the trigger fetch
+keeps running safely in the background, instead of blocking on it. Only
+`atlas-slack.mjs` changed; `atlas-ask-background.mjs` is untouched.
+
+**If you're the next agent touching Netlify functions:** any function that
+replies to a caller with a tight deadline (Slack, webhooks generally) and
+also needs to kick off background work should use this same
+`context.waitUntil(promise)` pattern rather than `await`-ing the trigger
+call directly. `atlas-ingest-background.mjs` and `atlas-enrich-background.mjs`
+correctly still `await` their own trigger calls to each other, since
+neither has an external caller on a deadline — that pattern was fine there
+and shouldn't be "fixed" to match this one.
+
+---
+
 ## What's coming next (not yet built)
 
 - Deploying the three Netlify function files above (Oscar to add to repo)
