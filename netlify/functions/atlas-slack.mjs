@@ -16,21 +16,44 @@ const SLACK_SIGNING_SECRET = Netlify.env.get("SLACK_SIGNING_SECRET");
 // Slack signs every request: v0=HMAC-SHA256(signing_secret, "v0:{ts}:{raw_body}").
 // Verifying this (rather than trusting the payload) is what stops anyone
 // who finds this URL from posting fake questions as Oscar.
+// TEMPORARY DIAGNOSTIC — every request is currently failing verification
+// for an unknown reason. Logs enough to pinpoint it without ever logging
+// the signing secret itself or the full raw body. Remove once fixed.
 function verifySlackSignature(rawBody, timestamp, signature) {
-  if (!SLACK_SIGNING_SECRET || !timestamp || !signature) return false;
+  console.log("atlas-slack DEBUG: secret configured?", !!SLACK_SIGNING_SECRET,
+    "secret length:", SLACK_SIGNING_SECRET ? SLACK_SIGNING_SECRET.length : 0);
+  console.log("atlas-slack DEBUG: timestamp header:", timestamp);
+  console.log("atlas-slack DEBUG: signature header:", signature);
+  console.log("atlas-slack DEBUG: rawBody length:", rawBody.length,
+    "preview:", rawBody.slice(0, 80));
 
-  // Reject requests older than 5 minutes — replay protection.
+  if (!SLACK_SIGNING_SECRET || !timestamp || !signature) {
+    console.log("atlas-slack DEBUG: failing at the missing-value check.");
+    return false;
+  }
+
   const age = Math.abs(Date.now() / 1000 - Number(timestamp));
-  if (age > 60 * 5) return false;
+  console.log("atlas-slack DEBUG: computed age (seconds):", age);
+  if (age > 60 * 5) {
+    console.log("atlas-slack DEBUG: failing at the age/replay check.");
+    return false;
+  }
 
   const base = `v0:${timestamp}:${rawBody}`;
   const expected =
     "v0=" + crypto.createHmac("sha256", SLACK_SIGNING_SECRET).update(base).digest("hex");
+  console.log("atlas-slack DEBUG: expected signature:", expected);
+  console.log("atlas-slack DEBUG: received signature:", signature);
 
   const a = Buffer.from(expected);
   const b = Buffer.from(signature);
-  if (a.length !== b.length) return false;
-  return crypto.timingSafeEqual(a, b);
+  if (a.length !== b.length) {
+    console.log("atlas-slack DEBUG: failing at length mismatch.", a.length, "vs", b.length);
+    return false;
+  }
+  const match = crypto.timingSafeEqual(a, b);
+  console.log("atlas-slack DEBUG: timingSafeEqual result:", match);
+  return match;
 }
 
 // Fires atlas-ask-background WITHOUT blocking the response to Slack.
