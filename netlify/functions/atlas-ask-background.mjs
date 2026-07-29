@@ -6,7 +6,8 @@
 //
 //   1. Embed the question via atlas-embed (gte-small, same model used
 //      to embed every note chunk — must match, or similarity is meaningless)
-//   2. Retrieve relevant note chunks via match_atlas_notes
+//   2. Retrieve relevant note chunks (match_atlas_notes) AND Knowledge Base
+//      chunks (match_atlas_kb) in parallel
 //   3. Ask Claude to answer USING ONLY the retrieved chunks, with citations
 //   4. Post the answer back to Slack — response_url for slash commands,
 //      chat.postMessage for DMs
@@ -20,6 +21,8 @@ const ATLAS_EMBED_URL = `${SUPABASE_URL}/functions/v1/atlas-embed`;
 const CLAUDE_MODEL = "claude-sonnet-5"; // answer quality matters more here than in bulk enrichment
 const MATCH_COUNT = 8;
 const MATCH_THRESHOLD = 0.72;
+const KB_MATCH_COUNT = 4;
+const KB_MATCH_THRESHOLD = 0.72;
 
 function isAuthorizedTrigger(req) {
   const expected = Netlify.env.get("ATLAS_TRIGGER_SECRET");
@@ -62,23 +65,52 @@ async function retrieveChunks(embedding) {
   return res.json();
 }
 
-const ANSWER_SYSTEM_PROMPT = `You are ATLAS, Oscar's personal assistant. You answer questions using excerpts from his Close CRM call notes. You are separate from Nirvana, the Hub's product AI — you only know Oscar's notes, not live account or billing data, and you don't guess about things Nirvana would know instead.
+async function retrieveKbChunks(embedding) {
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/match_atlas_kb`, {
+    method: "POST",
+    headers: {
+      apikey: SERVICE_ROLE_KEY,
+      Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      query_embedding: JSON.stringify(embedding),
+      match_threshold: KB_MATCH_THRESHOLD,
+      match_count: KB_MATCH_COUNT,
+    }),
+  });
+  if (!res.ok) {
+    throw new Error(`match_atlas_kb failed (${res.status}): ${await res.text().catch(() => "")}`);
+  }
+  return res.json();
+}
+
+const ANSWER_SYSTEM_PROMPT = `You are ATLAS, Oscar's personal assistant. You answer questions using excerpts from his Close CRM call notes AND the team's Knowledge Base (SOPs and reference docs). You are separate from Nirvana, the Hub's product AI — you only know Oscar's notes and the Knowledge Base, not live account or billing data, and you don't guess about things Nirvana would know instead.
 
 Rules:
 - Answer ONLY using the provided excerpts. Never invent a fact or a date.
-- Cite the client name and date for every claim, like "(Acme Roofing, Jul 12)".
+- Cite call notes by client name and date, like "(Acme Roofing, Jul 12)".
+- Cite Knowledge Base entries by their title, like "(SOP: New Client Onboarding)".
 - If the excerpts don't answer the question, say so plainly instead of guessing.
 - Keep it tight and scannable for Slack: short paragraphs, no headers, no tables.`;
 
-async function answerWithClaude(question, chunks) {
-  const context = chunks.length
-    ? chunks
-        .map(
-          (c) =>
-            `[${c.client_name || "Unknown client"} | ${new Date(c.note_date).toDateString()}]\n${c.chunk_text}`
-        )
-        .join("\n\n---\n\n")
-    : "(No matching notes were found for this question.)";
+async function answerWithClaude(question, noteChunks, kbChunks) {
+  const contextParts = [];
+  if (noteChunks.length) {
+    contextParts.push(
+      "CALL NOTES:\n" +
+        noteChunks
+          .map((c) => `[${c.client_name || "Unknown client"} | ${new Date(c.note_date).toDateString()}]\n${c.chunk_text}`)
+          .join("\n\n---\n\n")
+    );
+  }
+  if (kbChunks.length) {
+    contextParts.push(
+      "KNOWLEDGE BASE:\n" +
+        kbChunks.map((c) => `[SOP: ${c.kb_title || "Untitled"}]\n${c.chunk_text}`).join("\n\n---\n\n")
+    );
+  }
+  const context = contextParts.length ? contextParts.join("\n\n===\n\n") : "(No matching notes or Knowledge Base entries were found for this question.)";
 
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -91,7 +123,7 @@ async function answerWithClaude(question, chunks) {
       model: CLAUDE_MODEL,
       max_tokens: 700,
       system: ANSWER_SYSTEM_PROMPT,
-      messages: [{ role: "user", content: `Notes:\n\n${context}\n\nQuestion: ${question}` }],
+      messages: [{ role: "user", content: `${context}\n\nQuestion: ${question}` }],
     }),
   });
   if (!res.ok) {
@@ -103,23 +135,39 @@ async function answerWithClaude(question, chunks) {
 }
 
 async function postToSlack({ source, response_url, channel_id }, text) {
-  if (source === "slash" && response_url) {
-    await fetch(response_url, {
+  try {
+    if (source === "slash" && response_url) {
+      const res = await fetch(response_url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ response_type: "in_channel", text }),
+      });
+      // response_url posts don't return Slack's usual {ok, error} JSON body
+      // on failure the same way chat.postMessage does — a non-2xx here is
+      // the signal to check, since there's no data.ok field to read.
+      if (!res.ok) {
+        console.error("atlas-ask-background: response_url post failed:", res.status, await res.text().catch(() => ""));
+      }
+      return;
+    }
+    // DM, or slash fallback if response_url has expired (valid ~30 min).
+    const res = await fetch("https://slack.com/api/chat.postMessage", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ response_type: "in_channel", text }),
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${SLACK_BOT_TOKEN}`,
+      },
+      body: JSON.stringify({ channel: channel_id, text }),
     });
-    return;
+    const data = await res.json();
+    // Slack's API returns HTTP 200 even on failure -- the real signal is
+    // the "ok" field in the JSON body, not the status code.
+    if (!data.ok) {
+      console.error("atlas-ask-background: chat.postMessage failed:", data.error);
+    }
+  } catch (e) {
+    console.error("atlas-ask-background: Slack post threw:", e.message);
   }
-  // DM, or slash fallback if response_url has expired (valid ~30 min).
-  await fetch("https://slack.com/api/chat.postMessage", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${SLACK_BOT_TOKEN}`,
-    },
-    body: JSON.stringify({ channel: channel_id, text }),
-  });
 }
 
 export default async (req) => {
@@ -136,8 +184,8 @@ export default async (req) => {
 
   try {
     const embedding = await embedQuery(payload.question);
-    const chunks = await retrieveChunks(embedding);
-    const answer = await answerWithClaude(payload.question, chunks);
+    const [noteChunks, kbChunks] = await Promise.all([retrieveChunks(embedding), retrieveKbChunks(embedding)]);
+    const answer = await answerWithClaude(payload.question, noteChunks, kbChunks);
     await postToSlack(payload, answer);
   } catch (e) {
     console.error("atlas-ask-background: failed:", e.message);
