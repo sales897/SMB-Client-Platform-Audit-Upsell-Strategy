@@ -195,6 +195,37 @@ and shouldn't be "fixed" to match this one.
 
 ---
 
+## What changed since — 2026-07-29, real root cause found
+
+**The actual bug was never in the code.** `/atlas` failed twice (first
+"did not respond," then "invalid Slack signature" on every attempt) — both
+looked like code bugs and got code fixes (`context.waitUntil`, which was a
+real and correct improvement regardless). But the true root cause was
+underneath both: **`ATLAS_TRIGGER_SECRET`, `SLACK_SIGNING_SECRET`, and
+`SLACK_BOT_TOKEN` were never actually persisted in Netlify**, despite the
+env-var-setting tool reporting success every single time it was called.
+Confirmed by directly re-listing all env vars afterward — the three keys
+were simply absent, twice, across two separate set attempts.
+
+**Practical consequence:** this means the ingest/enrich pipeline was
+silently stalled from ~04:13 UTC (when the `ATLAS_TRIGGER_SECRET` auth gate
+went live) until Oscar manually added the three variables directly in the
+Netlify dashboard UI. The automated env-var tool is NOT reliable for
+secrets on this project — confirmed twice. Set secrets directly in the
+Netlify UI going forward, not via that tool, until/unless this is somehow
+fixed.
+
+**Diagnostic logging was added temporarily to `atlas-slack.mjs`** to catch
+this (logged secret presence/length, not the value itself), then removed
+once the cause was confirmed. Final clean version has no debug logging.
+
+**If you're the next agent setting a Netlify env var:** don't trust a
+success message from an automated tool for this project. Verify
+immediately afterward by reading the env var list back, or better, ask
+the person to set it directly in the dashboard.
+
+---
+
 ## What's coming next (not yet built)
 
 - Deploying the three Netlify function files above (Oscar to add to repo)
