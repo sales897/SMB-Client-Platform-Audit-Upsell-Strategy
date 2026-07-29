@@ -157,15 +157,30 @@ async function getRecentHighlights() {
   return res.json();
 }
 
-const BRIEF_SYSTEM_PROMPT = `You are ATLAS, writing Oscar's daily morning brief for Slack. You'll be given raw data in three categories: today's calendar, open commitments that may need attention, and recent call note highlights.
+const BRIEF_SYSTEM_PROMPT = `You are ATLAS, composing Oscar's daily morning brief for Slack, rendered as Slack Block Kit. Respond with ONLY a JSON object, no prose, no markdown fences, matching exactly this shape:
 
-Write one cohesive, scannable brief:
-- Natural prose and short bullets, not a rigid template. Bold client names.
-- If a category has nothing in it, skip that category entirely — don't say "none" or "nothing today."
+{
+  "sections": [
+    { "emoji": "one emoji that fits this section's actual content", "title": "short title, 2-4 words", "body_lines": ["line one", "line two"] }
+  ],
+  "signoff": "one short warm closing line"
+}
+
+"body_lines" is an array — one array entry per line, NOT one string with line breaks inside it. This matters: a raw line break inside a JSON string produces invalid JSON that fails to parse, so lines must be separate array entries instead.
+
+Formatting rules for each line in "body_lines" (this is Slack's mrkdwn, NOT standard markdown):
+- Bold is *single asterisks*, never **double asterisks** — double asterisks render as literal characters in Slack and look broken.
+- A bullet line starts with "- ". No nested bullets.
+- No markdown headers (## etc.) inside lines — the section's own "title" already serves that role.
+
+Content rules:
+- Only include a section if there's real data for it. Omit sections entirely rather than writing "nothing today."
+- Choose each section's emoji to match its actual content — 📅 for scheduling, 💰 for money or collections, ⚠️ for risk or urgency, 📝 for notes/highlights, ✅ for things on track — not the same icon for everything.
+- Within a line, an inline emoji next to one specific flagged item (a risk, a dollar figure) is fine; don't add emoji to every line — sparing and purposeful, not decorative.
 - Never invent anything not present in the data given.
-- Open commitments are an approximate flag, not a guarantee they're actually outstanding — phrase them as "worth checking" rather than certainties.
-- Keep it tight enough to read in under a minute. No big markdown headers — this is Slack, not a document.
-- End with a short, warm one-line sign-off, not a generic "have a great day."`;
+- Open commitments are an approximate flag, not a guarantee they're outstanding — phrase as "worth checking," not certainty.
+- Keep the whole thing readable in under a minute.
+- Do not write a greeting — that's added separately, outside your output.`;
 
 async function composeWithClaude({ calendarEvents, openCommitments, highlights }) {
   const parts = [];
@@ -201,7 +216,10 @@ async function composeWithClaude({ calendarEvents, openCommitments, highlights }
   }
 
   if (parts.length === 0) {
-    return "Quiet one this morning — no calendar events, no flagged commitments, and nothing new in the notes over the last day.";
+    return {
+      sections: [],
+      signoff: "Quiet one this morning 🌤️ — no calendar events, no flagged commitments, nothing new in the notes over the last day.",
+    };
   }
 
   const res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -213,7 +231,7 @@ async function composeWithClaude({ calendarEvents, openCommitments, highlights }
     },
     body: JSON.stringify({
       model: CLAUDE_MODEL,
-      max_tokens: 900,
+      max_tokens: 1200,
       system: BRIEF_SYSTEM_PROMPT,
       messages: [{ role: "user", content: parts.join("\n\n---\n\n") }],
     }),
@@ -221,15 +239,78 @@ async function composeWithClaude({ calendarEvents, openCommitments, highlights }
   if (!res.ok) throw new Error(`Claude brief composition failed (${res.status}): ${await res.text().catch(() => "")}`);
   const data = await res.json();
   const textBlock = (data.content || []).find((b) => b.type === "text");
-  return textBlock ? textBlock.text : "Couldn't compose this morning's brief.";
+  if (!textBlock) throw new Error("Claude response had no text block");
+
+  const cleaned = textBlock.text.trim().replace(/^```json\s*/i, "").replace(/```$/, "");
+  try {
+    return JSON.parse(cleaned);
+  } catch (e) {
+    // If this ever fails again, the raw text (not just "invalid JSON") is
+    // what actually lets someone diagnose it from the function log alone.
+    console.error("atlas-brief-background: JSON.parse failed on Claude's response:", e.message);
+    console.error("atlas-brief-background: raw response was:", cleaned.slice(0, 2000));
+    throw e;
+  }
 }
 
-async function postToSlack(target, text) {
-  await fetch("https://slack.com/api/chat.postMessage", {
-    method: "POST",
-    headers: { "Content-Type": "application/json", Authorization: `Bearer ${SLACK_BOT_TOKEN}` },
-    body: JSON.stringify({ channel: target, text }),
+// ---- Turns the structured brief into real Slack Block Kit: a header,
+// a section + divider per topic, and a small context block for the
+// sign-off — rather than one plain text blob with markdown that Slack
+// doesn't actually render (Slack's mrkdwn uses *single* asterisks for
+// bold, not standard markdown's **double** asterisks). ----
+// Greeting is deterministic, not LLM-generated -- audience (Oscar vs. the
+// team channel) is a simple fixed rule, not a judgment call worth leaving
+// to chance each run.
+function greetingFor(audience) {
+  return audience === "team" ? "Good morning, Team ☀️" : "Good morning, Oscar ☀️";
+}
+
+function buildSlackBlocks(brief, greeting) {
+  const blocks = [{ type: "header", text: { type: "plain_text", text: greeting, emoji: true } }];
+
+  brief.sections.forEach((s, i) => {
+    const body = (s.body_lines || []).join("\n");
+    blocks.push({ type: "section", text: { type: "mrkdwn", text: `*${s.emoji ? s.emoji + " " : ""}${s.title}*\n${body}` } });
+    if (i < brief.sections.length - 1) blocks.push({ type: "divider" });
   });
+
+  if (brief.signoff) {
+    if (brief.sections.length) blocks.push({ type: "divider" });
+    blocks.push({ type: "context", elements: [{ type: "mrkdwn", text: brief.signoff }] });
+  }
+
+  return blocks;
+}
+
+// Plain-text fallback for notifications/screen readers — Slack shows this
+// where blocks can't render (push notification previews, etc).
+function flattenBriefToText(brief, greeting) {
+  const lines = [greeting];
+  for (const s of brief.sections) {
+    lines.push("", `${s.emoji || ""} ${s.title}`.trim(), ...(s.body_lines || []));
+  }
+  if (brief.signoff) lines.push("", brief.signoff);
+  return lines.join("\n");
+}
+
+async function postToSlack(target, blocks, fallbackText) {
+  try {
+    const res = await fetch("https://slack.com/api/chat.postMessage", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${SLACK_BOT_TOKEN}` },
+      body: JSON.stringify({ channel: target, blocks, text: fallbackText }),
+    });
+    const data = await res.json();
+    // Slack's API returns HTTP 200 even on failure -- the real success/failure
+    // signal is the "ok" field in the JSON body, not the status code. Checking
+    // only res.ok (as an earlier version did) let a failed post to a channel
+    // the bot isn't a member of disappear with zero trace anywhere.
+    if (!data.ok) {
+      console.error(`atlas-brief-background: Slack post to ${target} failed:`, data.error);
+    }
+  } catch (e) {
+    console.error(`atlas-brief-background: Slack post to ${target} threw:`, e.message);
+  }
 }
 
 export default async (req) => {
@@ -248,8 +329,13 @@ export default async (req) => {
 
     const brief = await composeWithClaude({ calendarEvents, openCommitments, highlights });
 
-    await postToSlack(SLACK_CHANNEL_ID, brief);
-    await postToSlack(SLACK_USER_ID, brief);
+    const dmBlocks = buildSlackBlocks(brief, greetingFor("oscar"));
+    const dmText = flattenBriefToText(brief, greetingFor("oscar"));
+    const channelBlocks = buildSlackBlocks(brief, greetingFor("team"));
+    const channelText = flattenBriefToText(brief, greetingFor("team"));
+
+    await postToSlack(SLACK_CHANNEL_ID, channelBlocks, channelText);
+    await postToSlack(SLACK_USER_ID, dmBlocks, dmText);
 
     const dateStr = mexicoCityDateString();
     await sbFetch("atlas_digests", {
@@ -261,7 +347,7 @@ export default async (req) => {
           for_email: OWNER_EMAIL,
           period_start: `${dateStr}T00:00:00-06:00`,
           period_end: `${dateStr}T23:59:59-06:00`,
-          content: brief,
+          content: dmText,
           delivered_to: `${SLACK_CHANNEL_ID},${SLACK_USER_ID}`,
           delivered_at: new Date().toISOString(),
         },
