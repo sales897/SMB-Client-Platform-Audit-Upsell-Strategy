@@ -1,11 +1,17 @@
 // netlify/functions/atlas-brief-background.mjs
 //
-// ATLAS — daily morning brief. Pulls three things and has Claude weave
-// them into one Slack-readable brief:
-//   1. Today's Google Calendar events
+// ATLAS — daily morning brief. Pulls several kinds of data and has Claude
+// synthesize them into one Slack-readable brief, not just transcribe them:
+//   1. Today's Google Calendar events, plus deterministically-detected
+//      scheduling conflicts (computed in code, not left to Claude)
 //   2. "Open commitments" — things Oscar or a client promised in a recent
 //      call note that don't appear to have a matching client_tasks entry
 //   3. Highlights from notes enriched in roughly the last 24 hours
+//   4. A 30-day risk watchlist — flags repeat mentions of the same client
+//      as an escalating pattern, not just a list of individual flags
+//   5. A 30-day revenue-signal scan (dollar amounts mentioned) — Claude
+//      distinguishes genuine upsell/expansion signals from complaints or
+//      disputed charges, which look similar at a glance but aren't
 //
 // Posted to BOTH the shared Slack channel and a DM to Oscar.
 //
@@ -157,6 +163,90 @@ async function getRecentHighlights() {
   return res.json();
 }
 
+// ---- Risk watchlist: risk_signals across a WIDER window (30 days, all
+// clients) than "recent highlights" (24h). The point is to let Claude spot
+// a pattern -- e.g. the same client flagged three times in three weeks --
+// which a 24h window could never surface even once, let alone as a trend. ----
+async function getRiskWatchlist() {
+  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const res = await sbFetch(
+    `atlas_notes?select=client_name,note_date,risk_signals,sentiment` +
+      `&note_date=gte.${since}&risk_signals=neq.[]&order=note_date.desc&limit=40`
+  );
+  if (!res.ok) {
+    console.error("atlas-brief-background: risk watchlist fetch failed:", await res.text().catch(() => ""));
+    return [];
+  }
+  return res.json();
+}
+
+// ---- Revenue signals: reuses amounts_mentioned, which enrichment already
+// extracts per note -- no new column needed. Widened to 30 days for the
+// same reason as the risk watchlist: a single note rarely reads as an
+// "opportunity" on its own, but a client asking about pricing twice in a
+// month is a different story. Claude decides what's actually a signal
+// worth surfacing vs. noise (a mentioned dollar figure isn't automatically
+// an opportunity -- could just as easily be a complaint about a charge). ----
+async function getRevenueSignals() {
+  const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+  const res = await sbFetch(
+    `atlas_notes?select=client_name,note_date,summary,amounts_mentioned` +
+      `&note_date=gte.${since}&amounts_mentioned=neq.[]&order=note_date.desc&limit=40`
+  );
+  if (!res.ok) {
+    console.error("atlas-brief-background: revenue signals fetch failed:", await res.text().catch(() => ""));
+    return [];
+  }
+  return res.json();
+}
+
+// ---- Schedule conflicts: computed deterministically here, NOT left to
+// Claude's judgment. Comparing ISO timestamp ranges correctly is exactly
+// the kind of precise, mechanical task an LLM can get subtly wrong (off-
+// by-one on boundaries, timezone confusion, etc.) -- so this hands Claude
+// a confirmed fact to state plainly, rather than asking it to re-derive
+// overlaps from raw timestamps itself. All-day events (date, not
+// dateTime) are excluded -- a full-day calendar block "overlapping" a
+// meeting isn't a real conflict in the way two double-booked calls are. ----
+function formatMxTime(iso) {
+  try {
+    return new Date(iso).toLocaleTimeString("en-US", {
+      timeZone: "America/Mexico_City",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  } catch {
+    return iso;
+  }
+}
+
+function detectScheduleConflicts(events) {
+  const timed = events
+    .map((e) => ({
+      summary: e.summary,
+      start: e.start,
+      end: e.end,
+      startMs: e.start?.includes("T") ? new Date(e.start).getTime() : null,
+      endMs: e.end?.includes("T") ? new Date(e.end).getTime() : null,
+    }))
+    .filter((e) => e.startMs != null && e.endMs != null)
+    .sort((a, b) => a.startMs - b.startMs);
+
+  const conflicts = [];
+  for (let i = 0; i < timed.length; i++) {
+    for (let j = i + 1; j < timed.length; j++) {
+      if (timed[j].startMs >= timed[i].endMs) break; // sorted by start -- no later event can overlap once past this one's end
+      conflicts.push({
+        a: timed[i].summary,
+        aRange: `${formatMxTime(timed[i].start)}–${formatMxTime(timed[i].end)}`,
+        b: timed[j].summary,
+        bRange: `${formatMxTime(timed[j].start)}–${formatMxTime(timed[j].end)}`,
+      });
+    }
+  }
+  return conflicts;
+}
+
 const BRIEF_SYSTEM_PROMPT = `You are ATLAS, composing Oscar's daily morning brief for Slack, rendered as Slack Block Kit. Respond with ONLY a JSON object, no prose, no markdown fences, matching exactly this shape:
 
 {
@@ -173,17 +263,29 @@ Formatting rules for each line in "body_lines" (this is Slack's mrkdwn, NOT stan
 - A bullet line starts with "- ". No nested bullets.
 - No markdown headers (## etc.) inside lines — the section's own "title" already serves that role.
 
-Content rules:
-- Only include a section if there's real data for it. Omit sections entirely rather than writing "nothing today."
-- Choose each section's emoji to match its actual content — 📅 for scheduling, 💰 for money or collections, ⚠️ for risk or urgency, 📝 for notes/highlights, ✅ for things on track — not the same icon for everything.
-- Within a line, an inline emoji next to one specific flagged item (a risk, a dollar figure) is fine; don't add emoji to every line — sparing and purposeful, not decorative.
-- Never invent anything not present in the data given.
+You'll receive several kinds of data, some narrow (today's calendar, yesterday's notes) and some wide (a 30-day risk watchlist, a 30-day list of notes mentioning dollar amounts). Your job is SYNTHESIS, not transcription:
+
+- **Scheduling conflicts**: if a "SCHEDULING CONFLICTS" block appears in the data, those overlaps were already confirmed by exact calendar math — state them plainly as a flagged item. Do NOT independently re-check the raw calendar for conflicts yourself; only report what's given in that block, since manually comparing timestamps is exactly the kind of thing worth getting from code, not guessing at.
+- **Risk patterns**: don't just repeat each risk_signal verbatim. If the SAME client appears more than once in the 30-day watchlist, say so explicitly — that's an escalating situation, not a one-off, and is far more worth Oscar's attention than a single mention. A client appearing once with a mild flag may not deserve a section at all.
+- **Revenue opportunities**: scan the 30-day dollar-amount mentions for genuine expansion/upsell signals (a client asking about upgrading, adding a product, increasing spend) — NOT every dollar figure is an opportunity; a client disputing a charge or asking about a refund is a risk, not an opportunity, and should never be listed here. When genuinely unsure which it is, leave it out rather than guessing.
+- **Next best action**: given everything above (commitments, risks, calendar), recommend 1-3 concrete next actions if there's a clear one — skip this if nothing rises to the level of an actual recommendation.
+- Only include a section if there's real signal for it. A single lukewarm data point is not a "trend" — omit the section entirely rather than manufacturing one, and don't pad a thin section with restated data just to give it substance.
+- Never invent a fact, a date, or a client name not present in the data given.
 - Open commitments are an approximate flag, not a guarantee they're outstanding — phrase as "worth checking," not certainty.
+- Choose each section's emoji to match its actual content — 📅 scheduling, 💰 money/opportunity, ⚠️ risk/urgency, 📝 notes, ✅ on track, 🎯 recommended action — not the same icon for everything.
+- Within a line, an inline emoji next to one specific flagged item is fine; don't add emoji to every line.
 - Keep the whole thing readable in under a minute.
 - Do not write a greeting — that's added separately, outside your output.`;
 
-async function composeWithClaude({ calendarEvents, openCommitments, highlights }) {
+async function composeWithClaude({ calendarEvents, openCommitments, highlights, riskWatchlist, revenueSignals }) {
   const parts = [];
+  const conflicts = detectScheduleConflicts(calendarEvents);
+  if (conflicts.length) {
+    parts.push(
+      "SCHEDULING CONFLICTS (confirmed by exact time comparison, not an estimate):\n" +
+        conflicts.map((c) => `- "${c.a}" (${c.aRange}) overlaps "${c.b}" (${c.bRange})`).join("\n")
+    );
+  }
   if (calendarEvents.length) {
     parts.push(
       "TODAY'S CALENDAR:\n" +
@@ -214,6 +316,22 @@ async function composeWithClaude({ calendarEvents, openCommitments, highlights }
           .join("\n")
     );
   }
+  if (riskWatchlist.length) {
+    parts.push(
+      "RISK WATCHLIST (last 30 days, ALL clients — look for repeat mentions of the same client):\n" +
+        riskWatchlist
+          .map((n) => `- ${n.client_name} (${new Date(n.note_date).toDateString()}): ${n.risk_signals.join("; ")}`)
+          .join("\n")
+    );
+  }
+  if (revenueSignals.length) {
+    parts.push(
+      "DOLLAR-AMOUNT MENTIONS (last 30 days — decide which are genuine opportunities vs. risks/complaints):\n" +
+        revenueSignals
+          .map((n) => `- ${n.client_name} (${new Date(n.note_date).toDateString()}): ${n.amounts_mentioned.join(", ")} — context: ${n.summary || "(no summary)"}`)
+          .join("\n")
+    );
+  }
 
   if (parts.length === 0) {
     return {
@@ -231,7 +349,7 @@ async function composeWithClaude({ calendarEvents, openCommitments, highlights }
     },
     body: JSON.stringify({
       model: CLAUDE_MODEL,
-      max_tokens: 1200,
+      max_tokens: 1600,
       system: BRIEF_SYSTEM_PROMPT,
       messages: [{ role: "user", content: parts.join("\n\n---\n\n") }],
     }),
@@ -321,13 +439,15 @@ export default async (req) => {
 
   try {
     const accessToken = await getFreshGoogleAccessToken();
-    const [calendarEvents, openCommitments, highlights] = await Promise.all([
+    const [calendarEvents, openCommitments, highlights, riskWatchlist, revenueSignals] = await Promise.all([
       getTodayCalendarEvents(accessToken),
       getOpenCommitments(),
       getRecentHighlights(),
+      getRiskWatchlist(),
+      getRevenueSignals(),
     ]);
 
-    const brief = await composeWithClaude({ calendarEvents, openCommitments, highlights });
+    const brief = await composeWithClaude({ calendarEvents, openCommitments, highlights, riskWatchlist, revenueSignals });
 
     const dmBlocks = buildSlackBlocks(brief, greetingFor("oscar"));
     const dmText = flattenBriefToText(brief, greetingFor("oscar"));
@@ -355,7 +475,9 @@ export default async (req) => {
     });
 
     console.log("atlas-brief-background: brief sent.",
-      "calendar:", calendarEvents.length, "commitments:", openCommitments.length, "highlights:", highlights.length);
+      "calendar:", calendarEvents.length, "commitments:", openCommitments.length,
+      "highlights:", highlights.length, "risk watchlist:", riskWatchlist.length,
+      "revenue signals:", revenueSignals.length);
   } catch (e) {
     console.error("atlas-brief-background: failed:", e.message);
   }
