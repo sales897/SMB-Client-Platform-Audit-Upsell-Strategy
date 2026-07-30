@@ -1723,6 +1723,18 @@ tr.pg-hidden-row { display: none; }
 }
 .ai-quick-action:hover { border-color: var(--orange); color: var(--text); background: var(--bg2); }
 .ai-quick-action .icon { font-size: var(--font-sm); flex-shrink: 0; }
+/* ATLAS panel tab (Block: ATLAS HUB integration, 2026-07-30) -- reuses
+   --blue, already the codebase's existing color for "a distinct-but-
+   related identity" (the superuser role glow), rather than introducing
+   a new hue for the second AI agent. Mockup-approved: Option 2, "Unified
+   Tabbed Panel" -- one orb, one docked panel, a tab switch inside it. */
+.ai-agent-tabs { display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.ai-agent-tab { flex: 1; text-align: center; padding: var(--space-3); font-size: var(--font-sm); font-weight: 700; color: var(--text3); cursor: pointer; border-bottom: 2px solid transparent; transition: all var(--transition-base); }
+.ai-agent-tab.active.tab-nirvana { color: var(--orange2); border-color: var(--orange); background: var(--orange-dim); }
+.ai-agent-tab.active.tab-atlas { color: var(--blue2, #60a5fa); border-color: var(--blue); background: var(--blue-dim, rgba(59,130,246,.14)); }
+.ai-quick-action.atlas-quick-action:hover { border-color: var(--blue); color: var(--text); }
+.ai-msg-assistant-atlas { background: var(--blue-dim, rgba(59,130,246,.1)); border: 1px solid rgba(59,130,246,.25); }
+.atlas-empty-state { padding: var(--space-4); text-align: center; color: var(--text3); font-size: var(--font-xs); line-height: 1.6; }
 .ai-agent-messages { flex: 1; overflow-y: auto; padding: var(--space-3) var(--space-4); display: flex; flex-direction: column; gap: var(--space-3); }
 .ai-msg-row { display: flex; flex-direction: column; max-width: 88%; }
 .ai-msg-row.ai-msg-row-user { align-self: flex-end; align-items: flex-end; }
@@ -3510,18 +3522,33 @@ select.wfb-field-input { padding-right: 26px; }
       <button onclick="toggleAiAgentPanel()" title="Close" aria-label="Close Nirvana"><span class="icon" data-icon="close" data-icon-size="12"></span></button>
     </div>
   </div>
-  <div class="ai-quick-actions">
-    <div class="ai-quick-action" onclick="sendAiAgentQuickMessage('Give me today\'s briefing.')"><span class="icon" data-icon="clipboard"></span> Daily briefing</div>
-    <div class="ai-quick-action" onclick="sendAiAgentQuickMessage('Which clients are at risk right now?')"><span class="icon" data-icon="alert"></span> At-risk clients</div>
-    <div class="ai-quick-action" onclick="sendAiAgentQuickMessage('I want to create a task.')"><span class="icon" data-icon="check"></span> Create a task</div>
-    <div class="ai-quick-action" onclick="sendAiAgentQuickMessage('I want to add a note to a client.')"><span class="icon" data-icon="edit"></span> Add a note</div>
+  <div class="ai-agent-tabs">
+    <div class="ai-agent-tab active tab-nirvana" id="aiTabNirvanaBtn" onclick="setAiAgentTab('nirvana')">Nirvana</div>
+    <div class="ai-agent-tab tab-atlas" id="aiTabAtlasBtn" onclick="setAiAgentTab('atlas')">ATLAS</div>
   </div>
-  <div class="ai-agent-messages" id="aiAgentMessages"></div>
-  <div class="ai-agent-confirm" id="aiAgentConfirm" style="display:none"></div>
+  <div id="nirvanaTabContent">
+    <div class="ai-quick-actions">
+      <div class="ai-quick-action" onclick="sendAiAgentQuickMessage('Give me today\'s briefing.')"><span class="icon" data-icon="clipboard"></span> Daily briefing</div>
+      <div class="ai-quick-action" onclick="sendAiAgentQuickMessage('Which clients are at risk right now?')"><span class="icon" data-icon="alert"></span> At-risk clients</div>
+      <div class="ai-quick-action" onclick="sendAiAgentQuickMessage('I want to create a task.')"><span class="icon" data-icon="check"></span> Create a task</div>
+      <div class="ai-quick-action" onclick="sendAiAgentQuickMessage('I want to add a note to a client.')"><span class="icon" data-icon="edit"></span> Add a note</div>
+    </div>
+    <div class="ai-agent-messages" id="aiAgentMessages"></div>
+    <div class="ai-agent-confirm" id="aiAgentConfirm" style="display:none"></div>
+  </div>
+  <div id="atlasTabContent" style="display:none">
+    <div class="ai-quick-actions">
+      <div class="ai-quick-action atlas-quick-action" onclick="sendAtlasQuickMessage('please provide brief')"><span class="icon" data-icon="clipboard"></span> Request brief</div>
+      <div class="ai-quick-action atlas-quick-action" onclick="sendAtlasQuickMessage('what open commitments do I have right now?')"><span class="icon" data-icon="alert"></span> Open commitments</div>
+    </div>
+    <div class="ai-agent-messages" id="atlasAgentMessages">
+      <div class="atlas-empty-state">Ask ATLAS about your call notes or the Knowledge Base — e.g. "what's open with Tint Pros?"</div>
+    </div>
+  </div>
   <div class="ai-agent-input-row">
-    <input type="text" id="aiAgentInput" placeholder="Find a client, ask a question, or tell me what to do…" onkeydown="if(event.key==='Enter') sendAiAgentMessage()">
-    <button id="aiVoiceBtn" class="ai-voice-btn" onclick="toggleVoiceInput('aiAgentInput','aiVoiceBtn')" title="Speak to Nirvana" aria-label="Speak to Nirvana"><span class="icon" data-icon="mic" data-icon-size="13"></span></button>
-    <button id="aiAgentSendBtn" onclick="sendAiAgentMessage()">Send</button>
+    <input type="text" id="aiAgentInput" placeholder="Find a client, ask a question, or tell me what to do…" onkeydown="if(event.key==='Enter') sendActiveAgentMessage()">
+    <button id="aiVoiceBtn" class="ai-voice-btn" onclick="toggleVoiceInput('aiAgentInput','aiVoiceBtn')" title="Speak" aria-label="Speak"><span class="icon" data-icon="mic" data-icon-size="13"></span></button>
+    <button id="aiAgentSendBtn" onclick="sendActiveAgentMessage()">Send</button>
   </div>
 </div>
 
@@ -6798,6 +6825,18 @@ select.wfb-field-input { padding-right: 26px; }
         <option value="en">🇺🇸 English</option>
         <option value="es">🇲🇽 Español</option>
       </select></div>
+    </div>
+
+    <div style="margin-bottom:14px">
+      <label class="field-label">Visible To</label>
+      <div style="display:flex;gap:18px;align-items:center">
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text2);cursor:pointer;font-weight:400">
+          <input type="checkbox" id="kbVisibleNirvana" style="width:16px;height:16px;cursor:pointer"> Nirvana
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text2);cursor:pointer;font-weight:400">
+          <input type="checkbox" id="kbVisibleAtlas" style="width:16px;height:16px;cursor:pointer"> ATLAS
+        </label>
+      </div>
     </div>
 
     <label for="kbSourceUrl" class="field-label"><span data-i18n="kb_source_url">Source URL</span> <span style="color:var(--text3);font-weight:400" data-i18n="kb_source_url_hint">(optional — needed only if you want to auto-fetch a page's text)</span></label>
@@ -27987,12 +28026,23 @@ function rebuildKnowledgePage() {
   }
   list.innerHTML = entries.map(k => {
     const excerpt = (k.content || '').slice(0, 160).trim();
+    // Legacy rows created before this feature shipped have no stored value
+    // for either flag — treat that as "both" rather than "neither", so an
+    // older SOP doesn't silently look excluded from an agent it was always
+    // actually available to.
+    const visNirvana = k.visible_to_nirvana !== false;
+    const visAtlas = k.visible_to_atlas !== false;
+    const agentBadge = visNirvana && visAtlas ? '🔮 Nirvana + ATLAS'
+      : visNirvana ? '🔮 Nirvana only'
+      : visAtlas ? '🧭 ATLAS only'
+      : '🚫 Hidden from both';
     return `
     <div class="edit-client-row" style="margin-bottom:var(--space-2);padding:var(--space-3);align-items:flex-start">
       <div style="flex:1">
         <div style="display:flex;align-items:center;gap:var(--space-2);margin-bottom:4px">
           <span class="kb-badge kb-badge-${k.category}">${escAttr(KB_CATEGORY_LABELS[k.category] || k.category)}</span>
           <span class="kb-badge" style="background:var(--bg4);color:var(--text3)">${KB_LANGUAGE_LABELS[k.language] || KB_LANGUAGE_LABELS.en}</span>
+          <span class="kb-badge" style="background:var(--bg4);color:var(--text3)">${agentBadge}</span>
           <span style="font-weight:700;color:var(--text);font-size:var(--font-base)">${escAttr(k.title)}</span>
         </div>
         <div style="font-size:var(--font-xs);color:var(--text2);line-height:1.5">${escAttr(excerpt)}${(k.content || '').length > 160 ? '…' : ''}</div>
@@ -28024,6 +28074,8 @@ function openAddKnowledgeModal() {
   document.getElementById('kbSourceUrl').value = '';
   document.getElementById('kbContent').value = '';
   document.getElementById('kbContentMeta').textContent = '';
+  document.getElementById('kbVisibleNirvana').checked = true;
+  document.getElementById('kbVisibleAtlas').checked = true;
   themifySelect('kbCategory', { fullWidth: true });
   themifySelect('kbLanguage', { fullWidth: true });
   document.getElementById('knowledgeModal').classList.add('open');
@@ -28042,6 +28094,12 @@ function openEditKnowledgeModal(id) {
   document.getElementById('kbSourceUrl').value = entry.source_url || '';
   document.getElementById('kbContent').value = entry.content || '';
   document.getElementById('kbContentMeta').textContent = `${(entry.content || '').length.toLocaleString()} characters`;
+  // Existing entries created before this feature shipped have no stored
+  // value for these — default to true (both agents) rather than false, so
+  // an entry doesn't silently go dark to an agent just because it predates
+  // this toggle existing.
+  document.getElementById('kbVisibleNirvana').checked = entry.visible_to_nirvana !== false;
+  document.getElementById('kbVisibleAtlas').checked = entry.visible_to_atlas !== false;
   themifySelect('kbCategory', { fullWidth: true });
   themifySelect('kbLanguage', { fullWidth: true });
   document.getElementById('knowledgeModal').classList.add('open');
@@ -28180,6 +28238,8 @@ async function saveKnowledgeEntry() {
   entry.language = langChoice || detectTextLanguage(content);
   entry.source_url = document.getElementById('kbSourceUrl').value.trim() || null;
   entry.content = content;
+  entry.visible_to_nirvana = document.getElementById('kbVisibleNirvana').checked;
+  entry.visible_to_atlas = document.getElementById('kbVisibleAtlas').checked;
   entry.updated_at = new Date().toISOString();
   await persistKnowledgeEntry(entry);
   closeKnowledgeModal();
@@ -28196,6 +28256,7 @@ async function saveKnowledgeEntry() {
 // data (notes, tasks, KPI scores) always asks the user to confirm first.
 // ════════════════════════════════════════════════════════════════════════
 const AI_AGENT_ENDPOINT = '/.netlify/functions/ai-agent';
+const ATLAS_HUB_CHAT_ENDPOINT = '/.netlify/functions/atlas-hub-chat';
 
 // Maps a friendly chart name (what Nirvana requests) to its canvas element,
 // display label, and the function that redraws it — needed because charts
@@ -29644,7 +29705,14 @@ async function executeAiTool(name, input) {
       if (WORKFLOWS.length === 0) return { workflows: [], note: 'No workflows exist yet.' };
       return { workflows: WORKFLOWS.map(wf => ({ name: wf.name, active: wf.active, trigger: describeWorkflowTrigger(wf), action: describeWorkflowAction(wf), last_ran: wf.last_run_at || 'never' })) };
     case 'search_knowledge_base': {
-      const matches = searchKnowledgeBase(input.query, 3);
+      // Overfetch, then filter to entries actually marked visible_to_nirvana
+      // (legacy rows with no stored value default to visible, same rule
+      // used everywhere else this flag is read) -- filtered here rather
+      // than inside searchKnowledgeBase() itself, since that function is
+      // shared with the plain human-facing search box on this page, which
+      // should keep showing Oscar everything regardless of agent routing.
+      const candidates = searchKnowledgeBase(input.query, 15).filter(k => k.visible_to_nirvana !== false);
+      const matches = candidates.slice(0, 3);
       if (matches.length === 0) return { results: [], note: 'No matching knowledge base entries found for that query — if this topic seems like it should exist, try the same search again with the query translated into the other language (English/Spanish) before concluding nothing exists.' };
       return { results: matches.map(k => ({ title: k.title, category: k.category, language: k.language || 'en', source_url: k.source_url || null, content: (k.content || '').slice(0, 4000) })) };
     }
@@ -30584,6 +30652,81 @@ function renderAiQuickSuggestions() {
 function sendAiAgentQuickMessage(text) {
   document.getElementById('aiAgentInput').value = text;
   sendAiAgentMessage();
+}
+
+// ─── ATLAS tab (Block: ATLAS HUB integration, 2026-07-30) ─────────────────
+// One shared input row serves both tabs; sendActiveAgentMessage() is the
+// single dispatcher the input's Enter-key and Send button both call, so
+// neither needs to know which agent is currently active.
+let aiAgentActiveTab = 'nirvana';
+
+function setAiAgentTab(tab) {
+  aiAgentActiveTab = tab;
+  document.getElementById('aiTabNirvanaBtn').classList.toggle('active', tab === 'nirvana');
+  document.getElementById('aiTabAtlasBtn').classList.toggle('active', tab === 'atlas');
+  document.getElementById('nirvanaTabContent').style.display = tab === 'nirvana' ? '' : 'none';
+  document.getElementById('atlasTabContent').style.display = tab === 'atlas' ? '' : 'none';
+  const input = document.getElementById('aiAgentInput');
+  input.placeholder = tab === 'atlas'
+    ? 'Ask ATLAS about your notes or the Knowledge Base…'
+    : 'Find a client, ask a question, or tell me what to do…';
+  // Header still shows Nirvana's own name/photo either way -- swapping
+  // the photo would need a real ATLAS avatar asset, not built yet. The
+  // tab bar itself (which agent is highlighted) is the actual indicator
+  // of which one you're talking to.
+  const nameEl = document.getElementById('nirvanaDisplayName');
+  if (nameEl) nameEl.textContent = tab === 'atlas' ? 'ATLAS' : 'Nirvana';
+}
+
+function sendActiveAgentMessage() {
+  if (aiAgentActiveTab === 'atlas') sendAtlasMessage();
+  else sendAiAgentMessage();
+}
+
+function sendAtlasQuickMessage(text) {
+  document.getElementById('aiAgentInput').value = text;
+  sendAtlasMessage();
+}
+
+function appendAtlasMsg(role, text) {
+  const thread = document.getElementById('atlasAgentMessages');
+  const emptyState = thread.querySelector('.atlas-empty-state');
+  if (emptyState) emptyState.remove();
+  const row = document.createElement('div');
+  row.className = 'ai-msg-row ai-msg-row-' + (role === 'user' ? 'user' : 'assistant');
+  const bubble = document.createElement('div');
+  bubble.className = role === 'user' ? 'ai-msg ai-msg-user' : 'ai-msg ai-msg-assistant ai-msg-assistant-atlas';
+  bubble.innerHTML = role === 'user' ? escAttr(text).replace(/\n/g, '<br>') : renderAiMarkdown(text);
+  row.appendChild(bubble);
+  thread.appendChild(row);
+  thread.scrollTop = thread.scrollHeight;
+  return bubble;
+}
+
+// Non-streaming by design (see atlas-hub-chat.mjs's header comment for
+// why) -- a "thinking" bubble that gets replaced with the real answer
+// once it arrives, rather than filling in token-by-token like Nirvana.
+async function sendAtlasMessage() {
+  const input = document.getElementById('aiAgentInput');
+  const question = input.value.trim();
+  if (!question) return;
+  input.value = '';
+  appendAtlasMsg('user', question);
+  const thinkingBubble = appendAtlasMsg('assistant', '…thinking');
+
+  try {
+    const res = await fetch(ATLAS_HUB_CHAT_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': SB_HEADERS['Authorization'] || '' },
+      body: JSON.stringify({ question }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+    thinkingBubble.innerHTML = renderAiMarkdown(data.answer || "I couldn't generate an answer just now.");
+  } catch (e) {
+    thinkingBubble.innerHTML = renderAiMarkdown('Something went wrong: ' + e.message);
+  }
+  document.getElementById('atlasAgentMessages').scrollTop = document.getElementById('atlasAgentMessages').scrollHeight;
 }
 
 // Safe, lightweight markdown-to-HTML for the assistant's replies — tables,
