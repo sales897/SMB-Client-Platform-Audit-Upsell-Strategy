@@ -1732,6 +1732,17 @@ tr.pg-hidden-row { display: none; }
 .ai-agent-tab { flex: 1; text-align: center; padding: var(--space-3); font-size: var(--font-sm); font-weight: 700; color: var(--text3); cursor: pointer; border-bottom: 2px solid transparent; transition: all var(--transition-base); }
 .ai-agent-tab.active.tab-nirvana { color: var(--orange2); border-color: var(--orange); background: var(--orange-dim); }
 .ai-agent-tab.active.tab-atlas { color: var(--blue2, #60a5fa); border-color: var(--blue); background: var(--blue-dim, rgba(59,130,246,.14)); }
+/* #nirvanaTabContent / #atlasTabContent sit between the tab bar and the
+   shared input row as direct children of .ai-agent-panel (a flex column).
+   Without flex:1 + min-height:0 here, a long message thread just grows
+   the wrapper past the panel's visible height and pushes the input row
+   off-screen entirely -- the real bug found 2026-07-30: Nirvana's tab
+   (genuine long chat history) overflowed and hid the input row, while
+   ATLAS's tab (still mostly empty) hadn't grown enough to show the same
+   problem yet. min-height:0 is the actual fix, not just flex:1 alone --
+   a classic flexbox gotcha where a flex item won't shrink below its
+   content's natural height without it. */
+#nirvanaTabContent, #atlasTabContent { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
 .ai-quick-action.atlas-quick-action:hover { border-color: var(--blue); color: var(--text); }
 .ai-msg-assistant-atlas { background: var(--blue-dim, rgba(59,130,246,.1)); border: 1px solid rgba(59,130,246,.25); }
 .atlas-empty-state { padding: var(--space-4); text-align: center; color: var(--text3); font-size: var(--font-xs); line-height: 1.6; }
@@ -30668,7 +30679,7 @@ function setAiAgentTab(tab) {
   document.getElementById('atlasTabContent').style.display = tab === 'atlas' ? '' : 'none';
   const input = document.getElementById('aiAgentInput');
   input.placeholder = tab === 'atlas'
-    ? 'Ask ATLAS about your notes or the Knowledge Base…'
+    ? 'Ask ATLAS anything…'
     : 'Find a client, ask a question, or tell me what to do…';
   // Header still shows Nirvana's own name/photo either way -- swapping
   // the photo would need a real ATLAS avatar asset, not built yet. The
