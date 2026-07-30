@@ -1,13 +1,14 @@
 // netlify/functions/atlas-slack.mjs
 //
-// ATLAS — Slack entry point. Handles both:
-//   - Slash command  POST  /atlas <question>        (content-type: form-urlencoded)
-//   - Events API     POST  DMs + url_verification    (content-type: application/json)
+// ATLAS — Slack entry point. Handles:
+//   - Slash command  POST  /atlas <question>          (content-type: form-urlencoded)
+//   - Slash command  POST  /atlas-prep <client name>   (content-type: form-urlencoded)
+//   - Events API     POST  DMs + url_verification      (content-type: application/json)
 //
 // Slack requires a response within 3 seconds, so this function ONLY
-// verifies the request and acknowledges immediately. The actual retrieval
-// + Claude call happens in atlas-ask-background.mjs, fired here and not
-// awaited to completion.
+// verifies the request and acknowledges immediately. The actual work
+// happens in atlas-ask-background.mjs or atlas-prep-background.mjs,
+// fired here and not awaited to completion.
 
 import crypto from "node:crypto";
 
@@ -39,8 +40,8 @@ function verifySlackSignature(rawBody, timestamp, signature) {
 // easily blow past that, which is exactly what was happening before this
 // used context.waitUntil: Slack showed "the app did not respond" even
 // though nothing had actually errored.
-function fireBackground(context, origin, payload) {
-  const promise = fetch(`${origin}/.netlify/functions/atlas-ask-background`, {
+function fireBackground(context, origin, functionName, payload) {
+  const promise = fetch(`${origin}/.netlify/functions/${functionName}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -48,7 +49,7 @@ function fireBackground(context, origin, payload) {
     },
     body: JSON.stringify(payload),
   }).catch((e) => {
-    console.error("atlas-slack: failed to trigger atlas-ask-background:", e.message);
+    console.error(`atlas-slack: failed to trigger ${functionName}:`, e.message);
   });
   context.waitUntil(promise);
 }
@@ -86,7 +87,7 @@ export default async (req, context) => {
       const isRealUserMessage = !event.bot_id && !event.subtype;
 
       if (isDirectMessage && isRealUserMessage) {
-        fireBackground(context, origin, {
+        fireBackground(context, origin, "atlas-ask-background", {
           source: "dm",
           question: event.text,
           user_id: event.user,
@@ -100,10 +101,29 @@ export default async (req, context) => {
 
   // ---- Slash command (form-urlencoded) ----
   const params = new URLSearchParams(rawBody);
+  const command = params.get("command"); // "/atlas" or "/atlas-prep"
   const question = (params.get("text") || "").trim();
   const userId = params.get("user_id");
   const channelId = params.get("channel_id");
   const responseUrl = params.get("response_url");
+
+  if (command === "/atlas-prep") {
+    if (!question) {
+      return new Response(
+        JSON.stringify({ response_type: "ephemeral", text: "Usage: `/atlas-prep <client name>` — e.g. `/atlas-prep Tint Pros`" }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      );
+    }
+    fireBackground(context, origin, "atlas-prep-background", {
+      client_name: question,
+      user_id: userId,
+      channel_id: channelId,
+    });
+    return new Response(
+      JSON.stringify({ response_type: "ephemeral", text: `Pulling together a prep packet for ${question} — I'll DM you shortly.` }),
+      { status: 200, headers: { "Content-Type": "application/json" } }
+    );
+  }
 
   if (!question) {
     return new Response(
@@ -115,7 +135,7 @@ export default async (req, context) => {
     );
   }
 
-  fireBackground(context, origin, {
+  fireBackground(context, origin, "atlas-ask-background", {
     source: "slash",
     question,
     user_id: userId,
