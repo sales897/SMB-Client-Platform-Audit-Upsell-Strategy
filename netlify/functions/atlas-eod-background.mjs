@@ -305,24 +305,24 @@ async function composeWithClaude(data) {
     },
     body: JSON.stringify({
       model: CLAUDE_MODEL,
-      max_tokens: 1600,
+      max_tokens: 2800, // higher than the morning brief's 1600 -- EOD synthesizes
+      // more distinct data feeds (8 vs. 5) and was hitting the cap mid-response,
+      // producing truncated/invalid JSON. Confirmed via a real failure: the
+      // response cut off mid-string ("...present: Chat Wid") at 1600.
       system: EOD_SYSTEM_PROMPT,
       messages: [{ role: "user", content: parts.join("\n\n---\n\n") }],
     }),
   });
   if (!res.ok) throw new Error(`Claude EOD composition failed (${res.status}): ${await res.text().catch(() => "")}`);
   const resData = await res.json();
-  const textBlock = (resData.content || []).find((b) => b.type === "text");
-  if (!textBlock) {
-    // TEMPORARY DIAGNOSTIC — logs enough to see WHY there's no text block
-    // (stop_reason, what block types actually came back) without dumping
-    // potentially large full content. Remove once the cause is found.
-    console.error("atlas-eod-background DEBUG: stop_reason:", resData.stop_reason);
-    console.error("atlas-eod-background DEBUG: content block types:", (resData.content || []).map((b) => b.type));
-    console.error("atlas-eod-background DEBUG: usage:", JSON.stringify(resData.usage));
-    console.error("atlas-eod-background DEBUG: full content (first 1500 chars):", JSON.stringify(resData.content).slice(0, 1500));
-    throw new Error("Claude response had no text block");
+  if (resData.stop_reason === "max_tokens") {
+    // Cheap, permanent insurance: if this ever happens again despite the
+    // raised budget, the log says exactly why instead of a cryptic
+    // "unterminated string" JSON error pointing nowhere useful.
+    console.error("atlas-eod-background: Claude hit max_tokens — response was truncated. Consider raising the budget further.");
   }
+  const textBlock = (resData.content || []).find((b) => b.type === "text");
+  if (!textBlock) throw new Error("Claude response had no text block");
 
   const cleaned = textBlock.text.trim().replace(/^```json\s*/i, "").replace(/```$/, "");
   try {
