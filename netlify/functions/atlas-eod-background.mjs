@@ -313,7 +313,16 @@ async function composeWithClaude(data) {
   if (!res.ok) throw new Error(`Claude EOD composition failed (${res.status}): ${await res.text().catch(() => "")}`);
   const resData = await res.json();
   const textBlock = (resData.content || []).find((b) => b.type === "text");
-  if (!textBlock) throw new Error("Claude response had no text block");
+  if (!textBlock) {
+    // TEMPORARY DIAGNOSTIC — logs enough to see WHY there's no text block
+    // (stop_reason, what block types actually came back) without dumping
+    // potentially large full content. Remove once the cause is found.
+    console.error("atlas-eod-background DEBUG: stop_reason:", resData.stop_reason);
+    console.error("atlas-eod-background DEBUG: content block types:", (resData.content || []).map((b) => b.type));
+    console.error("atlas-eod-background DEBUG: usage:", JSON.stringify(resData.usage));
+    console.error("atlas-eod-background DEBUG: full content (first 1500 chars):", JSON.stringify(resData.content).slice(0, 1500));
+    throw new Error("Claude response had no text block");
+  }
 
   const cleaned = textBlock.text.trim().replace(/^```json\s*/i, "").replace(/```$/, "");
   try {
@@ -420,6 +429,14 @@ export default async (req) => {
     return new Response("Forbidden", { status: 403 });
   }
 
+  // Optional manual-test flag: { "test": true } in the POST body. Purely
+  // cosmetic (doesn't change what data gets pulled or how it's composed)
+  // -- it just prepends a visible disclaimer to both Slack posts, so a
+  // manual trigger to verify the function works doesn't get mistaken by
+  // anyone in the shared channel for the real 6pm recap.
+  const payload = await req.json().catch(() => ({}));
+  const isTest = payload?.test === true;
+
   try {
     const accessToken = await getFreshGoogleAccessToken();
     const todayStr = mexicoCityDateString(0);
@@ -466,19 +483,27 @@ export default async (req) => {
     const channelBlocks = buildSlackBlocks(brief, greetingFor("team"), kpi);
     const channelText = flattenBriefToText(brief, greetingFor("team"), kpi);
 
-    await postToSlack(SLACK_CHANNEL_ID, channelBlocks, channelText);
-    await postToSlack(SLACK_USER_ID, dmBlocks, dmText);
+    if (isTest) {
+      const disclaimer = { type: "context", elements: [{ type: "mrkdwn", text: "🧪 *TEST RUN* — verifying the EOD recap function. Not the real 6:00 PM report." }] };
+      dmBlocks.unshift(disclaimer, { type: "divider" });
+      channelBlocks.unshift(disclaimer, { type: "divider" });
+    }
+    const dmTextFinal = isTest ? `🧪 TEST RUN — not the real 6:00 PM report.\n\n${dmText}` : dmText;
+    const channelTextFinal = isTest ? `🧪 TEST RUN — not the real 6:00 PM report.\n\n${channelText}` : channelText;
+
+    await postToSlack(SLACK_CHANNEL_ID, channelBlocks, channelTextFinal);
+    await postToSlack(SLACK_USER_ID, dmBlocks, dmTextFinal);
 
     await sbFetch("atlas_digests", {
       method: "POST",
       headers: { Prefer: "return=minimal" },
       body: JSON.stringify([
         {
-          digest_type: "eod_recap",
+          digest_type: isTest ? "eod_recap_test" : "eod_recap",
           for_email: OWNER_EMAIL,
           period_start: `${todayStr}T00:00:00-06:00`,
           period_end: `${todayStr}T23:59:59-06:00`,
-          content: dmText,
+          content: dmTextFinal,
           delivered_to: `${SLACK_CHANNEL_ID},${SLACK_USER_ID}`,
           delivered_at: new Date().toISOString(),
         },
