@@ -54,7 +54,18 @@ function fireBackground(context, origin, functionName, payload) {
   context.waitUntil(promise);
 }
 
+// Deterministic keyword match, not an LLM judgment call -- this is a
+// simple, cheap classification ("does this look like a request for the
+// brief") and doesn't need a Claude call just to decide routing. Matches
+// phrases like "please provide brief", "send me the brief", "give me
+// today's brief", "can I get the morning brief".
+function isBriefRequest(text) {
+  const t = (text || "").toLowerCase();
+  return /\bbrief\b/.test(t) && /(provide|send|give|get|share|show|need|want)/.test(t);
+}
+
 export default async (req, context) => {
+
   const rawBody = await req.text();
   const timestamp = req.headers.get("x-slack-request-timestamp");
   const signature = req.headers.get("x-slack-signature");
@@ -87,12 +98,19 @@ export default async (req, context) => {
       const isRealUserMessage = !event.bot_id && !event.subtype;
 
       if (isDirectMessage && isRealUserMessage) {
-        fireBackground(context, origin, "atlas-ask-background", {
-          source: "dm",
-          question: event.text,
-          user_id: event.user,
-          channel_id: event.channel,
-        });
+        if (isBriefRequest(event.text)) {
+          fireBackground(context, origin, "atlas-brief-background", {
+            on_demand: true,
+            requester_user_id: event.user,
+          });
+        } else {
+          fireBackground(context, origin, "atlas-ask-background", {
+            source: "dm",
+            question: event.text,
+            user_id: event.user,
+            channel_id: event.channel,
+          });
+        }
       }
     }
 
@@ -131,6 +149,17 @@ export default async (req, context) => {
         response_type: "ephemeral",
         text: "Ask me something — e.g. `/atlas what did I promise Acme Roofing last call?`",
       }),
+      { status: 200, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
+  if (isBriefRequest(question)) {
+    fireBackground(context, origin, "atlas-brief-background", {
+      on_demand: true,
+      requester_user_id: userId,
+    });
+    return new Response(
+      JSON.stringify({ response_type: "ephemeral", text: "Pulling together your brief — I'll DM it to you shortly." }),
       { status: 200, headers: { "Content-Type": "application/json" } }
     );
   }

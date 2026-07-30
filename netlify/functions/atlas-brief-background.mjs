@@ -112,7 +112,30 @@ async function getTodayCalendarEvents(accessToken) {
     summary: e.summary || "(untitled event)",
     start: e.start?.dateTime || e.start?.date,
     end: e.end?.dateTime || e.end?.date,
+    // Google's eventType ('outOfOffice', 'focusTime', 'default', etc.) is
+    // captured and labeled deterministically here rather than left for
+    // Claude to infer from the raw summary text -- same reasoning as
+    // schedule-conflict detection: a known, structured field beats a guess.
+    eventType: e.eventType || "default",
   }));
+}
+
+// ---- HUB tasks (client_tasks) due today -- distinct from the 21-day
+// "open commitments" heuristic elsewhere; this is exact due_date matching
+// on the HUB's own task system, not a note-derived approximation. NOTE:
+// this is NOT Google Tasks (a different API/OAuth scope this integration
+// doesn't request) -- if Oscar actually meant Google's own Tasks list
+// rather than HUB tasks, that's a separate, later integration. ----
+async function getTasksDueToday() {
+  const dateStr = mexicoCityDateString();
+  const res = await sbFetch(
+    `client_tasks?select=client_name,title,status&due_date=eq.${dateStr}&status=neq.completed`
+  );
+  if (!res.ok) {
+    console.error("atlas-brief-background: tasks-due-today fetch failed:", await res.text().catch(() => ""));
+    return [];
+  }
+  return res.json();
 }
 
 // ---- Open commitments: notes with commitments from the last 21 days
@@ -250,34 +273,47 @@ function detectScheduleConflicts(events) {
 const BRIEF_SYSTEM_PROMPT = `You are ATLAS, composing Oscar's daily morning brief for Slack, rendered as Slack Block Kit. Respond with ONLY a JSON object, no prose, no markdown fences, matching exactly this shape:
 
 {
+  "executive_summary": "1-2 sentences: the state of the day at a glance, before any detail",
+  "kpi_snapshot": { "risks_flagged": <integer>, "revenue_opportunities": <integer> },
   "sections": [
-    { "emoji": "one emoji that fits this section's actual content", "title": "short title, 2-4 words", "body_lines": ["line one", "line two"] }
+    { "emoji": "one emoji that fits this section's actual content", "title": "short, concrete, action-oriented title, 2-4 words", "body_lines": ["line one", "line two"], "priority": "high" | "medium" | "low" }
   ],
-  "signoff": "one short warm closing line"
+  "signoff": "one short closing line"
 }
 
 "body_lines" is an array — one array entry per line, NOT one string with line breaks inside it. This matters: a raw line break inside a JSON string produces invalid JSON that fails to parse, so lines must be separate array entries instead.
+
+"kpi_snapshot" counts: report how many distinct items you actually included in a Risk section (risks_flagged) and how many in a Revenue Opportunities section (revenue_opportunities) — 0 if you didn't write that section. These should match your own sections below, not a re-count of raw input data (some of that data won't have made the cut).
+
+"priority" per section: "high" = needs attention today; "medium" = worth knowing, not urgent; "low" = FYI. Sections render in priority order (high first), so this also controls what Oscar sees first.
+
+Section titles — be concrete and action-oriented, not vague:
+- Prefer "Immediate Actions" over "Worth Checking On"
+- Prefer "Client Risks" over "Things to Watch"
+- Prefer "Growth Opportunities" over "Interesting Mentions"
 
 Formatting rules for each line in "body_lines" (this is Slack's mrkdwn, NOT standard markdown):
 - Bold is *single asterisks*, never **double asterisks** — double asterisks render as literal characters in Slack and look broken.
 - A bullet line starts with "- ". No nested bullets.
 - No markdown headers (## etc.) inside lines — the section's own "title" already serves that role.
 
-You'll receive several kinds of data, some narrow (today's calendar, yesterday's notes) and some wide (a 30-day risk watchlist, a 30-day list of notes mentioning dollar amounts). Your job is SYNTHESIS, not transcription:
+You'll receive several kinds of data, some narrow (today's calendar, today's tasks, yesterday's notes) and some wide (a 30-day risk watchlist, a 30-day list of notes mentioning dollar amounts). Your job is SYNTHESIS, not transcription:
 
-- **Scheduling conflicts**: if a "SCHEDULING CONFLICTS" block appears in the data, those overlaps were already confirmed by exact calendar math — state them plainly as a flagged item. Do NOT independently re-check the raw calendar for conflicts yourself; only report what's given in that block, since manually comparing timestamps is exactly the kind of thing worth getting from code, not guessing at.
+- **Today's Schedule**: ALWAYS write this section if there is at least one calendar event or task due today — never fold it into or replace it with the Scheduling Conflicts section; they're both needed, not one-or-the-other. List each event with its time range. If an event is marked Out of Office or Focus Time in the data, label it as such plainly (e.g. "🏖️ Out of Office: 2:00–5:00 PM"), don't just list it like a normal meeting. Merge in any tasks due today from the data as part of this section too (or as their own line), clearly distinguishing a task ("Task: ...") from a calendar event.
+- **Scheduling conflicts**: if a "SCHEDULING CONFLICTS" block appears in the data, those overlaps were already confirmed by exact calendar math — state them plainly as a flagged item (priority: high), IN ADDITION TO the full Today's Schedule section above, not instead of it. Do NOT independently re-check the raw calendar for conflicts yourself; only report what's given in that block, since manually comparing timestamps is exactly the kind of thing worth getting from code, not guessing at.
 - **Risk patterns**: don't just repeat each risk_signal verbatim. If the SAME client appears more than once in the 30-day watchlist, say so explicitly — that's an escalating situation, not a one-off, and is far more worth Oscar's attention than a single mention. A client appearing once with a mild flag may not deserve a section at all.
 - **Revenue opportunities**: scan the 30-day dollar-amount mentions for genuine expansion/upsell signals (a client asking about upgrading, adding a product, increasing spend) — NOT every dollar figure is an opportunity; a client disputing a charge or asking about a refund is a risk, not an opportunity, and should never be listed here. When genuinely unsure which it is, leave it out rather than guessing.
-- **Next best action**: given everything above (commitments, risks, calendar), recommend 1-3 concrete next actions if there's a clear one — skip this if nothing rises to the level of an actual recommendation.
-- Only include a section if there's real signal for it. A single lukewarm data point is not a "trend" — omit the section entirely rather than manufacturing one, and don't pad a thin section with restated data just to give it substance.
+- **Next best action**: given everything above (commitments, risks, calendar), recommend 1-3 concrete next actions if there's a clear one — skip this if nothing rises to the level of an actual recommendation. Mark this section priority: high when it exists.
+- Only include a NON-schedule section if there's real signal for it (Today's Schedule is the one exception — it's always included when there's at least one event or task, per above). A single lukewarm data point is not a "trend" — omit the section entirely rather than manufacturing one, and don't pad a thin section with restated data just to give it substance.
 - Never invent a fact, a date, or a client name not present in the data given.
 - Open commitments are an approximate flag, not a guarantee they're outstanding — phrase as "worth checking," not certainty.
 - Choose each section's emoji to match its actual content — 📅 scheduling, 💰 money/opportunity, ⚠️ risk/urgency, 📝 notes, ✅ on track, 🎯 recommended action — not the same icon for everything.
 - Within a line, an inline emoji next to one specific flagged item is fine; don't add emoji to every line.
 - Keep the whole thing readable in under a minute.
+- "signoff": if a clear top-priority action exists, point at it directly (e.g. "Start with the Yelp escalation — everything else can wait for that.") rather than a generic closing line. Only fall back to a light, warm closer on a genuinely quiet day with no high-priority section.
 - Do not write a greeting — that's added separately, outside your output.`;
 
-async function composeWithClaude({ calendarEvents, openCommitments, highlights, riskWatchlist, revenueSignals }) {
+async function composeWithClaude({ calendarEvents, tasksDueToday, openCommitments, highlights, riskWatchlist, revenueSignals }) {
   const parts = [];
   const conflicts = detectScheduleConflicts(calendarEvents);
   if (conflicts.length) {
@@ -289,7 +325,18 @@ async function composeWithClaude({ calendarEvents, openCommitments, highlights, 
   if (calendarEvents.length) {
     parts.push(
       "TODAY'S CALENDAR:\n" +
-        calendarEvents.map((e) => `- ${e.summary} (${e.start} to ${e.end})`).join("\n")
+        calendarEvents
+          .map((e) => {
+            const label = e.eventType === "outOfOffice" ? " [OUT OF OFFICE]" : e.eventType === "focusTime" ? " [FOCUS TIME]" : "";
+            return `- ${e.summary}${label} (${e.start} to ${e.end})`;
+          })
+          .join("\n")
+    );
+  }
+  if (tasksDueToday.length) {
+    parts.push(
+      "TASKS DUE TODAY (from the Hub's own task list, not Google Tasks):\n" +
+        tasksDueToday.map((t) => `- ${t.title}${t.client_name ? ` (${t.client_name})` : ""}`).join("\n")
     );
   }
   if (openCommitments.length) {
@@ -335,8 +382,10 @@ async function composeWithClaude({ calendarEvents, openCommitments, highlights, 
 
   if (parts.length === 0) {
     return {
+      executive_summary: "Quiet one this morning — nothing on the calendar, no flagged commitments, nothing new in the notes over the last day.",
+      kpi_snapshot: { meetings: calendarEvents.length, open_follow_ups: openCommitments.length, risks_flagged: 0, revenue_opportunities: 0 },
       sections: [],
-      signoff: "Quiet one this morning 🌤️ — no calendar events, no flagged commitments, nothing new in the notes over the last day.",
+      signoff: "🌤️ Nothing urgent today.",
     };
   }
 
@@ -360,8 +409,9 @@ async function composeWithClaude({ calendarEvents, openCommitments, highlights, 
   if (!textBlock) throw new Error("Claude response had no text block");
 
   const cleaned = textBlock.text.trim().replace(/^```json\s*/i, "").replace(/```$/, "");
+  let parsed;
   try {
-    return JSON.parse(cleaned);
+    parsed = JSON.parse(cleaned);
   } catch (e) {
     // If this ever fails again, the raw text (not just "invalid JSON") is
     // what actually lets someone diagnose it from the function log alone.
@@ -369,6 +419,19 @@ async function composeWithClaude({ calendarEvents, openCommitments, highlights, 
     console.error("atlas-brief-background: raw response was:", cleaned.slice(0, 2000));
     throw e;
   }
+
+  // meetings/open_follow_ups are known exactly from code (calendarEvents.length,
+  // openCommitments.length) -- no reason to trust Claude's arithmetic for
+  // numbers we already have precisely. risks_flagged/revenue_opportunities
+  // DO need to come from Claude, since they reflect its own post-filtering
+  // judgment about what actually counted as a risk vs. an opportunity.
+  parsed.kpi_snapshot = {
+    meetings: calendarEvents.length,
+    open_follow_ups: openCommitments.length,
+    risks_flagged: parsed.kpi_snapshot?.risks_flagged ?? 0,
+    revenue_opportunities: parsed.kpi_snapshot?.revenue_opportunities ?? 0,
+  };
+  return parsed;
 }
 
 // ---- Turns the structured brief into real Slack Block Kit: a header,
@@ -386,14 +449,43 @@ function greetingFor(audience) {
 function buildSlackBlocks(brief, greeting) {
   const blocks = [{ type: "header", text: { type: "plain_text", text: greeting, emoji: true } }];
 
-  brief.sections.forEach((s, i) => {
+  if (brief.executive_summary) {
+    blocks.push({ type: "section", text: { type: "mrkdwn", text: `*Executive Summary*\n${brief.executive_summary}` } });
+  }
+
+  const kpi = brief.kpi_snapshot;
+  if (kpi) {
+    blocks.push({
+      type: "section",
+      fields: [
+        { type: "mrkdwn", text: `*📅 Meetings*\n${kpi.meetings}` },
+        { type: "mrkdwn", text: `*✅ Follow-ups*\n${kpi.open_follow_ups}` },
+        { type: "mrkdwn", text: `*⚠️ Risks*\n${kpi.risks_flagged}` },
+        { type: "mrkdwn", text: `*💰 Opportunities*\n${kpi.revenue_opportunities}` },
+      ],
+    });
+  }
+
+  if (brief.executive_summary || kpi) blocks.push({ type: "divider" });
+
+  // High-priority sections first -- this is the practical stand-in for
+  // "color-coded priority" here: Slack's Block Kit has no real color
+  // support (the old attachment color-bar feature is legacy/deprecated),
+  // so priority is expressed through emoji plus what Oscar sees first,
+  // not an actual color.
+  const priorityRank = { high: 0, medium: 1, low: 2 };
+  const orderedSections = [...brief.sections].sort(
+    (a, b) => (priorityRank[a.priority] ?? 1) - (priorityRank[b.priority] ?? 1)
+  );
+
+  orderedSections.forEach((s, i) => {
     const body = (s.body_lines || []).join("\n");
     blocks.push({ type: "section", text: { type: "mrkdwn", text: `*${s.emoji ? s.emoji + " " : ""}${s.title}*\n${body}` } });
-    if (i < brief.sections.length - 1) blocks.push({ type: "divider" });
+    if (i < orderedSections.length - 1) blocks.push({ type: "divider" });
   });
 
   if (brief.signoff) {
-    if (brief.sections.length) blocks.push({ type: "divider" });
+    if (orderedSections.length) blocks.push({ type: "divider" });
     blocks.push({ type: "context", elements: [{ type: "mrkdwn", text: brief.signoff }] });
   }
 
@@ -404,7 +496,16 @@ function buildSlackBlocks(brief, greeting) {
 // where blocks can't render (push notification previews, etc).
 function flattenBriefToText(brief, greeting) {
   const lines = [greeting];
-  for (const s of brief.sections) {
+  if (brief.executive_summary) lines.push("", "Executive Summary", brief.executive_summary);
+  if (brief.kpi_snapshot) {
+    const k = brief.kpi_snapshot;
+    lines.push("", `Meetings: ${k.meetings} | Follow-ups: ${k.open_follow_ups} | Risks: ${k.risks_flagged} | Opportunities: ${k.revenue_opportunities}`);
+  }
+  const priorityRank = { high: 0, medium: 1, low: 2 };
+  const orderedSections = [...brief.sections].sort(
+    (a, b) => (priorityRank[a.priority] ?? 1) - (priorityRank[b.priority] ?? 1)
+  );
+  for (const s of orderedSections) {
     lines.push("", `${s.emoji || ""} ${s.title}`.trim(), ...(s.body_lines || []));
   }
   if (brief.signoff) lines.push("", brief.signoff);
@@ -437,25 +538,57 @@ export default async (req) => {
     return new Response("Forbidden", { status: 403 });
   }
 
+  // Optional on-demand mode: { "on_demand": true, "requester_user_id": "U0..." }
+  // Lets someone ask ATLAS for the brief outright (e.g. "please provide
+  // brief") instead of waiting for the 10am cron. When on_demand, this
+  // DMs only the requester and skips the shared channel post entirely --
+  // an ad hoc request shouldn't re-blast the whole team channel every
+  // time Oscar happens to ask for it again mid-morning.
+  const payload = await req.json().catch(() => ({}));
+  const isOnDemand = payload?.on_demand === true;
+  const requesterUserId = payload?.requester_user_id || SLACK_USER_ID;
+
+  // Logged BEFORE any real work starts, so a run that fails silently
+  // partway through is still visible from Supabase alone -- no need to
+  // fight Netlify's log viewer to tell whether a run even began.
+  await sbFetch("integration_sync_log", {
+    method: "POST",
+    headers: { Prefer: "return=minimal" },
+    body: JSON.stringify([
+      {
+        integration: "atlas_morning_brief",
+        event_type: "run_started",
+        direction: "internal",
+        detail: isOnDemand ? "triggered on-demand" : "triggered by schedule",
+        actor_email: null,
+      },
+    ]),
+  }).catch((e) => console.error("atlas-brief-background: run_started log failed:", e.message));
+
   try {
     const accessToken = await getFreshGoogleAccessToken();
-    const [calendarEvents, openCommitments, highlights, riskWatchlist, revenueSignals] = await Promise.all([
+    const [calendarEvents, tasksDueToday, openCommitments, highlights, riskWatchlist, revenueSignals] = await Promise.all([
       getTodayCalendarEvents(accessToken),
+      getTasksDueToday(),
       getOpenCommitments(),
       getRecentHighlights(),
       getRiskWatchlist(),
       getRevenueSignals(),
     ]);
 
-    const brief = await composeWithClaude({ calendarEvents, openCommitments, highlights, riskWatchlist, revenueSignals });
+    const brief = await composeWithClaude({ calendarEvents, tasksDueToday, openCommitments, highlights, riskWatchlist, revenueSignals });
 
     const dmBlocks = buildSlackBlocks(brief, greetingFor("oscar"));
     const dmText = flattenBriefToText(brief, greetingFor("oscar"));
-    const channelBlocks = buildSlackBlocks(brief, greetingFor("team"));
-    const channelText = flattenBriefToText(brief, greetingFor("team"));
 
-    await postToSlack(SLACK_CHANNEL_ID, channelBlocks, channelText);
-    await postToSlack(SLACK_USER_ID, dmBlocks, dmText);
+    if (isOnDemand) {
+      await postToSlack(requesterUserId, dmBlocks, dmText);
+    } else {
+      const channelBlocks = buildSlackBlocks(brief, greetingFor("team"));
+      const channelText = flattenBriefToText(brief, greetingFor("team"));
+      await postToSlack(SLACK_CHANNEL_ID, channelBlocks, channelText);
+      await postToSlack(SLACK_USER_ID, dmBlocks, dmText);
+    }
 
     const dateStr = mexicoCityDateString();
     await sbFetch("atlas_digests", {
@@ -463,19 +596,20 @@ export default async (req) => {
       headers: { Prefer: "return=minimal" },
       body: JSON.stringify([
         {
-          digest_type: "morning_brief",
+          digest_type: isOnDemand ? "morning_brief_on_demand" : "morning_brief",
           for_email: OWNER_EMAIL,
           period_start: `${dateStr}T00:00:00-06:00`,
           period_end: `${dateStr}T23:59:59-06:00`,
           content: dmText,
-          delivered_to: `${SLACK_CHANNEL_ID},${SLACK_USER_ID}`,
+          delivered_to: isOnDemand ? requesterUserId : `${SLACK_CHANNEL_ID},${SLACK_USER_ID}`,
           delivered_at: new Date().toISOString(),
         },
       ]),
     });
 
     console.log("atlas-brief-background: brief sent.",
-      "calendar:", calendarEvents.length, "commitments:", openCommitments.length,
+      "on_demand:", isOnDemand,
+      "calendar:", calendarEvents.length, "tasks:", tasksDueToday.length, "commitments:", openCommitments.length,
       "highlights:", highlights.length, "risk watchlist:", riskWatchlist.length,
       "revenue signals:", revenueSignals.length);
   } catch (e) {
