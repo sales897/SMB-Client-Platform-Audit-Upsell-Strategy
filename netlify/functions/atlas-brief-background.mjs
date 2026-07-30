@@ -147,7 +147,12 @@ async function getOpenCommitments() {
   const since = new Date(Date.now() - 21 * 24 * 60 * 60 * 1000).toISOString();
   const notesRes = await sbFetch(
     `atlas_notes?select=client_name,note_date,my_commitments,their_commitments` +
-      `&note_date=gte.${since}&or=(my_commitments.neq.[],their_commitments.neq.[])`
+      // Added a limit here too (2026-07-30) -- this had none at all before,
+      // genuinely unbounded, same class of risk as the risk watchlist/
+      // revenue signals fix above. Same reasoning: the prompt caps output
+      // at 5 lines per section regardless, so unbounded input just grows
+      // the prompt for no benefit.
+      `&note_date=gte.${since}&or=(my_commitments.neq.[],their_commitments.neq.[])&order=note_date.desc&limit=25`
   );
   if (!notesRes.ok) {
     console.error("atlas-brief-background: commitment notes fetch failed:", await notesRes.text().catch(() => ""));
@@ -194,7 +199,11 @@ async function getRiskWatchlist() {
   const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
   const res = await sbFetch(
     `atlas_notes?select=client_name,note_date,risk_signals,sentiment` +
-      `&note_date=gte.${since}&risk_signals=neq.[]&order=note_date.desc&limit=40`
+      // Trimmed from 40 to 20 (2026-07-30): the prompt now caps output at
+      // 5 lines per section regardless, so feeding 40 raw candidates just
+      // grows the prompt and pushes toward the token ceiling for no benefit
+      // -- 20 recent-most is plenty of room to pick the top 5 from.
+      `&note_date=gte.${since}&risk_signals=neq.[]&order=note_date.desc&limit=20`
   );
   if (!res.ok) {
     console.error("atlas-brief-background: risk watchlist fetch failed:", await res.text().catch(() => ""));
@@ -214,7 +223,8 @@ async function getRevenueSignals() {
   const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
   const res = await sbFetch(
     `atlas_notes?select=client_name,note_date,summary,amounts_mentioned` +
-      `&note_date=gte.${since}&amounts_mentioned=neq.[]&order=note_date.desc&limit=40`
+      // Same trim as the risk watchlist, same reasoning.
+      `&note_date=gte.${since}&amounts_mentioned=neq.[]&order=note_date.desc&limit=20`
   );
   if (!res.ok) {
     console.error("atlas-brief-background: revenue signals fetch failed:", await res.text().catch(() => ""));
@@ -305,6 +315,7 @@ You'll receive several kinds of data, some narrow (today's calendar, today's tas
 - **Revenue opportunities**: scan the 30-day dollar-amount mentions for genuine expansion/upsell signals (a client asking about upgrading, adding a product, increasing spend) — NOT every dollar figure is an opportunity; a client disputing a charge or asking about a refund is a risk, not an opportunity, and should never be listed here. When genuinely unsure which it is, leave it out rather than guessing.
 - **Next best action**: given everything above (commitments, risks, calendar), recommend 1-3 concrete next actions if there's a clear one — skip this if nothing rises to the level of an actual recommendation. Mark this section priority: high when it exists.
 - Only include a NON-schedule section if there's real signal for it (Today's Schedule is the one exception — it's always included when there's at least one event or task, per above). A single lukewarm data point is not a "trend" — omit the section entirely rather than manufacturing one, and don't pad a thin section with restated data just to give it substance.
+- HARD CAP, regardless of how much raw data you're given: at most 5 lines in any single section's "body_lines". If a section (risk watchlist, revenue signals, open commitments) has more real candidates than that, pick the 5 most significant ones and write one final line like "- plus N more — check the Hub for the full list" rather than trying to list everything. This matters because the underlying data grows over time as more notes accumulate; a fixed line cap keeps output length predictable regardless of how much history exists.
 - Never invent a fact, a date, or a client name not present in the data given.
 - Open commitments are an approximate flag, not a guarantee they're outstanding — phrase as "worth checking," not certainty.
 - Choose each section's emoji to match its actual content — 📅 scheduling, 💰 money/opportunity, ⚠️ risk/urgency, 📝 notes, ✅ on track, 🎯 recommended action — not the same icon for everything.
@@ -398,11 +409,13 @@ async function composeWithClaude({ calendarEvents, tasksDueToday, openCommitment
     },
     body: JSON.stringify({
       model: CLAUDE_MODEL,
-      max_tokens: 3000, // raised from 1600 (2026-07-30): requiring a full "Today's
-      // Schedule" section every run (on top of conflicts, risks, opportunities,
-      // commitments, next-best-action) pushed real output past 1600 and caused
-      // a truncated/missing text block -- same failure mode already seen and
-      // fixed in the EOD recap for the same underlying reason.
+      max_tokens: 4096, // raised again from 3000 (2026-07-30): a third real
+      // failure at 3000 confirms this isn't "need a slightly bigger number" --
+      // raw data volume (risk watchlist, revenue signals, highlights) grows
+      // as ATLAS accumulates history, so any fixed ceiling eventually gets
+      // outrun again. The durable fix is bounding OUTPUT length explicitly
+      // in the prompt (see "at most N items per section" below), not just
+      // repeatedly raising this number as data keeps growing over weeks.
       system: BRIEF_SYSTEM_PROMPT,
       messages: [{ role: "user", content: parts.join("\n\n---\n\n") }],
     }),
