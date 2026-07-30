@@ -398,13 +398,20 @@ async function composeWithClaude({ calendarEvents, tasksDueToday, openCommitment
     },
     body: JSON.stringify({
       model: CLAUDE_MODEL,
-      max_tokens: 1600,
+      max_tokens: 3000, // raised from 1600 (2026-07-30): requiring a full "Today's
+      // Schedule" section every run (on top of conflicts, risks, opportunities,
+      // commitments, next-best-action) pushed real output past 1600 and caused
+      // a truncated/missing text block -- same failure mode already seen and
+      // fixed in the EOD recap for the same underlying reason.
       system: BRIEF_SYSTEM_PROMPT,
       messages: [{ role: "user", content: parts.join("\n\n---\n\n") }],
     }),
   });
   if (!res.ok) throw new Error(`Claude brief composition failed (${res.status}): ${await res.text().catch(() => "")}`);
   const data = await res.json();
+  if (data.stop_reason === "max_tokens") {
+    console.error("atlas-brief-background: Claude hit max_tokens — response was truncated. Consider raising the budget further.");
+  }
   const textBlock = (data.content || []).find((b) => b.type === "text");
   if (!textBlock) throw new Error("Claude response had no text block");
 
