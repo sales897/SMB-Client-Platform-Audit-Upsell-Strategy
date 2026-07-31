@@ -32,7 +32,10 @@ const ANTHROPIC_API_KEY = Netlify.env.get("ANTHROPIC_API_KEY");
 const ATLAS_EMBED_URL = `${SUPABASE_URL}/functions/v1/atlas-embed`;
 const CLAUDE_MODEL = "claude-sonnet-5";
 const MATCH_COUNT = 8;
-const MATCH_THRESHOLD = 0.72;
+const MATCH_THRESHOLD = 0.5; // lowered from 0.72 (2026-07-31) -- see
+// atlas-ask-background.mjs's identical comment for the full reasoning.
+// Same fix applied to both files since they share the exact same
+// retrieval logic and would share the exact same problem.
 const KB_MATCH_COUNT = 4;
 const KB_MATCH_THRESHOLD = 0.72;
 

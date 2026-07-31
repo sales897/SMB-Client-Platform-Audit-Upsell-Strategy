@@ -20,7 +20,18 @@ const SLACK_BOT_TOKEN = Netlify.env.get("SLACK_BOT_TOKEN");
 const ATLAS_EMBED_URL = `${SUPABASE_URL}/functions/v1/atlas-embed`;
 const CLAUDE_MODEL = "claude-sonnet-5"; // answer quality matters more here than in bulk enrichment
 const MATCH_COUNT = 8;
-const MATCH_THRESHOLD = 0.72;
+const MATCH_THRESHOLD = 0.5; // lowered from 0.72 (2026-07-31): a real query
+// ("what did we tell Zoom Drain last call") failed to retrieve confirmed-
+// existing, correctly-embedded notes for that client. gte-small (a small,
+// lightweight model) likely doesn't produce high enough similarity between
+// a natural-language question and short, terse call-note snippets that
+// don't share much surface vocabulary with it, even when the content is
+// clearly the right answer. This is a well-reasoned hypothesis based on
+// the evidence (data confirmed present + embedded, no code bug found),
+// not a confirmed root cause -- worth re-testing after this change to
+// confirm it actually fixes real queries, not just declaring it fixed.
+// KB_MATCH_THRESHOLD left untouched -- KB retrieval has demonstrated
+// success at 0.72 already, no evidence it has the same problem.
 const KB_MATCH_COUNT = 4;
 const KB_MATCH_THRESHOLD = 0.72;
 
