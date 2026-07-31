@@ -97,12 +97,13 @@ const ENRICHMENT_SYSTEM_PROMPT = `You extract structure from a single client-suc
   "my_commitments": ["things the rep/Oscar promised to do, with any date mentioned"],
   "their_commitments": ["things the client promised to do, with any date mentioned"],
   "risk_signals": ["any sign of churn risk, frustration, or dissatisfaction — empty array if none"],
+  "opportunity_signals": ["any sign of growth potential — client mentioned expanding, asked about another product, expressed satisfaction that could support an upsell ask, referenced growing their own business — empty array if none"],
   "sentiment": "positive" | "neutral" | "mixed" | "negative",
   "next_step": "the single clearest next step, or null if none is stated",
   "amounts_mentioned": ["any dollar amounts mentioned, as written, e.g. \\"$450/mo\\""]
 }
 
-If the note is too short or too vague to extract something, use an empty array or null rather than inventing content. Never invent a fact not present in the text.`;
+If the note is too short or too vague to extract something, use an empty array or null rather than inventing content. Never invent a fact not present in the text. Don't force a risk or opportunity signal that isn't genuinely there — most notes will have an empty array for one or both, and that's the correct output, not a failure to find something.`;
 
 async function enrichWithClaude(rawText) {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -217,19 +218,53 @@ export default async (req) => {
         my_commitments: enrichment.my_commitments ?? [],
         their_commitments: enrichment.their_commitments ?? [],
         risk_signals: enrichment.risk_signals ?? [],
+        opportunity_signals: enrichment.opportunity_signals ?? [],
         sentiment: enrichment.sentiment ?? null,
         next_step: enrichment.next_step ?? null,
         amounts_mentioned: enrichment.amounts_mentioned ?? [],
         enriched_at: new Date().toISOString(),
       });
 
+      // Suggest a follow-up task when there's a clear, specific next step --
+      // deliberately a SUGGESTION, not a real client_tasks row. Matches this
+      // codebase's existing convention (Bulk Close Enrichment, Smart Paste):
+      // nothing auto-applies without a human look first. The length check is
+      // a simple heuristic to skip near-empty/vague answers ("n/a", "-")
+      // rather than suggesting a task from nothing.
+      if (enrichment.next_step && enrichment.next_step.trim().length > 10) {
+        await sbFetch("atlas_task_suggestions", {
+          method: "POST",
+          headers: { Prefer: "return=minimal" },
+          body: JSON.stringify([
+            {
+              note_id: note.id,
+              client_name: note.client_name,
+              suggested_title: enrichment.next_step.trim(),
+              source_text: note.raw_text.slice(0, 500),
+              note_date: note.note_date,
+              status: "pending",
+            },
+          ]),
+        }).catch((e) => console.error("atlas-enrich-background: task suggestion insert failed:", e.message));
+      }
+
       const chunks = chunkText(note.raw_text);
-      const embeddings = await embedChunks(chunks);
+      // Embed WITH client-name + date context, but STORE the clean chunk
+      // text (no prefix) for display/citation. Real bug found 2026-07-31:
+      // chunk_text on its own ("Not gonna increase until he sees a 3x
+      // ROI") carries zero lexical connection to "Zoom Drain" or any
+      // client name -- a name-anchored query has nothing to match against
+      // in the actual embedded text, no matter how lenient the similarity
+      // threshold is. This was a structural gap, not a tuning problem.
+      const textsForEmbedding = chunks.map(
+        (c) => `Client: ${note.client_name || "Unknown"} (${new Date(note.note_date).toDateString()})\n${c}`
+      );
+      const embeddings = await embedChunks(textsForEmbedding);
 
       const chunkRows = chunks.map((chunk_text, idx) => ({
         note_id: note.id,
         chunk_index: idx,
-        chunk_text,
+        chunk_text, // clean, no prefix -- what gets shown/cited, not what got embedded
         client_name: note.client_name,
         note_date: note.note_date,
         // JSON.stringify per Supabase's documented pattern: pgvector's input
