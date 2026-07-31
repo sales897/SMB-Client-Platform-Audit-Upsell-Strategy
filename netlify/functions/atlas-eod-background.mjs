@@ -429,13 +429,34 @@ export default async (req) => {
     return new Response("Forbidden", { status: 403 });
   }
 
-  // Optional manual-test flag: { "test": true } in the POST body. Purely
-  // cosmetic (doesn't change what data gets pulled or how it's composed)
-  // -- it just prepends a visible disclaimer to both Slack posts, so a
-  // manual trigger to verify the function works doesn't get mistaken by
-  // anyone in the shared channel for the real 6pm recap.
+  // { "test": true } -- purely cosmetic manual-test disclaimer (unrelated
+  // to on_demand below). { "on_demand": true, "requester_user_id": "U0..." }
+  // -- a real on-demand request (e.g. "please provide EOD report"): DMs
+  // only the requester and skips the shared channel post, same reasoning
+  // as the morning brief's on-demand mode -- an ad hoc request shouldn't
+  // re-blast the whole team channel.
   const payload = await req.json().catch(() => ({}));
   const isTest = payload?.test === true;
+  const isOnDemand = payload?.on_demand === true;
+  const requesterUserId = payload?.requester_user_id || SLACK_USER_ID;
+
+  // Logged BEFORE any real work starts -- same reasoning as the morning
+  // brief: a run that fails silently partway through is still visible
+  // from Supabase alone. This file never had this until 2026-07-31, which
+  // is exactly why an earlier missed scheduled run was hard to diagnose.
+  await sbFetch("integration_sync_log", {
+    method: "POST",
+    headers: { Prefer: "return=minimal" },
+    body: JSON.stringify([
+      {
+        integration: "atlas_eod_recap",
+        event_type: "run_started",
+        direction: "internal",
+        detail: isOnDemand ? "triggered on-demand" : isTest ? "triggered as test" : "triggered by schedule",
+        actor_email: null,
+      },
+    ]),
+  }).catch((e) => console.error("atlas-eod-background: run_started log failed:", e.message));
 
   try {
     const accessToken = await getFreshGoogleAccessToken();
@@ -491,20 +512,24 @@ export default async (req) => {
     const dmTextFinal = isTest ? `🧪 TEST RUN — not the real 6:00 PM report.\n\n${dmText}` : dmText;
     const channelTextFinal = isTest ? `🧪 TEST RUN — not the real 6:00 PM report.\n\n${channelText}` : channelText;
 
-    await postToSlack(SLACK_CHANNEL_ID, channelBlocks, channelTextFinal);
-    await postToSlack(SLACK_USER_ID, dmBlocks, dmTextFinal);
+    if (isOnDemand) {
+      await postToSlack(requesterUserId, dmBlocks, dmTextFinal);
+    } else {
+      await postToSlack(SLACK_CHANNEL_ID, channelBlocks, channelTextFinal);
+      await postToSlack(SLACK_USER_ID, dmBlocks, dmTextFinal);
+    }
 
     await sbFetch("atlas_digests", {
       method: "POST",
       headers: { Prefer: "return=minimal" },
       body: JSON.stringify([
         {
-          digest_type: isTest ? "eod_recap_test" : "eod_recap",
+          digest_type: isTest ? "eod_recap_test" : isOnDemand ? "eod_recap_on_demand" : "eod_recap",
           for_email: OWNER_EMAIL,
           period_start: `${todayStr}T00:00:00-06:00`,
           period_end: `${todayStr}T23:59:59-06:00`,
           content: dmTextFinal,
-          delivered_to: `${SLACK_CHANNEL_ID},${SLACK_USER_ID}`,
+          delivered_to: isOnDemand ? requesterUserId : `${SLACK_CHANNEL_ID},${SLACK_USER_ID}`,
           delivered_at: new Date().toISOString(),
         },
       ]),

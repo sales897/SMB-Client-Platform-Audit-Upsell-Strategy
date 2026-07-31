@@ -66,6 +66,18 @@ function isBriefRequest(text) {
   return /\bbrief\b/.test(t) && /(provide|send|give|get|share|show|need|want)/.test(t);
 }
 
+// Same deterministic pattern as isBriefRequest() -- matches "eod",
+// "end of day", or "end-of-day" plus a request verb. Added 2026-07-31
+// after a real gap: Oscar asked "please provide EOD report" and, since
+// nothing detected it, it fell through to general Q&A retrieval, which
+// correctly found no notes about "an EOD report" (because that's a
+// feature ATLAS has, not something in his call notes) and said so --
+// technically honest, but not actually helpful. This routes it properly.
+function isEodRequest(text) {
+  const t = (text || "").toLowerCase();
+  return /\beod\b|end[\s-]of[\s-]day/.test(t) && /(provide|send|give|get|share|show|need|want)/.test(t);
+}
+
 export default async (req, context) => {
 
   const rawBody = await req.text();
@@ -102,6 +114,11 @@ export default async (req, context) => {
       if (isDirectMessage && isRealUserMessage) {
         if (isBriefRequest(event.text)) {
           fireBackground(context, origin, "atlas-brief-background", {
+            on_demand: true,
+            requester_user_id: event.user,
+          });
+        } else if (isEodRequest(event.text)) {
+          fireBackground(context, origin, "atlas-eod-background", {
             on_demand: true,
             requester_user_id: event.user,
           });
@@ -180,6 +197,17 @@ export default async (req, context) => {
     });
     return new Response(
       JSON.stringify({ response_type: "ephemeral", text: "Pulling together your brief — I'll DM it to you shortly." }),
+      { status: 200, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
+  if (isEodRequest(question)) {
+    fireBackground(context, origin, "atlas-eod-background", {
+      on_demand: true,
+      requester_user_id: userId,
+    });
+    return new Response(
+      JSON.stringify({ response_type: "ephemeral", text: "Pulling together your EOD report — I'll DM it to you shortly." }),
       { status: 200, headers: { "Content-Type": "application/json" } }
     );
   }
