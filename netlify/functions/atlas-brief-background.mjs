@@ -233,6 +233,22 @@ async function getRevenueSignals() {
   return res.json();
 }
 
+// ---- Pending task suggestions: notes with a clear next_step that ATLAS
+// suggested as a task, awaiting Oscar's review. Deliberately SURFACED,
+// not auto-created -- same "nothing auto-applies" convention this
+// codebase already follows elsewhere. Full auto-create (with an approval
+// mechanism) is a natural next increment, not built yet. ----
+async function getPendingTaskSuggestions() {
+  const res = await sbFetch(
+    `atlas_task_suggestions?select=client_name,suggested_title,note_date&status=eq.pending&order=created_at.desc&limit=10`
+  );
+  if (!res.ok) {
+    console.error("atlas-brief-background: task suggestions fetch failed:", await res.text().catch(() => ""));
+    return [];
+  }
+  return res.json();
+}
+
 // ---- Schedule conflicts: computed deterministically here, NOT left to
 // Claude's judgment. Comparing ISO timestamp ranges correctly is exactly
 // the kind of precise, mechanical task an LLM can get subtly wrong (off-
@@ -309,12 +325,14 @@ Formatting rules for each line in "body_lines" (this is Slack's mrkdwn, NOT stan
 
 You'll receive several kinds of data, some narrow (today's calendar, today's tasks, yesterday's notes) and some wide (a 30-day risk watchlist, a 30-day list of notes mentioning dollar amounts). Your job is SYNTHESIS, not transcription:
 
-- **Today's Schedule**: ALWAYS write this section if there is at least one calendar event or task due today — never fold it into or replace it with the Scheduling Conflicts section; they're both needed, not one-or-the-other. List each event with its time range. If an event is marked Out of Office or Focus Time in the data, label it as such plainly (e.g. "🏖️ Out of Office: 2:00–5:00 PM"), don't just list it like a normal meeting. Merge in any tasks due today from the data as part of this section too (or as their own line), clearly distinguishing a task ("Task: ...") from a calendar event.
+- **Today's Schedule**: ALWAYS write this section if there is at least one calendar event today — never fold it into or replace it with the Scheduling Conflicts section; they're both needed, not one-or-the-other. List each event with its time range. If an event is marked Out of Office or Focus Time in the data, label it as such plainly (e.g. "🏖️ Out of Office: 2:00–5:00 PM"), don't just list it like a normal meeting. Calendar events only — tasks belong in their own section below, not merged in here.
+- **Task Overview**: ALWAYS write this as its own separate section if there's at least one task due today — a distinct section, not folded into Today's Schedule. List each task, with the client it's tied to if there is one.
+- **Suggested Follow-Up Tasks**: if a "SUGGESTED FOLLOW-UP TASKS" block appears, write a section for it clearly labeled as suggestions awaiting review, NOT tasks that already exist — e.g. title it "Suggested Follow-Ups (Review)" so it's never confused with the real Task Overview above. Don't claim these are already created. List up to 4 suggestions (not 5, to leave room for the line below), then ALWAYS add this exact line as the final line of this section's body_lines: "Reply /atlas-approve-task <Client Name> to create one, or /atlas-dismiss-task <Client Name> to skip it." This hint line doesn't count against the 5-line cap.
 - **Scheduling conflicts**: if a "SCHEDULING CONFLICTS" block appears in the data, those overlaps were already confirmed by exact calendar math — state them plainly as a flagged item (priority: high), IN ADDITION TO the full Today's Schedule section above, not instead of it. Do NOT independently re-check the raw calendar for conflicts yourself; only report what's given in that block, since manually comparing timestamps is exactly the kind of thing worth getting from code, not guessing at.
 - **Risk patterns**: don't just repeat each risk_signal verbatim. If the SAME client appears more than once in the 30-day watchlist, say so explicitly — that's an escalating situation, not a one-off, and is far more worth Oscar's attention than a single mention. A client appearing once with a mild flag may not deserve a section at all.
 - **Revenue opportunities**: scan the 30-day dollar-amount mentions for genuine expansion/upsell signals (a client asking about upgrading, adding a product, increasing spend) — NOT every dollar figure is an opportunity; a client disputing a charge or asking about a refund is a risk, not an opportunity, and should never be listed here. When genuinely unsure which it is, leave it out rather than guessing.
 - **Next best action**: given everything above (commitments, risks, calendar), recommend 1-3 concrete next actions if there's a clear one — skip this if nothing rises to the level of an actual recommendation. Mark this section priority: high when it exists.
-- Only include a NON-schedule section if there's real signal for it (Today's Schedule is the one exception — it's always included when there's at least one event or task, per above). A single lukewarm data point is not a "trend" — omit the section entirely rather than manufacturing one, and don't pad a thin section with restated data just to give it substance.
+- Only include a section if there's real signal for it, EXCEPT Today's Schedule (always included when there's at least one event) and Task Overview (always included when there's at least one task due today) — those two are always shown when they have any data at all. A single lukewarm data point elsewhere is not a "trend" — omit the section entirely rather than manufacturing one, and don't pad a thin section with restated data just to give it substance.
 - HARD CAP, regardless of how much raw data you're given: at most 5 lines in any single section's "body_lines". If a section (risk watchlist, revenue signals, open commitments) has more real candidates than that, pick the 5 most significant ones and write one final line like "- plus N more — check the Hub for the full list" rather than trying to list everything. This matters because the underlying data grows over time as more notes accumulate; a fixed line cap keeps output length predictable regardless of how much history exists.
 - Never invent a fact, a date, or a client name not present in the data given.
 - Open commitments are an approximate flag, not a guarantee they're outstanding — phrase as "worth checking," not certainty.
@@ -324,7 +342,7 @@ You'll receive several kinds of data, some narrow (today's calendar, today's tas
 - "signoff": if a clear top-priority action exists, point at it directly (e.g. "Start with the Yelp escalation — everything else can wait for that.") rather than a generic closing line. Only fall back to a light, warm closer on a genuinely quiet day with no high-priority section.
 - Do not write a greeting — that's added separately, outside your output.`;
 
-async function composeWithClaude({ calendarEvents, tasksDueToday, openCommitments, highlights, riskWatchlist, revenueSignals }) {
+async function composeWithClaude({ calendarEvents, tasksDueToday, openCommitments, highlights, riskWatchlist, revenueSignals, taskSuggestions }) {
   const parts = [];
   const conflicts = detectScheduleConflicts(calendarEvents);
   if (conflicts.length) {
@@ -348,6 +366,14 @@ async function composeWithClaude({ calendarEvents, tasksDueToday, openCommitment
     parts.push(
       "TASKS DUE TODAY (from the Hub's own task list, not Google Tasks):\n" +
         tasksDueToday.map((t) => `- ${t.title}${t.client_name ? ` (${t.client_name})` : ""}`).join("\n")
+    );
+  }
+  if (taskSuggestions.length) {
+    parts.push(
+      "SUGGESTED FOLLOW-UP TASKS (ATLAS spotted these in recent notes -- NOT yet real tasks, awaiting Oscar's review):\n" +
+        taskSuggestions
+          .map((s) => `- ${s.suggested_title}${s.client_name ? ` (${s.client_name})` : ""} — from ${new Date(s.note_date).toDateString()}`)
+          .join("\n")
     );
   }
   if (openCommitments.length) {
@@ -587,16 +613,17 @@ export default async (req) => {
 
   try {
     const accessToken = await getFreshGoogleAccessToken();
-    const [calendarEvents, tasksDueToday, openCommitments, highlights, riskWatchlist, revenueSignals] = await Promise.all([
+    const [calendarEvents, tasksDueToday, openCommitments, highlights, riskWatchlist, revenueSignals, taskSuggestions] = await Promise.all([
       getTodayCalendarEvents(accessToken),
       getTasksDueToday(),
       getOpenCommitments(),
       getRecentHighlights(),
       getRiskWatchlist(),
       getRevenueSignals(),
+      getPendingTaskSuggestions(),
     ]);
 
-    const brief = await composeWithClaude({ calendarEvents, tasksDueToday, openCommitments, highlights, riskWatchlist, revenueSignals });
+    const brief = await composeWithClaude({ calendarEvents, tasksDueToday, openCommitments, highlights, riskWatchlist, revenueSignals, taskSuggestions });
 
     const dmBlocks = buildSlackBlocks(brief, greetingFor("oscar"));
     const dmText = flattenBriefToText(brief, greetingFor("oscar"));

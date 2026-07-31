@@ -3,12 +3,14 @@
 // ATLAS — Slack entry point. Handles:
 //   - Slash command  POST  /atlas <question>          (content-type: form-urlencoded)
 //   - Slash command  POST  /atlas-prep <client name>   (content-type: form-urlencoded)
+//   - Slash command  POST  /atlas-approve-task <client name>  (content-type: form-urlencoded)
+//   - Slash command  POST  /atlas-dismiss-task <client name>  (content-type: form-urlencoded)
 //   - Events API     POST  DMs + url_verification      (content-type: application/json)
 //
 // Slack requires a response within 3 seconds, so this function ONLY
 // verifies the request and acknowledges immediately. The actual work
-// happens in atlas-ask-background.mjs or atlas-prep-background.mjs,
-// fired here and not awaited to completion.
+// happens in atlas-ask-background.mjs, atlas-prep-background.mjs, or
+// atlas-task-action-background.mjs, fired here and not awaited to completion.
 
 import crypto from "node:crypto";
 
@@ -139,6 +141,24 @@ export default async (req, context) => {
     });
     return new Response(
       JSON.stringify({ response_type: "ephemeral", text: `Pulling together a prep packet for ${question} — I'll DM you shortly.` }),
+      { status: 200, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
+  if (command === "/atlas-approve-task" || command === "/atlas-dismiss-task") {
+    if (!question) {
+      return new Response(
+        JSON.stringify({ response_type: "ephemeral", text: `Usage: \`${command} <client name>\` — e.g. \`${command} Tint Pros\`` }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      );
+    }
+    fireBackground(context, origin, "atlas-task-action-background", {
+      action: command === "/atlas-approve-task" ? "approve" : "dismiss",
+      client_name: question,
+      requester_user_id: userId,
+    });
+    return new Response(
+      JSON.stringify({ response_type: "ephemeral", text: `On it — I'll DM you the result.` }),
       { status: 200, headers: { "Content-Type": "application/json" } }
     );
   }
