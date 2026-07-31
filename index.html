@@ -1744,6 +1744,7 @@ tr.pg-hidden-row { display: none; }
    content's natural height without it. */
 #nirvanaTabContent, #atlasTabContent { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
 .ai-quick-action.atlas-quick-action:hover { border-color: var(--blue); color: var(--text); }
+.ai-agent-header-icon.atlas-active { box-shadow: 0 0 0 2px rgba(59,130,246,.4); }
 .ai-msg-assistant-atlas { background: var(--blue-dim, rgba(59,130,246,.1)); border: 1px solid rgba(59,130,246,.25); }
 .atlas-empty-state { padding: var(--space-4); text-align: center; color: var(--text3); font-size: var(--font-xs); line-height: 1.6; }
 .ai-agent-messages { flex: 1; overflow-y: auto; padding: var(--space-3) var(--space-4); display: flex; flex-direction: column; gap: var(--space-3); }
@@ -28268,6 +28269,12 @@ async function saveKnowledgeEntry() {
 // ════════════════════════════════════════════════════════════════════════
 const AI_AGENT_ENDPOINT = '/.netlify/functions/ai-agent';
 const ATLAS_HUB_CHAT_ENDPOINT = '/.netlify/functions/atlas-hub-chat';
+// ATLAS's own avatar -- a simple compass/wayfinding mark in the blue this
+// codebase already uses for "distinct-but-related identity" (superuser
+// glow), matching the accent chosen for ATLAS everywhere else. A clean
+// SVG mark rather than a photo like Nirvana's, sized to read clearly at
+// the small 24px header size this gets rendered at.
+const ATLAS_AVATAR_DATA_URI = 'data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMTAwIDEwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8ZGVmcz4KICAgIDxyYWRpYWxHcmFkaWVudCBpZD0iZyIgY3g9IjM1JSIgY3k9IjMwJSIgcj0iNzUlIj4KICAgICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzhmYjhmZiIvPgogICAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMzYjgyZjYiLz4KICAgIDwvcmFkaWFsR3JhZGllbnQ+CiAgPC9kZWZzPgogIDxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjUwIiBmaWxsPSJ1cmwoI2cpIi8+CiAgPHBvbHlnb24gcG9pbnRzPSI1MCwxOCA1OSw1MCA1MCw4MiA0MSw1MCIgZmlsbD0iI2ZmZmZmZiIgb3BhY2l0eT0iMC45NyIvPgogIDxwb2x5Z29uIHBvaW50cz0iMTgsNTAgNTAsNDEgODIsNTAgNTAsNTkiIGZpbGw9IiNmZmZmZmYiIG9wYWNpdHk9IjAuNTUiLz4KPC9zdmc+Cg==';
 
 // Maps a friendly chart name (what Nirvana requests) to its canvas element,
 // display label, and the function that redraws it — needed because charts
@@ -30687,6 +30694,15 @@ function setAiAgentTab(tab) {
   // of which one you're talking to.
   const nameEl = document.getElementById('nirvanaDisplayName');
   if (nameEl) nameEl.textContent = tab === 'atlas' ? 'ATLAS' : 'Nirvana';
+  const headerIcon = document.getElementById('nirvanaHeaderIcon');
+  if (headerIcon) {
+    // Capture Nirvana's real avatar src once, before it's ever overwritten
+    // -- lets us always restore it exactly, rather than hardcoding it a
+    // second time somewhere else and risking the two copies drifting.
+    if (!headerIcon.dataset.nirvanaSrc) headerIcon.dataset.nirvanaSrc = headerIcon.src;
+    headerIcon.src = tab === 'atlas' ? ATLAS_AVATAR_DATA_URI : headerIcon.dataset.nirvanaSrc;
+    headerIcon.classList.toggle('atlas-active', tab === 'atlas');
+  }
 }
 
 function sendActiveAgentMessage() {
