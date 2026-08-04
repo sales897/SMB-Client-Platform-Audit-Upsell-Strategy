@@ -7,8 +7,11 @@
 //   1. Embed the question via atlas-embed (gte-small, same model used
 //      to embed every note chunk — must match, or similarity is meaningless)
 //   2. Retrieve relevant note chunks (match_atlas_notes) AND Knowledge Base
-//      chunks (match_atlas_kb) in parallel
-//   3. Ask Claude to answer USING ONLY the retrieved chunks, with citations
+//      chunks (match_atlas_kb) in parallel, PLUS detect a mentioned client
+//      name and pull basic billing/account status directly if found
+//      (Block: 2026-07-31 — ATLAS's own direct HUB read access, the
+//      practical alternative to a fake "ask Nirvana" round trip)
+//   3. Ask Claude to answer USING ONLY the retrieved chunks/data, with citations
 //   4. Post the answer back to Slack — response_url for slash commands,
 //      chat.postMessage for DMs
 
@@ -39,6 +42,63 @@ function isAuthorizedTrigger(req) {
   const expected = Netlify.env.get("ATLAS_TRIGGER_SECRET");
   if (!expected) return false;
   return req.headers.get("x-atlas-trigger-secret") === expected;
+}
+
+async function sbFetch(path, options = {}) {
+  return fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    ...options,
+    headers: {
+      apikey: SERVICE_ROLE_KEY,
+      Authorization: `Bearer ${SERVICE_ROLE_KEY}`,
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+    },
+  });
+}
+
+// ---- Give ATLAS its own direct read access to basic HUB account/billing
+// data, rather than a fake "ask Nirvana" round trip. Nirvana's tools run
+// client-side in the browser; ATLAS's Slack functions run serverless with
+// no browser -- a literal cross-agent call isn't clean the other direction
+// (see ask_atlas's own comments in index.html for the full reasoning).
+// This achieves the practical goal ("ATLAS knows account status") the
+// same way atlas-prep-background.mjs already does for prep packets. ----
+
+// Deterministic detection, not an LLM guess -- same reasoning as
+// isBriefRequest()/isEodRequest() in atlas-slack.mjs: checking whether a
+// known client name appears in the question is a mechanical string
+// match, not a judgment call worth spending a Claude call on.
+async function findMentionedClient(question) {
+  const res = await sbFetch("portfolio_clients?select=name&order=name.asc");
+  if (!res.ok) return null;
+  const clients = await res.json();
+  const q = question.toLowerCase();
+  // Longest match wins -- avoids a short, generic name (e.g. "AC") from
+  // matching before a more specific one that's actually in the question.
+  let best = null;
+  for (const c of clients) {
+    if (!c.name || c.name.length < 4) continue; // skip near-empty/too-short names, too easy to false-positive
+    if (q.includes(c.name.toLowerCase())) {
+      if (!best || c.name.length > best.length) best = c.name;
+    }
+  }
+  return best;
+}
+
+async function getBillingContext(clientName) {
+  const clientRes = await sbFetch(
+    `portfolio_clients?select=name,customer_status,billing_status,monthly_rate,last_billing_date,cancellation_date&name=eq.${encodeURIComponent(clientName)}&limit=1`
+  );
+  const client = clientRes.ok ? (await clientRes.json())[0] : null;
+
+  const [ledgerRes, collectionsRes] = await Promise.all([
+    sbFetch(`ledger_entries?select=amount,category,description,due_date&client_name=eq.${encodeURIComponent(clientName)}&resolved_at=is.null`),
+    sbFetch(`collections_accounts?select=amount,status&name=eq.${encodeURIComponent(clientName)}&resolved_date=is.null`),
+  ]);
+  const ledger = ledgerRes.ok ? await ledgerRes.json() : [];
+  const collections = collectionsRes.ok ? await collectionsRes.json() : [];
+
+  return { client, ledger, collections };
 }
 
 async function embedQuery(text) {
@@ -96,22 +156,23 @@ async function retrieveKbChunks(embedding) {
   return res.json();
 }
 
-const ANSWER_SYSTEM_PROMPT = `You are ATLAS, Oscar's personal assistant. You answer questions using excerpts from his Close CRM call notes AND the team's Knowledge Base (SOPs and reference docs). You are separate from Nirvana, the Hub's product AI — you only know Oscar's notes and the Knowledge Base, not live account or billing data, and you don't guess about things Nirvana would know instead.
+const ANSWER_SYSTEM_PROMPT = `You are ATLAS, Oscar's personal assistant. You answer questions using excerpts from his Close CRM call notes, the team's Knowledge Base (SOPs and reference docs), and basic account/billing status when a specific client is mentioned. You are separate from Nirvana, the Hub's product AI — for anything beyond basic account status (deep KPI history, adoption data, detailed reporting), you don't guess, that's her domain.
 
-Casual conversation ("good morning," "thanks," "how's it going") is NOT a question that needs looking up. Respond naturally and warmly, like a helpful colleague would — don't force a citation, don't mention notes or excerpts, don't say you don't have information about it. Only the rules below about citing sources apply to actual questions about clients, notes, or the Knowledge Base — never to small talk.
+Casual conversation ("good morning," "thanks," "how's it going") is NOT a question that needs looking up. Respond naturally and warmly, like a helpful colleague would — don't force a citation, don't mention notes or excerpts, don't say you don't have information about it. Only the rules below about citing sources apply to actual questions about clients, notes, billing, or the Knowledge Base — never to small talk.
 
 Formatting — this is Slack, not standard markdown:
 - Bold is *single asterisks*, never **double asterisks** — double asterisks show up as literal characters in Slack and look broken.
 - Bullets are a line starting with "- ". No nested bullets, no markdown headers (##).
 
 Rules for actual questions (not casual conversation):
-- Answer ONLY using the provided excerpts. Never invent a fact or a date.
+- Answer ONLY using the provided excerpts and data. Never invent a fact, a date, or a dollar amount.
 - Cite call notes by client name and date, like "(Acme Roofing, Jul 12)".
 - Cite Knowledge Base entries by their title, like "(SOP: New Client Onboarding)".
+- Cite account/billing data as "(Account status, as of today)" — it's live, not dated to a specific note.
 - If the excerpts don't answer the question, say so plainly instead of guessing.
 - Keep it tight and scannable for Slack: short paragraphs, no headers, no tables.`;
 
-async function answerWithClaude(question, noteChunks, kbChunks) {
+async function answerWithClaude(question, noteChunks, kbChunks, billing) {
   const contextParts = [];
   if (noteChunks.length) {
     contextParts.push(
@@ -127,7 +188,24 @@ async function answerWithClaude(question, noteChunks, kbChunks) {
         kbChunks.map((c) => `[SOP: ${c.kb_title || "Untitled"}]\n${c.chunk_text}`).join("\n\n---\n\n")
     );
   }
-  const context = contextParts.length ? contextParts.join("\n\n===\n\n") : "(No matching notes or Knowledge Base entries were found for this question.)";
+  if (billing?.client) {
+    const c = billing.client;
+    const lines = [
+      `- Customer status: ${c.customer_status || "unknown"}`,
+      `- Billing status: ${c.billing_status || "unknown"}`,
+      c.monthly_rate ? `- Monthly rate: $${c.monthly_rate}` : null,
+      c.last_billing_date ? `- Last billing date: ${c.last_billing_date}` : null,
+      c.cancellation_date ? `- Cancellation date on file: ${c.cancellation_date}` : null,
+    ].filter(Boolean);
+    if (billing.ledger?.length) {
+      lines.push(...billing.ledger.map((l) => `- Unresolved ledger item: ${l.category || "charge"}, $${l.amount}${l.due_date ? `, due ${l.due_date}` : ""} — ${l.description || ""}`));
+    }
+    if (billing.collections?.length) {
+      lines.push(...billing.collections.map((cx) => `- Collections: $${cx.amount}, status: ${cx.status}`));
+    }
+    contextParts.push(`ACCOUNT/BILLING STATUS for ${c.name}:\n${lines.join("\n")}`);
+  }
+  const context = contextParts.length ? contextParts.join("\n\n===\n\n") : "(No matching notes, Knowledge Base entries, or account data were found for this question.)";
 
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -201,8 +279,13 @@ export default async (req) => {
 
   try {
     const embedding = await embedQuery(payload.question);
-    const [noteChunks, kbChunks] = await Promise.all([retrieveChunks(embedding), retrieveKbChunks(embedding)]);
-    const answer = await answerWithClaude(payload.question, noteChunks, kbChunks);
+    const [noteChunks, kbChunks, mentionedClient] = await Promise.all([
+      retrieveChunks(embedding),
+      retrieveKbChunks(embedding),
+      findMentionedClient(payload.question),
+    ]);
+    const billing = mentionedClient ? await getBillingContext(mentionedClient) : null;
+    const answer = await answerWithClaude(payload.question, noteChunks, kbChunks, billing);
     await postToSlack(payload, answer);
   } catch (e) {
     console.error("atlas-ask-background: failed:", e.message);

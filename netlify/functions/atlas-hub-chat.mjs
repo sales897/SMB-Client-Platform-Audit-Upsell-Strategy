@@ -22,7 +22,9 @@
 //
 // Reuses the exact same retrieval logic as atlas-ask-background.mjs
 // (embed -> match_atlas_notes + match_atlas_kb -> Claude with citations),
-// just returns the answer directly instead of posting to Slack.
+// just returns the answer directly instead of posting to Slack. Also
+// shares that file's client-mention detection + direct billing/account
+// read access (Block: 2026-07-31), kept in sync between both files.
 
 const SUPABASE_URL = Netlify.env.get("SUPABASE_URL");
 const SUPABASE_ANON_KEY = Netlify.env.get("SUPABASE_ANON_KEY");
@@ -106,20 +108,55 @@ async function retrieveKbChunks(embedding) {
   return res.json();
 }
 
+// ---- Same "ATLAS's own direct HUB read access" capability as
+// atlas-ask-background.mjs -- identical logic, kept in sync between both
+// files. See that file's comments for the full reasoning. ----
+async function findMentionedClient(question) {
+  const res = await sbFetch("portfolio_clients?select=name&order=name.asc");
+  if (!res.ok) return null;
+  const clients = await res.json();
+  const q = question.toLowerCase();
+  let best = null;
+  for (const c of clients) {
+    if (!c.name || c.name.length < 4) continue;
+    if (q.includes(c.name.toLowerCase())) {
+      if (!best || c.name.length > best.length) best = c.name;
+    }
+  }
+  return best;
+}
+
+async function getBillingContext(clientName) {
+  const clientRes = await sbFetch(
+    `portfolio_clients?select=name,customer_status,billing_status,monthly_rate,last_billing_date,cancellation_date&name=eq.${encodeURIComponent(clientName)}&limit=1`
+  );
+  const client = clientRes.ok ? (await clientRes.json())[0] : null;
+
+  const [ledgerRes, collectionsRes] = await Promise.all([
+    sbFetch(`ledger_entries?select=amount,category,description,due_date&client_name=eq.${encodeURIComponent(clientName)}&resolved_at=is.null`),
+    sbFetch(`collections_accounts?select=amount,status&name=eq.${encodeURIComponent(clientName)}&resolved_date=is.null`),
+  ]);
+  const ledger = ledgerRes.ok ? await ledgerRes.json() : [];
+  const collections = collectionsRes.ok ? await collectionsRes.json() : [];
+
+  return { client, ledger, collections };
+}
+
 // Same system prompt as atlas-ask-background.mjs -- one behavior for
 // ATLAS regardless of whether the question came from Slack or the HUB.
-const ANSWER_SYSTEM_PROMPT = `You are ATLAS, Oscar's personal assistant. You answer questions using excerpts from his Close CRM call notes AND the team's Knowledge Base (SOPs and reference docs). You are separate from Nirvana, the Hub's product AI — you only know Oscar's notes and the Knowledge Base, not live account or billing data, and you don't guess about things Nirvana would know instead.
+const ANSWER_SYSTEM_PROMPT = `You are ATLAS, Oscar's personal assistant. You answer questions using excerpts from his Close CRM call notes, the team's Knowledge Base (SOPs and reference docs), and basic account/billing status when a specific client is mentioned. You are separate from Nirvana, the Hub's product AI — for anything beyond basic account status (deep KPI history, adoption data, detailed reporting), you don't guess, that's her domain.
 
-Casual conversation ("good morning," "thanks," "how's it going") is NOT a question that needs looking up. Respond naturally and warmly, like a helpful colleague would — don't force a citation, don't mention notes or excerpts, don't say you don't have information about it. Only the rules below about citing sources apply to actual questions about clients, notes, or the Knowledge Base — never to small talk.
+Casual conversation ("good morning," "thanks," "how's it going") is NOT a question that needs looking up. Respond naturally and warmly, like a helpful colleague would — don't force a citation, don't mention notes or excerpts, don't say you don't have information about it. Only the rules below about citing sources apply to actual questions about clients, notes, billing, or the Knowledge Base — never to small talk.
 
 Rules for actual questions (not casual conversation):
-- Answer ONLY using the provided excerpts. Never invent a fact or a date.
+- Answer ONLY using the provided excerpts and data. Never invent a fact, a date, or a dollar amount.
 - Cite call notes by client name and date, like "(Acme Roofing, Jul 12)".
 - Cite Knowledge Base entries by their title, like "(SOP: New Client Onboarding)".
+- Cite account/billing data as "(Account status, as of today)" — it's live, not dated to a specific note.
 - If the excerpts don't answer the question, say so plainly instead of guessing.
 - Keep responses concise and scannable.`;
 
-async function answerWithClaude(question, noteChunks, kbChunks) {
+async function answerWithClaude(question, noteChunks, kbChunks, billing) {
   const contextParts = [];
   if (noteChunks.length) {
     contextParts.push(
@@ -130,7 +167,24 @@ async function answerWithClaude(question, noteChunks, kbChunks) {
   if (kbChunks.length) {
     contextParts.push("KNOWLEDGE BASE:\n" + kbChunks.map((c) => `[SOP: ${c.kb_title || "Untitled"}]\n${c.chunk_text}`).join("\n\n---\n\n"));
   }
-  const context = contextParts.length ? contextParts.join("\n\n===\n\n") : "(No matching notes or Knowledge Base entries were found for this question.)";
+  if (billing?.client) {
+    const c = billing.client;
+    const lines = [
+      `- Customer status: ${c.customer_status || "unknown"}`,
+      `- Billing status: ${c.billing_status || "unknown"}`,
+      c.monthly_rate ? `- Monthly rate: $${c.monthly_rate}` : null,
+      c.last_billing_date ? `- Last billing date: ${c.last_billing_date}` : null,
+      c.cancellation_date ? `- Cancellation date on file: ${c.cancellation_date}` : null,
+    ].filter(Boolean);
+    if (billing.ledger?.length) {
+      lines.push(...billing.ledger.map((l) => `- Unresolved ledger item: ${l.category || "charge"}, $${l.amount}${l.due_date ? `, due ${l.due_date}` : ""} — ${l.description || ""}`));
+    }
+    if (billing.collections?.length) {
+      lines.push(...billing.collections.map((cx) => `- Collections: $${cx.amount}, status: ${cx.status}`));
+    }
+    contextParts.push(`ACCOUNT/BILLING STATUS for ${c.name}:\n${lines.join("\n")}`);
+  }
+  const context = contextParts.length ? contextParts.join("\n\n===\n\n") : "(No matching notes, Knowledge Base entries, or account data were found for this question.)";
 
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -171,8 +225,13 @@ export default async (req) => {
 
   try {
     const embedding = await embedQuery(question);
-    const [noteChunks, kbChunks] = await Promise.all([retrieveChunks(embedding), retrieveKbChunks(embedding)]);
-    const answer = await answerWithClaude(question, noteChunks, kbChunks);
+    const [noteChunks, kbChunks, mentionedClient] = await Promise.all([
+      retrieveChunks(embedding),
+      retrieveKbChunks(embedding),
+      findMentionedClient(question),
+    ]);
+    const billing = mentionedClient ? await getBillingContext(mentionedClient) : null;
+    const answer = await answerWithClaude(question, noteChunks, kbChunks, billing);
     return new Response(JSON.stringify({ answer }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch (e) {
     console.error("atlas-hub-chat: failed:", e.message);
