@@ -12538,8 +12538,9 @@ function gcalQuickAddUrl(task) {
       const toUtcStamp = (d) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
       datesParam = `${toUtcStamp(start)}/${toUtcStamp(end)}`;
     } else {
-      const day = task.due_date.replace(/-/g, '');
-      const nextDay = new Date(task.due_date + 'T00:00:00Z');
+      const datePart = taskDueDatePart(task.due_date);
+      const day = datePart.replace(/-/g, '');
+      const nextDay = new Date(datePart + 'T00:00:00Z');
       nextDay.setUTCDate(nextDay.getUTCDate() + 1);
       datesParam = `${day}/${nextDay.toISOString().slice(0,10).replace(/-/g,'')}`;
     }
@@ -12572,12 +12573,13 @@ async function pushTaskToGoogleCalendar(task) {
         reminders,
       };
     } else {
-      const nextDay = new Date(task.due_date + 'T00:00:00Z');
+      const datePart = taskDueDatePart(task.due_date);
+      const nextDay = new Date(datePart + 'T00:00:00Z');
       nextDay.setUTCDate(nextDay.getUTCDate() + 1);
       event = {
         summary: task.title,
         description: `The HUB task for ${task.client_name}`,
-        start: { date: task.due_date },
+        start: { date: datePart },
         end: { date: nextDay.toISOString().slice(0,10) },
         reminders,
       };
@@ -14666,6 +14668,19 @@ function taskHasSpecificTime(dueDateStr) {
   const match = dueDateStr.match(/T(\d{2}):(\d{2})/);
   if (!match) return false;
   return !(match[1] === '00' && match[2] === '00');
+}
+
+// Returns just the 'YYYY-MM-DD' portion of a due_date value, regardless of
+// whether it's a bare date or a full timestamp string. client_tasks.due_date
+// is actually `timestamp with time zone` live (confirmed 2026-08-05 -- the
+// Schema Reference doc's "date" is stale), so any code treating a date-only
+// task as midnight-on-that-day must go through this rather than
+// concatenating onto the raw value directly -- appending e.g. 'T00:00:00Z'
+// onto an already-full timestamp string produces an unparseable double
+// timestamp (RangeError: Invalid time value on toISOString()). See Known
+// Bugs 2026-08-05.
+function taskDueDatePart(dueDateStr) {
+  return dueDateStr ? dueDateStr.slice(0, 10) : dueDateStr;
 }
 
 // Returns 'overdue' | 'today' | 'upcoming' | null (no due date). A
@@ -17043,7 +17058,7 @@ function checkTaskReminders() {
     if (task.status === 'done' || task.reminder_notified) return;
     if (!task.due_date) return;
     if ((task.assigned_to_email || '').toLowerCase() !== u.email.toLowerCase()) return;
-    const dueTime = new Date(taskHasSpecificTime(task.due_date) ? task.due_date : task.due_date + 'T09:00:00').getTime();
+    const dueTime = new Date(taskHasSpecificTime(task.due_date) ? task.due_date : taskDueDatePart(task.due_date) + 'T09:00:00').getTime();
     if (isNaN(dueTime)) return;
     // "Calendar default" (reminder_minutes left unset) only means something if
     // Google Calendar is actually connected -- otherwise it was silently a
