@@ -13102,6 +13102,15 @@ function positionThemedSelectPanel(panel) {
   const spaceBelow = window.innerHeight - wrapRect.bottom;
   const spaceAbove = wrapRect.top;
   if (panel.offsetHeight > spaceBelow && spaceAbove > spaceBelow) {
+    // .themed-select-panel's `top: calc(100% + 4px)` is set at the CSS
+    // class level, not inline -- clearing an inline style above does
+    // nothing to cancel it. Setting both top (from the class) and bottom
+    // (here) at once on an absolutely positioned element with no explicit
+    // height collapses its computed height to the gap between them, which
+    // can be zero or negative -- the panel silently renders with no
+    // visible height at all. Explicitly overriding top to 'auto' is what
+    // actually cancels the class rule. See Known Bugs 2026-08-05.
+    panel.style.top = 'auto';
     panel.style.bottom = 'calc(100% + 4px)';
   }
 }
