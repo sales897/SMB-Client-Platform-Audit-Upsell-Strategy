@@ -166,6 +166,31 @@ function isAuthorizedTrigger(req) {
   return req.headers.get("x-atlas-trigger-secret") === expected;
 }
 
+// ---- Payment data redaction (added 2026-08-04, after finding 4 real
+// Close notes containing raw card numbers/CVV/expiration in plaintext --
+// a rep had typed card details directly into a note as a temporary place
+// to jot them down, and this pipeline copied them straight into Supabase
+// unfiltered). Applied here, BEFORE storage and before anything ever
+// reaches Claude -- redact first, not "clean up after the fact." Also
+// the likely root cause of a real bug found the same day: these exact
+// notes had failed enrichment silently on every attempt for 6 days,
+// consistent with Claude's own safety handling of raw payment data not
+// returning the expected parseable JSON. Deliberately broad/over-
+// inclusive: a false-positive redaction costs a little context; a false
+// negative leaks a card number. Not a full PCI solution -- just stops
+// the most obvious, common case (a card number typed directly into a
+// note) from ever landing here again.
+function redactPaymentInfo(text) {
+  if (!text) return text;
+  let out = text;
+  // Card-number-like sequences: 13-19 digits, optionally grouped with
+  // spaces or dashes every few digits.
+  out = out.replace(/\b(?:\d[ -]?){13,19}\b/g, "[REDACTED CARD NUMBER]");
+  out = out.replace(/\b(CVV|CVC)\s*:?\s*\d{3,4}\b/gi, "$1: [REDACTED]");
+  out = out.replace(/\bEXP\s*:?\s*\d{1,2}\/\d{2,4}\b/gi, "EXP: [REDACTED]");
+  return out;
+}
+
 export default async (req) => {
   if (!isAuthorizedTrigger(req)) {
     console.warn("atlas-ingest-background: rejected an unauthorized trigger attempt.");
@@ -208,7 +233,7 @@ export default async (req) => {
           note_type: null, // classified during enrichment (call_summary | transcript | typed_note)
           author: n.author,
           note_date: n.date_created,
-          raw_text: n.text,
+          raw_text: redactPaymentInfo(n.text),
         }))
       );
 
