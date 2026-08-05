@@ -13134,6 +13134,99 @@ document.addEventListener('click', (e) => {
   if (!e.target.closest('.themed-select')) document.querySelectorAll('.themed-select-panel').forEach(p => p.style.display = 'none');
 });
 
+// ─── Autocorrect (added 2026-08-05): common-typo auto-replace + forced
+// native spellcheck, applied Hub-wide via event delegation on `document`
+// rather than wiring into every individual render function. This covers
+// every current textarea/text input automatically, including ones
+// rendered dynamically (notes, tasks, contact cards, etc.), and any new
+// ones added later, with zero per-field changes needed anywhere else.
+// Deliberately conservative: only a short list of unambiguous, extremely
+// common English misspellings that are essentially never intentional.
+// Never applies to structured fields (email/tel/url/number/password/date/
+// etc.) where "correcting" a real value would be actively harmful --
+// isAutocorrectTarget() below is the single gate every field passes
+// through, so tightening or loosening scope only ever needs to change in
+// one place. Any specific field can opt out with data-no-autocorrect="true".
+const AUTOCORRECT_MAP = {
+  'teh': 'the', 'hte': 'the', 'adn': 'and', 'nad': 'and', 'taht': 'that',
+  'wiht': 'with', 'thier': 'their', 'recieve': 'receive', 'recieved': 'received',
+  'recieving': 'receiving', 'seperate': 'separate', 'seperated': 'separated',
+  'seperately': 'separately', 'definately': 'definitely', 'occured': 'occurred',
+  'occuring': 'occurring', 'wich': 'which', 'becuase': 'because',
+  'beacuse': 'because', 'becasue': 'because', 'differnt': 'different',
+  'enviroment': 'environment', 'goverment': 'government',
+  'immediatly': 'immediately', 'neccessary': 'necessary', 'necesary': 'necessary',
+  'occassion': 'occasion', 'priviledge': 'privilege', 'publically': 'publicly',
+  'reccommend': 'recommend', 'recomend': 'recommend', 'succesful': 'successful',
+  'successfull': 'successful', 'untill': 'until', 'wierd': 'weird',
+  'acheive': 'achieve', 'arguement': 'argument', 'beleive': 'believe',
+  'calender': 'calendar', 'collegue': 'colleague', 'concious': 'conscious',
+  'apparant': 'apparent', 'begining': 'beginning', 'comming': 'coming',
+  'commited': 'committed', 'commitee': 'committee', 'existance': 'existence',
+  'foriegn': 'foreign', 'happend': 'happened', 'independant': 'independent',
+  'intrested': 'interested', 'knowlege': 'knowledge', 'liason': 'liaison',
+  'maintainance': 'maintenance', 'noticable': 'noticeable', 'ocasion': 'occasion',
+  'persistant': 'persistent', 'posession': 'possession', 'prefered': 'preferred',
+  'pronounciation': 'pronunciation', 'realy': 'really', 'refered': 'referred',
+  'relevent': 'relevant', 'rember': 'remember', 'remeber': 'remember',
+  'sucess': 'success', 'suprise': 'surprise', 'tommorow': 'tomorrow',
+  'tommorrow': 'tomorrow', 'truely': 'truly', 'unfortunatly': 'unfortunately',
+  'writting': 'writing', 'youre': "you're", 'theyre': "they're",
+  'dont': "don't", 'doesnt': "doesn't", 'didnt': "didn't", 'wont': "won't",
+  'cant': "can't", 'isnt': "isn't", 'wasnt': "wasn't", 'werent': "weren't",
+  'havent': "haven't", 'hasnt': "hasn't", 'couldnt': "couldn't",
+  'wouldnt': "wouldn't", 'shouldnt': "shouldn't", 'thats': "that's",
+  'alot': 'a lot', 'aswell': 'as well', 'infact': 'in fact', 'inspite': 'in spite'
+};
+function isAutocorrectTarget(el) {
+  if (!el || el.dataset.noAutocorrect === 'true') return false;
+  if (el.tagName === 'TEXTAREA') return true;
+  if (el.tagName === 'INPUT') {
+    const type = (el.type || 'text').toLowerCase();
+    return type === 'text' || type === 'search';
+  }
+  return false;
+}
+function applyAutocorrectCase(original, replacement) {
+  if (original === original.toUpperCase() && original !== original.toLowerCase()) return replacement.toUpperCase();
+  if (original[0] === original[0].toUpperCase()) return replacement[0].toUpperCase() + replacement.slice(1);
+  return replacement;
+}
+// Checks the word ending at `endIndex` in el.value against the typo map,
+// replacing it in place if matched. Returns the character-count delta
+// (replacement length - original length) so callers can reposition the
+// cursor, or undefined if nothing changed.
+function autocorrectCheckWord(el, endIndex) {
+  const value = el.value;
+  let start = endIndex;
+  while (start > 0 && /[A-Za-z']/.test(value[start - 1])) start--;
+  const word = value.slice(start, endIndex);
+  if (!word) return;
+  const fix = AUTOCORRECT_MAP[word.toLowerCase()];
+  if (!fix || fix.toLowerCase() === word.toLowerCase()) return;
+  const corrected = applyAutocorrectCase(word, fix);
+  el.value = value.slice(0, start) + corrected + value.slice(endIndex);
+  return corrected.length - word.length;
+}
+document.addEventListener('input', (e) => {
+  const el = e.target;
+  if (!isAutocorrectTarget(el)) return;
+  el.spellcheck = true;
+  const pos = el.selectionStart;
+  if (pos !== el.selectionEnd) return; // leave an active selection alone
+  const justTyped = el.value.slice(pos - 1, pos);
+  if (!/[\s.,!?;:)\]]/.test(justTyped)) return; // only fire right after a word-boundary character
+  const delta = autocorrectCheckWord(el, pos - 1);
+  if (delta) el.setSelectionRange(pos + delta, pos + delta);
+}, true);
+// Also catches the trailing word when a field loses focus without a
+// trailing space/punctuation ever being typed (e.g. typing a note and
+// immediately clicking "Add Note").
+document.addEventListener('focusout', (e) => { if (isAutocorrectTarget(e.target)) autocorrectCheckWord(e.target, e.target.value.length); }, true);
+// Forces spellcheck on as soon as a relevant field is focused, so existing
+// text shows as misspelled immediately -- not just after the next keystroke.
+document.addEventListener('focusin', (e) => { if (isAutocorrectTarget(e.target)) e.target.spellcheck = true; }, true);
+
 function switchSettingsTab(tab) {
   document.querySelectorAll('#page-settings .pm-tab').forEach(b => b.classList.remove('active'));
   document.getElementById(`settings${tab.charAt(0).toUpperCase()}${tab.slice(1)}TabBtn`).classList.add('active');
