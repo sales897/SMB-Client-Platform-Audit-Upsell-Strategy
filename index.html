@@ -9235,6 +9235,7 @@ function buildHomeVitalsGrid() {
     const sub = t(def.subKey);
     return `
       <div class="vital-block" draggable="true" data-slot="${i}" data-current-key="${key}"
+           onmousedown="vitalCardMouseDown(event)"
            ondragstart="vitalDragStart(event)" ondragover="vitalDragOver(event)" ondrop="vitalDrop(event)" ondragend="vitalDragEnd(event)">
         <div class="vital-block-hd">
           <h3><span class="vital-dot" style="background:${def.dot};color:${def.dot}"></span>${escAttr(label)}</h3>
@@ -9258,7 +9259,20 @@ function buildHomeVitalsGrid() {
 }
 
 let vitalDragSrcSlot = null;
+// Tracks where the mouse actually went down, so vitalDragStart() can tell
+// whether the gesture started on a clickable item inside the card (e.g. a
+// task row that opens a client's profile) vs. the card itself. Needed
+// because native HTML5 drag hijacks even a few px of pointer jitter during
+// an ordinary click on a plain (non-<button>/<a>) element sitting inside a
+// draggable="true" ancestor -- the click event never fires once that
+// happens. Fixed 2026-08-05, see Known Bugs.
+let vitalDragMouseDownTarget = null;
+function vitalCardMouseDown(e) { vitalDragMouseDownTarget = e.target; }
 function vitalDragStart(e) {
+  if (vitalDragMouseDownTarget && vitalDragMouseDownTarget.closest('.vital-no-drag')) {
+    e.preventDefault();
+    return;
+  }
   vitalDragSrcSlot = parseInt(e.currentTarget.dataset.slot, 10);
   e.dataTransfer.effectAllowed = 'move';
   e.currentTarget.classList.add('dragging');
@@ -9390,7 +9404,7 @@ function renderVitalTasks() {
     const pillKey = status || 'pending';
     const pillLabel = status === 'overdue' ? 'Overdue' : status === 'today' ? 'Today' : status === 'upcoming' ? 'Coming Up' : 'Pending';
     const safeClient = escOnclickArg(t.client_name);
-    return `<div class="vital-list-item${statusClass}" onclick="openClientNotesTasksModal('${safeClient}')" tabindex="0" role="button" aria-label="Open notes and tasks for ${escAttr(t.client_name)}">
+    return `<div class="vital-list-item vital-no-drag${statusClass}" onclick="openClientNotesTasksModal('${safeClient}')" tabindex="0" role="button" aria-label="Open notes and tasks for ${escAttr(t.client_name)}">
       <span class="dot" style="background:${dotColor};color:${dotColor}"></span>
       <span class="title">${escAttr(t.title)}</span>
       <span class="vital-task-pill vital-task-pill-${pillKey}">${pillLabel}</span>
