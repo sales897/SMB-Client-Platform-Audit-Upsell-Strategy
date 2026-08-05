@@ -13081,7 +13081,29 @@ function toggleThemedSelect(selectId, event) {
   if (event) event.stopPropagation();
   document.querySelectorAll('.themed-select-panel').forEach(p => { if (p.id !== `ts-panel-${selectId}`) p.style.display = 'none'; });
   const panel = document.getElementById(`ts-panel-${selectId}`);
-  if (panel) panel.style.display = panel.style.display === 'none' ? '' : 'none';
+  if (!panel) return;
+  const opening = panel.style.display === 'none';
+  panel.style.display = opening ? '' : 'none';
+  if (opening) positionThemedSelectPanel(panel);
+}
+// Flips the panel to open upward instead of downward when there isn't
+// enough room below in the viewport. .themed-select-panel is absolutely
+// positioned with a fixed `top: calc(100% + 4px)` in its base CSS, with no
+// boundary check -- opened near the bottom of the screen (e.g. the
+// hour/minute pickers inside the task date/time popover, but this affects
+// every themed-select anywhere in the app), it could render partly or
+// fully off-screen and unreachable. See Known Bugs 2026-08-05.
+function positionThemedSelectPanel(panel) {
+  panel.style.top = '';
+  panel.style.bottom = '';
+  const wrap = panel.closest('.themed-select');
+  if (!wrap) return;
+  const wrapRect = wrap.getBoundingClientRect();
+  const spaceBelow = window.innerHeight - wrapRect.bottom;
+  const spaceAbove = wrapRect.top;
+  if (panel.offsetHeight > spaceBelow && spaceAbove > spaceBelow) {
+    panel.style.bottom = 'calc(100% + 4px)';
+  }
 }
 function pickThemedSelect(selectId, value, event) {
   if (event) event.stopPropagation();
@@ -20873,10 +20895,31 @@ function openCntTaskDateTimePicker(which) {
   document.body.appendChild(pop);
   renderCntDtPopover();
   const trigger = document.getElementById(which === 'start' ? 'cntTaskStartTrigger' : 'cntTaskEndTrigger');
-  const rect = trigger.getBoundingClientRect();
-  pop.style.top = (rect.bottom + 6) + 'px';
-  pop.style.left = rect.left + 'px';
+  positionCntDtPopover(trigger, pop);
   setTimeout(() => document.addEventListener('mousedown', cntDtOutsideClick), 0);
+}
+// Keeps the date/time popover fully within the viewport regardless of how
+// low the trigger sits on the page -- flips above the trigger when there
+// isn't enough room below, and clamps horizontally too so it can't bleed
+// off the right edge either. Previously this always rendered fixed
+// `rect.bottom + 6`px below the trigger with no boundary check at all, so
+// a trigger low on a long tab (e.g. the Tasks tab's "Starts" field) could
+// render the whole popover partly or fully off-screen. See Known Bugs
+// 2026-08-05.
+function positionCntDtPopover(trigger, pop) {
+  const rect = trigger.getBoundingClientRect();
+  const popRect = pop.getBoundingClientRect();
+  const margin = 8;
+  const spaceBelow = window.innerHeight - rect.bottom - margin;
+  const spaceAbove = rect.top - margin;
+  const placeAbove = popRect.height > spaceBelow && spaceAbove > spaceBelow;
+  pop.style.top = placeAbove
+    ? Math.max(margin, rect.top - popRect.height - 6) + 'px'
+    : (rect.bottom + 6) + 'px';
+  let left = rect.left;
+  if (left + popRect.width > window.innerWidth - margin) left = window.innerWidth - popRect.width - margin;
+  if (left < margin) left = margin;
+  pop.style.left = left + 'px';
 }
 function cntDtOutsideClick(e) {
   const pop = document.getElementById('cntDtPopover');
@@ -20892,6 +20935,12 @@ function cntDtChangeMonth(delta) {
   if (cntDtViewMonth < 0) { cntDtViewMonth = 11; cntDtViewYear--; }
   if (cntDtViewMonth > 11) { cntDtViewMonth = 0; cntDtViewYear++; }
   renderCntDtPopover();
+  // The calendar grid can be one row taller/shorter depending on the month
+  // (4-6 weeks), so re-check the viewport fit rather than trusting the
+  // position computed when the popover first opened.
+  const pop = document.getElementById('cntDtPopover');
+  const trigger = document.getElementById(cntDtPickerTarget === 'start' ? 'cntTaskStartTrigger' : 'cntTaskEndTrigger');
+  if (pop && trigger) positionCntDtPopover(trigger, pop);
 }
 function cntDtPickDay(day) {
   cntDtSelDay = day;
