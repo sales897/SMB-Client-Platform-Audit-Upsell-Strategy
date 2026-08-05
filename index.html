@@ -2005,10 +2005,9 @@ tr.pg-hidden-row { display: none; }
 .btn:disabled { opacity: .4; cursor: not-allowed; }
 .modal.wide { width: 820px; }
 .modal.xwide { width: 1040px; }
-.cnt-columns { display: grid; grid-template-columns: 1.15fr 1fr; gap: 24px; }
-.cnt-column-scroll { max-height: 46vh; overflow-y: auto; padding-right: 6px; }
-.cnt-column-divider { border-left: 1px solid var(--border); padding-left: 24px; }
-@media (max-width: 900px) { .cnt-columns { grid-template-columns: 1fr; } .cnt-column-divider { border-left: none; padding-left: 0; border-top: 1px solid var(--border); padding-top: 20px; } }
+.cnt-column-scroll { max-height: 60vh; overflow-y: auto; padding-right: 6px; }
+.cnt-tab-count { font-size: 10px; font-weight: 700; color: var(--text3); }
+.cnt-tab-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--green); margin-left: 2px; vertical-align: middle; }
 .modal select {
   width: 100%; padding: 9px 12px;
   background: var(--bg3); border: 1px solid var(--border);
@@ -2353,7 +2352,13 @@ tr.pg-hidden-row { display: none; }
 .cnt-contact-head-left { display: flex; align-items: center; gap: 8px; }
 .cnt-contact-primary-badge { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--orange); background: var(--orange-dim); padding: 2px 7px; border-radius: var(--radius-pill); }
 .cnt-contact-updated { font-size: 11px; color: var(--text3); }
-.cnt-contact-fields { display: grid; grid-template-columns: 1fr 1fr 1.2fr 1fr auto; gap: 10px; align-items: end; }
+.cnt-contact-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; align-items: start; }
+.c-multi-group { display: flex; flex-direction: column; gap: 6px; }
+.c-multi-row { display: flex; align-items: center; gap: 6px; }
+.c-multi-row .rm { color: var(--text3); cursor: pointer; font-size: 13px; flex-shrink: 0; width: 16px; text-align: center; }
+.c-multi-row .rm:hover { color: var(--red); }
+.c-add-link { color: var(--orange); font-size: 11px; cursor: pointer; display: inline-block; margin-top: 4px; }
+.c-add-link:hover { text-decoration: underline; }
 .cnt-empty-contacts-hint { color: var(--text3); font-size: 12.5px; padding: 10px 2px; }
 .close-linked-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .close-candidate-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius-xs); margin-bottom: 6px; background: var(--bg2); }
@@ -3425,28 +3430,34 @@ select.wfb-field-input { padding-right: 26px; }
   <div class="modal xwide" role="dialog" aria-modal="true" aria-labelledby="cntTitle">
     <h3 id="cntTitle"><span class="icon" data-icon="user" data-icon-size="14"></span> <span data-i18n="cnt_client_profile">Client Profile</span></h3>
 
-    <div class="cnt-section" style="margin-top:10px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <div class="cnt-section-title" style="margin-bottom:0"><span class="icon" data-icon="user" data-icon-size="14"></span> <span data-i18n="cnt_contact_info">Contact Info</span></div>
-        <button class="btn btn-ghost btn-sm" id="cntAddContactBtn" onclick="addClientContactCard()"><span class="icon" data-icon="plus" data-icon-size="12"></span> Add Contact</button>
-      </div>
-      <div id="cntContactsList"></div>
+    <div class="hub-tabs">
+      <button class="hub-tab active" data-group="cntTabs" data-tab="contact" onclick="switchHubTab('cntTabs','contact')"><span class="icon" data-icon="user" data-icon-size="13"></span> Contact</button>
+      <button class="hub-tab" data-group="cntTabs" data-tab="close" onclick="switchHubTab('cntTabs','close')"><span class="icon" data-icon="building" data-icon-size="13"></span> Close CRM <span id="cntTabCloseDot" class="cnt-tab-dot" style="display:none"></span></button>
+      <button class="hub-tab" data-group="cntTabs" data-tab="notes" onclick="switchHubTab('cntTabs','notes')"><span class="icon" data-icon="note" data-icon-size="13"></span> <span data-i18n="cnt_notes_section">Notes</span> <span id="cntTabNotesCount" class="cnt-tab-count"></span></button>
+      <button class="hub-tab" data-group="cntTabs" data-tab="tasks" onclick="switchHubTab('cntTabs','tasks')"><span class="icon" data-icon="check" data-icon-size="13"></span> <span data-i18n="cnt_tasks_section">Tasks</span> <span id="cntTabTasksCount" class="cnt-tab-count"></span></button>
     </div>
 
-    <div class="cnt-divider"></div>
-
-    <div class="cnt-section" id="cntCloseCrmSection">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-        <div class="cnt-section-title" style="margin-bottom:0"><span class="icon" data-icon="building" data-icon-size="14"></span> Close CRM</div>
+    <div class="hub-tab-panel active" data-group="cntTabs" data-tab="contact">
+      <div class="cnt-section" style="margin-top:0">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div class="cnt-section-title" style="margin-bottom:0"><span class="icon" data-icon="user" data-icon-size="14"></span> <span data-i18n="cnt_contact_info">Contact Info</span></div>
+          <button class="btn btn-ghost btn-sm" id="cntAddContactBtn" onclick="addClientContactCard()"><span class="icon" data-icon="plus" data-icon-size="12"></span> Add Contact</button>
+        </div>
+        <div id="cntContactsList"></div>
       </div>
-      <div id="cntCloseCrmBody"></div>
     </div>
 
-    <div class="cnt-divider"></div>
+    <div class="hub-tab-panel" data-group="cntTabs" data-tab="close">
+      <div class="cnt-section" id="cntCloseCrmSection" style="margin-top:0">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div class="cnt-section-title" style="margin-bottom:0"><span class="icon" data-icon="building" data-icon-size="14"></span> Close CRM</div>
+        </div>
+        <div id="cntCloseCrmBody"></div>
+      </div>
+    </div>
 
-    <div class="cnt-columns">
-      <div class="cnt-section">
-        <div class="cnt-section-title"><span class="icon" data-icon="note" data-icon-size="14"></span> <span data-i18n="cnt_notes_section">Notes</span></div>
+    <div class="hub-tab-panel" data-group="cntTabs" data-tab="notes">
+      <div class="cnt-section" style="margin-top:0">
         <div class="notes-thread cnt-column-scroll" id="cntNotesThread"></div>
         <label for="cntNewNoteText" class="field-label" style="margin-top:12px" data-i18n="cnt_add_a_note">Add a Note</label>
         <div class="note-toolbar">
@@ -3465,9 +3476,10 @@ select.wfb-field-input { padding-right: 26px; }
           <button class="btn btn-primary btn-sm" id="cntNotesSubmitBtn" onclick="addClientNote()" data-i18n="cnt_add_a_note">Add Note</button>
         </div>
       </div>
+    </div>
 
-      <div class="cnt-section cnt-column-divider">
-        <div class="cnt-section-title" style="margin-bottom:8px"><span class="icon" data-icon="check" data-icon-size="16"></span> <span data-i18n="cnt_tasks_section">Tasks</span></div>
+    <div class="hub-tab-panel" data-group="cntTabs" data-tab="tasks">
+      <div class="cnt-section" style="margin-top:0">
         <div id="cntTasksList" class="cnt-column-scroll" style="margin-bottom:12px"></div>
         <label for="cntNewTaskTitle" class="field-label" data-i18n="cnt_add_a_task">Add a Task</label>
         <input type="text" id="cntNewTaskTitle" class="field-input" style="height:36px;margin-bottom:8px" placeholder="e.g. Follow up about renewal" data-i18n-placeholder="cnt_task_placeholder">
@@ -17176,8 +17188,11 @@ function handleSmartPaste(prefix, rawText) {
 }
 function handleContactCardSmartPaste(contactId, rawText) {
   const parsed = parseSmartPaste(rawText);
-  const idMap = { ContactName: 'name', ContactTitle: 'title', ContactEmail: 'email', ContactPhone: 'phone' };
-  const filled = fillSmartPasteFields(parsed, (suffix) => `cnt-${idMap[suffix]}-${contactId}`);
+  // Email/Phone target the first (index 0) repeatable row specifically --
+  // Smart Paste is for filling a freshly-added card, which always starts
+  // with exactly one row per field.
+  const idMap = { ContactName: `cnt-name-${contactId}`, ContactTitle: `cnt-title-${contactId}`, ContactEmail: `cnt-email-${contactId}-0`, ContactPhone: `cnt-phone-${contactId}-0` };
+  const filled = fillSmartPasteFields(parsed, (suffix) => idMap[suffix]);
 
   const box = document.getElementById(`cnt-paste-${contactId}`);
   if (box) box.value = '';
@@ -17207,7 +17222,16 @@ function getClientContact(clientName) {
 }
 // Shared create/update/delete-by-id helpers so the Contact Info UI and the
 // Nirvana contact tools hit exactly the same code path, not two copies.
+// emails/phones (jsonb arrays, added 2026-08-05) are the source of truth for
+// multi-value contacts; email/phone (single text columns) are kept in sync
+// as "primary = first entry" purely so older call sites that still read the
+// singular fields (Client Spotlight, Directory hint, Missing Contact Info
+// filter) keep working unchanged -- none of those needed to be rewritten.
 async function upsertClientContactRecord(contact) {
+  if (!Array.isArray(contact.emails)) contact.emails = (contact.email || '').trim() ? [contact.email.trim()] : [];
+  if (!Array.isArray(contact.phones)) contact.phones = (contact.phone || '').trim() ? [contact.phone.trim()] : [];
+  contact.email = contact.emails[0] || '';
+  contact.phone = contact.phones[0] || '';
   contact.updated_at = new Date().toISOString();
   localStorage.setItem(CLIENT_CONTACTS_CACHE_KEY, JSON.stringify(CLIENT_CONTACTS));
   try { await sbUpsert('client_contacts', contact); } catch(e) { console.warn('Could not save contact info:', e.message); }
@@ -17224,6 +17248,46 @@ async function deleteClientContactRecord(contactId) {
   try { await sbDelete('client_contacts', `id=eq.${contactId}`); } catch(e) { console.warn('Could not delete contact:', e.message); }
 }
 
+function renderContactMultiRows(id, kind, values) {
+  const vals = (values && values.length) ? values : [''];
+  const type = kind === 'email' ? 'email' : 'tel';
+  const placeholder = kind === 'email' ? 'e.g. jamie@business.com' : '(555) 123-4567';
+  return vals.map((v, idx) => `
+    <div class="c-multi-row">
+      <input type="${type}" id="cnt-${kind}-${id}-${idx}" class="field-input" style="height:32px;margin-bottom:0" placeholder="${placeholder}" value="${escAttr(v)}">
+      <span class="rm" onclick="removeContactFieldRow(this)" title="Remove" style="visibility:${vals.length > 1 ? 'visible' : 'hidden'}">✕</span>
+    </div>`).join('');
+}
+// Adds a blank repeatable row (phone or email) under an existing contact
+// card. Rows aren't renumbered when one is removed from the middle --
+// saveClientContactCard() reads all rows in DOM order rather than relying
+// on index continuity, so this doesn't need to stay perfectly sequential.
+function addContactFieldRow(contactId, kind) {
+  const container = document.getElementById(`cnt-${kind}-group-${contactId}`);
+  if (!container) return;
+  const idx = container.querySelectorAll('.c-multi-row').length;
+  const type = kind === 'email' ? 'email' : 'tel';
+  const placeholder = kind === 'email' ? 'e.g. jamie@business.com' : '(555) 123-4567';
+  const row = document.createElement('div');
+  row.className = 'c-multi-row';
+  row.innerHTML = `<input type="${type}" id="cnt-${kind}-${contactId}-${idx}" class="field-input" style="height:32px;margin-bottom:0" placeholder="${placeholder}"><span class="rm" onclick="removeContactFieldRow(this)" title="Remove">✕</span>`;
+  container.appendChild(row);
+  updateContactRowRemoveButtons(container);
+  row.querySelector('input').focus();
+}
+function removeContactFieldRow(el) {
+  const container = el.closest('.c-multi-group');
+  el.closest('.c-multi-row').remove();
+  if (container) updateContactRowRemoveButtons(container);
+}
+// Hides the remove (✕) button once only one row is left -- there's nothing
+// left to remove down to, matching the original single-input behavior of
+// always showing at least one (possibly empty) field.
+function updateContactRowRemoveButtons(container) {
+  const rows = container.querySelectorAll('.c-multi-row');
+  rows.forEach(r => { const rm = r.querySelector('.rm'); if (rm) rm.style.visibility = rows.length > 1 ? 'visible' : 'hidden'; });
+}
+
 function renderContactCardHtml(c, isPrimary, editable) {
   const id = c.id;
   const updatedNote = c.updated_at ? `Last updated ${fmtNoteTime(c.updated_at)}` : 'Not saved yet';
@@ -17238,9 +17302,17 @@ function renderContactCardHtml(c, isPrimary, editable) {
     <div class="cnt-contact-fields">
       <div><label for="cnt-name-${id}" class="field-label">Contact Name</label><input type="text" id="cnt-name-${id}" class="field-input" style="height:36px" placeholder="e.g. Jamie Rivera" value="${escAttr(c.contact_name)}" ${editable ? '' : 'disabled'}></div>
       <div><label for="cnt-title-${id}" class="field-label">Title</label><input type="text" id="cnt-title-${id}" class="field-input" style="height:36px" placeholder="e.g. Owner" value="${escAttr(c.title)}" ${editable ? '' : 'disabled'}></div>
-      <div><label for="cnt-email-${id}" class="field-label">Email</label><input type="email" id="cnt-email-${id}" class="field-input" style="height:36px" placeholder="e.g. jamie@business.com" value="${escAttr(c.email)}" ${editable ? '' : 'disabled'}></div>
-      <div><label for="cnt-phone-${id}" class="field-label">Phone</label><input type="tel" id="cnt-phone-${id}" class="field-input" style="height:36px" placeholder="(555) 123-4567" value="${escAttr(c.phone)}" ${editable ? '' : 'disabled'}></div>
-      ${editable ? `<button class="btn btn-primary btn-sm" style="height:36px" onclick="saveClientContactCard('${id}')"><span class="icon" data-icon="save" data-icon-size="13"></span> <span data-i18n="btn_save">Save</span></button>` : '<div></div>'}
+      <div>
+        <label class="field-label">Phone</label>
+        <div class="c-multi-group" id="cnt-phone-group-${id}">${renderContactMultiRows(id, 'phone', c.phones)}</div>
+        ${editable ? `<span class="c-add-link" onclick="addContactFieldRow('${id}','phone')">+ Add another phone number</span>` : ''}
+      </div>
+      <div>
+        <label class="field-label">Email</label>
+        <div class="c-multi-group" id="cnt-email-group-${id}">${renderContactMultiRows(id, 'email', c.emails)}</div>
+        ${editable ? `<span class="c-add-link" onclick="addContactFieldRow('${id}','email')">+ Add another email</span>` : ''}
+      </div>
+      ${editable ? `<div style="grid-column:1/-1;display:flex;justify-content:flex-end"><button class="btn btn-primary btn-sm" style="height:36px" onclick="saveClientContactCard('${id}')"><span class="icon" data-icon="save" data-icon-size="13"></span> <span data-i18n="btn_save">Save</span></button></div>` : ''}
     </div>
   </div>`;
 }
@@ -17277,8 +17349,10 @@ async function saveClientContactCard(contactId) {
   if (!contact) return;
   contact.contact_name = (document.getElementById(`cnt-name-${contactId}`) || {}).value?.trim() || '';
   contact.title = (document.getElementById(`cnt-title-${contactId}`) || {}).value?.trim() || '';
-  contact.email = (document.getElementById(`cnt-email-${contactId}`) || {}).value?.trim() || '';
-  contact.phone = (document.getElementById(`cnt-phone-${contactId}`) || {}).value?.trim() || '';
+  const phoneGroup = document.getElementById(`cnt-phone-group-${contactId}`);
+  const emailGroup = document.getElementById(`cnt-email-group-${contactId}`);
+  contact.phones = phoneGroup ? Array.from(phoneGroup.querySelectorAll('input')).map(i => i.value.trim()).filter(Boolean) : [];
+  contact.emails = emailGroup ? Array.from(emailGroup.querySelectorAll('input')).map(i => i.value.trim()).filter(Boolean) : [];
   await upsertClientContactRecord(contact);
   renderClientContactInfo();
   showToast('Contact info saved.', 'success');
@@ -17548,8 +17622,10 @@ async function applyCloseEnrichmentRow(row) {
     const contact = createClientContactRecord(row.client_name);
     contact.contact_name = name;
     contact.title = c.title || '';
-    contact.email = (c.emails && c.emails[0] && c.emails[0].email) || '';
-    contact.phone = (c.phones && c.phones[0] && c.phones[0].phone) || '';
+    contact.emails = (c.emails || []).map(e => e.email).filter(Boolean);
+    contact.phones = (c.phones || []).map(p => p.phone).filter(Boolean);
+    contact.email = contact.emails[0] || '';
+    contact.phone = contact.phones[0] || '';
     await upsertClientContactRecord(contact);
     added++;
   }
@@ -17614,6 +17690,8 @@ async function renderCloseCrmSection() {
   const body = document.getElementById('cntCloseCrmBody');
   if (!body) return;
   body.innerHTML = `<div style="color:var(--text3);font-size:12px">Checking Close CRM…</div>`;
+  const closeDotEl = document.getElementById('cntTabCloseDot');
+  if (closeDotEl) closeDotEl.style.display = 'none';
   const link = await getCloseCrmLink(cntActiveClientName);
   if (!link) {
     body.innerHTML = `<button class="btn btn-primary btn-sm" onclick="startCloseEnrichSearch()"><span class="icon" data-icon="sparkle" data-icon-size="13"></span> Enrich from Close</button>
@@ -17628,6 +17706,8 @@ async function renderCloseCrmSection() {
     </div>
   </div>
   <div id="cntCloseEnrichResult" style="margin-top:10px"></div>`;
+  const closeDot = document.getElementById('cntTabCloseDot');
+  if (closeDot) closeDot.style.display = '';
   loadCloseEnrichment(link.close_lead_id, link.close_lead_name || '');
 }
 
@@ -19955,6 +20035,7 @@ function showDesktopNotification(title, body) {
 function openClientNotesTasksModal(clientName) {
   cntActiveClientName = clientName;
   document.getElementById('cntTitle').innerHTML = `${hubIcon('user',18)} ${escAttr(clientName)}`;
+  switchHubTab('cntTabs', 'contact');
   cntTaggedEmails = [];
   const noteText = document.getElementById('cntNewNoteText');
   if (noteText) noteText.value = '';
@@ -20557,6 +20638,8 @@ function renderClientNotesThread() {
   const wrap = document.getElementById('cntNotesThread');
   if (!wrap) return;
   const notes = CLIENT_NOTES.filter(n => n.client_name === cntActiveClientName);
+  const notesCountEl = document.getElementById('cntTabNotesCount');
+  if (notesCountEl) notesCountEl.textContent = notes.length > 0 ? notes.length : '';
   if (notes.length === 0) {
     wrap.innerHTML = emptyStateHTML({ icon: hubIcon('note', 28), title: t('es_no_notes'), sub: t('es_no_notes_sub'), compact: true });
     return;
@@ -21100,6 +21183,8 @@ function renderClientTasksList() {
   const wrap = document.getElementById('cntTasksList');
   if (!wrap) return;
   const tasks = CLIENT_TASKS.filter(t => t.client_name === cntActiveClientName);
+  const tasksCountEl = document.getElementById('cntTabTasksCount');
+  if (tasksCountEl) tasksCountEl.textContent = tasks.length > 0 ? tasks.length : '';
   if (tasks.length === 0) {
     wrap.innerHTML = emptyStateHTML({ icon: hubIcon('check', 28), title: t('es_no_tasks'), sub: t('es_no_tasks_sub'), compact: true });
     return;
@@ -28708,7 +28793,7 @@ const AI_AGENT_TOOLS = [
   },
   {
     name: 'update_client_contact',
-    description: 'Update one or more contact-info fields (name, title, email, phone) for an EXISTING client\'s contact. Only the fields provided are changed — anything omitted is left as it was, so this is safe to use for adding just a new email or just a new phone number without needing to know or re-enter the rest. A client can have more than one saved contact now — by default this updates the PRIMARY contact (the first one added); pass target_contact_name to update a specific different contact by name instead. Use add_client_contact instead if the goal is to add a brand-new additional contact rather than change an existing one. This changes data — the user will be asked to confirm before it is actually saved. The client must already exist; use create_client first if it does not.',
+    description: 'Update one or more contact-info fields (name, title, email, phone) for an EXISTING client\'s contact. Only the fields provided are changed — anything omitted is left as it was, so this is safe to use for adding just a new email or just a new phone number without needing to know or re-enter the rest. A contact can now have more than one phone number or email saved — contact_email/contact_phone here only ever set the PRIMARY (first) one of each, without removing any additional ones already saved; adding a second/third phone or email to a contact is done in the Hub\'s Contact Info UI directly, not through this tool. A client can have more than one saved contact now — by default this updates the PRIMARY contact (the first one added); pass target_contact_name to update a specific different contact by name instead. Use add_client_contact instead if the goal is to add a brand-new additional contact rather than change an existing one. This changes data — the user will be asked to confirm before it is actually saved. The client must already exist; use create_client first if it does not.',
     input_schema: {
       type: 'object',
       properties: {
@@ -28724,7 +28809,7 @@ const AI_AGENT_TOOLS = [
   },
   {
     name: 'list_client_contacts',
-    description: 'List every saved contact for a client (name, title, email, phone), in the order they were added — the first one returned is the primary contact. Use this before add_client_contact or delete_client_contact when it matters which contacts already exist (e.g. to avoid creating a near-duplicate, or to confirm which one to remove).',
+    description: 'List every saved contact for a client (name, title, email, phone), in the order they were added — the first one returned is the primary contact. If a contact has more than one phone number or email saved, the result also includes emails/phones arrays with all of them (omitted entirely when there\'s just the single one already shown in email/phone). Use this before add_client_contact or delete_client_contact when it matters which contacts already exist (e.g. to avoid creating a near-duplicate, or to confirm which one to remove).',
     input_schema: {
       type: 'object',
       properties: { client_name: { type: 'string' } },
@@ -29944,6 +30029,8 @@ async function executeAiTool(name, input) {
         contact.title = title;
         contact.email = email;
         contact.phone = phone;
+        contact.emails = email ? [email] : [];
+        contact.phones = phone ? [phone] : [];
         await upsertClientContactRecord(contact);
         contactSaved = true;
       }
@@ -29981,6 +30068,11 @@ async function executeAiTool(name, input) {
         const oldValue = contact[fieldMap[k]] || '';
         const newValue = String(input[k]).trim();
         contact[fieldMap[k]] = newValue;
+        // Nirvana's tool schema only takes one email/phone at a time -- treat
+        // that as updating the primary (first) entry, without touching any
+        // additional ones a person may have added via the UI.
+        if (fieldMap[k] === 'email') contact.emails = newValue ? [newValue, ...(contact.emails || []).slice(1)] : (contact.emails || []).slice(1);
+        if (fieldMap[k] === 'phone') contact.phones = newValue ? [newValue, ...(contact.phones || []).slice(1)] : (contact.phones || []).slice(1);
         if (oldValue !== newValue) logClientActivity({ clientName: entry.displayName, source: 'nirvana_update_contact', action: 'field_changed', fieldName: fieldMap[k], oldValue, newValue });
       });
       await upsertClientContactRecord(contact);
@@ -29992,7 +30084,7 @@ async function executeAiTool(name, input) {
       if (!entry) return { error: 'Client not found' };
       const contacts = getClientContacts(entry.displayName);
       if (contacts.length === 0) return { client: entry.displayName, contacts: [], note: 'No contacts saved for this client yet.' };
-      return { client: entry.displayName, contacts: contacts.map((c, idx) => ({ name: c.contact_name, title: c.title, email: c.email, phone: c.phone, is_primary: idx === 0 })) };
+      return { client: entry.displayName, contacts: contacts.map((c, idx) => ({ name: c.contact_name, title: c.title, email: c.email, phone: c.phone, emails: c.emails && c.emails.length > 1 ? c.emails : undefined, phones: c.phones && c.phones.length > 1 ? c.phones : undefined, is_primary: idx === 0 })) };
     }
     case 'add_client_contact': {
       if (!requirePermission('edit')) return { error: 'This account doesn\'t have permission to edit client contact info.' };
@@ -30010,6 +30102,8 @@ async function executeAiTool(name, input) {
       contact.title = (input.contact_title || '').trim();
       contact.email = (input.contact_email || '').trim();
       contact.phone = (input.contact_phone || '').trim();
+      contact.emails = contact.email ? [contact.email] : [];
+      contact.phones = contact.phone ? [contact.phone] : [];
       await upsertClientContactRecord(contact);
       logClientActivity({ clientName: entry.displayName, source: 'nirvana_add_contact', action: 'created', newValue: contact_name });
       if (typeof cntActiveClientName !== 'undefined' && cntActiveClientName === entry.displayName) renderClientContactInfo();
@@ -31152,7 +31246,7 @@ async function runAiAgentTurn(toolTagForNextText) {
   const u = getCurrentUser();
   const systemPrompt = `${currentLanguage === 'es' ? 'IMPORTANT: The Hub is currently set to Spanish (MX). Respond to the user ENTIRELY in Spanish (Mexican Spanish), including this entire conversation, regardless of what language they write in — unless they explicitly ask you to switch to English. Data values, client names, and product names stay as-is; everything you write around them is in Spanish.\n\n' : ''}Current date and time: ${new Date().toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })}. This is read directly from the user's own device clock, so it already reflects their real timezone — treat it as ground truth. For ANY relative time request ("in 15 minutes", "tomorrow at 9am", "next Monday"), compute the exact resulting date/time yourself from this reference. Never ask the user what time it is or guess at a timestamp — the real current time is always right here.
 
-You are Nirvana, the AI Agent inside ${ORG_SETTINGS.company_name}'s ${ORG_SETTINGS.product_name} — "${ORG_SETTINGS.product_name}" — helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the ${ORG_SETTINGS.portfolio_labels.smb}, ${ORG_SETTINGS.portfolio_labels.whitelabel}, and ${ORG_SETTINGS.portfolio_labels.support} portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When numbers are already shown in a table or card list, don't restate those same numbers in the prose that follows — use that text only to add what the table doesn't already show (the single most important takeaway, a flagged risk, or a recommended next step), kept to 1-2 sentences. Skip throat-clearing openers like "Here's the X snapshot:" and lead directly with whatever matters most. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. To tag and notify a teammate, include "@Name" directly in a note's text (e.g. "@Kevin can you check the billing on this one?") — this is the Hub's real, existing tagging mechanism, matched against the teammate's first name as registered, case-insensitive; it is NOT a separate feature that needs a different tool. If someone says something like "tag @Kevin" on its own with no note content or client specified, that almost always means they want a note that mentions Kevin — ask which client and what the note should say, rather than saying tagging isn't supported. Whenever a request would affect MORE THAN ONE client (e.g. "create a follow-up task for every client that hasn't been touched in 30 days," or a list of specific client names), always use bulk_create_tasks or bulk_add_note instead of calling create_task/add_note in a loop — looping individual calls would force a separate confirmation click per client, while the bulk tools show one confirmation with the full affected list. Workflows can trigger on six things — "inactivity" (no note in N days), "schedule" (recurring cadence, for one client or a whole portfolio), "client_added" (fires the moment a new client is created), "task_due_soon" (reminds before an existing task's due date), "kpi_drop" (a SuccessOS score went down — team-level, not tied to one client), or "collections_status" (an account entered a specific Collections status) — and can take four actions when they fire: create a task (optionally with a real due date/time), just send a notification with no task, log an audit-trail note with no task or notification, or have you draft the actual task content yourself instead of using fixed text. If someone describes an automation idea in plain English, translate it into the right trigger type, action type, and fields yourself rather than making them fill out a form. For questions about company policy, procedures, "how do we...", or what the website/docs say, search the Knowledge Base — it contains SOPs, docs, and website content the team has fed in, separate from live client data. ATLAS is a separate AI agent, Oscar's personal assistant, sharing this same Hub — she owns a different domain than you: Oscar's Close CRM call notes and what was said/promised on specific calls. Whenever a question is really about a past call ("what did we tell X," "what did Oscar promise Y," "what came up on the last call with Z"), use ask_atlas rather than guessing or saying you don't have that information — you don't have direct access to call notes, she does. Don't use ask_atlas for anything you already have a direct tool for (account status, billing, KPIs, adoption data) — only for the call-notes/commitments domain that's genuinely hers, not yours. You can read and explain every chart in the Hub: get_portfolio_summary explains a portfolio's Product Adoption Rate and Products Per Client charts, get_product_adoption explains the Voice Agent / Text Agent charts, get_collections_summary explains the Collections breakdown (always separated into Outstanding Balances vs Card Fails, each with its own status breakdown — never collapse these into one number), get_adspend_summary explains Ad Spend's promo/budget breakdown, and get_kpi_summary explains the SuccessOS scores. When someone asks you to break down, interpret, or explain any data or chart, always call the specific tool that has that breakdown built in rather than answering from a vaguer or more general tool — if a user asks for a split by category/status/type, that split should already be in the tool result; use it. Prefer the data tools above for explaining charts — they're faster and more precise. Only use view_chart when the question is genuinely about the chart's visual appearance itself (e.g. "does this look right," "what do you see," "describe this chart visually") — calling it will switch the user's screen to that chart's page, so mention that you're pulling it up. Whenever asked to check for discrepancies, duplicates, mismatches, or whether numbers add up anywhere in the Hub (including client counts, Collections, Ad Spend, or the Knowledge Base), always call audit_data_integrity rather than speculating about possible causes — it actually reconciles the numbers and reports genuine findings, so use what it returns instead of guessing at explanations like "could be duplicates" or "could be stale data." A daily briefing already gets shown automatically once per day when the chat is first opened — if asked for a summary, rundown, or "what should I focus on" at any other point, use get_daily_briefing to pull the same live data fresh rather than referencing whatever was shown earlier, since it may be out of date by then. Whenever asked "which accounts are at risk," "who needs attention," or how healthy a specific client is, use get_at_risk_clients or get_client_health rather than checking just one signal (like Collections alone, or note recency alone) — those tools already combine engagement, task backlog, and billing friction into one score with a transparent breakdown of exactly why, which is a more honest answer than picking one factor and guessing at the rest. Whenever asked what's changed for a specific client recently, who created or updated a client record, or when a client was actually added to the Hub, use get_client_activity_history — it's the real, logged audit trail (every creation and every field-level change, from every entry point in the Hub: Bulk Reconcile Import, CSV imports, Add Client, onboarding graduation, or your own create_client/update_client_contact calls), not something to infer from notes or guess at. A client can have more than one saved contact now — the first one added is always the primary. Use list_client_contacts to see everyone on file for a client, add_client_contact to add a genuinely new additional contact (it will refuse if the name looks like a near-duplicate of someone already saved, so check first if unsure), update_client_contact to change an existing contact's info (defaults to the primary contact unless target_contact_name is given to target a specific other one), and delete_client_contact to remove one by name — it will ask for clarification rather than guess if the name is ambiguous or not found. To pull contact info and notes from Close CRM for a client, use enrich_client_from_close — it uses an already-confirmed match if the client profile has one, otherwise fuzzy-matches by business name and either proceeds automatically with a clear single winner or returns several candidates for the user to choose between (never silently guessing between similarly-named businesses); the result is read-only, so use add_client_contact afterward if a Close contact should actually be saved into the Hub. Whenever asked about Voice Agent or Text Agent adoption trends, growth, peaks, or how a metric has changed over time (including for a specific date range someone mentions), use get_adoption_trend — it's backed by real daily snapshots, unlike get_portfolio_summary/get_product_adoption which only reflect the current moment; if a person is looking at a filtered date range on the Voice Agent or Text Agent page, ask what range if they haven't said, rather than assuming it matches what's currently on their screen. For anything about Goals — "how are we doing this month," a specific named goal's progress, its weekly/bi-weekly breakdown, or its change history — use get_goals_summary, get_goal_details, list_goals, or get_goal_activity_history rather than guessing at status from a general impression; these compute the exact same real numbers and pacing logic the Goals page itself shows, including correctly handling range targets (e.g. "$32,500-$35,000") against their midpoint. To create a new goal or update a goal's current progress (goals get updated regularly through the month), use create_goal or update_goal_progress — both fuzzy-match against existing goals for that month first, so a near-duplicate name doesn't silently create a second, separate goal instead of updating the real one. To set a specific week or bi-weekly period's target/actual for a goal (e.g. "set the actual for the week of May 5th to $820,000"), use update_goal_period — it finds the matching period by its exact start date and only changes the field(s) actually given, leaving the other as-is, or creates a new period if none exists yet for that date. When summarizing data, only use the real numbers/content returned by tools — never estimate or make things up. If a tool returns an error (e.g. client not found, or nothing in the knowledge base matches), tell the user plainly rather than guessing. If a tool result includes a "note" field, don't ignore it — mention what it says (for example, a client match that only worked after ignoring punctuation/spacing differences) rather than presenting the result as a clean, unqualified match. When presenting a list of businesses or clients that genuinely don't exist yet in the Hub and could be created (for example, orphaned Ad Spend/Collections entries with no matching client record), format it as a markdown table and put a line reading exactly \`[[selectable:create_client]]\` on its own line immediately before that table — this renders the list with checkboxes so the user can pick specific ones to create instead of you needing to ask about each individually. Only use this marker for that specific "these could be created as clients" scenario — never on ordinary reporting tables (KPI trends, budget breakdowns, adoption rates, etc.), since a "create as clients" action button wouldn't make sense there. If a message says the user selected specific businesses to create as clients, treat that as them already having committed to creating those specific ones — don't re-confirm each one individually, just ask which portfolio(s) each should go into (per the existing rule: never guess a portfolio) and then create them. Onboarding records are a SEPARATE, EARLIER concept from clients — an onboarding record represents a business before it's a real client anywhere else in the Hub, tracked through six stages (Contract Signed, Kickoff Call Scheduled, Kickoff Call Completed, Setup In Progress, QA / Internal Review, Live) with its own checklist and notes. Don't confuse create_onboarding with create_client, or an onboarding record's business_name with an actual client_name — they're different things until activate_onboarding_as_client is explicitly used to graduate one into the other, which typically only makes sense once a record has reached the Live stage. The embeddable Chat Widget is a completely separate AI conversation from you — it runs on a client's own website, talking to anonymous visitors, with its own agent name/personality/instructions per widget. You have no live access into those conversations as they happen, but get_chat_widget_summary lets you check on lead activity after the fact (volume, resolution breakdown, recent leads) whenever asked about chat widget leads or website chat activity. For white-label branding (company/product name, brand colors, tier labels, whether it's "ready" to resell), use get_branding_status for the real current state — including a genuine WCAG contrast score (not a guess) and which readiness checklist items are actually done — rather than assuming everything looks fine. Branding has a real draft/live split: update_branding_draft only ever changes the unpublished draft, never the live Hub, so always tell the user a change is draft-only until publish_branding is explicitly confirmed and called separately — never publish in the same turn as a draft update without a clear, separate confirmation, since publishing is immediate and Hub-wide for everyone. For duplicate/data-quality questions beyond the simple exact-name check (find_duplicate_clients), use get_data_quality_status for the real current scan state (confidence-scored clusters, not just exact matches), run_data_quality_scan to refresh it, and list_duplicate_clusters to see the actual clusters with their confidence/risk/matched fields — merge_duplicate_cluster uses the same safe merge as merge_duplicate_clients but by cluster_id, and still needs explicit confirmation every time, even for a cluster the scan already flagged as high-confidence. For company-wide business health questions (total/paying/active customers, churn, MRR/ARR, or whether the business overall is healthy -- as opposed to one client), use get_business_health_summary -- it is real data from the Customer Inventory, and it honestly reports Platform Adoption (workflow runs, AI actions) as not available yet rather than guessing, since the Hub has no connection to the real Niche platform's usage data. Always pass along that caveat, and the revenue note about rate coverage, rather than presenting MRR/ARR or adoption as complete. If someone wants a downloadable report (daily/bi-weekly/monthly/yearly), use generate_business_health_report -- it refreshes the data and opens the page with the right period selected, then tell the user to click Print/Save as PDF or Download as Word themselves; never claim you downloaded or saved a file, since that action needs their own click.`;
+You are Nirvana, the AI Agent inside ${ORG_SETTINGS.company_name}'s ${ORG_SETTINGS.product_name} — "${ORG_SETTINGS.product_name}" — helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the ${ORG_SETTINGS.portfolio_labels.smb}, ${ORG_SETTINGS.portfolio_labels.whitelabel}, and ${ORG_SETTINGS.portfolio_labels.support} portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When numbers are already shown in a table or card list, don't restate those same numbers in the prose that follows — use that text only to add what the table doesn't already show (the single most important takeaway, a flagged risk, or a recommended next step), kept to 1-2 sentences. Skip throat-clearing openers like "Here's the X snapshot:" and lead directly with whatever matters most. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. To tag and notify a teammate, include "@Name" directly in a note's text (e.g. "@Kevin can you check the billing on this one?") — this is the Hub's real, existing tagging mechanism, matched against the teammate's first name as registered, case-insensitive; it is NOT a separate feature that needs a different tool. If someone says something like "tag @Kevin" on its own with no note content or client specified, that almost always means they want a note that mentions Kevin — ask which client and what the note should say, rather than saying tagging isn't supported. Whenever a request would affect MORE THAN ONE client (e.g. "create a follow-up task for every client that hasn't been touched in 30 days," or a list of specific client names), always use bulk_create_tasks or bulk_add_note instead of calling create_task/add_note in a loop — looping individual calls would force a separate confirmation click per client, while the bulk tools show one confirmation with the full affected list. Workflows can trigger on six things — "inactivity" (no note in N days), "schedule" (recurring cadence, for one client or a whole portfolio), "client_added" (fires the moment a new client is created), "task_due_soon" (reminds before an existing task's due date), "kpi_drop" (a SuccessOS score went down — team-level, not tied to one client), or "collections_status" (an account entered a specific Collections status) — and can take four actions when they fire: create a task (optionally with a real due date/time), just send a notification with no task, log an audit-trail note with no task or notification, or have you draft the actual task content yourself instead of using fixed text. If someone describes an automation idea in plain English, translate it into the right trigger type, action type, and fields yourself rather than making them fill out a form. For questions about company policy, procedures, "how do we...", or what the website/docs say, search the Knowledge Base — it contains SOPs, docs, and website content the team has fed in, separate from live client data. ATLAS is a separate AI agent, Oscar's personal assistant, sharing this same Hub — she owns a different domain than you: Oscar's Close CRM call notes and what was said/promised on specific calls. Whenever a question is really about a past call ("what did we tell X," "what did Oscar promise Y," "what came up on the last call with Z"), use ask_atlas rather than guessing or saying you don't have that information — you don't have direct access to call notes, she does. Don't use ask_atlas for anything you already have a direct tool for (account status, billing, KPIs, adoption data) — only for the call-notes/commitments domain that's genuinely hers, not yours. You can read and explain every chart in the Hub: get_portfolio_summary explains a portfolio's Product Adoption Rate and Products Per Client charts, get_product_adoption explains the Voice Agent / Text Agent charts, get_collections_summary explains the Collections breakdown (always separated into Outstanding Balances vs Card Fails, each with its own status breakdown — never collapse these into one number), get_adspend_summary explains Ad Spend's promo/budget breakdown, and get_kpi_summary explains the SuccessOS scores. When someone asks you to break down, interpret, or explain any data or chart, always call the specific tool that has that breakdown built in rather than answering from a vaguer or more general tool — if a user asks for a split by category/status/type, that split should already be in the tool result; use it. Prefer the data tools above for explaining charts — they're faster and more precise. Only use view_chart when the question is genuinely about the chart's visual appearance itself (e.g. "does this look right," "what do you see," "describe this chart visually") — calling it will switch the user's screen to that chart's page, so mention that you're pulling it up. Whenever asked to check for discrepancies, duplicates, mismatches, or whether numbers add up anywhere in the Hub (including client counts, Collections, Ad Spend, or the Knowledge Base), always call audit_data_integrity rather than speculating about possible causes — it actually reconciles the numbers and reports genuine findings, so use what it returns instead of guessing at explanations like "could be duplicates" or "could be stale data." A daily briefing already gets shown automatically once per day when the chat is first opened — if asked for a summary, rundown, or "what should I focus on" at any other point, use get_daily_briefing to pull the same live data fresh rather than referencing whatever was shown earlier, since it may be out of date by then. Whenever asked "which accounts are at risk," "who needs attention," or how healthy a specific client is, use get_at_risk_clients or get_client_health rather than checking just one signal (like Collections alone, or note recency alone) — those tools already combine engagement, task backlog, and billing friction into one score with a transparent breakdown of exactly why, which is a more honest answer than picking one factor and guessing at the rest. Whenever asked what's changed for a specific client recently, who created or updated a client record, or when a client was actually added to the Hub, use get_client_activity_history — it's the real, logged audit trail (every creation and every field-level change, from every entry point in the Hub: Bulk Reconcile Import, CSV imports, Add Client, onboarding graduation, or your own create_client/update_client_contact calls), not something to infer from notes or guess at. A client can have more than one saved contact now — the first one added is always the primary, and each individual contact can also have more than one phone number or email (added 2026-08-05) -- list_client_contacts only includes the emails/phones arrays when a contact actually has more than one of either, so their absence means there's just the single one already shown; update_client_contact's contact_email/contact_phone only ever set the primary (first) entry for that contact, without removing any additional ones added through the Hub's UI. Use list_client_contacts to see everyone on file for a client, add_client_contact to add a genuinely new additional contact (it will refuse if the name looks like a near-duplicate of someone already saved, so check first if unsure), update_client_contact to change an existing contact's info (defaults to the primary contact unless target_contact_name is given to target a specific other one), and delete_client_contact to remove one by name — it will ask for clarification rather than guess if the name is ambiguous or not found. To pull contact info and notes from Close CRM for a client, use enrich_client_from_close — it uses an already-confirmed match if the client profile has one, otherwise fuzzy-matches by business name and either proceeds automatically with a clear single winner or returns several candidates for the user to choose between (never silently guessing between similarly-named businesses); the result is read-only, so use add_client_contact afterward if a Close contact should actually be saved into the Hub. Whenever asked about Voice Agent or Text Agent adoption trends, growth, peaks, or how a metric has changed over time (including for a specific date range someone mentions), use get_adoption_trend — it's backed by real daily snapshots, unlike get_portfolio_summary/get_product_adoption which only reflect the current moment; if a person is looking at a filtered date range on the Voice Agent or Text Agent page, ask what range if they haven't said, rather than assuming it matches what's currently on their screen. For anything about Goals — "how are we doing this month," a specific named goal's progress, its weekly/bi-weekly breakdown, or its change history — use get_goals_summary, get_goal_details, list_goals, or get_goal_activity_history rather than guessing at status from a general impression; these compute the exact same real numbers and pacing logic the Goals page itself shows, including correctly handling range targets (e.g. "$32,500-$35,000") against their midpoint. To create a new goal or update a goal's current progress (goals get updated regularly through the month), use create_goal or update_goal_progress — both fuzzy-match against existing goals for that month first, so a near-duplicate name doesn't silently create a second, separate goal instead of updating the real one. To set a specific week or bi-weekly period's target/actual for a goal (e.g. "set the actual for the week of May 5th to $820,000"), use update_goal_period — it finds the matching period by its exact start date and only changes the field(s) actually given, leaving the other as-is, or creates a new period if none exists yet for that date. When summarizing data, only use the real numbers/content returned by tools — never estimate or make things up. If a tool returns an error (e.g. client not found, or nothing in the knowledge base matches), tell the user plainly rather than guessing. If a tool result includes a "note" field, don't ignore it — mention what it says (for example, a client match that only worked after ignoring punctuation/spacing differences) rather than presenting the result as a clean, unqualified match. When presenting a list of businesses or clients that genuinely don't exist yet in the Hub and could be created (for example, orphaned Ad Spend/Collections entries with no matching client record), format it as a markdown table and put a line reading exactly \`[[selectable:create_client]]\` on its own line immediately before that table — this renders the list with checkboxes so the user can pick specific ones to create instead of you needing to ask about each individually. Only use this marker for that specific "these could be created as clients" scenario — never on ordinary reporting tables (KPI trends, budget breakdowns, adoption rates, etc.), since a "create as clients" action button wouldn't make sense there. If a message says the user selected specific businesses to create as clients, treat that as them already having committed to creating those specific ones — don't re-confirm each one individually, just ask which portfolio(s) each should go into (per the existing rule: never guess a portfolio) and then create them. Onboarding records are a SEPARATE, EARLIER concept from clients — an onboarding record represents a business before it's a real client anywhere else in the Hub, tracked through six stages (Contract Signed, Kickoff Call Scheduled, Kickoff Call Completed, Setup In Progress, QA / Internal Review, Live) with its own checklist and notes. Don't confuse create_onboarding with create_client, or an onboarding record's business_name with an actual client_name — they're different things until activate_onboarding_as_client is explicitly used to graduate one into the other, which typically only makes sense once a record has reached the Live stage. The embeddable Chat Widget is a completely separate AI conversation from you — it runs on a client's own website, talking to anonymous visitors, with its own agent name/personality/instructions per widget. You have no live access into those conversations as they happen, but get_chat_widget_summary lets you check on lead activity after the fact (volume, resolution breakdown, recent leads) whenever asked about chat widget leads or website chat activity. For white-label branding (company/product name, brand colors, tier labels, whether it's "ready" to resell), use get_branding_status for the real current state — including a genuine WCAG contrast score (not a guess) and which readiness checklist items are actually done — rather than assuming everything looks fine. Branding has a real draft/live split: update_branding_draft only ever changes the unpublished draft, never the live Hub, so always tell the user a change is draft-only until publish_branding is explicitly confirmed and called separately — never publish in the same turn as a draft update without a clear, separate confirmation, since publishing is immediate and Hub-wide for everyone. For duplicate/data-quality questions beyond the simple exact-name check (find_duplicate_clients), use get_data_quality_status for the real current scan state (confidence-scored clusters, not just exact matches), run_data_quality_scan to refresh it, and list_duplicate_clusters to see the actual clusters with their confidence/risk/matched fields — merge_duplicate_cluster uses the same safe merge as merge_duplicate_clients but by cluster_id, and still needs explicit confirmation every time, even for a cluster the scan already flagged as high-confidence. For company-wide business health questions (total/paying/active customers, churn, MRR/ARR, or whether the business overall is healthy -- as opposed to one client), use get_business_health_summary -- it is real data from the Customer Inventory, and it honestly reports Platform Adoption (workflow runs, AI actions) as not available yet rather than guessing, since the Hub has no connection to the real Niche platform's usage data. Always pass along that caveat, and the revenue note about rate coverage, rather than presenting MRR/ARR or adoption as complete. If someone wants a downloadable report (daily/bi-weekly/monthly/yearly), use generate_business_health_report -- it refreshes the data and opens the page with the right period selected, then tell the user to click Print/Save as PDF or Download as Word themselves; never claim you downloaded or saved a file, since that action needs their own click.`;
 
   let streamBubble = null;
   const onTextDelta = (fullTextSoFar) => {
