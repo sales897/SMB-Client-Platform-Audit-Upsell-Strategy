@@ -24631,7 +24631,7 @@ async function saveClientsToSupabase(pk) {
     // duplicates going forward, since only one row per real client gets
     // rebuilt, but it's possible for a duplicate's OTHER independently-set
     // field to be lost in that consolidation.
-    const BH_FIELDS = ['customer_status', 'account_owner', 'billing_status', 'monthly_rate', 'plan', 'google_ads_management', 'trial_date', 'first_paid_date', 'last_billing_date', 'cancellation_date', 'created_at'];
+    const BH_FIELDS = ['customer_status', 'account_owner', 'billing_status', 'monthly_rate', 'plan', 'google_ads_management', 'pay_as_you_go', 'trial_date', 'first_paid_date', 'last_billing_date', 'cancellation_date', 'created_at'];
     let existingByName = new Map();
     let existingRows = [];
     try {
@@ -24653,8 +24653,19 @@ async function saveClientsToSupabase(pk) {
 
     const rows = clients.map(c => {
       const existing = existingByName.get(normName(c.name));
+      // Primary source: the fresh fetch above (authoritative, current as
+      // of moments ago). Fallback: whatever's already in the in-memory
+      // client object, which updateBhField() now keeps in sync with
+      // Customer Inventory edits (added 2026-08-06, same incident) --
+      // real redundancy, not just belt-and-suspenders for its own sake:
+      // if the fresh-fetch name lookup ever fails to find a match for any
+      // reason, this is what stands between a real value and it silently
+      // defaulting to blank.
       const carried = {};
-      if (existing) BH_FIELDS.forEach(f => { carried[f] = existing[f]; });
+      BH_FIELDS.forEach(f => {
+        if (existing && existing[f] != null) carried[f] = existing[f];
+        else if (c[f] != null) carried[f] = c[f];
+      });
       return {
         id: existing ? existing.id : (crypto.randomUUID ? crypto.randomUUID() : 'pc_' + Date.now() + Math.random().toString(16).slice(2)),
         portfolio: pk,
@@ -26218,6 +26229,21 @@ async function updateBhField(id, field, value) {
   row[field] = value;
   try { await sbPatch('portfolio_clients', `id=eq.${id}`, { [field]: value }); }
   catch (e) { row[field] = prev; showToast('Could not save: ' + e.message, 'error'); renderBhInventoryTable(); return; }
+  // Also mirror this change into PORTFOLIOS[pk].clients, the completely
+  // separate in-memory list saveClientsToSupabase() reads from on any
+  // directory-level edit (a product checkbox, renaming an org, etc.).
+  // Real incident 2026-08-06: BH_INVENTORY and PORTFOLIOS never synced
+  // with each other at all -- Customer Inventory edits persisted fine to
+  // Supabase, but the separate in-memory PORTFOLIOS list never learned
+  // about them. saveClientsToSupabase's fetch-fresh-before-rebuild carry-
+  // forward should already protect against this independently, but this
+  // closes the actual root divergence directly, as a second layer rather
+  // than relying on one mechanism alone.
+  const pClients = PORTFOLIOS[row.portfolio] && PORTFOLIOS[row.portfolio].clients;
+  if (pClients) {
+    const match = pClients.find(c => normName(c.name) === normName(row.name));
+    if (match) match[field] = value;
+  }
   // Update just this row's Total cell directly -- monthly_rate,
   // google_ads_management, and pay_as_you_go are the fields that actually
   // feed into it, but recomputing unconditionally here is cheap and keeps
