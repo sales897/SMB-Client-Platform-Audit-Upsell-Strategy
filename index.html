@@ -4154,14 +4154,14 @@ select.wfb-field-input { padding-right: 26px; }
   ════════════════════════════════════════════════════════════════════════ -->
   <div class="page" id="page-voice">
     <div class="hub-mini-grid" style="grid-template-columns:repeat(4,1fr)">
-    <div class="kpi kpi-theme-green kpi-clickable" onclick="openVoiceAgentClientListModal(true)" title="Click to see the actual client list">
+    <div class="kpi kpi-theme-green kpi-clickable" onclick="openProductClientListModal('voice_agent', true, 'Clients with Voice Agent')" title="Click to see the actual client list">
         <div class="kpi-icon"><span class="icon" data-icon="mic" data-icon-size="13"></span></div>
         <div class="kpi-val green" id="va-using">0</div>
         <div class="kpi-lbl" data-i18n="voice_using">Clients with Voice Agent</div>
         <div class="kpi-sub" id="va-using-pct">0% of all clients</div>
         <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 130 100 C 150 95, 160 80, 172 75 C 184 70, 190 50, 200 45 C 212 39, 220 20, 232 12"/><circle cx="172" cy="75"/><circle cx="200" cy="45"/><circle cx="232" cy="12" r="3"/><circle r="3"><animateMotion dur="2.6s" repeatCount="indefinite" path="M 130 100 C 150 95, 160 80, 172 75 C 184 70, 190 50, 200 45 C 212 39, 220 20, 232 12"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.9;1" dur="2.6s" repeatCount="indefinite"/></circle></svg>
       </div>
-    <div class="kpi kpi-theme-red kpi-clickable" onclick="openVoiceAgentClientListModal(false)" title="Click to see the actual client list">
+    <div class="kpi kpi-theme-red kpi-clickable" onclick="openProductClientListModal('voice_agent', false, 'Clients NOT on Voice Agent')" title="Click to see the actual client list">
         <div class="kpi-icon"><span class="icon" data-icon="download" data-icon-size="13"></span></div>
         <div class="kpi-val red" id="va-not-using">0</div>
         <div class="kpi-lbl" data-i18n="voice_not_using">Clients NOT on Voice Agent</div>
@@ -4315,21 +4315,21 @@ select.wfb-field-input { padding-right: 26px; }
   ════════════════════════════════════════════════════════════════════════ -->
   <div class="page" id="page-textagent">
     <div class="hub-mini-grid" style="grid-template-columns:repeat(5,1fr)">
-    <div class="kpi kpi-theme-blue">
+    <div class="kpi kpi-theme-blue kpi-clickable" onclick="openProductClientListModal('yelp', true, 'Using Yelp')" title="Click to see the actual client list">
         <div class="kpi-icon" id="ta-yelp-icon"><span class="icon" data-icon="star" data-icon-size="14"></span></div>
         <div class="kpi-val" id="ta-yelp">0</div>
         <div class="kpi-lbl" data-i18n="ta_using_yelp">Using Yelp</div>
         <div class="kpi-sub" data-i18n="cl_across_portfolios">Across all portfolios</div>
         <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><path d="M 130 100 C 150 95, 160 80, 172 75 C 184 70, 190 50, 200 45 C 212 39, 220 20, 232 12"/><circle cx="172" cy="75"/><circle cx="200" cy="45"/><circle cx="232" cy="12" r="3"/><circle r="3"><animateMotion dur="2.6s" repeatCount="indefinite" path="M 130 100 C 150 95, 160 80, 172 75 C 184 70, 190 50, 200 45 C 212 39, 220 20, 232 12"/><animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.08;0.9;1" dur="2.6s" repeatCount="indefinite"/></circle></svg>
       </div>
-    <div class="kpi kpi-theme-purple">
+    <div class="kpi kpi-theme-purple kpi-clickable" onclick="openProductClientListModal('google_lsa', true, 'Using Google LSA')" title="Click to see the actual client list">
         <div class="kpi-icon" id="ta-lsa-icon"><span class="icon" data-icon="search" data-icon-size="14"></span></div>
         <div class="kpi-val" id="ta-lsa">0</div>
         <div class="kpi-lbl" data-i18n="ta_using_lsa">Using Google LSA</div>
         <div class="kpi-sub" data-i18n="cl_across_portfolios">Across all portfolios</div>
         <svg class="kpi-comet" viewBox="0 0 240 120" preserveAspectRatio="none" aria-hidden="true"><line x1="148" y1="92" x2="188" y2="52"/><line x1="188" y1="52" x2="226" y2="70"/><line x1="188" y1="52" x2="212" y2="18"/><line x1="148" y1="92" x2="198" y2="102"/><circle class="mesh-node" cx="148" cy="92" r="2.2" style="animation-delay:0s"/><circle class="mesh-node" cx="188" cy="52" r="3" style="animation-delay:.3s"/><circle class="mesh-node" cx="226" cy="70" r="2.2" style="animation-delay:.6s"/><circle class="mesh-node" cx="212" cy="18" r="2.2" style="animation-delay:.9s"/><circle class="mesh-node" cx="198" cy="102" r="2" style="animation-delay:1.2s"/></svg>
       </div>
-    <div class="kpi kpi-theme-green">
+    <div class="kpi kpi-theme-green kpi-clickable" onclick="openProductClientListModal('thumbtack', true, 'Using Thumbtack')" title="Click to see the actual client list">
         <div class="kpi-icon" id="ta-thumbtack-icon"><span class="icon" data-icon="pin" data-icon-size="13"></span></div>
         <div class="kpi-val" id="ta-thumbtack">0</div>
         <div class="kpi-lbl" data-i18n="ta_using_thumbtack">Using Thumbtack</div>
@@ -9957,17 +9957,18 @@ function rebuildVoicePage() {
   loadVoiceAgentInsights();
 }
 
-// ─── Voice Agent adoption KPI drill-down (added 2026-08-06) ────────────────
-// Clicking "Clients with Voice Agent" / "Clients NOT on Voice Agent" opens
-// the actual client list behind that count, instead of leaving the number
-// as a dead end. Reuses the exact same getAllClientsWithPortfolio() data
-// rebuildVoicePage() already computes the counts from, so the list can
-// never disagree with the KPI card that opened it.
+// ─── Product adoption KPI drill-down (added 2026-08-05, generalized same
+// week to cover any product, not just Voice Agent) ─────────────────────────
+// Clicking an adoption KPI card (Voice Agent, Yelp, Google LSA, Thumbtack,
+// etc.) opens the actual client list behind that count, instead of leaving
+// the number as a dead end. Reuses the exact same getAllClientsWithPortfolio()
+// data the KPI counts themselves are computed from, so the list can never
+// disagree with the number that opened it.
 let vaClientListFilterData = [];
-function openVoiceAgentClientListModal(usingVoiceAgent) {
+function openProductClientListModal(productKey, using, label) {
   const all = getAllClientsWithPortfolio();
-  vaClientListFilterData = all.filter(x => !!x.client.voice_agent === !!usingVoiceAgent).sort((a, b) => a.client.name.localeCompare(b.client.name));
-  document.getElementById('vaClientListTitleText').textContent = usingVoiceAgent ? `Clients with Voice Agent (${vaClientListFilterData.length})` : `Clients NOT on Voice Agent (${vaClientListFilterData.length})`;
+  vaClientListFilterData = all.filter(x => !!x.client[productKey] === !!using).sort((a, b) => a.client.name.localeCompare(b.client.name));
+  document.getElementById('vaClientListTitleText').textContent = `${label} (${vaClientListFilterData.length})`;
   document.getElementById('vaClientListSearch').value = '';
   renderVoiceAgentClientList();
   document.getElementById('voiceAgentClientListModal').classList.add('open');
