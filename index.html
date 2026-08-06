@@ -2030,6 +2030,11 @@ tr.pg-hidden-row { display: none; }
 .import-summary .stat { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 16px; text-align: center; }
 .import-summary .stat b { display: block; font-size: 20px; color: var(--orange); }
 .import-summary .stat span { font-size: var(--font-2xs); color: var(--text3); text-transform: uppercase; letter-spacing: .03em; }
+.voice-plan-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: var(--radius-pill); }
+.voice-plan-badge.plan-core { background: rgba(59,130,246,.14); color: #3b82f6; }
+.voice-plan-badge.plan-growth { background: var(--orange-dim); color: var(--orange); }
+.voice-plan-badge.plan-pro { background: rgba(34,197,94,.14); color: var(--green); }
+.voice-plan-badge.plan-scale { background: rgba(168,85,247,.14); color: #a855f7; }
 /* ─── ROLES / TEAM ─────────────────────────────────────────────────────── */
 .user-badge {
   display: flex; align-items: center; gap: 8px;
@@ -4191,6 +4196,7 @@ select.wfb-field-input { padding-right: 26px; }
     <div class="hub-tabs">
       <button class="hub-tab active" data-group="vaTabs" data-tab="records" onclick="switchHubTab('vaTabs','records')">Client Records</button>
       <button class="hub-tab" data-group="vaTabs" data-tab="insights" onclick="switchHubTab('vaTabs','insights')">Insights & Activity</button>
+      <button class="hub-tab" data-group="vaTabs" data-tab="usage" onclick="switchHubTab('vaTabs','usage');renderVoiceUsageTab()">Usage & Billing</button>
     </div>
 
     <div class="hub-tab-panel active" data-group="vaTabs" data-tab="records">
@@ -4259,6 +4265,42 @@ select.wfb-field-input { padding-right: 26px; }
           <div class="card-header"><div class="card-title"><span class="icon" data-icon="chart" data-icon-size="14"></span> Activity Feed</div></div>
           <div id="va-activity-feed"></div>
         </div>
+      </div>
+    </div>
+
+    <div class="hub-tab-panel" data-group="vaTabs" data-tab="usage">
+      <div class="card" style="width:100%;margin-bottom:var(--space-4)">
+        <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:4px">
+          <span style="font-size:28px;font-weight:700" id="vaUsageHeroCost">$0.00</span>
+          <span style="font-size:11px;color:var(--text3)" id="vaUsageHeroSub">total this period</span>
+        </div>
+        <div class="hub-mini-grid" style="grid-template-columns:repeat(4,1fr);margin-top:12px">
+          <div class="kpi" style="--kpi-accent:var(--orange)"><div class="kpi-lbl">Total Minutes</div><div class="kpi-val" id="vaUsageKpiMinutes">0</div></div>
+          <div class="kpi" style="--kpi-accent:var(--green)"><div class="kpi-lbl">Clients Tracked</div><div class="kpi-val" id="vaUsageKpiClients">0</div></div>
+          <div class="kpi" style="--kpi-accent:var(--blue)"><div class="kpi-lbl">Avg Cost / Client</div><div class="kpi-val" id="vaUsageKpiAvg">$0.00</div></div>
+          <div class="kpi" style="--kpi-accent:var(--purple)"><div class="kpi-lbl">Uploads on File</div><div class="kpi-val" id="vaUsageKpiUploads">0</div></div>
+        </div>
+      </div>
+
+      <div class="table-controls" style="align-items:center;margin-bottom:10px">
+        <select class="field-input" id="vaUsagePeriodSelect" style="width:auto;min-width:200px;height:34px;margin-bottom:0" onchange="handleVoiceUsagePeriodChange()"></select>
+        <div id="vaUsageCustomRangeRow" style="display:none;align-items:center;gap:6px">
+          <input type="date" class="field-input" id="vaUsageCustomStart" style="width:auto;height:34px;margin-bottom:0" onchange="renderVoiceUsageTab()">
+          <span style="color:var(--text3);font-size:11px">to</span>
+          <input type="date" class="field-input" id="vaUsageCustomEnd" style="width:auto;height:34px;margin-bottom:0" onchange="renderVoiceUsageTab()">
+        </div>
+        <button class="btn btn-ghost" style="height:34px" onclick="openVoiceRatesModal()"><span class="icon" data-icon="settings" data-icon-size="13"></span> Manage Rates</button>
+        <button class="btn btn-primary" style="height:34px;margin-left:auto" onclick="document.getElementById('vaUsageFileUpload').click()"><span class="icon" data-icon="upload" data-icon-size="13"></span> Upload New Sheet</button>
+        <input type="file" id="vaUsageFileUpload" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleVoiceUsageFileUpload(event)">
+      </div>
+
+      <div class="card" style="width:100%;margin-bottom:var(--space-4)">
+        <div id="vaUsageTableWrap" style="overflow-x:auto"></div>
+      </div>
+
+      <div class="card" style="width:100%">
+        <div class="card-header"><div class="card-title"><span class="icon" data-icon="clock" data-icon-size="14"></span> Upload History</div></div>
+        <div id="vaUsageUploadHistory"></div>
       </div>
     </div>
 
@@ -5680,6 +5722,68 @@ select.wfb-field-input { padding-right: 26px; }
       <div class="modal-btns">
         <button class="btn btn-ghost" onclick="backToAdSpendMapping()"><span data-i18n="btn_back">← Back</span></button>
         <button class="btn btn-primary" onclick="applyAdSpendImport()"><span data-i18n="btn_save_import">Save Import</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- VOICE AGENT USAGE: COLUMN MAPPING MODAL (step 1 of import) -->
+  <div class="modal-overlay" id="vaUsageMappingModal">
+    <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="vaUsageMappingModalTitle">
+      <h3 id="vaUsageMappingModalTitle"><span class="icon" data-icon="puzzle" data-icon-size="14"></span> Map Your Columns</h3>
+      <p id="vaMappingFileLabel">We auto-detected these columns from your file. Fix anything that looks wrong, then continue.</p>
+      <div class="modal-scroll">
+        <table class="map-table">
+          <thead><tr><th style="width:26%">Your Column</th><th style="width:20%">Sample Value</th><th style="width:54%">Maps To</th></tr></thead>
+          <tbody id="vaMappingTableBody"></tbody>
+        </table>
+      </div>
+      <div id="vaMappingWarning" style="font-size:11px;color:var(--red);margin-bottom:10px;display:none"><span class="icon" data-icon="alert" data-icon-size="16"></span> Pick a column for Business Name before continuing.</div>
+      <div style="background:var(--bg3);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:14px;border:1px solid var(--border)">
+        <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px">What period does this sheet cover?</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+          <div><label class="field-label">Label</label><input type="text" id="vaMappingPeriodLabel" class="field-input" style="height:34px" placeholder="e.g. August 2026"></div>
+          <div><label class="field-label">Start date</label><input type="date" id="vaMappingPeriodStart" class="field-input" style="height:34px"></div>
+          <div><label class="field-label">End date</label><input type="date" id="vaMappingPeriodEnd" class="field-input" style="height:34px"></div>
+        </div>
+      </div>
+      <div class="modal-btns">
+        <button class="btn btn-ghost" onclick="closeVoiceUsageMappingModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="confirmVoiceUsageMapping()">Continue →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- VOICE AGENT USAGE: REVIEW MODAL (step 2 of import) -->
+  <div class="modal-overlay" id="vaUsageReviewModal">
+    <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="vaUsageReviewModalTitle">
+      <h3 id="vaUsageReviewModalTitle"><span class="icon" data-icon="search" data-icon-size="14"></span> Review Import</h3>
+      <p id="vaReviewSummaryText">Here's what we found before saving.</p>
+      <div class="import-summary" id="vaReviewSummaryStats"></div>
+      <div id="vaReviewReplaceWarning" style="display:none;font-size:12px;color:var(--yellow);background:rgba(234,179,8,.1);border:1px solid rgba(234,179,8,.3);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:14px">
+        <span class="icon" data-icon="alert" data-icon-size="14"></span> <span id="vaReviewReplaceText"></span> Saving will replace that period's existing data with this upload.
+      </div>
+      <div id="vaReviewUnmappedPlans" style="display:none;font-size:12px;color:var(--text2);background:var(--bg3);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:14px;border:1px solid var(--border)"></div>
+      <div class="modal-btns">
+        <button class="btn btn-ghost" onclick="backToVoiceUsageMapping()">← Back</button>
+        <button class="btn btn-primary" onclick="applyVoiceUsageImport()">Save Import</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- VOICE AGENT: RATE CARD MODAL -->
+  <div class="modal-overlay" id="voiceRatesModal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="voiceRatesModalTitle">
+      <h3 id="voiceRatesModalTitle"><span class="icon" data-icon="settings" data-icon-size="14"></span> Voice Agent Rate Card</h3>
+      <p style="font-size:12px;color:var(--text2);margin-bottom:14px">Per-minute rate charged for each plan. Changing a rate here only affects future uploads — past months keep the rate that was actually charged at the time.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px">
+        <div><label class="field-label">Core ($/min)</label><input type="number" step="0.01" min="0" id="vaRateCore" class="field-input" style="height:36px"></div>
+        <div><label class="field-label">Growth ($/min)</label><input type="number" step="0.01" min="0" id="vaRateGrowth" class="field-input" style="height:36px"></div>
+        <div><label class="field-label">Pro ($/min)</label><input type="number" step="0.01" min="0" id="vaRatePro" class="field-input" style="height:36px"></div>
+        <div><label class="field-label">Scale</label><input type="text" class="field-input" style="height:36px" value="Custom per client" disabled></div>
+      </div>
+      <div class="modal-btns">
+        <button class="btn btn-ghost" onclick="closeVoiceRatesModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveVoiceRates()">Save</button>
       </div>
     </div>
   </div>
@@ -17687,6 +17791,464 @@ function applyAdSpendImport() {
   showUploadFeedback(`${fileName} → Ad Spend Management · ${parts.join(', ') || 'no changes'} · Saved`, false);
 
   closeAdSpendDuplicatesModal();
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// VOICE AGENT USAGE & BILLING (added 2026-08-05)
+// Monthly usage spreadsheets (Business, Plan, In/Out/Total Min, Status,
+// Note) uploaded and stored per-period in Supabase (voice_agent_usage),
+// with per-minute cost resolved at import time from the rate card
+// (org_settings.voice_agent_rates) -- so changing rates later never
+// silently rewrites what a past month was actually charged. Viewing is
+// open to everyone; uploading, editing a Scale client's custom rate, and
+// changing the rate card itself require Super user/Admin (matches this
+// table's RLS exactly -- see CSH_Schema_Reference.md).
+// ═══════════════════════════════════════════════════════════════════════
+let VOICE_USAGE_ROWS = [];
+let pendingVoiceUsageImport = null;
+let vaUsageSelectedRowId = null; // which row's rate is being inline-edited, if any
+
+async function loadVoiceAgentUsage() {
+  try {
+    VOICE_USAGE_ROWS = await sbSelect('voice_agent_usage', 'select=*&order=period_start.desc,client_name.asc');
+  } catch (e) {
+    console.warn('Could not load Voice Agent usage data:', e.message);
+    VOICE_USAGE_ROWS = [];
+  }
+}
+
+function voiceRateFor(plan) {
+  const rates = ORG_SETTINGS.voice_agent_rates || { core: 1.29, growth: 0.99, pro: 0.79 };
+  const key = String(plan || '').trim().toLowerCase();
+  if (key === 'core') return rates.core;
+  if (key === 'growth') return rates.growth;
+  if (key === 'pro') return rates.pro;
+  return 0; // Scale (or anything unrecognized) has no default -- entered per client after import
+}
+
+// ─── Import wizard: upload → map columns → review/period → save ───────────
+function guessVoiceUsageColumn(header) {
+  const h = normalizeHeader(header);
+  if (/business|client|company|^name$/.test(h)) return 'client_name';
+  if (/plan/.test(h)) return 'plan';
+  if (/^in.?min|inbound/.test(h)) return 'in_minutes';
+  if (/^out.?min|outbound/.test(h)) return 'out_minutes';
+  if (/total.?min/.test(h)) return 'total_minutes';
+  if (/status/.test(h)) return 'status_category';
+  if (/detail|note/.test(h)) return 'detail_note';
+  return '';
+}
+
+function handleVoiceUsageFileUpload(e) {
+  if (!requirePermission('upload')) { e.target.value = ''; return; }
+  const file = e.target.files[0];
+  if (!file) return;
+  const isCSV = /\.csv$/i.test(file.name);
+  const reader = new FileReader();
+  const inputEl = e.target;
+
+  reader.onload = function(ev) {
+    try {
+      let rows;
+      if (isCSV) rows = parseCSV(ev.target.result);
+      else {
+        const wb = XLSX.read(ev.target.result, { type: 'binary' });
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+      }
+      if (!rows || rows.length === 0) throw new Error('No data rows found in this file.');
+      startVoiceUsageImport(rows, file.name, inputEl);
+    } catch (err) {
+      showToast('Could not process file: ' + err.message, 'error');
+      inputEl.value = '';
+    }
+  };
+  reader.onerror = () => showToast('File read error', 'error');
+
+  if (isCSV) reader.readAsText(file);
+  else reader.readAsBinaryString(file);
+}
+
+// Defaults to the previous calendar month if today is early in the month
+// (uploads typically cover the month that just ended), otherwise the
+// current calendar month -- just a starting point, fully editable in the
+// mapping modal before saving.
+function suggestVoicePeriod() {
+  const now = new Date();
+  const useMonth = now.getDate() <= 7 ? now.getMonth() - 1 : now.getMonth();
+  const start = new Date(now.getFullYear(), useMonth, 1);
+  const end = new Date(now.getFullYear(), useMonth + 1, 0);
+  const label = start.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  return { label, start: start.toISOString().slice(0, 10), end: end.toISOString().slice(0, 10) };
+}
+
+function startVoiceUsageImport(rows, fileName, inputEl) {
+  const headers = Object.keys(rows[0]);
+  const mapping = {};
+  headers.forEach((h, i) => { mapping[i] = guessVoiceUsageColumn(h); });
+  pendingVoiceUsageImport = { fileName, rows, headers, mapping, inputEl, result: null };
+  renderVoiceUsageMappingModal();
+  const suggested = suggestVoicePeriod();
+  document.getElementById('vaMappingPeriodLabel').value = suggested.label;
+  document.getElementById('vaMappingPeriodStart').value = suggested.start;
+  document.getElementById('vaMappingPeriodEnd').value = suggested.end;
+  document.getElementById('vaUsageMappingModal').classList.add('open');
+}
+
+function renderVoiceUsageMappingModal() {
+  const { rows, headers, mapping, fileName } = pendingVoiceUsageImport;
+  document.getElementById('vaMappingFileLabel').innerHTML =
+    `<strong style="color:var(--text)">${fileName}</strong> → Voice Agent Usage · ${rows.length} row${rows.length === 1 ? '' : 's'} detected. Fix anything that looks wrong, then continue.`;
+  const options = (selected) => `
+    <option value="">— Ignore this column —</option>
+    <option value="client_name" ${selected === 'client_name' ? 'selected' : ''}>Business Name</option>
+    <option value="plan" ${selected === 'plan' ? 'selected' : ''}>Current Plan</option>
+    <option value="in_minutes" ${selected === 'in_minutes' ? 'selected' : ''}>In Minutes</option>
+    <option value="out_minutes" ${selected === 'out_minutes' ? 'selected' : ''}>Out Minutes</option>
+    <option value="total_minutes" ${selected === 'total_minutes' ? 'selected' : ''}>Total Minutes</option>
+    <option value="status_category" ${selected === 'status_category' ? 'selected' : ''}>Status Category</option>
+    <option value="detail_note" ${selected === 'detail_note' ? 'selected' : ''}>Detail / Note</option>`;
+  const body = document.getElementById('vaMappingTableBody');
+  body.innerHTML = headers.map((h, i) => {
+    const sample = String(rows[0][h] ?? '').slice(0, 40) || '—';
+    return `<tr>
+      <td class="col-header">${h}</td>
+      <td class="col-sample">${sample}</td>
+      <td><select id="va-mapping-${i}" data-idx="${i}" onchange="onVoiceUsageMappingChange(this)">${options(mapping[i])}</select></td>
+    </tr>`;
+  }).join('');
+  headers.forEach((h, i) => themifySelect(`va-mapping-${i}`, { fullWidth: true }));
+  document.getElementById('vaMappingWarning').style.display = 'none';
+}
+
+function onVoiceUsageMappingChange(sel) {
+  pendingVoiceUsageImport.mapping[sel.getAttribute('data-idx')] = sel.value;
+  document.getElementById('vaMappingWarning').style.display = 'none';
+}
+
+function closeVoiceUsageMappingModal() {
+  document.getElementById('vaUsageMappingModal').classList.remove('open');
+  if (pendingVoiceUsageImport && pendingVoiceUsageImport.inputEl) pendingVoiceUsageImport.inputEl.value = '';
+  pendingVoiceUsageImport = null;
+}
+
+function confirmVoiceUsageMapping() {
+  const { rows, headers, mapping } = pendingVoiceUsageImport;
+  if (!Object.values(mapping).includes('client_name')) {
+    document.getElementById('vaMappingWarning').style.display = 'block';
+    return;
+  }
+  const periodLabel = document.getElementById('vaMappingPeriodLabel').value.trim();
+  const periodStart = document.getElementById('vaMappingPeriodStart').value;
+  const periodEnd = document.getElementById('vaMappingPeriodEnd').value;
+  if (!periodLabel || !periodStart || !periodEnd) {
+    showToast('Fill in the period label and both dates before continuing.', 'warning');
+    return;
+  }
+
+  const built = rows.map(row => {
+    const rec = { client_name: '', plan: '', in_minutes: 0, out_minutes: 0, total_minutes: 0, status_category: '', detail_note: '' };
+    headers.forEach((h, i) => {
+      const target = mapping[i];
+      if (!target) return;
+      const val = row[h];
+      if (target === 'client_name') { if (!rec.client_name) rec.client_name = String(val ?? '').trim(); }
+      else if (target === 'plan') rec.plan = String(val ?? '').trim();
+      else if (target === 'in_minutes') rec.in_minutes = Number(String(val).replace(/[^0-9.-]/g, '')) || 0;
+      else if (target === 'out_minutes') rec.out_minutes = Number(String(val).replace(/[^0-9.-]/g, '')) || 0;
+      else if (target === 'total_minutes') rec.total_minutes = Number(String(val).replace(/[^0-9.-]/g, '')) || 0;
+      else if (target === 'status_category') rec.status_category = String(val ?? '').trim();
+      else if (target === 'detail_note') rec.detail_note = String(val ?? '').trim();
+    });
+    // If Total Minutes wasn't its own mapped column, derive it -- the
+    // source sheet usually has it, but this keeps the math right either way.
+    if (!rec.total_minutes) rec.total_minutes = rec.in_minutes + rec.out_minutes;
+    const rate = voiceRateFor(rec.plan);
+    rec.rate_per_minute = rate;
+    rec.cost = rec.total_minutes * rate;
+    return rec;
+  }).filter(r => r.client_name);
+
+  const existingForPeriod = VOICE_USAGE_ROWS.filter(r => r.period_label === periodLabel);
+
+  pendingVoiceUsageImport.result = { built, periodLabel, periodStart, periodEnd, existingForPeriod };
+  document.getElementById('vaUsageMappingModal').classList.remove('open');
+  renderVoiceUsageReview();
+  document.getElementById('vaUsageReviewModal').classList.add('open');
+}
+
+function renderVoiceUsageReview() {
+  const { fileName } = pendingVoiceUsageImport;
+  const { built, periodLabel, existingForPeriod } = pendingVoiceUsageImport.result;
+  document.getElementById('vaReviewSummaryText').innerHTML = `<strong style="color:var(--text)">${fileName}</strong> → Voice Agent Usage · <strong style="color:var(--text)">${escAttr(periodLabel)}</strong>. Review below, then save.`;
+
+  const totalMin = built.reduce((s, r) => s + r.total_minutes, 0);
+  const totalCost = built.reduce((s, r) => s + r.cost, 0);
+  const unresolvedRate = built.filter(r => r.rate_per_minute === 0).length;
+
+  document.getElementById('vaReviewSummaryStats').innerHTML = `
+    <div class="stat"><b>${built.length}</b><span>Rows Mapped</span></div>
+    <div class="stat"><b>${totalMin.toFixed(1)}</b><span>Total Minutes</span></div>
+    <div class="stat"><b>$${totalCost.toFixed(2)}</b><span>Computed Cost</span></div>
+    ${unresolvedRate ? `<div class="stat" style="border-color:var(--orange)"><b style="color:var(--orange)">${unresolvedRate}</b><span>No Rate Yet (Scale/unrecognized plan)</span></div>` : ''}
+  `;
+
+  const replaceWarning = document.getElementById('vaReviewReplaceWarning');
+  if (existingForPeriod.length > 0) {
+    replaceWarning.style.display = 'block';
+    document.getElementById('vaReviewReplaceText').textContent = `${escAttrPlain(periodLabel)} already has ${existingForPeriod.length} row${existingForPeriod.length === 1 ? '' : 's'} on file.`;
+  } else {
+    replaceWarning.style.display = 'none';
+  }
+
+  const unmappedBox = document.getElementById('vaReviewUnmappedPlans');
+  if (unresolvedRate > 0) {
+    const names = built.filter(r => r.rate_per_minute === 0).map(r => r.client_name).slice(0, 8).join(', ');
+    unmappedBox.style.display = 'block';
+    unmappedBox.innerHTML = `<strong style="color:var(--text)">${unresolvedRate} client${unresolvedRate === 1 ? '' : 's'}</strong> have a plan that doesn't match Core/Growth/Pro (likely Scale) — their rate defaults to $0 and their cost will show as $0 until you set a rate for them after saving: ${escAttr(names)}${built.filter(r => r.rate_per_minute === 0).length > 8 ? ', …' : ''}.`;
+  } else {
+    unmappedBox.style.display = 'none';
+  }
+}
+
+function escAttrPlain(s) { return String(s || ''); }
+
+function backToVoiceUsageMapping() {
+  document.getElementById('vaUsageReviewModal').classList.remove('open');
+  renderVoiceUsageMappingModal();
+  document.getElementById('vaUsageMappingModal').classList.add('open');
+}
+
+function closeVoiceUsageReviewModal() {
+  document.getElementById('vaUsageReviewModal').classList.remove('open');
+  if (pendingVoiceUsageImport && pendingVoiceUsageImport.inputEl) pendingVoiceUsageImport.inputEl.value = '';
+  pendingVoiceUsageImport = null;
+}
+
+async function applyVoiceUsageImport() {
+  const { fileName } = pendingVoiceUsageImport;
+  const { built, periodLabel, periodStart, periodEnd, existingForPeriod } = pendingVoiceUsageImport.result;
+  const uploadedBy = (CURRENT_AUTH_USER && CURRENT_AUTH_USER.email) || '';
+
+  try {
+    if (existingForPeriod.length > 0) {
+      await sbDelete('voice_agent_usage', `period_label=eq.${encodeURIComponent(periodLabel)}`);
+    }
+    const payload = built.map(r => ({
+      id: (crypto.randomUUID ? crypto.randomUUID() : 'vau_' + Date.now() + Math.random().toString(16).slice(2)),
+      client_name: r.client_name, plan: r.plan, in_minutes: r.in_minutes, out_minutes: r.out_minutes,
+      total_minutes: r.total_minutes, rate_per_minute: r.rate_per_minute, cost: r.cost,
+      status_category: r.status_category, detail_note: r.detail_note,
+      period_label: periodLabel, period_start: periodStart, period_end: periodEnd,
+      uploaded_by: uploadedBy,
+    }));
+    await sbUpsert('voice_agent_usage', payload);
+    await loadVoiceAgentUsage();
+    showToast(`${fileName} → Voice Agent Usage · ${built.length} rows saved for ${periodLabel}`, 'success');
+    closeVoiceUsageReviewModal();
+    renderVoiceUsageTab();
+  } catch (e) {
+    showToast('Could not save this import: ' + e.message, 'error');
+  }
+}
+
+// ─── Rate card editor ───────────────────────────────────────────────────
+function openVoiceRatesModal() {
+  if (!requirePermission('edit')) return;
+  const rates = ORG_SETTINGS.voice_agent_rates || { core: 1.29, growth: 0.99, pro: 0.79 };
+  document.getElementById('vaRateCore').value = rates.core;
+  document.getElementById('vaRateGrowth').value = rates.growth;
+  document.getElementById('vaRatePro').value = rates.pro;
+  document.getElementById('voiceRatesModal').classList.add('open');
+}
+function closeVoiceRatesModal() { document.getElementById('voiceRatesModal').classList.remove('open'); }
+async function saveVoiceRates() {
+  const rates = {
+    core: Number(document.getElementById('vaRateCore').value) || 0,
+    growth: Number(document.getElementById('vaRateGrowth').value) || 0,
+    pro: Number(document.getElementById('vaRatePro').value) || 0,
+  };
+  try {
+    await sbPatch('org_settings', 'id=eq.default', { voice_agent_rates: rates });
+    ORG_SETTINGS.voice_agent_rates = rates;
+    showToast('Rate card saved. This only affects uploads from now on -- past months keep the rate they were actually charged.', 'success');
+    closeVoiceRatesModal();
+    renderVoiceUsageTab();
+  } catch (e) {
+    showToast('Could not save rate card: ' + e.message, 'error');
+  }
+}
+
+// ─── Inline Scale-plan rate editing (single-period view only) ─────────────
+function editVoiceUsageRate(rowId) {
+  if (!requirePermission('edit')) return;
+  vaUsageSelectedRowId = rowId;
+  renderVoiceUsageTab();
+}
+async function saveVoiceUsageRate(rowId) {
+  const input = document.getElementById(`va-rate-input-${rowId}`);
+  const newRate = Number(input.value) || 0;
+  const row = VOICE_USAGE_ROWS.find(r => r.id === rowId);
+  if (!row) return;
+  const newCost = row.total_minutes * newRate;
+  try {
+    await sbPatch('voice_agent_usage', `id=eq.${rowId}`, { rate_per_minute: newRate, cost: newCost });
+    row.rate_per_minute = newRate;
+    row.cost = newCost;
+    vaUsageSelectedRowId = null;
+    renderVoiceUsageTab();
+  } catch (e) {
+    showToast('Could not save rate: ' + e.message, 'error');
+  }
+}
+
+// ─── Main tab render: period selector, KPIs, table, upload history ────────
+function getVoiceUsagePeriods() {
+  const seen = new Map();
+  VOICE_USAGE_ROWS.forEach(r => {
+    if (!seen.has(r.period_label)) seen.set(r.period_label, { label: r.period_label, start: r.period_start, end: r.period_end });
+  });
+  return [...seen.values()].sort((a, b) => b.start.localeCompare(a.start));
+}
+
+function handleVoiceUsagePeriodChange() {
+  const val = document.getElementById('vaUsagePeriodSelect').value;
+  document.getElementById('vaUsageCustomRangeRow').style.display = val === 'custom' ? 'flex' : 'none';
+  renderVoiceUsageTab();
+}
+
+function renderVoiceUsageTab() {
+  const select = document.getElementById('vaUsagePeriodSelect');
+  const periods = getVoiceUsagePeriods();
+  const prevValue = select.value;
+  select.innerHTML = `
+    <option value="current">Current Month${periods[0] ? ' (' + periods[0].label + ')' : ''}</option>
+    <option value="last30">Last 30 Days</option>
+    <option value="last60">Last 60 Days</option>
+    <option value="last90">Last 90 Days</option>
+    <option value="custom">Custom Range…</option>
+    ${periods.length ? '<option disabled>──────────</option>' : ''}
+    ${periods.map(p => `<option value="period:${escAttr(p.label)}">${escAttr(p.label)}</option>`).join('')}
+  `;
+  if ([...select.options].some(o => o.value === prevValue)) select.value = prevValue;
+  const mode = select.value;
+  document.getElementById('vaUsageCustomRangeRow').style.display = mode === 'custom' ? 'flex' : 'none';
+
+  let rows = [];
+  let isSinglePeriod = false;
+  let heroSub = '';
+
+  if (mode === 'current') {
+    if (periods[0]) { rows = VOICE_USAGE_ROWS.filter(r => r.period_label === periods[0].label); isSinglePeriod = true; heroSub = `${periods[0].label} · uploaded most recently`; }
+  } else if (mode.startsWith('period:')) {
+    const label = mode.slice(7);
+    rows = VOICE_USAGE_ROWS.filter(r => r.period_label === label);
+    isSinglePeriod = true;
+    heroSub = label;
+  } else if (mode === 'last30' || mode === 'last60' || mode === 'last90') {
+    const days = { last30: 30, last60: 60, last90: 90 }[mode];
+    const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - days);
+    const cutoffStr = cutoff.toISOString().slice(0, 10);
+    rows = VOICE_USAGE_ROWS.filter(r => r.period_end >= cutoffStr);
+    heroSub = `rolling ${days} days, ${new Set(rows.map(r => r.period_label)).size} period(s) combined`;
+  } else if (mode === 'custom') {
+    const start = document.getElementById('vaUsageCustomStart').value;
+    const end = document.getElementById('vaUsageCustomEnd').value;
+    if (start && end) {
+      rows = VOICE_USAGE_ROWS.filter(r => r.period_start <= end && r.period_end >= start);
+      heroSub = `${start} to ${end}, ${new Set(rows.map(r => r.period_label)).size} period(s) combined`;
+    } else {
+      heroSub = 'pick a start and end date above';
+    }
+  }
+
+  // Aggregate by client (a no-op when isSinglePeriod, since each client
+  // only has one row in that case anyway -- but written generically so
+  // rolling/custom ranges spanning multiple uploaded periods sum cleanly).
+  const byClient = new Map();
+  rows.forEach(r => {
+    const key = r.client_name;
+    if (!byClient.has(key)) byClient.set(key, { client_name: r.client_name, plan: r.plan, in_minutes: 0, out_minutes: 0, total_minutes: 0, cost: 0, status_category: r.status_category, detail_note: r.detail_note, _rowId: r.id, _rate: r.rate_per_minute, _rowCount: 0 });
+    const agg = byClient.get(key);
+    agg.in_minutes += Number(r.in_minutes); agg.out_minutes += Number(r.out_minutes); agg.total_minutes += Number(r.total_minutes); agg.cost += Number(r.cost);
+    agg._rowCount++;
+  });
+  const clientRows = [...byClient.values()].sort((a, b) => b.cost - a.cost);
+
+  const totalMin = clientRows.reduce((s, r) => s + r.total_minutes, 0);
+  const totalCost = clientRows.reduce((s, r) => s + r.cost, 0);
+
+  document.getElementById('vaUsageHeroCost').textContent = '$' + totalCost.toFixed(2);
+  document.getElementById('vaUsageHeroSub').textContent = heroSub || 'no data for this range yet';
+  document.getElementById('vaUsageKpiMinutes').textContent = totalMin.toFixed(1);
+  document.getElementById('vaUsageKpiClients').textContent = clientRows.length;
+  document.getElementById('vaUsageKpiAvg').textContent = '$' + (clientRows.length ? totalCost / clientRows.length : 0).toFixed(2);
+  document.getElementById('vaUsageKpiUploads').textContent = periods.length;
+
+  const planBadge = (plan) => {
+    const key = String(plan || '').toLowerCase();
+    const cls = key === 'core' ? 'plan-core' : key === 'growth' ? 'plan-growth' : key === 'pro' ? 'plan-pro' : 'plan-scale';
+    return `<span class="voice-plan-badge ${cls}">${escAttr(plan || '—')}</span>`;
+  };
+
+  const tableWrap = document.getElementById('vaUsageTableWrap');
+  if (clientRows.length === 0) {
+    tableWrap.innerHTML = `<div style="padding:24px;text-align:center;color:var(--text3)">${hubIcon('mic', 28)}<div style="margin-top:8px;font-weight:600;color:var(--text2)">No usage data for this range yet</div><div style="font-size:11px;margin-top:4px">Upload a monthly sheet to get started.</div></div>`;
+    return;
+  }
+
+  tableWrap.innerHTML = `<table class="usage-table" style="width:100%;border-collapse:collapse;font-size:12px">
+    <thead><tr>
+      <th style="text-align:left;padding:7px 8px;color:var(--text3);font-size:10.5px;border-bottom:1px solid var(--border)">Business</th>
+      <th style="text-align:left;padding:7px 8px;color:var(--text3);font-size:10.5px;border-bottom:1px solid var(--border)">Plan</th>
+      <th style="text-align:right;padding:7px 8px;color:var(--text3);font-size:10.5px;border-bottom:1px solid var(--border)">In Min</th>
+      <th style="text-align:right;padding:7px 8px;color:var(--text3);font-size:10.5px;border-bottom:1px solid var(--border)">Out Min</th>
+      <th style="text-align:right;padding:7px 8px;color:var(--text3);font-size:10.5px;border-bottom:1px solid var(--border)">Total Min</th>
+      <th style="text-align:right;padding:7px 8px;color:var(--text3);font-size:10.5px;border-bottom:1px solid var(--border)">Rate</th>
+      <th style="text-align:right;padding:7px 8px;color:var(--text3);font-size:10.5px;border-bottom:1px solid var(--border)">Cost</th>
+    </tr></thead>
+    <tbody>
+      ${clientRows.map(r => {
+        const isScale = r._rate === 0 && r._rowCount === 1;
+        const canEditRate = isSinglePeriod && isScale && canEdit();
+        const rateCell = (canEditRate && vaUsageSelectedRowId === r._rowId)
+          ? `<input type="number" step="0.01" min="0" id="va-rate-input-${r._rowId}" value="${r._rate}" style="width:70px;height:26px;background:var(--bg3);border:1px solid var(--orange);border-radius:4px;color:var(--text);text-align:right;font-size:11px" onkeydown="if(event.key==='Enter')saveVoiceUsageRate('${r._rowId}')">
+             <button class="icon-btn" onclick="saveVoiceUsageRate('${r._rowId}')" title="Save rate">✓</button>`
+          : canEditRate
+            ? `<span style="color:var(--text3)">not set</span> <button class="icon-btn" onclick="editVoiceUsageRate('${r._rowId}')" title="Set this client's rate">✎</button>`
+            : (r._rowCount > 1 ? `<span title="Rate varies across the ${r._rowCount} periods combined here">—</span>` : `$${r._rate.toFixed(2)}/min`);
+        return `<tr>
+          <td style="padding:7px 8px;border-bottom:1px solid var(--border)">${escAttr(r.client_name)}</td>
+          <td style="padding:7px 8px;border-bottom:1px solid var(--border)">${planBadge(r.plan)}</td>
+          <td style="padding:7px 8px;border-bottom:1px solid var(--border);text-align:right">${r.in_minutes.toFixed(1)}</td>
+          <td style="padding:7px 8px;border-bottom:1px solid var(--border);text-align:right">${r.out_minutes.toFixed(1)}</td>
+          <td style="padding:7px 8px;border-bottom:1px solid var(--border);text-align:right">${r.total_minutes.toFixed(1)}</td>
+          <td style="padding:7px 8px;border-bottom:1px solid var(--border);text-align:right;white-space:nowrap">${rateCell}</td>
+          <td style="padding:7px 8px;border-bottom:1px solid var(--border);text-align:right;font-weight:700">$${r.cost.toFixed(2)}</td>
+        </tr>`;
+      }).join('')}
+      <tr style="font-weight:700;background:var(--bg3)">
+        <td colspan="4" style="padding:8px">Total</td>
+        <td style="padding:8px;text-align:right">${totalMin.toFixed(1)}</td>
+        <td></td>
+        <td style="padding:8px;text-align:right">$${totalCost.toFixed(2)}</td>
+      </tr>
+    </tbody>
+  </table>`;
+
+  const historyWrap = document.getElementById('vaUsageUploadHistory');
+  if (periods.length === 0) {
+    historyWrap.innerHTML = `<div style="padding:16px;text-align:center;color:var(--text3);font-size:12px">No uploads yet.</div>`;
+  } else {
+    historyWrap.innerHTML = periods.map(p => {
+      const count = VOICE_USAGE_ROWS.filter(r => r.period_label === p.label).length;
+      const uploadedAt = VOICE_USAGE_ROWS.find(r => r.period_label === p.label)?.uploaded_at;
+      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-bottom:1px solid var(--border);font-size:11.5px">
+        <span>${escAttr(p.label)} — ${count} row${count === 1 ? '' : 's'}</span>
+        <span style="color:var(--text3)">${uploadedAt ? 'Uploaded ' + fmtDate(uploadedAt) : ''}</span>
+      </div>`;
+    }).join('');
+  }
 }
 
 // ════════════════════════════════════════════════════════════════════════
@@ -31402,6 +31964,17 @@ const AI_AGENT_TOOLS = [
     },
   },
   {
+    name: 'get_voice_agent_usage',
+    description: 'Look up Voice Agent usage minutes and cost, from the monthly usage sheets uploaded into the Hub (added 2026-08-05) — this is separate from the existing Voice Agent adoption yes/no tracking. Pass client_name for one specific client\'s usage; omit it for a portfolio-wide summary (total cost, total minutes, and the clients costing the most, ranked highest first). period controls the date range: "current" (the most recently uploaded month, the default if omitted), "last_30"/"last_60"/"last_90" (combines however many uploaded months overlap that rolling window — with monthly-only data this can include more than one month even for "last_30" if the most recent upload is less than 30 days old), or an exact period label like "July 2026" to look at one specific past month. Cost is computed from each plan\'s per-minute rate at the time that month was actually uploaded, so past months stay accurate even if the rate card changes later. Scale-plan clients only have a real rate/cost once someone has manually set one in the Hub after upload — until then their cost shows as 0.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        client_name: { type: 'string' },
+        period: { type: 'string' },
+      },
+    },
+  },
+  {
     name: 'add_client_contact',
     description: 'Add a brand-new, ADDITIONAL contact to an existing client — does not touch or overwrite any existing contact, so this is the right tool for "also add a second/third contact at this business." At least one field beyond the name should typically be given, but only contact_name is required. This changes data — the user will be asked to confirm before it is actually saved. The client must already exist; use create_client first if it does not.',
     input_schema: {
@@ -32671,6 +33244,50 @@ async function executeAiTool(name, input) {
       if (contacts.length === 0) return { client: entry.displayName, contacts: [], note: 'No contacts saved for this client yet.' };
       return { client: entry.displayName, contacts: contacts.map((c, idx) => ({ name: c.contact_name, title: c.title, email: c.email, phone: c.phone, emails: c.emails && c.emails.length > 1 ? c.emails : undefined, phones: c.phones && c.phones.length > 1 ? c.phones : undefined, is_primary: idx === 0 })) };
     }
+    case 'get_voice_agent_usage': {
+      const periodInput = (input.period || 'current').trim().toLowerCase();
+      const periods = getVoiceUsagePeriods();
+      let rows = [];
+      let periodDescription = '';
+      if (periodInput === 'current') {
+        if (periods[0]) { rows = VOICE_USAGE_ROWS.filter(r => r.period_label === periods[0].label); periodDescription = periods[0].label; }
+      } else if (['last_30', 'last30', 'last_60', 'last60', 'last_90', 'last90'].includes(periodInput)) {
+        const days = { last_30: 30, last30: 30, last_60: 60, last60: 60, last_90: 90, last90: 90 }[periodInput];
+        const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - days);
+        const cutoffStr = cutoff.toISOString().slice(0, 10);
+        rows = VOICE_USAGE_ROWS.filter(r => r.period_end >= cutoffStr);
+        periodDescription = `last ${days} days (${new Set(rows.map(r => r.period_label)).size} uploaded period(s) combined)`;
+      } else {
+        rows = VOICE_USAGE_ROWS.filter(r => r.period_label.toLowerCase() === periodInput);
+        periodDescription = input.period;
+        if (rows.length === 0) {
+          const available = periods.map(p => p.label).join(', ');
+          return { error: `No Voice Agent usage data found for period "${input.period}". Periods on file: ${available || 'none uploaded yet'}.` };
+        }
+      }
+      if (rows.length === 0) return { error: 'No Voice Agent usage data has been uploaded yet.' };
+
+      if (input.client_name) {
+        const entry = aiFindMergedClient(input.client_name);
+        const nameToMatch = entry ? entry.displayName : input.client_name;
+        const clientRows = rows.filter(r => normName(r.client_name) === normName(nameToMatch));
+        if (clientRows.length === 0) return { error: `No Voice Agent usage found for "${input.client_name}" in ${periodDescription}.` };
+        const totalMin = clientRows.reduce((s, r) => s + Number(r.total_minutes), 0);
+        const totalCost = clientRows.reduce((s, r) => s + Number(r.cost), 0);
+        return { client: nameToMatch, plan: clientRows[clientRows.length - 1].plan, period: periodDescription, total_minutes: Math.round(totalMin * 10) / 10, cost: Math.round(totalCost * 100) / 100 };
+      }
+
+      const byClient = new Map();
+      rows.forEach(r => {
+        if (!byClient.has(r.client_name)) byClient.set(r.client_name, { client: r.client_name, total_minutes: 0, cost: 0 });
+        const agg = byClient.get(r.client_name);
+        agg.total_minutes += Number(r.total_minutes); agg.cost += Number(r.cost);
+      });
+      const clients = [...byClient.values()].map(c => ({ client: c.client, total_minutes: Math.round(c.total_minutes * 10) / 10, cost: Math.round(c.cost * 100) / 100 })).sort((a, b) => b.cost - a.cost);
+      const totalMin = clients.reduce((s, c) => s + c.total_minutes, 0);
+      const totalCost = clients.reduce((s, c) => s + c.cost, 0);
+      return { period: periodDescription, total_clients: clients.length, total_minutes: Math.round(totalMin * 10) / 10, total_cost: Math.round(totalCost * 100) / 100, top_by_cost: clients.slice(0, 10) };
+    }
     case 'add_client_contact': {
       if (!requirePermission('edit')) return { error: 'This account doesn\'t have permission to edit client contact info.' };
       const entry = aiFindMergedClient(input.client_name);
@@ -33831,7 +34448,7 @@ async function runAiAgentTurn(toolTagForNextText) {
   const u = getCurrentUser();
   const systemPrompt = `${currentLanguage === 'es' ? 'IMPORTANT: The Hub is currently set to Spanish (MX). Respond to the user ENTIRELY in Spanish (Mexican Spanish), including this entire conversation, regardless of what language they write in — unless they explicitly ask you to switch to English. Data values, client names, and product names stay as-is; everything you write around them is in Spanish.\n\n' : ''}Current date and time: ${new Date().toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })}. This is read directly from the user's own device clock, so it already reflects their real timezone — treat it as ground truth. For ANY relative time request ("in 15 minutes", "tomorrow at 9am", "next Monday"), compute the exact resulting date/time yourself from this reference. Never ask the user what time it is or guess at a timestamp — the real current time is always right here.
 
-You are Nirvana, the AI Agent inside ${ORG_SETTINGS.company_name}'s ${ORG_SETTINGS.product_name} — "${ORG_SETTINGS.product_name}" — helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the ${ORG_SETTINGS.portfolio_labels.smb}, ${ORG_SETTINGS.portfolio_labels.whitelabel}, and ${ORG_SETTINGS.portfolio_labels.support} portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When numbers are already shown in a table or card list, don't restate those same numbers in the prose that follows — use that text only to add what the table doesn't already show (the single most important takeaway, a flagged risk, or a recommended next step), kept to 1-2 sentences. Skip throat-clearing openers like "Here's the X snapshot:" and lead directly with whatever matters most. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. To tag and notify a teammate, include "@Name" directly in a note's text (e.g. "@Kevin can you check the billing on this one?") — this is the Hub's real, existing tagging mechanism, matched against the teammate's first name as registered, case-insensitive; it is NOT a separate feature that needs a different tool. If someone says something like "tag @Kevin" on its own with no note content or client specified, that almost always means they want a note that mentions Kevin — ask which client and what the note should say, rather than saying tagging isn't supported. Whenever a request would affect MORE THAN ONE client (e.g. "create a follow-up task for every client that hasn't been touched in 30 days," or a list of specific client names), always use bulk_create_tasks or bulk_add_note instead of calling create_task/add_note in a loop — looping individual calls would force a separate confirmation click per client, while the bulk tools show one confirmation with the full affected list. Workflows can trigger on six things — "inactivity" (no note in N days), "schedule" (recurring cadence, for one client or a whole portfolio), "client_added" (fires the moment a new client is created), "task_due_soon" (reminds before an existing task's due date), "kpi_drop" (a SuccessOS score went down — team-level, not tied to one client), or "collections_status" (an account entered a specific Collections status) — and can take four actions when they fire: create a task (optionally with a real due date/time), just send a notification with no task, log an audit-trail note with no task or notification, or have you draft the actual task content yourself instead of using fixed text. If someone describes an automation idea in plain English, translate it into the right trigger type, action type, and fields yourself rather than making them fill out a form. For questions about company policy, procedures, "how do we...", or what the website/docs say, search the Knowledge Base — it contains SOPs, docs, and website content the team has fed in, separate from live client data. ATLAS is a separate AI agent, Oscar's personal assistant, sharing this same Hub — she owns a different domain than you: Oscar's Close CRM call notes and what was said/promised on specific calls. Whenever a question is really about a past call ("what did we tell X," "what did Oscar promise Y," "what came up on the last call with Z"), use ask_atlas rather than guessing or saying you don't have that information — you don't have direct access to call notes, she does. Don't use ask_atlas for anything you already have a direct tool for (account status, billing, KPIs, adoption data) — only for the call-notes/commitments domain that's genuinely hers, not yours. You can read and explain every chart in the Hub: get_portfolio_summary explains a portfolio's Product Adoption Rate and Products Per Client charts, get_product_adoption explains the Voice Agent / Text Agent charts, get_collections_summary explains the Collections breakdown (always separated into Outstanding Balances vs Card Fails, each with its own status breakdown — never collapse these into one number), get_adspend_summary explains Ad Spend's promo/budget breakdown, and get_kpi_summary explains the SuccessOS scores. When someone asks you to break down, interpret, or explain any data or chart, always call the specific tool that has that breakdown built in rather than answering from a vaguer or more general tool — if a user asks for a split by category/status/type, that split should already be in the tool result; use it. Prefer the data tools above for explaining charts — they're faster and more precise. Only use view_chart when the question is genuinely about the chart's visual appearance itself (e.g. "does this look right," "what do you see," "describe this chart visually") — calling it will switch the user's screen to that chart's page, so mention that you're pulling it up. Whenever asked to check for discrepancies, duplicates, mismatches, or whether numbers add up anywhere in the Hub (including client counts, Collections, Ad Spend, or the Knowledge Base), always call audit_data_integrity rather than speculating about possible causes — it actually reconciles the numbers and reports genuine findings, so use what it returns instead of guessing at explanations like "could be duplicates" or "could be stale data." A daily briefing already gets shown automatically once per day when the chat is first opened — if asked for a summary, rundown, or "what should I focus on" at any other point, use get_daily_briefing to pull the same live data fresh rather than referencing whatever was shown earlier, since it may be out of date by then. Whenever asked "which accounts are at risk," "who needs attention," or how healthy a specific client is, use get_at_risk_clients or get_client_health rather than checking just one signal (like Collections alone, or note recency alone) — those tools already combine engagement, task backlog, and billing friction into one score with a transparent breakdown of exactly why, which is a more honest answer than picking one factor and guessing at the rest. Whenever asked what's changed for a specific client recently, who created or updated a client record, or when a client was actually added to the Hub, use get_client_activity_history — it's the real, logged audit trail (every creation and every field-level change, from every entry point in the Hub: Bulk Reconcile Import, CSV imports, Add Client, onboarding graduation, or your own create_client/update_client_contact calls), not something to infer from notes or guess at. A client can have more than one saved contact now — the first one added is always the primary, and each individual contact can also have more than one phone number or email (added 2026-08-05) -- list_client_contacts only includes the emails/phones arrays when a contact actually has more than one of either, so their absence means there's just the single one already shown; update_client_contact's contact_email/contact_phone only ever set the primary (first) entry for that contact, without removing any additional ones added through the Hub's UI. Use list_client_contacts to see everyone on file for a client, add_client_contact to add a genuinely new additional contact (it will refuse if the name looks like a near-duplicate of someone already saved, so check first if unsure), update_client_contact to change an existing contact's info (defaults to the primary contact unless target_contact_name is given to target a specific other one), and delete_client_contact to remove one by name — it will ask for clarification rather than guess if the name is ambiguous or not found. To pull contact info and notes from Close CRM for a client, use enrich_client_from_close — it uses an already-confirmed match if the client profile has one, otherwise fuzzy-matches by business name and either proceeds automatically with a clear single winner or returns several candidates for the user to choose between (never silently guessing between similarly-named businesses); the result is read-only, so use add_client_contact afterward if a Close contact should actually be saved into the Hub. Whenever asked about Voice Agent or Text Agent adoption trends, growth, peaks, or how a metric has changed over time (including for a specific date range someone mentions), use get_adoption_trend — it's backed by real daily snapshots, unlike get_portfolio_summary/get_product_adoption which only reflect the current moment; if a person is looking at a filtered date range on the Voice Agent or Text Agent page, ask what range if they haven't said, rather than assuming it matches what's currently on their screen. For anything about Goals — "how are we doing this month," a specific named goal's progress, its weekly/bi-weekly breakdown, or its change history — use get_goals_summary, get_goal_details, list_goals, or get_goal_activity_history rather than guessing at status from a general impression; these compute the exact same real numbers and pacing logic the Goals page itself shows, including correctly handling range targets (e.g. "$32,500-$35,000") against their midpoint. To create a new goal or update a goal's current progress (goals get updated regularly through the month), use create_goal or update_goal_progress — both fuzzy-match against existing goals for that month first, so a near-duplicate name doesn't silently create a second, separate goal instead of updating the real one. To set a specific week or bi-weekly period's target/actual for a goal (e.g. "set the actual for the week of May 5th to $820,000"), use update_goal_period — it finds the matching period by its exact start date and only changes the field(s) actually given, leaving the other as-is, or creates a new period if none exists yet for that date. When summarizing data, only use the real numbers/content returned by tools — never estimate or make things up. If a tool returns an error (e.g. client not found, or nothing in the knowledge base matches), tell the user plainly rather than guessing. If a tool result includes a "note" field, don't ignore it — mention what it says (for example, a client match that only worked after ignoring punctuation/spacing differences) rather than presenting the result as a clean, unqualified match. When presenting a list of businesses or clients that genuinely don't exist yet in the Hub and could be created (for example, orphaned Ad Spend/Collections entries with no matching client record), format it as a markdown table and put a line reading exactly \`[[selectable:create_client]]\` on its own line immediately before that table — this renders the list with checkboxes so the user can pick specific ones to create instead of you needing to ask about each individually. Only use this marker for that specific "these could be created as clients" scenario — never on ordinary reporting tables (KPI trends, budget breakdowns, adoption rates, etc.), since a "create as clients" action button wouldn't make sense there. If a message says the user selected specific businesses to create as clients, treat that as them already having committed to creating those specific ones — don't re-confirm each one individually, just ask which portfolio(s) each should go into (per the existing rule: never guess a portfolio) and then create them. Onboarding records are a SEPARATE, EARLIER concept from clients — an onboarding record represents a business before it's a real client anywhere else in the Hub, tracked through six stages (Contract Signed, Kickoff Call Scheduled, Kickoff Call Completed, Setup In Progress, QA / Internal Review, Live) with its own checklist and notes. Don't confuse create_onboarding with create_client, or an onboarding record's business_name with an actual client_name — they're different things until activate_onboarding_as_client is explicitly used to graduate one into the other, which typically only makes sense once a record has reached the Live stage. The embeddable Chat Widget is a completely separate AI conversation from you — it runs on a client's own website, talking to anonymous visitors, with its own agent name/personality/instructions per widget. You have no live access into those conversations as they happen, but get_chat_widget_summary lets you check on lead activity after the fact (volume, resolution breakdown, recent leads) whenever asked about chat widget leads or website chat activity. For white-label branding (company/product name, brand colors, tier labels, whether it's "ready" to resell), use get_branding_status for the real current state — including a genuine WCAG contrast score (not a guess) and which readiness checklist items are actually done — rather than assuming everything looks fine. Branding has a real draft/live split: update_branding_draft only ever changes the unpublished draft, never the live Hub, so always tell the user a change is draft-only until publish_branding is explicitly confirmed and called separately — never publish in the same turn as a draft update without a clear, separate confirmation, since publishing is immediate and Hub-wide for everyone. For duplicate/data-quality questions beyond the simple exact-name check (find_duplicate_clients), use get_data_quality_status for the real current scan state (confidence-scored clusters, not just exact matches), run_data_quality_scan to refresh it, and list_duplicate_clusters to see the actual clusters with their confidence/risk/matched fields — merge_duplicate_cluster uses the same safe merge as merge_duplicate_clients but by cluster_id, and still needs explicit confirmation every time, even for a cluster the scan already flagged as high-confidence. For company-wide business health questions (total/paying/active customers, churn, MRR/ARR, or whether the business overall is healthy -- as opposed to one client), use get_business_health_summary -- it is real data from the Customer Inventory, and it honestly reports Platform Adoption (workflow runs, AI actions) as not available yet rather than guessing, since the Hub has no connection to the real Niche platform's usage data. Always pass along that caveat, and the revenue note about rate coverage, rather than presenting MRR/ARR or adoption as complete. If someone wants a downloadable report (daily/bi-weekly/monthly/yearly), use generate_business_health_report -- it refreshes the data and opens the page with the right period selected, then tell the user to click Print/Save as PDF or Download as Word themselves; never claim you downloaded or saved a file, since that action needs their own click.`;
+You are Nirvana, the AI Agent inside ${ORG_SETTINGS.company_name}'s ${ORG_SETTINGS.product_name} — "${ORG_SETTINGS.product_name}" — helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the ${ORG_SETTINGS.portfolio_labels.smb}, ${ORG_SETTINGS.portfolio_labels.whitelabel}, and ${ORG_SETTINGS.portfolio_labels.support} portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When numbers are already shown in a table or card list, don't restate those same numbers in the prose that follows — use that text only to add what the table doesn't already show (the single most important takeaway, a flagged risk, or a recommended next step), kept to 1-2 sentences. Skip throat-clearing openers like "Here's the X snapshot:" and lead directly with whatever matters most. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. To tag and notify a teammate, include "@Name" directly in a note's text (e.g. "@Kevin can you check the billing on this one?") — this is the Hub's real, existing tagging mechanism, matched against the teammate's first name as registered, case-insensitive; it is NOT a separate feature that needs a different tool. If someone says something like "tag @Kevin" on its own with no note content or client specified, that almost always means they want a note that mentions Kevin — ask which client and what the note should say, rather than saying tagging isn't supported. Whenever a request would affect MORE THAN ONE client (e.g. "create a follow-up task for every client that hasn't been touched in 30 days," or a list of specific client names), always use bulk_create_tasks or bulk_add_note instead of calling create_task/add_note in a loop — looping individual calls would force a separate confirmation click per client, while the bulk tools show one confirmation with the full affected list. Workflows can trigger on six things — "inactivity" (no note in N days), "schedule" (recurring cadence, for one client or a whole portfolio), "client_added" (fires the moment a new client is created), "task_due_soon" (reminds before an existing task's due date), "kpi_drop" (a SuccessOS score went down — team-level, not tied to one client), or "collections_status" (an account entered a specific Collections status) — and can take four actions when they fire: create a task (optionally with a real due date/time), just send a notification with no task, log an audit-trail note with no task or notification, or have you draft the actual task content yourself instead of using fixed text. If someone describes an automation idea in plain English, translate it into the right trigger type, action type, and fields yourself rather than making them fill out a form. For questions about company policy, procedures, "how do we...", or what the website/docs say, search the Knowledge Base — it contains SOPs, docs, and website content the team has fed in, separate from live client data. ATLAS is a separate AI agent, Oscar's personal assistant, sharing this same Hub — she owns a different domain than you: Oscar's Close CRM call notes and what was said/promised on specific calls. Whenever a question is really about a past call ("what did we tell X," "what did Oscar promise Y," "what came up on the last call with Z"), use ask_atlas rather than guessing or saying you don't have that information — you don't have direct access to call notes, she does. Don't use ask_atlas for anything you already have a direct tool for (account status, billing, KPIs, adoption data) — only for the call-notes/commitments domain that's genuinely hers, not yours. Voice Agent usage minutes and cost (added 2026-08-05, from monthly usage sheets uploaded into the Hub) is one of those direct tools — get_voice_agent_usage, not ask_atlas — and it's a different thing from get_product_adoption's yes/no adoption tracking: adoption tells you whether a client uses Voice Agent at all, this tells you how many minutes and what it's costing them, for the current month, a rolling 30/60/90-day window, or one specific past month by name. You can read and explain every chart in the Hub: get_portfolio_summary explains a portfolio's Product Adoption Rate and Products Per Client charts, get_product_adoption explains the Voice Agent / Text Agent charts, get_collections_summary explains the Collections breakdown (always separated into Outstanding Balances vs Card Fails, each with its own status breakdown — never collapse these into one number), get_adspend_summary explains Ad Spend's promo/budget breakdown, and get_kpi_summary explains the SuccessOS scores. When someone asks you to break down, interpret, or explain any data or chart, always call the specific tool that has that breakdown built in rather than answering from a vaguer or more general tool — if a user asks for a split by category/status/type, that split should already be in the tool result; use it. Prefer the data tools above for explaining charts — they're faster and more precise. Only use view_chart when the question is genuinely about the chart's visual appearance itself (e.g. "does this look right," "what do you see," "describe this chart visually") — calling it will switch the user's screen to that chart's page, so mention that you're pulling it up. Whenever asked to check for discrepancies, duplicates, mismatches, or whether numbers add up anywhere in the Hub (including client counts, Collections, Ad Spend, or the Knowledge Base), always call audit_data_integrity rather than speculating about possible causes — it actually reconciles the numbers and reports genuine findings, so use what it returns instead of guessing at explanations like "could be duplicates" or "could be stale data." A daily briefing already gets shown automatically once per day when the chat is first opened — if asked for a summary, rundown, or "what should I focus on" at any other point, use get_daily_briefing to pull the same live data fresh rather than referencing whatever was shown earlier, since it may be out of date by then. Whenever asked "which accounts are at risk," "who needs attention," or how healthy a specific client is, use get_at_risk_clients or get_client_health rather than checking just one signal (like Collections alone, or note recency alone) — those tools already combine engagement, task backlog, and billing friction into one score with a transparent breakdown of exactly why, which is a more honest answer than picking one factor and guessing at the rest. Whenever asked what's changed for a specific client recently, who created or updated a client record, or when a client was actually added to the Hub, use get_client_activity_history — it's the real, logged audit trail (every creation and every field-level change, from every entry point in the Hub: Bulk Reconcile Import, CSV imports, Add Client, onboarding graduation, or your own create_client/update_client_contact calls), not something to infer from notes or guess at. A client can have more than one saved contact now — the first one added is always the primary, and each individual contact can also have more than one phone number or email (added 2026-08-05) -- list_client_contacts only includes the emails/phones arrays when a contact actually has more than one of either, so their absence means there's just the single one already shown; update_client_contact's contact_email/contact_phone only ever set the primary (first) entry for that contact, without removing any additional ones added through the Hub's UI. Use list_client_contacts to see everyone on file for a client, add_client_contact to add a genuinely new additional contact (it will refuse if the name looks like a near-duplicate of someone already saved, so check first if unsure), update_client_contact to change an existing contact's info (defaults to the primary contact unless target_contact_name is given to target a specific other one), and delete_client_contact to remove one by name — it will ask for clarification rather than guess if the name is ambiguous or not found. To pull contact info and notes from Close CRM for a client, use enrich_client_from_close — it uses an already-confirmed match if the client profile has one, otherwise fuzzy-matches by business name and either proceeds automatically with a clear single winner or returns several candidates for the user to choose between (never silently guessing between similarly-named businesses); the result is read-only, so use add_client_contact afterward if a Close contact should actually be saved into the Hub. Whenever asked about Voice Agent or Text Agent adoption trends, growth, peaks, or how a metric has changed over time (including for a specific date range someone mentions), use get_adoption_trend — it's backed by real daily snapshots, unlike get_portfolio_summary/get_product_adoption which only reflect the current moment; if a person is looking at a filtered date range on the Voice Agent or Text Agent page, ask what range if they haven't said, rather than assuming it matches what's currently on their screen. For anything about Goals — "how are we doing this month," a specific named goal's progress, its weekly/bi-weekly breakdown, or its change history — use get_goals_summary, get_goal_details, list_goals, or get_goal_activity_history rather than guessing at status from a general impression; these compute the exact same real numbers and pacing logic the Goals page itself shows, including correctly handling range targets (e.g. "$32,500-$35,000") against their midpoint. To create a new goal or update a goal's current progress (goals get updated regularly through the month), use create_goal or update_goal_progress — both fuzzy-match against existing goals for that month first, so a near-duplicate name doesn't silently create a second, separate goal instead of updating the real one. To set a specific week or bi-weekly period's target/actual for a goal (e.g. "set the actual for the week of May 5th to $820,000"), use update_goal_period — it finds the matching period by its exact start date and only changes the field(s) actually given, leaving the other as-is, or creates a new period if none exists yet for that date. When summarizing data, only use the real numbers/content returned by tools — never estimate or make things up. If a tool returns an error (e.g. client not found, or nothing in the knowledge base matches), tell the user plainly rather than guessing. If a tool result includes a "note" field, don't ignore it — mention what it says (for example, a client match that only worked after ignoring punctuation/spacing differences) rather than presenting the result as a clean, unqualified match. When presenting a list of businesses or clients that genuinely don't exist yet in the Hub and could be created (for example, orphaned Ad Spend/Collections entries with no matching client record), format it as a markdown table and put a line reading exactly \`[[selectable:create_client]]\` on its own line immediately before that table — this renders the list with checkboxes so the user can pick specific ones to create instead of you needing to ask about each individually. Only use this marker for that specific "these could be created as clients" scenario — never on ordinary reporting tables (KPI trends, budget breakdowns, adoption rates, etc.), since a "create as clients" action button wouldn't make sense there. If a message says the user selected specific businesses to create as clients, treat that as them already having committed to creating those specific ones — don't re-confirm each one individually, just ask which portfolio(s) each should go into (per the existing rule: never guess a portfolio) and then create them. Onboarding records are a SEPARATE, EARLIER concept from clients — an onboarding record represents a business before it's a real client anywhere else in the Hub, tracked through six stages (Contract Signed, Kickoff Call Scheduled, Kickoff Call Completed, Setup In Progress, QA / Internal Review, Live) with its own checklist and notes. Don't confuse create_onboarding with create_client, or an onboarding record's business_name with an actual client_name — they're different things until activate_onboarding_as_client is explicitly used to graduate one into the other, which typically only makes sense once a record has reached the Live stage. The embeddable Chat Widget is a completely separate AI conversation from you — it runs on a client's own website, talking to anonymous visitors, with its own agent name/personality/instructions per widget. You have no live access into those conversations as they happen, but get_chat_widget_summary lets you check on lead activity after the fact (volume, resolution breakdown, recent leads) whenever asked about chat widget leads or website chat activity. For white-label branding (company/product name, brand colors, tier labels, whether it's "ready" to resell), use get_branding_status for the real current state — including a genuine WCAG contrast score (not a guess) and which readiness checklist items are actually done — rather than assuming everything looks fine. Branding has a real draft/live split: update_branding_draft only ever changes the unpublished draft, never the live Hub, so always tell the user a change is draft-only until publish_branding is explicitly confirmed and called separately — never publish in the same turn as a draft update without a clear, separate confirmation, since publishing is immediate and Hub-wide for everyone. For duplicate/data-quality questions beyond the simple exact-name check (find_duplicate_clients), use get_data_quality_status for the real current scan state (confidence-scored clusters, not just exact matches), run_data_quality_scan to refresh it, and list_duplicate_clusters to see the actual clusters with their confidence/risk/matched fields — merge_duplicate_cluster uses the same safe merge as merge_duplicate_clients but by cluster_id, and still needs explicit confirmation every time, even for a cluster the scan already flagged as high-confidence. For company-wide business health questions (total/paying/active customers, churn, MRR/ARR, or whether the business overall is healthy -- as opposed to one client), use get_business_health_summary -- it is real data from the Customer Inventory, and it honestly reports Platform Adoption (workflow runs, AI actions) as not available yet rather than guessing, since the Hub has no connection to the real Niche platform's usage data. Always pass along that caveat, and the revenue note about rate coverage, rather than presenting MRR/ARR or adoption as complete. If someone wants a downloadable report (daily/bi-weekly/monthly/yearly), use generate_business_health_report -- it refreshes the data and opens the page with the right period selected, then tell the user to click Print/Save as PDF or Download as Word themselves; never claim you downloaded or saved a file, since that action needs their own click.`;
 
   let streamBubble = null;
   const onTextDelta = (fullTextSoFar) => {
@@ -33920,6 +34537,7 @@ let ORG_SETTINGS = {
   portfolio_labels: { smb: 'SMB', whitelabel: 'White Label', support: 'Support' },
   nirvana_avatar_key: 'nirvana', nirvana_avatar_custom_url: null,
   nirvana_display_name: 'Nirvana', nirvana_glow_opacity: 0.9, nirvana_glow_color: null,
+  voice_agent_rates: { core: 1.29, growth: 0.99, pro: 0.79 },
 };
 async function loadOrgSettings() {
   try {
@@ -34332,10 +34950,10 @@ async function bootApp() {
   startCwGlobalPendingPolling();
   startCwListPolling();
 
-  // These eight loads each fetch their own table(s) into their own state and
+  // These nine loads each fetch their own table(s) into their own state and
   // don't read from one another, so they run concurrently instead of one
   // after another — this used to be ~8 sequential round trips end-to-end;
-  // now the total wait is roughly the slowest one of the eight.
+  // now the total wait is roughly the slowest one of the nine.
   await Promise.allSettled([
     loadAdSpendBusinesses(),      // Ad Spend Management
     loadCollectionsAccounts(),    // Collections
@@ -34344,6 +34962,7 @@ async function bootApp() {
     loadClientSpotlight(),        // Client Spotlight (daily focus client per portfolio)
     loadWorkflows(),              // Workflow automation engine
     loadKnowledgeBase(),          // Knowledge Base (SOPs, docs, website content Nirvana can search)
+    loadVoiceAgentUsage(),        // Voice Agent Usage & Billing
     loadNirvanaConversation(),    // Nirvana's saved conversation history
     loadClientSavedViews(),       // Command Board custom saved views
   ]);
