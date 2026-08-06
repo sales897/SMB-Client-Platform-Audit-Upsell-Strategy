@@ -24651,6 +24651,23 @@ async function saveClientsToSupabase(pk) {
       return;
     }
 
+    // Circuit breaker, part 1 (added 2026-08-06): if we're about to rebuild
+    // a portfolio that clearly has real clients, but the fresh "existing
+    // data" fetch came back completely empty, that's a red flag on its
+    // own -- either the fetch itself failed silently, or something else is
+    // deeply wrong. A real portfolio this size should essentially never
+    // have zero existing rows to compare against. This matters because the
+    // per-row check below (part 2) can only catch loss when the fetch
+    // partially succeeds -- if the fetch itself is what's broken, there's
+    // no "before" data to compare against at all, so this check exists
+    // specifically to catch that case on its own terms.
+    if (clients.length > 5 && existingRows.length === 0) {
+      const msg = `Save blocked: about to rebuild ${clients.length} clients in ${pk}, but found zero existing records to compare against — this looks like the pre-save lookup failed, not a genuinely empty portfolio. Nothing was saved. Tell Claude/Codex if you see this.`;
+      console.error(msg, { clientCount: clients.length, portfolio: pk });
+      showToast(msg, 'error');
+      return;
+    }
+
     const rows = clients.map(c => {
       const existing = existingByName.get(normName(c.name));
       // Primary source: the fresh fetch above (authoritative, current as
@@ -24679,6 +24696,30 @@ async function saveClientsToSupabase(pk) {
       };
     });
 
+    // Circuit breaker, part 2: check what's actually about to be deleted as
+    // "stale" (computed here, reused for the real cleanup delete below) --
+    // if any of those rows carry real, previously-set Business Health data,
+    // that data is about to be PERMANENTLY DELETED, not just overwritten
+    // blank. This checks what's being destroyed directly, rather than
+    // comparing new-row-to-old-row -- a genuine name mismatch (e.g. a
+    // trailing character, or a client renamed on one side but not the
+    // other) means the old row never gets matched to any new row at all,
+    // which a row-by-row comparison structurally cannot detect since
+    // there's no "new row" to compare it against. Tested directly against
+    // this exact scenario before shipping -- an earlier version of this
+    // check used row-by-row comparison and missed it entirely.
+    const currentIds = new Set(rows.map(r => r.id));
+    const staleRows = existingRows.filter(r => !currentIds.has(r.id));
+    const MONEY_FIELDS = ['monthly_rate', 'plan', 'google_ads_management', 'pay_as_you_go'];
+    const lostRows = staleRows.filter(r => MONEY_FIELDS.some(f => r[f] != null) || (r.billing_status && r.billing_status !== 'unknown'));
+    if (lostRows.length > 1) {
+      const names = lostRows.slice(0, 5).map(r => r.name).join(', ');
+      const msg = `Save blocked: ${lostRows.length} existing record(s) with real rate/plan/billing data (e.g. ${names}) would be permanently deleted by this save — likely a name-matching issue, not an intentional removal. Nothing was saved or deleted. Tell Claude/Codex if you see this message.`;
+      console.error(msg, { lostRows: lostRows.map(r => r.name), portfolio: pk });
+      showToast(msg, 'error');
+      return;
+    }
+
     // Upsert FIRST, then delete only whatever's genuinely no longer
     // current, AFTER the upsert has actually succeeded. Real risk found
     // 2026-08-06 alongside the Tint Pros incident: the old delete-then-
@@ -24691,10 +24732,8 @@ async function saveClientsToSupabase(pk) {
     // (recoverable) instead of live data being gone (not recoverable).
     await sbUpsert('portfolio_clients', rows);
 
-    const currentIds = new Set(rows.map(r => r.id));
-    const staleIds = existingRows.filter(r => !currentIds.has(r.id)).map(r => r.id);
-    if (staleIds.length > 0) {
-      try { await sbDelete('portfolio_clients', `id=in.(${staleIds.join(',')})`); }
+    if (staleRows.length > 0) {
+      try { await sbDelete('portfolio_clients', `id=in.(${staleRows.map(r => r.id).join(',')})`); }
       catch (e) { console.warn('Could not clean up stale rows after save (non-critical -- current data already saved fine):', e.message); }
     }
 
