@@ -22699,7 +22699,7 @@ async function doActivateOnboardingAsClient(r) {
   getProdKeys(r.portfolio).forEach(k => { client[k] = selectedKeys.has(k); });
   PORTFOLIOS[r.portfolio].clients.push(client);
   rebuildAll();
-  saveClientsToSupabase(r.portfolio).catch(e => console.warn('Save failed:', e));
+  saveSingleClientToSupabase(r.portfolio, r.business_name).catch(e => console.warn('Save failed:', e));
   fireClientAddedWorkflows(r.business_name, [r.portfolio]).catch(e => console.warn('client_added workflow check failed:', e.message));
   logClientActivity({ clientName: r.business_name, source: 'onboarding_activation', action: 'created', newValue: `Created in ${PORTFOLIO_LABELS[r.portfolio]} (graduated from onboarding)` });
 
@@ -24755,6 +24755,73 @@ async function saveClientsToSupabase(pk) {
     showToast(`Could not save ${PORTFOLIO_LABELS[pk] || pk} clients to the database (working from a local backup instead) — reload will lose anything unsaved. Try again, or tell Claude/Codex if this keeps happening: ${e.message}`, 'error');
     // Fall back to localStorage
     saveToLocalStorage();
+  }
+}
+
+// ─── Targeted single-client save/delete (added 2026-08-06) ────────────────
+// Direct response to the real data-loss incident earlier the same day: of
+// the 8 places in the Hub that used to call saveClientsToSupabase() (the
+// full-portfolio rebuild), only 3 are genuinely bulk operations that
+// actually need to replace/merge many rows at once (CSV import, Google
+// Sheets connect, Google Sheets auto-refresh) -- those still correctly use
+// the full rebuild. The other 5 (Add Client, Edit Client, delete a client,
+// onboarding graduation, Nirvana's create_client) only ever touch ONE
+// client, but were going through a function with up to a 1,191-row blast
+// radius to do it. saveEditClient() -- the function behind editing a
+// client's product checkboxes, almost certainly what actually triggered
+// the incident -- was exactly this pattern. These two functions give
+// those 5 call sites a genuine 1-row blast radius instead, by construction,
+// not just by added protection layered on top of a risky operation.
+//
+// Reuses the exact same safety pattern as saveClientsToSupabase (fetch the
+// real existing record first, carry its Business Health fields forward,
+// fall back to the in-memory copy if that fetch doesn't find a match) --
+// just scoped to one row instead of a whole portfolio.
+const SINGLE_SAVE_BH_FIELDS = ['customer_status', 'account_owner', 'billing_status', 'monthly_rate', 'plan', 'google_ads_management', 'pay_as_you_go', 'trial_date', 'first_paid_date', 'last_billing_date', 'cancellation_date', 'created_at'];
+async function saveSingleClientToSupabase(pk, clientName) {
+  const client = getClients(pk).find(c => normName(c.name) === normName(clientName));
+  if (!client) {
+    console.warn(`saveSingleClientToSupabase: "${clientName}" not found in ${pk}'s in-memory client list -- nothing to save.`);
+    return;
+  }
+  let existing = null;
+  try {
+    const rows = await sbSelect('portfolio_clients', `portfolio=eq.${pk}&name=eq.${encodeURIComponent(clientName)}&select=id,name,${SINGLE_SAVE_BH_FIELDS.join(',')}`);
+    existing = rows && rows[0] ? rows[0] : null;
+  } catch (e) {
+    console.warn(`Could not fetch "${clientName}"'s existing record before saving:`, e.message);
+  }
+  const carried = {};
+  SINGLE_SAVE_BH_FIELDS.forEach(f => {
+    if (existing && existing[f] != null) carried[f] = existing[f];
+    else if (client[f] != null) carried[f] = client[f];
+  });
+  const row = {
+    id: existing ? existing.id : (crypto.randomUUID ? crypto.randomUUID() : 'pc_' + Date.now() + Math.random().toString(16).slice(2)),
+    portfolio: pk,
+    name: client.name,
+    organization: client.org || null,
+    cell_notes: client.cellNotes || null,
+    products: Object.fromEntries(getProdKeys(pk).map(k => [k, !!client[k]])),
+    ...carried,
+  };
+  try {
+    await sbUpsert('portfolio_clients', [row]);
+  } catch (e) {
+    showToast(`Could not save "${clientName}" to the database: ${e.message}`, 'error');
+    throw e;
+  }
+}
+// Deletes one client's row(s) from Supabase across the given portfolios, by
+// name -- a direct, targeted delete instead of rebuilding entire
+// portfolios just to remove one client (up to 3x 1,000+-row rebuilds for
+// what should be a single small delete).
+async function deleteSingleClientFromSupabase(clientName, pks) {
+  try {
+    await sbDelete('portfolio_clients', `name=eq.${encodeURIComponent(clientName)}&portfolio=in.(${pks.join(',')})`);
+  } catch (e) {
+    showToast(`Could not remove "${clientName}" from the database: ${e.message}`, 'error');
+    throw e;
   }
 }
 
@@ -27346,7 +27413,7 @@ async function saveNewClient() {
   closeAddClientModal();
   rebuildAll();
   const touchedPortfolios = new Set([...addedTo, ...updatedPortfolios]);
-  touchedPortfolios.forEach(pk => saveClientsToSupabase(pk).catch(e => console.warn('Save failed:', e)));
+  touchedPortfolios.forEach(pk => saveSingleClientToSupabase(pk, name).catch(e => console.warn('Save failed:', e)));
   if (addedTo.length) {
     fireClientAddedWorkflows(name, addedTo).catch(e => console.warn('client_added workflow check failed:', e.message));
     addedTo.forEach(pk => logClientActivity({ clientName: name, source: 'add_client_modal', action: 'created', newValue: `Created in ${PORTFOLIO_LABELS[pk]}` }));
@@ -27395,7 +27462,7 @@ function saveEditClient() {
   rebuildAll();
   // Determine which portfolios were edited and save each
   Object.keys(entry.portfolios).forEach(pk => {
-    saveClientsToSupabase(pk).catch(e => console.warn('Save failed:', e));
+    saveSingleClientToSupabase(pk, entry.displayName).catch(e => console.warn('Save failed:', e));
   });
   showUploadFeedback(`Updated "${entry.displayName}" · Saved`, false);
 }
@@ -27424,9 +27491,7 @@ function confirmDeleteClient() {
   const removedName = deletingClientName;
   closeDeleteClientModal();
   rebuildAll();
-  ['smb','whitelabel','support'].forEach(pk => {
-    saveClientsToSupabase(pk).catch(e => console.warn('Save failed:', e));
-  });
+  deleteSingleClientFromSupabase(removedName, ['smb', 'whitelabel', 'support']).catch(e => console.warn('Save failed:', e));
   showUploadFeedback(`Removed "${removedName}" · Saved`, false);
 }
 
@@ -33829,7 +33894,7 @@ async function executeAiTool(name, input) {
       }
 
       rebuildAll();
-      addedTo.forEach(pk => saveClientsToSupabase(pk).catch(e => console.warn('Save failed:', e)));
+      addedTo.forEach(pk => saveSingleClientToSupabase(pk, name).catch(e => console.warn('Save failed:', e)));
       const triggeredWorkflows = await fireClientAddedWorkflows(name, addedTo).catch(e => { console.warn('client_added workflow check failed:', e.message); return []; });
       addedTo.forEach(pk => logClientActivity({ clientName: name, source: 'nirvana_create_client', action: 'created', newValue: `Created in ${PORTFOLIO_LABELS[pk]}` }));
 
