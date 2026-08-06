@@ -691,7 +691,13 @@ body.ai-panel-open .main {
 }
 .cmdboard-client-card:hover { border-color: var(--orange); transform: translateY(-1px); }
 .cc-name { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
-.cc-name .cc-menu { color: var(--text3); font-weight: 400; }
+.cc-menu-btn { color: var(--text3); font-weight: 400; background: none; border: none; cursor: pointer; padding: 2px 6px; border-radius: var(--radius-xs); font-size: 13px; line-height: 1; flex-shrink: 0; }
+.cc-menu-btn:hover { color: var(--orange); background: var(--bg3); }
+/* position:fixed from the start (not absolute) -- the card grid this
+   button lives in can scroll, and an absolutely-positioned popover would
+   be clipped by that scrolling ancestor. See Known Bugs 2026-08-06. */
+.cc-menu-popover { position: fixed; background: var(--bg4); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: 0 8px 20px rgba(0,0,0,.4); padding: 6px; z-index: 1300; display: flex; flex-direction: column; gap: 2px; min-width: 110px; }
+.cc-menu-popover .row-action-btn { margin-right: 0; text-align: left; width: 100%; }
 .cc-products { font-size: 10.5px; color: var(--text3); }
 .cc-tags { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; margin-top: 6px; }
 .cc-product-icons { display: flex; gap: 3px; margin-left: auto; }
@@ -26552,11 +26558,60 @@ function renderClDirBoardClientCard(r, currentGroupKey) {
   const safe = escOnclickArg(r.row.displayName);
   const otherPks = currentGroupKey ? r.pks.filter(pk => pk !== currentGroupKey) : r.pks;
   const chips = otherPks.map(pk => `<span class="portfolio-chip chip-${pk}">${PORTFOLIO_ICONS[pk]} ${PORTFOLIO_LABELS[pk]}</span>`).join('');
+  // Menu only rendered for users who can actually edit, mirroring the
+  // compact table row's existing canEdit() gate on its Edit/Remove buttons.
+  const menuBtn = canEdit()
+    ? `<button type="button" class="cc-menu-btn" onclick="toggleClDirCardMenu(event, '${safe}')" title="Edit or delete this client">⋮</button>`
+    : '';
   return `<div class="cmdboard-client-card" onclick="openClientNotesTasksModal('${safe}')">
-    <div class="cc-name"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escAttr(r.row.displayName)}</span><span class="cc-menu">⋮</span></div>
+    <div class="cc-name"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escAttr(r.row.displayName)}</span>${menuBtn}</div>
     <div class="cc-products">${r.total} product${r.total === 1 ? '' : 's'}</div>
     ${chips ? `<div class="cc-tags">${chips}</div>` : ''}
   </div>`;
+}
+// The card's own onclick opens the client profile -- toggleClDirCardMenu
+// stops that click from bubbling up to it, and appends the popover
+// directly to document.body (not nested inside the card) so it's
+// completely outside any scrolling/clipping ancestor from the start.
+function toggleClDirCardMenu(event, clientName) {
+  event.stopPropagation();
+  const alreadyOpenForThis = clDirCardMenuOpenFor === clientName;
+  closeClDirCardMenu();
+  if (alreadyOpenForThis) return; // clicking the same ⋮ again just closes it
+  const btn = event.currentTarget;
+  const menu = document.createElement('div');
+  menu.className = 'cc-menu-popover';
+  menu.id = 'clDirCardMenuPopover';
+  menu.innerHTML = `
+    <button type="button" class="row-action-btn" onclick="event.stopPropagation(); closeClDirCardMenu(); openEditClientModal('${clientName}')"><span class="icon" data-icon="edit" data-icon-size="13"></span> Edit</button>
+    <button type="button" class="row-action-btn danger" onclick="event.stopPropagation(); closeClDirCardMenu(); openDeleteClientModal('${clientName}')"><span class="icon" data-icon="trash" data-icon-size="13"></span> Delete</button>
+  `;
+  document.body.appendChild(menu);
+  const rect = btn.getBoundingClientRect();
+  const menuRect = menu.getBoundingClientRect();
+  const margin = 4;
+  const openUpward = (window.innerHeight - rect.bottom) < menuRect.height && rect.top > menuRect.height;
+  menu.style.top = openUpward ? '' : (rect.bottom + margin) + 'px';
+  menu.style.bottom = openUpward ? (window.innerHeight - rect.top + margin) + 'px' : '';
+  let left = rect.right - menuRect.width;
+  if (left < 4) left = 4;
+  menu.style.left = left + 'px';
+  clDirCardMenuOpenFor = clientName;
+  setTimeout(() => {
+    document.addEventListener('click', closeClDirCardMenuOnOutsideClick);
+    document.addEventListener('scroll', closeClDirCardMenu, true);
+  }, 0);
+}
+let clDirCardMenuOpenFor = null;
+function closeClDirCardMenu() {
+  const existing = document.getElementById('clDirCardMenuPopover');
+  if (existing) existing.remove();
+  clDirCardMenuOpenFor = null;
+  document.removeEventListener('click', closeClDirCardMenuOnOutsideClick);
+  document.removeEventListener('scroll', closeClDirCardMenu, true);
+}
+function closeClDirCardMenuOnOutsideClick(e) {
+  if (!e.target.closest('#clDirCardMenuPopover')) closeClDirCardMenu();
 }
 
 function renderClientBoardView(rows) {
