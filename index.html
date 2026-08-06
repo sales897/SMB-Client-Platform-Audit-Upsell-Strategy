@@ -5737,7 +5737,7 @@ select.wfb-field-input { padding-right: 26px; }
           <tbody id="vaMappingTableBody"></tbody>
         </table>
       </div>
-      <div id="vaMappingWarning" style="font-size:11px;color:var(--red);margin-bottom:10px;display:none"><span class="icon" data-icon="alert" data-icon-size="16"></span> Pick a column for Business Name before continuing.</div>
+      <div id="vaMappingWarning" style="font-size:11px;color:var(--red);margin-bottom:10px;display:none"><span class="icon" data-icon="alert" data-icon-size="16"></span> <span id="vaMappingWarningText">Pick a column for Business Name before continuing.</span></div>
       <div style="background:var(--bg3);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:14px;border:1px solid var(--border)">
         <div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px">What period does this sheet cover?</div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
@@ -17938,12 +17938,38 @@ function closeVoiceUsageMappingModal() {
   pendingVoiceUsageImport = null;
 }
 
+// Friendly labels for the mapping-warning message -- keep in sync with the
+// <option> text in renderVoiceUsageMappingModal.
+const VOICE_USAGE_TARGET_LABELS = { client_name: 'Business Name', plan: 'Current Plan', in_minutes: 'In Minutes', out_minutes: 'Out Minutes', total_minutes: 'Total Minutes', status_category: 'Status Category', detail_note: 'Detail / Note' };
 function confirmVoiceUsageMapping() {
   const { rows, headers, mapping } = pendingVoiceUsageImport;
+  const warningEl = document.getElementById('vaMappingWarning');
+  const warningTextEl = document.getElementById('vaMappingWarningText');
   if (!Object.values(mapping).includes('client_name')) {
-    document.getElementById('vaMappingWarning').style.display = 'block';
+    warningTextEl.textContent = 'Pick a column for Business Name before continuing.';
+    warningEl.style.display = 'block';
     return;
   }
+  // Two columns mapped to the same target (e.g. a sheet with both "Plan"
+  // and "Current Plan" columns) would otherwise silently let whichever one
+  // comes later in the file overwrite the other with no warning at all if
+  // they ever disagreed. Block and name the exact columns involved instead
+  // of guessing which one the person meant. See Known Bugs 2026-08-05.
+  const targetToHeaders = {};
+  headers.forEach((h, i) => {
+    const target = mapping[i];
+    if (!target) return;
+    (targetToHeaders[target] = targetToHeaders[target] || []).push(h);
+  });
+  const duplicateTarget = Object.keys(targetToHeaders).find(t => targetToHeaders[t].length > 1);
+  if (duplicateTarget) {
+    const cols = targetToHeaders[duplicateTarget].map(h => `"${h}"`).join(' and ');
+    warningTextEl.textContent = `${cols} are both mapped to "${VOICE_USAGE_TARGET_LABELS[duplicateTarget]}" — pick just one for each column, or set the other to "Ignore this column".`;
+    warningEl.style.display = 'block';
+    return;
+  }
+  warningEl.style.display = 'none';
+
   const periodLabel = document.getElementById('vaMappingPeriodLabel').value.trim();
   const periodStart = document.getElementById('vaMappingPeriodStart').value;
   const periodEnd = document.getElementById('vaMappingPeriodEnd').value;
