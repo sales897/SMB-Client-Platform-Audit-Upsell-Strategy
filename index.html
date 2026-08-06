@@ -17829,6 +17829,12 @@ function voiceRateFor(plan) {
 // ─── Import wizard: upload → map columns → review/period → save ───────────
 function guessVoiceUsageColumn(header) {
   const h = normalizeHeader(header);
+  // Checked first and returns immediately: an ID/key column (e.g. "Business
+  // ID", "Record ID", "Client ID") should never auto-map to Business Name
+  // just because it also contains the word "business" -- \bid\b matches
+  // "id" as its own whole word, not as a substring of something else like
+  // "paid" or "void". See Known Bugs 2026-08-05.
+  if (/\bid\b/.test(h)) return '';
   if (/business|client|company|^name$/.test(h)) return 'client_name';
   if (/plan/.test(h)) return 'plan';
   if (/^in.?min|inbound/.test(h)) return 'in_minutes';
