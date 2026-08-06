@@ -2275,7 +2275,7 @@ tr.pg-hidden-row { display: none; }
 .themed-select-btn:disabled { opacity: .4; cursor: not-allowed; }
 .themed-select-btn:disabled:hover { border-color: var(--border); }
 .themed-select-caret { font-size: 9px; color: var(--text3); flex-shrink: 0; }
-.themed-select-panel { position: absolute; top: calc(100% + 4px); left: 0; min-width: 100%; max-height: 260px; overflow-y: auto; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: 0 8px 20px rgba(0,0,0,.4); z-index: 40; }
+.themed-select-panel { position: fixed; min-width: 120px; max-height: 260px; overflow-y: auto; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: 0 8px 20px rgba(0,0,0,.4); z-index: 1300; }
 .themed-select-option { padding: 8px 12px; font-size: 11.5px; font-weight: 600; color: var(--text2); cursor: pointer; white-space: nowrap; }
 .themed-select-option:hover { background: var(--orange-dim); color: var(--orange); }
 .themed-select-option.active { color: var(--orange); background: var(--orange-dim); }
@@ -13240,32 +13240,30 @@ function toggleThemedSelect(selectId, event) {
   panel.style.display = opening ? '' : 'none';
   if (opening) positionThemedSelectPanel(panel);
 }
-// Flips the panel to open upward instead of downward when there isn't
-// enough room below in the viewport. .themed-select-panel is absolutely
-// positioned with a fixed `top: calc(100% + 4px)` in its base CSS, with no
-// boundary check -- opened near the bottom of the screen (e.g. the
-// hour/minute pickers inside the task date/time popover, but this affects
-// every themed-select anywhere in the app), it could render partly or
-// fully off-screen and unreachable. See Known Bugs 2026-08-05.
+// Positions the now-fixed-position panel using the trigger's live screen
+// coordinates -- position:fixed (changed 2026-08-06, see Known Bugs) means
+// this is no longer clippable by a scrolling ancestor (e.g. the Customer
+// Inventory table's overflow-x:auto wrapper truncated these dropdowns
+// before), but it does mean every coordinate has to be computed here
+// explicitly rather than left to CSS's relative `top: calc(100% + 4px)`,
+// which only made sense when the panel was still position:absolute.
+// Still flips upward instead of downward when there isn't enough room
+// below in the viewport, same as before.
 function positionThemedSelectPanel(panel) {
-  panel.style.top = '';
-  panel.style.bottom = '';
   const wrap = panel.closest('.themed-select');
   if (!wrap) return;
   const wrapRect = wrap.getBoundingClientRect();
+  const margin = 4;
+  panel.style.left = Math.max(0, wrapRect.left) + 'px';
+  panel.style.minWidth = Math.max(120, wrapRect.width) + 'px';
   const spaceBelow = window.innerHeight - wrapRect.bottom;
   const spaceAbove = wrapRect.top;
   if (panel.offsetHeight > spaceBelow && spaceAbove > spaceBelow) {
-    // .themed-select-panel's `top: calc(100% + 4px)` is set at the CSS
-    // class level, not inline -- clearing an inline style above does
-    // nothing to cancel it. Setting both top (from the class) and bottom
-    // (here) at once on an absolutely positioned element with no explicit
-    // height collapses its computed height to the gap between them, which
-    // can be zero or negative -- the panel silently renders with no
-    // visible height at all. Explicitly overriding top to 'auto' is what
-    // actually cancels the class rule. See Known Bugs 2026-08-05.
     panel.style.top = 'auto';
-    panel.style.bottom = 'calc(100% + 4px)';
+    panel.style.bottom = (window.innerHeight - wrapRect.top + margin) + 'px';
+  } else {
+    panel.style.bottom = 'auto';
+    panel.style.top = (wrapRect.bottom + margin) + 'px';
   }
 }
 function pickThemedSelect(selectId, value, event) {
@@ -13287,6 +13285,14 @@ function pickThemedSelect(selectId, value, event) {
 document.addEventListener('click', (e) => {
   if (!e.target.closest('.themed-select')) document.querySelectorAll('.themed-select-panel').forEach(p => p.style.display = 'none');
 });
+// Closes any open themed-select panel the moment ANY scrollable container
+// scrolls (capture phase, since scroll doesn't bubble) -- now that the
+// panel is position:fixed (2026-08-06), it no longer scrolls along with a
+// scrolling ancestor like the Customer Inventory table, so without this it
+// would visually detach from its trigger button instead of moving with it.
+document.addEventListener('scroll', () => {
+  document.querySelectorAll('.themed-select-panel').forEach(p => { if (p.style.display !== 'none') p.style.display = 'none'; });
+}, true);
 
 // ─── Autocorrect (added 2026-08-05, deepened same day): common-typo
 // auto-replace + forced native spellcheck, applied Hub-wide via event
