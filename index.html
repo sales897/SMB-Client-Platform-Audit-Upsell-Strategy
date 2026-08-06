@@ -4572,11 +4572,13 @@ select.wfb-field-input { padding-right: 26px; }
             <thead><tr>
               <th style="text-align:left;padding-left:var(--space-3)">Organization</th>
               <th style="text-align:left">Status</th>
+              <th style="text-align:left">Plan</th>
               <th style="text-align:left">Owner</th>
               <th style="text-align:left">Billing</th>
               <th style="text-align:left">Last Activity</th>
               <th>Monthly Rate</th>
-              <th title="Monthly Rate + matching Ad Spend budget, if that client has one">Total</th>
+              <th>Google Ads Management</th>
+              <th title="Monthly Rate + Google Ads Management + matching Ad Spend budget + Ad Spend add-ons, if that client has a match">Total</th>
               <th></th>
             </tr></thead>
             <tbody id="bhInventoryBody"></tbody>
@@ -4590,7 +4592,7 @@ select.wfb-field-input { padding-right: 26px; }
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4);align-items:start">
         <div class="card brand-section-card">
           <div class="card-title" style="font-size:13px">Revenue</div>
-          <div class="card-sub" style="font-size:11px;margin-bottom:8px" id="bhRevenueSub">Based on manually-entered monthly rates.</div>
+          <div class="card-sub" style="font-size:11px;margin-bottom:8px" id="bhRevenueSub">Based on manually-entered Monthly Rate and Google Ads Management values.</div>
           <div id="bhRevenuePanel"></div>
         </div>
         <div class="card brand-section-card">
@@ -24544,20 +24546,55 @@ async function saveClientsToSupabase(pk) {
   try {
     const clients = getClients(pk);
 
+    // Fetch each client's existing Business Health fields FIRST, before the
+    // delete-and-rebuild below, and carry them forward into the rebuilt
+    // rows. Real bug found 2026-08-06: this function used to delete every
+    // row for the portfolio and re-insert brand-new ones (fresh IDs) built
+    // only from portfolio/name/organization/cell_notes/products -- silently
+    // dropping Monthly Rate, Plan, Google Ads Management, Customer Status,
+    // Owner, Billing Status, and every BH-tracked date on every single
+    // client edit anywhere in the Hub (checking a product box, renaming an
+    // org, etc.), not just when someone was actually trying to change one
+    // of those fields. If a client name has more than one existing row
+    // (a symptom of this same bug over time creating duplicates), the one
+    // with a Monthly Rate set wins -- this naturally consolidates
+    // duplicates going forward, since only one row per real client gets
+    // rebuilt, but it's possible for a duplicate's OTHER independently-set
+    // field to be lost in that consolidation.
+    const BH_FIELDS = ['customer_status', 'account_owner', 'billing_status', 'monthly_rate', 'plan', 'google_ads_management', 'trial_date', 'first_paid_date', 'last_billing_date', 'cancellation_date', 'created_at'];
+    let existingByName = new Map();
+    try {
+      const existingRows = await sbSelect('portfolio_clients', `portfolio=eq.${pk}&select=id,name,${BH_FIELDS.join(',')}`);
+      existingRows.forEach(r => {
+        const key = normName(r.name);
+        const prev = existingByName.get(key);
+        if (!prev || (r.monthly_rate != null && prev.monthly_rate == null)) existingByName.set(key, r);
+      });
+    } catch (e) {
+      console.warn('Could not fetch existing Business Health fields before rebuild:', e.message);
+    }
+
     // Delete existing clients for this portfolio, then re-insert
     await sbDelete('portfolio_clients', `portfolio=eq.${pk}`);
 
     if (clients.length === 0) return;
 
-    const rows = clients.map(c => ({
-      portfolio: pk,
-      name: c.name,
-      organization: c.org || null,
-      cell_notes: c.cellNotes || null,
-      products: Object.fromEntries(
-        getProdKeys(pk).map(k => [k, !!c[k]])
-      ),
-    }));
+    const rows = clients.map(c => {
+      const existing = existingByName.get(normName(c.name));
+      const carried = {};
+      if (existing) BH_FIELDS.forEach(f => { carried[f] = existing[f]; });
+      return {
+        id: existing ? existing.id : (crypto.randomUUID ? crypto.randomUUID() : 'pc_' + Date.now() + Math.random().toString(16).slice(2)),
+        portfolio: pk,
+        name: c.name,
+        organization: c.org || null,
+        cell_notes: c.cellNotes || null,
+        products: Object.fromEntries(
+          getProdKeys(pk).map(k => [k, !!c[k]])
+        ),
+        ...carried,
+      };
+    });
 
     await sbUpsert('portfolio_clients', rows);
     console.log(`✅ Saved ${clients.length} clients to Supabase [${pk}]`);
@@ -25609,7 +25646,7 @@ const BH_DEFINITIONS = [
 async function rebuildBusinessHealthPage() {
   if (!document.getElementById('page-businesshealth')) return;
   try {
-    BH_INVENTORY = await sbSelect('portfolio_clients', 'select=id,name,portfolio,organization,customer_status,account_owner,billing_status,monthly_rate,trial_date,first_paid_date,last_billing_date,cancellation_date,created_at&order=name.asc');
+    BH_INVENTORY = await sbSelect('portfolio_clients', 'select=id,name,portfolio,organization,customer_status,account_owner,billing_status,monthly_rate,plan,google_ads_management,trial_date,first_paid_date,last_billing_date,cancellation_date,created_at&order=name.asc');
   } catch (e) {
     console.warn('Could not load customer inventory:', e.message);
     BH_INVENTORY = [];
@@ -25688,11 +25725,15 @@ function computeBusinessHealthReport(period) {
   const payingInactive = BH_INVENTORY.filter(r => r.billing_status === 'billed' && daysSinceLastClientNote(r.name) > 90).length;
   const noOwner = BH_INVENTORY.filter(r => !r.account_owner).length;
 
-  const withRate = BH_INVENTORY.filter(r => r.monthly_rate && r.customer_status !== 'cancelled');
-  // mrr already correctly sums across every one of a client's rows -- summing
-  // revenue across a multi-portfolio client's relationships is exactly the
-  // intended behavior, so this doesn't change.
-  const mrr = withRate.reduce((s, r) => s + Number(r.monthly_rate), 0);
+  const withRate = BH_INVENTORY.filter(r => (r.monthly_rate || r.google_ads_management) && r.customer_status !== 'cancelled');
+  // MRR includes Google Ads Management alongside Monthly Rate (added
+  // 2026-08-06, confirmed with Oscar) -- both are genuine recurring
+  // revenue Niche charges the client directly, unlike Ad Spend Budget/
+  // Add-ons, which is the client's own media spend passthrough, not
+  // Niche's revenue. Already correctly sums across every one of a
+  // client's rows -- summing revenue across a multi-portfolio client's
+  // relationships is exactly the intended behavior, so this doesn't change.
+  const mrr = withRate.reduce((s, r) => s + Number(r.monthly_rate || 0) + Number(r.google_ads_management || 0), 0);
   // rateCoverage and arpu now use the deduplicated rated-client count instead
   // of a raw row count, so they stay meaningful against the new, deduplicated
   // "total" above (a raw-row denominator here would let rateCoverage exceed
@@ -25731,7 +25772,7 @@ function renderBhAnswers(rep) {
   if (!el) return;
   const confident = ['Total & paying customer counts', 'New/churned counts for the selected period', 'Customer health segmentation', 'Reconciliation flags (unbilled, inactive, unowned)'];
   const notConfident = ['Platform Adoption (workflow runs, AI actions) — no data source connected'];
-  if (rep.rateCoverage < 100) notConfident.push(`Revenue — only ${rep.rateCoverage}% of organizations have a monthly rate entered`);
+  if (rep.rateCoverage < 100) notConfident.push(`Revenue — only ${rep.rateCoverage}% of organizations have a Monthly Rate or Google Ads Management value entered`);
   const qas = [
     ['How many customers do we have?', `${rep.total.toLocaleString()} total.`],
     ['How many paying customers do we have?', `${rep.paying.toLocaleString()}.`],
@@ -25819,7 +25860,7 @@ function renderBhRevenue(rep) {
       <div><div class="int-info-label">ARPU</div><div class="int-info-value">${fmtMoney(rep.arpu)}</div></div>
       <div><div class="int-info-label">Rate Coverage</div><div class="int-info-value">${rep.rateCoverage}% of orgs</div></div>
     </div>
-    ${rep.rateCoverage < 100 ? `<div style="font-size:10.5px;color:var(--yellow);margin-top:8px">${(rep.total * (100 - rep.rateCoverage) / 100).toFixed(0)} organization(s) have no monthly rate entered — MRR/ARR above only reflects what's been entered so far.</div>` : ''}
+    ${rep.rateCoverage < 100 ? `<div style="font-size:10.5px;color:var(--yellow);margin-top:8px">${(rep.total * (100 - rep.rateCoverage) / 100).toFixed(0)} organization(s) have neither a Monthly Rate nor Google Ads Management value entered — MRR/ARR above only reflects what's been entered so far.</div>` : ''}
     <div style="font-size:10px;color:var(--text3);margin-top:6px">GRR/NRR aren't shown — they require tracking rate changes over time (upgrades, downgrades, churn), and only one current rate per org is captured today.</div>
   `;
 }
@@ -25964,6 +26005,13 @@ function renderBhInventoryTable() {
         <option value="cancelled" ${r.customer_status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
         <option value="internal" ${r.customer_status === 'internal' ? 'selected' : ''}>Internal</option>
       </select></td>
+      <td><select id="bh-plan-${r.id}" onchange="updateBhField('${r.id}','plan',this.value || null)">
+        <option value="" ${!r.plan ? 'selected' : ''}>—</option>
+        <option value="Core" ${r.plan === 'Core' ? 'selected' : ''}>Core</option>
+        <option value="Growth" ${r.plan === 'Growth' ? 'selected' : ''}>Growth</option>
+        <option value="Pro" ${r.plan === 'Pro' ? 'selected' : ''}>Pro</option>
+        <option value="Scale" ${r.plan === 'Scale' ? 'selected' : ''}>Scale</option>
+      </select></td>
       <td><select id="bh-owner-${r.id}" onchange="updateBhField('${r.id}','account_owner',this.value)">
         <option value="">Unassigned</option>
         ${TEAM_MEMBERS.map(m => `<option value="${escAttr(m.email)}" ${r.account_owner === m.email ? 'selected' : ''}>${escAttr(m.name)}</option>`).join('')}
@@ -25975,6 +26023,7 @@ function renderBhInventoryTable() {
       </select></td>
       <td style="font-size:11px;color:var(--text3)">${lastActivityLabel}</td>
       <td><input type="number" id="bh-rate-${r.id}" value="${r.monthly_rate || ''}" placeholder="—" style="width:80px" onkeydown="if(event.key==='Enter') this.blur()" onchange="updateBhField('${r.id}','monthly_rate', this.value ? Number(this.value) : null)"></td>
+      <td><input type="number" id="bh-gam-${r.id}" value="${r.google_ads_management || ''}" placeholder="—" style="width:80px" onkeydown="if(event.key==='Enter') this.blur()" onchange="updateBhField('${r.id}','google_ads_management', this.value ? Number(this.value) : null)"></td>
       <td id="bh-total-${r.id}">${renderBhTotalCell(r)}</td>
       <td><button class="row-action-btn" onclick="openClientNotesTasksModal('${escAttr(r.name)}')" title="Open profile"><span class="icon" data-icon="eye" data-icon-size="13"></span></button></td>
     </tr>`;
@@ -25982,6 +26031,7 @@ function renderBhInventoryTable() {
 
   pageItems.forEach(r => {
     themifySelect(`bh-status-${r.id}`, { fullWidth: true });
+    themifySelect(`bh-plan-${r.id}`, { fullWidth: true });
     themifySelect(`bh-owner-${r.id}`, { fullWidth: true });
     themifySelect(`bh-billing-${r.id}`, { fullWidth: true });
   });
@@ -25993,23 +26043,41 @@ function renderBhInventoryTable() {
   }
 }
 
-// Total = Monthly Rate + a confidently-matched Ad Spend budget, if one
-// exists for this client. Uses the same "don't guess" threshold as every
-// other fuzzy match built tonight -- an uncertain Ad Spend match is left
-// out rather than silently added in.
-function renderBhTotalCell(r) {
+// Parses Ad Spend's addons array -- each element is a dollar-formatted
+// string like "$30.00" (confirmed live, not a plain feature-name label) --
+// into a summed numeric total. Robust to more than one add-on per client,
+// even though no client currently has more than one.
+function sumAdSpendAddons(addons) {
+  if (!Array.isArray(addons) || addons.length === 0) return 0;
+  return addons.reduce((sum, a) => sum + (Number(String(a).replace(/[^0-9.-]/g, '')) || 0), 0);
+}
+// Pure computation, no HTML -- the single source of truth for a client's
+// Total, used by both renderBhTotalCell (UI) and the get_client_business_
+// health_detail Nirvana tool, so the two can never silently disagree.
+// Uses the same "don't guess" 0.92 fuzzy-match threshold as every other
+// Ad Spend match built for this feature -- an uncertain match is left out
+// rather than silently added in.
+function computeBhTotal(r) {
   const rate = Number(r.monthly_rate || 0);
-  let budget = 0, matchedName = null;
+  const gam = Number(r.google_ads_management || 0);
+  let budget = 0, addonsTotal = 0, matchedName = null;
   if (AD_SPEND_BUSINESSES.length) {
     const scored = AD_SPEND_BUSINESSES.map(a => ({ a, score: nameSimilarity(r.name, a.name) })).sort((x, y) => y.score - x.score);
-    if (scored[0] && scored[0].score >= 0.92) { budget = Number(scored[0].a.budget || 0); matchedName = scored[0].a.name; }
+    if (scored[0] && scored[0].score >= 0.92) {
+      budget = Number(scored[0].a.budget || 0);
+      addonsTotal = sumAdSpendAddons(scored[0].a.addons);
+      matchedName = scored[0].a.name;
+    }
   }
-  const total = rate + budget;
+  return { rate, gam, budget, addonsTotal, matchedName, total: rate + gam + budget + addonsTotal };
+}
+function renderBhTotalCell(r) {
+  const { rate, gam, budget, addonsTotal, matchedName, total } = computeBhTotal(r);
   if (total === 0) return `<span style="color:var(--text3)">—</span>`;
-  const title = budget > 0
-    ? `Monthly Rate $${rate.toFixed(2)} + Ad Spend budget $${budget.toFixed(2)} (matched: ${escAttr(matchedName)})`
-    : `Monthly Rate only — no matching Ad Spend record found`;
-  return `<span style="font-weight:700" title="${title}">$${total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>`;
+  const parts = [`Monthly Rate $${rate.toFixed(2)}`, `Google Ads Management $${gam.toFixed(2)}`];
+  if (matchedName) parts.push(`Ad Spend Budget $${budget.toFixed(2)}`, `Ad Spend Add-ons $${addonsTotal.toFixed(2)} (matched: ${escAttr(matchedName)})`);
+  else parts.push('no matching Ad Spend record found');
+  return `<span style="font-weight:700" title="${parts.join(' + ')}">$${total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>`;
 }
 async function updateBhField(id, field, value) {
   if (!requirePermission('edit')) { renderBhInventoryTable(); return; }
@@ -26019,10 +26087,10 @@ async function updateBhField(id, field, value) {
   row[field] = value;
   try { await sbPatch('portfolio_clients', `id=eq.${id}`, { [field]: value }); }
   catch (e) { row[field] = prev; showToast('Could not save: ' + e.message, 'error'); renderBhInventoryTable(); return; }
-  // Update just this row's Total cell directly -- monthly_rate is the field
-  // that actually feeds into it, but recomputing unconditionally here is
-  // cheap and keeps this correct even if another field affecting Total gets
-  // added later.
+  // Update just this row's Total cell directly -- monthly_rate and
+  // google_ads_management are the fields that actually feed into it, but
+  // recomputing unconditionally here is cheap and keeps this correct even
+  // if another field affecting Total gets added later.
   const totalCell = document.getElementById('bh-total-' + id);
   if (totalCell) totalCell.innerHTML = renderBhTotalCell(row);
   renderBhReportPanels();
@@ -31769,10 +31837,19 @@ const AI_AGENT_TOOLS = [
   { name: 'get_kpi_summary', description: 'Get the current SuccessOS KPI scores and recent trend for all three KPIs.', input_schema: { type: 'object', properties: {} } },
   {
     name: 'get_business_health_summary',
-    description: 'Get the real, current Business Health Framework numbers for a given period: total/paying customers, active organizations at 30/90/180/365 days, new/churned customers in the period, real customer health segmentation (healthy/underutilizing/at-risk — the same scoring used for individual client risk flags elsewhere in the Hub), real reconciliation flags (active-but-unbilled, paying-but-inactive, unowned accounts), and revenue (MRR/ARR/ARPU, with real coverage — how many organizations actually have a rate entered). Also reports what is genuinely NOT available yet (Platform Adoption — workflow runs/AI actions — needs a Niche platform connection that does not exist today) rather than guessing at it. Use this whenever asked how many customers/paying customers/active customers there are, what churned, how healthy the business is, or any of the standard business-health questions.',
+    description: 'Get the real, current Business Health Framework numbers for a given period: total/paying customers, active organizations at 30/90/180/365 days, new/churned customers in the period, real customer health segmentation (healthy/underutilizing/at-risk — the same scoring used for individual client risk flags elsewhere in the Hub), real reconciliation flags (active-but-unbilled, paying-but-inactive, unowned accounts), and revenue (MRR/ARR/ARPU — includes both Monthly Rate and Google Ads Management as of 2026-08-06, since both are genuine recurring revenue Niche charges directly; does NOT include Ad Spend Budget/Add-ons, which is the client\'s own media spend passthrough, not Niche\'s revenue — with real coverage, how many organizations actually have at least one of those two rate fields entered). Also reports what is genuinely NOT available yet (Platform Adoption — workflow runs/AI actions — needs a Niche platform connection that does not exist today) rather than guessing at it. Use this whenever asked how many customers/paying customers/active customers there are, what churned, how healthy the business is, or any of the standard company-wide business-health questions. For a SPECIFIC client\'s Plan, rate, or total value, use get_client_business_health_detail instead — this tool only gives aggregates.',
     input_schema: {
       type: 'object',
       properties: { period: { type: 'string', enum: ['daily', 'biweekly', 'monthly', 'yearly'], description: 'Reporting window for "new" and "churned" counts. Defaults to monthly if not specified.' } },
+    },
+  },
+  {
+    name: 'get_client_business_health_detail',
+    description: 'Get one specific client\'s Customer Inventory / Business Health record — Plan (Core/Growth/Pro/Scale), Monthly Rate, Google Ads Management, Customer Status, Owner, Billing Status, and the same Total the Customer Inventory table itself shows (Monthly Rate + Google Ads Management + a confidently-matched Ad Spend Budget and Add-ons, if a match exists — omitted from the breakdown entirely when no confident match is found, rather than guessed at). Use this whenever asked about a specific client\'s plan, rate, or total value — get_business_health_summary only gives company-wide aggregates, this is the per-client lookup.',
+    input_schema: {
+      type: 'object',
+      properties: { client_name: { type: 'string' } },
+      required: ['client_name'],
     },
   },
   {
@@ -32645,7 +32722,7 @@ async function executeAiTool(name, input) {
     case 'get_business_health_summary': {
       const period = ['daily', 'biweekly', 'monthly', 'yearly'].includes(input.period) ? input.period : 'monthly';
       try {
-        BH_INVENTORY = await sbSelect('portfolio_clients', 'select=id,name,portfolio,organization,customer_status,account_owner,billing_status,monthly_rate,trial_date,first_paid_date,last_billing_date,cancellation_date,created_at&order=name.asc');
+        BH_INVENTORY = await sbSelect('portfolio_clients', 'select=id,name,portfolio,organization,customer_status,account_owner,billing_status,monthly_rate,plan,google_ads_management,trial_date,first_paid_date,last_billing_date,cancellation_date,created_at&order=name.asc');
       } catch (e) { return { error: 'Could not load the customer inventory: ' + e.message }; }
       const rep = computeBusinessHealthReport(period);
       return {
@@ -32658,15 +32735,44 @@ async function executeAiTool(name, input) {
         revenue: {
           mrr: Number(rep.mrr.toFixed(2)), arr: Number(rep.arr.toFixed(2)), arpu: Number(rep.arpu.toFixed(2)),
           rate_coverage_pct: rep.rateCoverage,
-          note: 'MRR/ARR only reflect organizations with a monthly rate actually entered — check rate_coverage_pct before treating these as complete.',
+          note: 'MRR/ARR include both Monthly Rate and Google Ads Management (both are genuine recurring revenue Niche charges directly) for organizations with at least one of those actually entered -- check rate_coverage_pct before treating these as complete. Does NOT include Ad Spend Budget/Add-ons, since that\'s the client\'s own media spend passthrough, not Niche\'s revenue.',
         },
         platform_adoption: { available: false, note: 'Workflow runs and AI actions are not available — the Hub has no connection to the real Niche platform\'s usage data yet. This is a known, real gap, not a zero.' },
+      };
+    }
+    case 'get_client_business_health_detail': {
+      const entry = aiFindMergedClient(input.client_name);
+      const nameToMatch = entry ? entry.displayName : input.client_name;
+      let rows;
+      try {
+        rows = await sbSelect('portfolio_clients', `select=id,name,portfolio,customer_status,account_owner,billing_status,monthly_rate,plan,google_ads_management&name=eq.${encodeURIComponent(nameToMatch)}`);
+      } catch (e) { return { error: 'Could not load Business Health data: ' + e.message }; }
+      if (!rows || rows.length === 0) return { error: `No Customer Inventory record found for "${input.client_name}".` };
+      // A client can have more than one row (one per portfolio relationship,
+      // or an occasional leftover duplicate) -- report each separately
+      // rather than silently picking one, same principle as everywhere
+      // else in the Hub that refuses to guess between ambiguous matches.
+      return {
+        client: nameToMatch,
+        records: rows.map(r => {
+          const t = computeBhTotal(r);
+          return {
+            portfolio: PORTFOLIO_LABELS[r.portfolio] || r.portfolio,
+            plan: r.plan || null,
+            customer_status: r.customer_status || null,
+            account_owner: r.account_owner || null,
+            billing_status: r.billing_status || null,
+            monthly_rate: t.rate, google_ads_management: t.gam,
+            ad_spend_match: t.matchedName ? { matched_name: t.matchedName, budget: t.budget, addons_total: t.addonsTotal } : null,
+            total: Number(t.total.toFixed(2)),
+          };
+        }),
       };
     }
     case 'generate_business_health_report': {
       const period = ['daily', 'biweekly', 'monthly', 'yearly'].includes(input.period) ? input.period : 'monthly';
       try {
-        BH_INVENTORY = await sbSelect('portfolio_clients', 'select=id,name,portfolio,organization,customer_status,account_owner,billing_status,monthly_rate,trial_date,first_paid_date,last_billing_date,cancellation_date,created_at&order=name.asc');
+        BH_INVENTORY = await sbSelect('portfolio_clients', 'select=id,name,portfolio,organization,customer_status,account_owner,billing_status,monthly_rate,plan,google_ads_management,trial_date,first_paid_date,last_billing_date,cancellation_date,created_at&order=name.asc');
       } catch (e) { return { error: 'Could not load the customer inventory: ' + e.message }; }
       bhReportPeriod = period;
       if (document.getElementById('page-businesshealth')) {
@@ -34560,7 +34666,7 @@ async function runAiAgentTurn(toolTagForNextText) {
   const u = getCurrentUser();
   const systemPrompt = `${currentLanguage === 'es' ? 'IMPORTANT: The Hub is currently set to Spanish (MX). Respond to the user ENTIRELY in Spanish (Mexican Spanish), including this entire conversation, regardless of what language they write in — unless they explicitly ask you to switch to English. Data values, client names, and product names stay as-is; everything you write around them is in Spanish.\n\n' : ''}Current date and time: ${new Date().toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })}. This is read directly from the user's own device clock, so it already reflects their real timezone — treat it as ground truth. For ANY relative time request ("in 15 minutes", "tomorrow at 9am", "next Monday"), compute the exact resulting date/time yourself from this reference. Never ask the user what time it is or guess at a timestamp — the real current time is always right here.
 
-You are Nirvana, the AI Agent inside ${ORG_SETTINGS.company_name}'s ${ORG_SETTINGS.product_name} — "${ORG_SETTINGS.product_name}" — helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the ${ORG_SETTINGS.portfolio_labels.smb}, ${ORG_SETTINGS.portfolio_labels.whitelabel}, and ${ORG_SETTINGS.portfolio_labels.support} portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When numbers are already shown in a table or card list, don't restate those same numbers in the prose that follows — use that text only to add what the table doesn't already show (the single most important takeaway, a flagged risk, or a recommended next step), kept to 1-2 sentences. Skip throat-clearing openers like "Here's the X snapshot:" and lead directly with whatever matters most. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. To tag and notify a teammate, include "@Name" directly in a note's text (e.g. "@Kevin can you check the billing on this one?") — this is the Hub's real, existing tagging mechanism, matched against the teammate's first name as registered, case-insensitive; it is NOT a separate feature that needs a different tool. If someone says something like "tag @Kevin" on its own with no note content or client specified, that almost always means they want a note that mentions Kevin — ask which client and what the note should say, rather than saying tagging isn't supported. Whenever a request would affect MORE THAN ONE client (e.g. "create a follow-up task for every client that hasn't been touched in 30 days," or a list of specific client names), always use bulk_create_tasks or bulk_add_note instead of calling create_task/add_note in a loop — looping individual calls would force a separate confirmation click per client, while the bulk tools show one confirmation with the full affected list. Workflows can trigger on six things — "inactivity" (no note in N days), "schedule" (recurring cadence, for one client or a whole portfolio), "client_added" (fires the moment a new client is created), "task_due_soon" (reminds before an existing task's due date), "kpi_drop" (a SuccessOS score went down — team-level, not tied to one client), or "collections_status" (an account entered a specific Collections status) — and can take four actions when they fire: create a task (optionally with a real due date/time), just send a notification with no task, log an audit-trail note with no task or notification, or have you draft the actual task content yourself instead of using fixed text. If someone describes an automation idea in plain English, translate it into the right trigger type, action type, and fields yourself rather than making them fill out a form. For questions about company policy, procedures, "how do we...", or what the website/docs say, search the Knowledge Base — it contains SOPs, docs, and website content the team has fed in, separate from live client data. ATLAS is a separate AI agent, Oscar's personal assistant, sharing this same Hub — she owns a different domain than you: Oscar's Close CRM call notes and what was said/promised on specific calls. Whenever a question is really about a past call ("what did we tell X," "what did Oscar promise Y," "what came up on the last call with Z"), use ask_atlas rather than guessing or saying you don't have that information — you don't have direct access to call notes, she does. Don't use ask_atlas for anything you already have a direct tool for (account status, billing, KPIs, adoption data) — only for the call-notes/commitments domain that's genuinely hers, not yours. Voice Agent usage minutes and cost (added 2026-08-05, from monthly usage sheets uploaded into the Hub) is one of those direct tools — get_voice_agent_usage, not ask_atlas — and it's a different thing from get_product_adoption's yes/no adoption tracking: adoption tells you whether a client uses Voice Agent at all, this tells you how many minutes and what it's costing them, for the current month, a rolling 30/60/90-day window, or one specific past month by name. You can read and explain every chart in the Hub: get_portfolio_summary explains a portfolio's Product Adoption Rate and Products Per Client charts, get_product_adoption explains the Voice Agent / Text Agent charts, get_collections_summary explains the Collections breakdown (always separated into Outstanding Balances vs Card Fails, each with its own status breakdown — never collapse these into one number), get_adspend_summary explains Ad Spend's promo/budget breakdown, and get_kpi_summary explains the SuccessOS scores. When someone asks you to break down, interpret, or explain any data or chart, always call the specific tool that has that breakdown built in rather than answering from a vaguer or more general tool — if a user asks for a split by category/status/type, that split should already be in the tool result; use it. Prefer the data tools above for explaining charts — they're faster and more precise. Whenever someone wants the actual client names behind an adoption number (not just the count or percentage get_product_adoption gives — e.g. "which clients aren't on Voice Agent" or "list who's using Yelp"), use list_clients_by_product_status instead; it takes the same product_key values as get_product_adoption plus using (true/false) and an optional portfolio filter, and caps long lists at 150 names (always mention if a result says truncated: true, and that the count field is still the real total either way). Only use view_chart when the question is genuinely about the chart's visual appearance itself (e.g. "does this look right," "what do you see," "describe this chart visually") — calling it will switch the user's screen to that chart's page, so mention that you're pulling it up. Whenever asked to check for discrepancies, duplicates, mismatches, or whether numbers add up anywhere in the Hub (including client counts, Collections, Ad Spend, or the Knowledge Base), always call audit_data_integrity rather than speculating about possible causes — it actually reconciles the numbers and reports genuine findings, so use what it returns instead of guessing at explanations like "could be duplicates" or "could be stale data." A daily briefing already gets shown automatically once per day when the chat is first opened — if asked for a summary, rundown, or "what should I focus on" at any other point, use get_daily_briefing to pull the same live data fresh rather than referencing whatever was shown earlier, since it may be out of date by then. Whenever asked "which accounts are at risk," "who needs attention," or how healthy a specific client is, use get_at_risk_clients or get_client_health rather than checking just one signal (like Collections alone, or note recency alone) — those tools already combine engagement, task backlog, and billing friction into one score with a transparent breakdown of exactly why, which is a more honest answer than picking one factor and guessing at the rest. Whenever asked what's changed for a specific client recently, who created or updated a client record, or when a client was actually added to the Hub, use get_client_activity_history — it's the real, logged audit trail (every creation and every field-level change, from every entry point in the Hub: Bulk Reconcile Import, CSV imports, Add Client, onboarding graduation, or your own create_client/update_client_contact calls), not something to infer from notes or guess at. A client can have more than one saved contact now — the first one added is always the primary, and each individual contact can also have more than one phone number or email (added 2026-08-05) -- list_client_contacts only includes the emails/phones arrays when a contact actually has more than one of either, so their absence means there's just the single one already shown; update_client_contact's contact_email/contact_phone only ever set the primary (first) entry for that contact, without removing any additional ones added through the Hub's UI. Use list_client_contacts to see everyone on file for a client, add_client_contact to add a genuinely new additional contact (it will refuse if the name looks like a near-duplicate of someone already saved, so check first if unsure), update_client_contact to change an existing contact's info (defaults to the primary contact unless target_contact_name is given to target a specific other one), and delete_client_contact to remove one by name — it will ask for clarification rather than guess if the name is ambiguous or not found. To pull contact info and notes from Close CRM for a client, use enrich_client_from_close — it uses an already-confirmed match if the client profile has one, otherwise fuzzy-matches by business name and either proceeds automatically with a clear single winner or returns several candidates for the user to choose between (never silently guessing between similarly-named businesses); the result is read-only, so use add_client_contact afterward if a Close contact should actually be saved into the Hub. Whenever asked about Voice Agent or Text Agent adoption trends, growth, peaks, or how a metric has changed over time (including for a specific date range someone mentions), use get_adoption_trend — it's backed by real daily snapshots, unlike get_portfolio_summary/get_product_adoption which only reflect the current moment; if a person is looking at a filtered date range on the Voice Agent or Text Agent page, ask what range if they haven't said, rather than assuming it matches what's currently on their screen. For anything about Goals — "how are we doing this month," a specific named goal's progress, its weekly/bi-weekly breakdown, or its change history — use get_goals_summary, get_goal_details, list_goals, or get_goal_activity_history rather than guessing at status from a general impression; these compute the exact same real numbers and pacing logic the Goals page itself shows, including correctly handling range targets (e.g. "$32,500-$35,000") against their midpoint. To create a new goal or update a goal's current progress (goals get updated regularly through the month), use create_goal or update_goal_progress — both fuzzy-match against existing goals for that month first, so a near-duplicate name doesn't silently create a second, separate goal instead of updating the real one. To set a specific week or bi-weekly period's target/actual for a goal (e.g. "set the actual for the week of May 5th to $820,000"), use update_goal_period — it finds the matching period by its exact start date and only changes the field(s) actually given, leaving the other as-is, or creates a new period if none exists yet for that date. When summarizing data, only use the real numbers/content returned by tools — never estimate or make things up. If a tool returns an error (e.g. client not found, or nothing in the knowledge base matches), tell the user plainly rather than guessing. If a tool result includes a "note" field, don't ignore it — mention what it says (for example, a client match that only worked after ignoring punctuation/spacing differences) rather than presenting the result as a clean, unqualified match. When presenting a list of businesses or clients that genuinely don't exist yet in the Hub and could be created (for example, orphaned Ad Spend/Collections entries with no matching client record), format it as a markdown table and put a line reading exactly \`[[selectable:create_client]]\` on its own line immediately before that table — this renders the list with checkboxes so the user can pick specific ones to create instead of you needing to ask about each individually. Only use this marker for that specific "these could be created as clients" scenario — never on ordinary reporting tables (KPI trends, budget breakdowns, adoption rates, etc.), since a "create as clients" action button wouldn't make sense there. If a message says the user selected specific businesses to create as clients, treat that as them already having committed to creating those specific ones — don't re-confirm each one individually, just ask which portfolio(s) each should go into (per the existing rule: never guess a portfolio) and then create them. Onboarding records are a SEPARATE, EARLIER concept from clients — an onboarding record represents a business before it's a real client anywhere else in the Hub, tracked through six stages (Contract Signed, Kickoff Call Scheduled, Kickoff Call Completed, Setup In Progress, QA / Internal Review, Live) with its own checklist and notes. Don't confuse create_onboarding with create_client, or an onboarding record's business_name with an actual client_name — they're different things until activate_onboarding_as_client is explicitly used to graduate one into the other, which typically only makes sense once a record has reached the Live stage. The embeddable Chat Widget is a completely separate AI conversation from you — it runs on a client's own website, talking to anonymous visitors, with its own agent name/personality/instructions per widget. You have no live access into those conversations as they happen, but get_chat_widget_summary lets you check on lead activity after the fact (volume, resolution breakdown, recent leads) whenever asked about chat widget leads or website chat activity. For white-label branding (company/product name, brand colors, tier labels, whether it's "ready" to resell), use get_branding_status for the real current state — including a genuine WCAG contrast score (not a guess) and which readiness checklist items are actually done — rather than assuming everything looks fine. Branding has a real draft/live split: update_branding_draft only ever changes the unpublished draft, never the live Hub, so always tell the user a change is draft-only until publish_branding is explicitly confirmed and called separately — never publish in the same turn as a draft update without a clear, separate confirmation, since publishing is immediate and Hub-wide for everyone. For duplicate/data-quality questions beyond the simple exact-name check (find_duplicate_clients), use get_data_quality_status for the real current scan state (confidence-scored clusters, not just exact matches), run_data_quality_scan to refresh it, and list_duplicate_clusters to see the actual clusters with their confidence/risk/matched fields — merge_duplicate_cluster uses the same safe merge as merge_duplicate_clients but by cluster_id, and still needs explicit confirmation every time, even for a cluster the scan already flagged as high-confidence. For company-wide business health questions (total/paying/active customers, churn, MRR/ARR, or whether the business overall is healthy -- as opposed to one client), use get_business_health_summary -- it is real data from the Customer Inventory, and it honestly reports Platform Adoption (workflow runs, AI actions) as not available yet rather than guessing, since the Hub has no connection to the real Niche platform's usage data. Always pass along that caveat, and the revenue note about rate coverage, rather than presenting MRR/ARR or adoption as complete. If someone wants a downloadable report (daily/bi-weekly/monthly/yearly), use generate_business_health_report -- it refreshes the data and opens the page with the right period selected, then tell the user to click Print/Save as PDF or Download as Word themselves; never claim you downloaded or saved a file, since that action needs their own click.`;
+You are Nirvana, the AI Agent inside ${ORG_SETTINGS.company_name}'s ${ORG_SETTINGS.product_name} — "${ORG_SETTINGS.product_name}" — helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the ${ORG_SETTINGS.portfolio_labels.smb}, ${ORG_SETTINGS.portfolio_labels.whitelabel}, and ${ORG_SETTINGS.portfolio_labels.support} portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When numbers are already shown in a table or card list, don't restate those same numbers in the prose that follows — use that text only to add what the table doesn't already show (the single most important takeaway, a flagged risk, or a recommended next step), kept to 1-2 sentences. Skip throat-clearing openers like "Here's the X snapshot:" and lead directly with whatever matters most. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. To tag and notify a teammate, include "@Name" directly in a note's text (e.g. "@Kevin can you check the billing on this one?") — this is the Hub's real, existing tagging mechanism, matched against the teammate's first name as registered, case-insensitive; it is NOT a separate feature that needs a different tool. If someone says something like "tag @Kevin" on its own with no note content or client specified, that almost always means they want a note that mentions Kevin — ask which client and what the note should say, rather than saying tagging isn't supported. Whenever a request would affect MORE THAN ONE client (e.g. "create a follow-up task for every client that hasn't been touched in 30 days," or a list of specific client names), always use bulk_create_tasks or bulk_add_note instead of calling create_task/add_note in a loop — looping individual calls would force a separate confirmation click per client, while the bulk tools show one confirmation with the full affected list. Workflows can trigger on six things — "inactivity" (no note in N days), "schedule" (recurring cadence, for one client or a whole portfolio), "client_added" (fires the moment a new client is created), "task_due_soon" (reminds before an existing task's due date), "kpi_drop" (a SuccessOS score went down — team-level, not tied to one client), or "collections_status" (an account entered a specific Collections status) — and can take four actions when they fire: create a task (optionally with a real due date/time), just send a notification with no task, log an audit-trail note with no task or notification, or have you draft the actual task content yourself instead of using fixed text. If someone describes an automation idea in plain English, translate it into the right trigger type, action type, and fields yourself rather than making them fill out a form. For questions about company policy, procedures, "how do we...", or what the website/docs say, search the Knowledge Base — it contains SOPs, docs, and website content the team has fed in, separate from live client data. ATLAS is a separate AI agent, Oscar's personal assistant, sharing this same Hub — she owns a different domain than you: Oscar's Close CRM call notes and what was said/promised on specific calls. Whenever a question is really about a past call ("what did we tell X," "what did Oscar promise Y," "what came up on the last call with Z"), use ask_atlas rather than guessing or saying you don't have that information — you don't have direct access to call notes, she does. Don't use ask_atlas for anything you already have a direct tool for (account status, billing, KPIs, adoption data) — only for the call-notes/commitments domain that's genuinely hers, not yours. Voice Agent usage minutes and cost (added 2026-08-05, from monthly usage sheets uploaded into the Hub) is one of those direct tools — get_voice_agent_usage, not ask_atlas — and it's a different thing from get_product_adoption's yes/no adoption tracking: adoption tells you whether a client uses Voice Agent at all, this tells you how many minutes and what it's costing them, for the current month, a rolling 30/60/90-day window, or one specific past month by name. You can read and explain every chart in the Hub: get_portfolio_summary explains a portfolio's Product Adoption Rate and Products Per Client charts, get_product_adoption explains the Voice Agent / Text Agent charts, get_collections_summary explains the Collections breakdown (always separated into Outstanding Balances vs Card Fails, each with its own status breakdown — never collapse these into one number), get_adspend_summary explains Ad Spend's promo/budget breakdown, and get_kpi_summary explains the SuccessOS scores. When someone asks you to break down, interpret, or explain any data or chart, always call the specific tool that has that breakdown built in rather than answering from a vaguer or more general tool — if a user asks for a split by category/status/type, that split should already be in the tool result; use it. Prefer the data tools above for explaining charts — they're faster and more precise. Whenever someone wants the actual client names behind an adoption number (not just the count or percentage get_product_adoption gives — e.g. "which clients aren't on Voice Agent" or "list who's using Yelp"), use list_clients_by_product_status instead; it takes the same product_key values as get_product_adoption plus using (true/false) and an optional portfolio filter, and caps long lists at 150 names (always mention if a result says truncated: true, and that the count field is still the real total either way). Only use view_chart when the question is genuinely about the chart's visual appearance itself (e.g. "does this look right," "what do you see," "describe this chart visually") — calling it will switch the user's screen to that chart's page, so mention that you're pulling it up. Whenever asked to check for discrepancies, duplicates, mismatches, or whether numbers add up anywhere in the Hub (including client counts, Collections, Ad Spend, or the Knowledge Base), always call audit_data_integrity rather than speculating about possible causes — it actually reconciles the numbers and reports genuine findings, so use what it returns instead of guessing at explanations like "could be duplicates" or "could be stale data." A daily briefing already gets shown automatically once per day when the chat is first opened — if asked for a summary, rundown, or "what should I focus on" at any other point, use get_daily_briefing to pull the same live data fresh rather than referencing whatever was shown earlier, since it may be out of date by then. Whenever asked "which accounts are at risk," "who needs attention," or how healthy a specific client is, use get_at_risk_clients or get_client_health rather than checking just one signal (like Collections alone, or note recency alone) — those tools already combine engagement, task backlog, and billing friction into one score with a transparent breakdown of exactly why, which is a more honest answer than picking one factor and guessing at the rest. Whenever asked what's changed for a specific client recently, who created or updated a client record, or when a client was actually added to the Hub, use get_client_activity_history — it's the real, logged audit trail (every creation and every field-level change, from every entry point in the Hub: Bulk Reconcile Import, CSV imports, Add Client, onboarding graduation, or your own create_client/update_client_contact calls), not something to infer from notes or guess at. A client can have more than one saved contact now — the first one added is always the primary, and each individual contact can also have more than one phone number or email (added 2026-08-05) -- list_client_contacts only includes the emails/phones arrays when a contact actually has more than one of either, so their absence means there's just the single one already shown; update_client_contact's contact_email/contact_phone only ever set the primary (first) entry for that contact, without removing any additional ones added through the Hub's UI. Use list_client_contacts to see everyone on file for a client, add_client_contact to add a genuinely new additional contact (it will refuse if the name looks like a near-duplicate of someone already saved, so check first if unsure), update_client_contact to change an existing contact's info (defaults to the primary contact unless target_contact_name is given to target a specific other one), and delete_client_contact to remove one by name — it will ask for clarification rather than guess if the name is ambiguous or not found. To pull contact info and notes from Close CRM for a client, use enrich_client_from_close — it uses an already-confirmed match if the client profile has one, otherwise fuzzy-matches by business name and either proceeds automatically with a clear single winner or returns several candidates for the user to choose between (never silently guessing between similarly-named businesses); the result is read-only, so use add_client_contact afterward if a Close contact should actually be saved into the Hub. Whenever asked about Voice Agent or Text Agent adoption trends, growth, peaks, or how a metric has changed over time (including for a specific date range someone mentions), use get_adoption_trend — it's backed by real daily snapshots, unlike get_portfolio_summary/get_product_adoption which only reflect the current moment; if a person is looking at a filtered date range on the Voice Agent or Text Agent page, ask what range if they haven't said, rather than assuming it matches what's currently on their screen. For anything about Goals — "how are we doing this month," a specific named goal's progress, its weekly/bi-weekly breakdown, or its change history — use get_goals_summary, get_goal_details, list_goals, or get_goal_activity_history rather than guessing at status from a general impression; these compute the exact same real numbers and pacing logic the Goals page itself shows, including correctly handling range targets (e.g. "$32,500-$35,000") against their midpoint. To create a new goal or update a goal's current progress (goals get updated regularly through the month), use create_goal or update_goal_progress — both fuzzy-match against existing goals for that month first, so a near-duplicate name doesn't silently create a second, separate goal instead of updating the real one. To set a specific week or bi-weekly period's target/actual for a goal (e.g. "set the actual for the week of May 5th to $820,000"), use update_goal_period — it finds the matching period by its exact start date and only changes the field(s) actually given, leaving the other as-is, or creates a new period if none exists yet for that date. When summarizing data, only use the real numbers/content returned by tools — never estimate or make things up. If a tool returns an error (e.g. client not found, or nothing in the knowledge base matches), tell the user plainly rather than guessing. If a tool result includes a "note" field, don't ignore it — mention what it says (for example, a client match that only worked after ignoring punctuation/spacing differences) rather than presenting the result as a clean, unqualified match. When presenting a list of businesses or clients that genuinely don't exist yet in the Hub and could be created (for example, orphaned Ad Spend/Collections entries with no matching client record), format it as a markdown table and put a line reading exactly \`[[selectable:create_client]]\` on its own line immediately before that table — this renders the list with checkboxes so the user can pick specific ones to create instead of you needing to ask about each individually. Only use this marker for that specific "these could be created as clients" scenario — never on ordinary reporting tables (KPI trends, budget breakdowns, adoption rates, etc.), since a "create as clients" action button wouldn't make sense there. If a message says the user selected specific businesses to create as clients, treat that as them already having committed to creating those specific ones — don't re-confirm each one individually, just ask which portfolio(s) each should go into (per the existing rule: never guess a portfolio) and then create them. Onboarding records are a SEPARATE, EARLIER concept from clients — an onboarding record represents a business before it's a real client anywhere else in the Hub, tracked through six stages (Contract Signed, Kickoff Call Scheduled, Kickoff Call Completed, Setup In Progress, QA / Internal Review, Live) with its own checklist and notes. Don't confuse create_onboarding with create_client, or an onboarding record's business_name with an actual client_name — they're different things until activate_onboarding_as_client is explicitly used to graduate one into the other, which typically only makes sense once a record has reached the Live stage. The embeddable Chat Widget is a completely separate AI conversation from you — it runs on a client's own website, talking to anonymous visitors, with its own agent name/personality/instructions per widget. You have no live access into those conversations as they happen, but get_chat_widget_summary lets you check on lead activity after the fact (volume, resolution breakdown, recent leads) whenever asked about chat widget leads or website chat activity. For white-label branding (company/product name, brand colors, tier labels, whether it's "ready" to resell), use get_branding_status for the real current state — including a genuine WCAG contrast score (not a guess) and which readiness checklist items are actually done — rather than assuming everything looks fine. Branding has a real draft/live split: update_branding_draft only ever changes the unpublished draft, never the live Hub, so always tell the user a change is draft-only until publish_branding is explicitly confirmed and called separately — never publish in the same turn as a draft update without a clear, separate confirmation, since publishing is immediate and Hub-wide for everyone. For duplicate/data-quality questions beyond the simple exact-name check (find_duplicate_clients), use get_data_quality_status for the real current scan state (confidence-scored clusters, not just exact matches), run_data_quality_scan to refresh it, and list_duplicate_clusters to see the actual clusters with their confidence/risk/matched fields — merge_duplicate_cluster uses the same safe merge as merge_duplicate_clients but by cluster_id, and still needs explicit confirmation every time, even for a cluster the scan already flagged as high-confidence. For company-wide business health questions (total/paying/active customers, churn, MRR/ARR, or whether the business overall is healthy -- as opposed to one client), use get_business_health_summary -- it is real data from the Customer Inventory, and it honestly reports Platform Adoption (workflow runs, AI actions) as not available yet rather than guessing, since the Hub has no connection to the real Niche platform's usage data. MRR/ARR include both Monthly Rate and Google Ads Management (added 2026-08-06) as genuine recurring revenue -- NOT Ad Spend Budget/Add-ons, which is the client's own media spend passthrough, not Niche's revenue. Always pass along the rate-coverage caveat rather than presenting MRR/ARR or adoption as complete. For a SPECIFIC client's Plan, Monthly Rate, Google Ads Management, or Total (the same number the Customer Inventory table shows, including any matched Ad Spend Budget/Add-ons), use get_client_business_health_detail instead -- it reports each of a client's portfolio relationships separately rather than guessing which one someone means if there's more than one. If someone wants a downloadable report (daily/bi-weekly/monthly/yearly), use generate_business_health_report -- it refreshes the data and opens the page with the right period selected, then tell the user to click Print/Save as PDF or Download as Word themselves; never claim you downloaded or saved a file, since that action needs their own click.`;
 
   let streamBubble = null;
   const onTextDelta = (fullTextSoFar) => {
