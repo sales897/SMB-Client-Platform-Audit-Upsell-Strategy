@@ -2060,6 +2060,61 @@ tr.pg-hidden-row { display: none; }
 .bh-mp-month-grid button:hover { border-color: var(--orange); color: var(--orange); }
 .bh-mp-month-grid button.selected { background: var(--orange-dim); border-color: var(--orange); color: var(--orange); }
 .bh-mp-month-grid button.disabled { opacity: .3; cursor: not-allowed; pointer-events: none; }
+
+/* ─── Calendar (added 2026-08-06) ────────────────────────────────────────── */
+.cal-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px; }
+.cal-nav { display: flex; align-items: center; gap: 8px; }
+.cal-arrow-btn { background: var(--bg3); border: 1px solid var(--border); color: var(--text2); width: 30px; height: 30px; border-radius: var(--radius-sm); cursor: pointer; font-size: 13px; }
+.cal-arrow-btn:hover { border-color: var(--orange); color: var(--orange); }
+.cal-title { font-size: 15px; font-weight: 700; min-width: 150px; }
+.cal-legend { display: flex; gap: 16px; font-size: 10.5px; color: var(--text3); margin-bottom: 10px; }
+.chip { font-size: 9.5px; font-weight: 700; padding: 1px 6px; border-radius: var(--radius-pill); white-space: nowrap; }
+.chip-event { background: rgba(59,130,246,.16); color: var(--blue); }
+.chip-task { background: var(--orange-dim); color: var(--orange); }
+.chip-reminder { background: rgba(168,85,247,.16); color: var(--purple); }
+
+.sync-toggle { display: flex; align-items: center; gap: 6px; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-pill); padding: 2px; }
+.sync-toggle button { border: none; background: none; color: var(--text3); font-size: 9.5px; font-weight: 700; padding: 4px 9px; border-radius: var(--radius-pill); cursor: pointer; font-family: inherit; }
+.sync-toggle button.active { background: var(--orange); color: #fff; }
+
+.view-switcher { position: relative; }
+.view-switcher-btn { display: flex; align-items: center; gap: 8px; background: var(--bg3); border: 1px solid var(--border); color: var(--text); font-size: 12px; font-weight: 600; padding: 7px 12px; border-radius: var(--radius-sm); cursor: pointer; font-family: inherit; }
+.view-switcher-btn:hover { border-color: var(--orange); }
+/* position:fixed from the start -- third time this exact lesson gets
+   applied this session (themed-select dropdowns, the client card's ⋮
+   menu, now this) -- a calendar toolbar can easily sit inside a
+   scrollable page, so this is never optional here. */
+.view-switcher-menu { position: fixed; background: var(--bg4); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: 0 8px 20px rgba(0,0,0,.4); width: 170px; z-index: 1300; overflow: hidden; display: none; }
+.view-switcher-menu.open { display: block; }
+.view-switcher-menu button { width: 100%; display: flex; justify-content: space-between; align-items: center; background: none; border: none; color: var(--text2); font-size: 12.5px; padding: 9px 14px; cursor: pointer; text-align: left; font-family: inherit; }
+.view-switcher-menu button:hover { background: var(--bg3); color: var(--text); }
+.view-switcher-menu button.active { color: var(--orange); font-weight: 700; }
+.view-switcher-menu .kbd { font-size: 10px; color: var(--text3); }
+
+/* Month view */
+.cal-month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.cal-dow { font-size: 10px; color: var(--text3); text-align: center; padding-bottom: 4px; font-weight: 700; }
+.cal-day { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-xs); min-height: 74px; padding: 5px; font-size: 10.5px; cursor: pointer; }
+.cal-day:hover { border-color: var(--orange); }
+.cal-day.today { border-color: var(--orange); }
+.cal-day.other-month { opacity: .35; }
+.cal-day .dnum { color: var(--text3); font-weight: 700; margin-bottom: 3px; }
+.cal-day.today .dnum { color: var(--orange); }
+.cal-day .item { font-size: 9px; padding: 1px 4px; border-radius: 3px; margin-bottom: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+.cal-day .item.task { background: var(--orange-dim); color: var(--orange); }
+.cal-day .item.reminder { background: rgba(168,85,247,.16); color: var(--purple); }
+.cal-day .item:hover { filter: brightness(1.3); }
+.cal-day .item-more { font-size: 8.5px; color: var(--text3); }
+
+/* Schedule (agenda) view */
+.agenda-date-hdr { font-size: 11px; font-weight: 700; color: var(--text2); padding: 10px 0 6px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; }
+.agenda-item { display: flex; align-items: center; gap: 10px; padding: 8px 4px; border-bottom: 1px solid var(--border); font-size: 12px; cursor: pointer; }
+.agenda-item:hover { background: var(--bg3); }
+.agenda-time { width: 66px; color: var(--text3); font-size: 10.5px; flex-shrink: 0; }
+.agenda-client { color: var(--text2); font-size: 10.5px; }
+.cal-empty-state { padding: 40px 20px; text-align: center; color: var(--text3); font-size: 12px; }
+.cal-coming-soon { padding: 60px 20px; text-align: center; color: var(--text3); }
+.cal-coming-soon .icon-lg { font-size: 32px; margin-bottom: 10px; opacity: .5; }
 /* ─── ROLES / TEAM ─────────────────────────────────────────────────────── */
 .user-badge {
   display: flex; align-items: center; gap: 8px;
@@ -3271,6 +3326,10 @@ select.wfb-field-input { padding-right: 26px; }
       <span class="icon" data-icon="home"></span> <span data-i18n="nav_home">Home</span>
     </div>
 
+    <div class="nav-item" onclick="showPage('calendar')" title="Calendar" data-collapsed-title="Calendar">
+      <span class="icon" data-icon="calendar"></span> <span data-i18n="nav_calendar">Calendar</span>
+    </div>
+
     <div class="nav-dropdown">
       <div class="nav-item nav-dropdown-trigger" onclick="toggleNavDropdown(this)" title="Portfolios"><span class="icon" data-icon="store"></span> <span data-i18n="nav_portfolios">Portfolios</span> <span class="caret">▾</span></div>
       <div class="nav-dropdown-menu">
@@ -4170,6 +4229,52 @@ select.wfb-field-input { padding-right: 26px; }
     </div>
 
     <div class="page-footer"><span class="org-brand-inline">The HUB · Niche Inc.</span> · White Label Partner · v2.0 · Confidential</div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       PAGE: CALENDAR — Events, Tasks & Reminders, unified across clients
+  ════════════════════════════════════════════════════════════════════════ -->
+  <div class="page" id="page-calendar">
+    <div class="card" style="width:100%">
+      <div class="cal-toolbar">
+        <div class="cal-nav">
+          <button class="btn btn-sm" onclick="calendarGoToday()">Today</button>
+          <button class="cal-arrow-btn" onclick="calendarNav(-1)" aria-label="Previous">‹</button>
+          <button class="cal-arrow-btn" onclick="calendarNav(1)" aria-label="Next">›</button>
+          <span class="cal-title" id="calTitle"></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <div class="sync-toggle" id="calSyncToggle" title="Controls whether items created here get pushed to Google Calendar">
+            <button type="button" id="calSyncBtn1way" onclick="setCalendarSyncMode('1way')">1-Way</button>
+            <button type="button" id="calSyncBtn2way" onclick="setCalendarSyncMode('2way')">2-Way</button>
+          </div>
+          <div class="view-switcher">
+            <button type="button" class="view-switcher-btn" onclick="toggleCalViewMenu()">
+              <span id="calViewLabel">Month</span> <span style="font-size:9px">▾</span>
+            </button>
+            <div class="view-switcher-menu" id="calViewMenu">
+              <button type="button" onclick="setCalendarView('day')">Day <span class="kbd">D</span></button>
+              <button type="button" onclick="setCalendarView('week')">Week <span class="kbd">W</span></button>
+              <button type="button" class="active" onclick="setCalendarView('month')">Month <span class="kbd">M</span></button>
+              <button type="button" onclick="setCalendarView('year')">Year <span class="kbd">Y</span></button>
+              <button type="button" onclick="setCalendarView('schedule')">Schedule <span class="kbd">A</span></button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="cal-legend">
+        <span><span class="chip chip-task">Task</span> due date, visible to the whole team</span>
+        <span><span class="chip chip-reminder">Reminder</span> set in the Hub, only visible to whoever set it</span>
+      </div>
+
+      <div id="calViewPaneMonth" class="cal-view-pane active"></div>
+      <div id="calViewPaneSchedule" class="cal-view-pane" style="display:none"></div>
+      <div id="calViewPaneDay" class="cal-view-pane" style="display:none"></div>
+      <div id="calViewPaneWeek" class="cal-view-pane" style="display:none"></div>
+      <div id="calViewPaneYear" class="cal-view-pane" style="display:none"></div>
+    </div>
+    <div class="page-footer"><span class="org-brand-inline">The HUB · Niche Inc.</span> · Calendar</div>
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════════
@@ -7705,6 +7810,7 @@ function showPage(id) {
   if (newGoalBtn) newGoalBtn.style.display = onGoalsPage ? '' : 'none';
 
   if (id === 'home') rebuildHomePage();
+  if (id === 'calendar') rebuildCalendarPage();
   if (id === 'voice') rebuildVoicePage();
   if (id === 'businesshealth') rebuildBusinessHealthPage();
   if (id === 'textagent') rebuildTextAgentPage();
@@ -8133,7 +8239,7 @@ let currentLanguage = getSavedLanguage();
 
 const I18N = {
   en: {
-    nav_home: 'Home', nav_portfolios: 'Portfolios', nav_onboarding: 'Onboarding', nav_performance: 'Performance',
+    nav_home: 'Home', nav_calendar: 'Calendar', nav_portfolios: 'Portfolios', nav_onboarding: 'Onboarding', nav_performance: 'Performance',
     nav_growth_tools: 'Growth Tools', nav_finance: 'Finance',
     pref_theme: 'Theme', pref_language: 'Language', pref_show_amounts: 'Show amounts',
     pref_notifications: 'Notifications', pref_settings: 'Settings',
@@ -8290,7 +8396,7 @@ const I18N = {
     es_no_matches: 'No matches', es_no_knowledge: 'No knowledge yet', es_try_different_search: 'Try a different search term.', es_add_sop_help: 'Add an SOP, doc, or website page below, or ask Nirvana to help.',
   },
   es: {
-    nav_home: 'Inicio', nav_portfolios: 'Portafolios', nav_onboarding: 'Incorporación', nav_performance: 'Rendimiento',
+    nav_home: 'Inicio', nav_calendar: 'Calendario', nav_portfolios: 'Portafolios', nav_onboarding: 'Incorporación', nav_performance: 'Rendimiento',
     nav_growth_tools: 'Herramientas de Crecimiento', nav_finance: 'Finanzas',
     pref_theme: 'Tema', pref_language: 'Idioma', pref_show_amounts: 'Mostrar montos',
     pref_notifications: 'Notificaciones', pref_settings: 'Configuración',
@@ -20555,6 +20661,172 @@ async function loadClientNotesTasks() {
   rebuildHomePage();
   syncMyTasksToGoogleCalendar();
   checkTaskReminders();
+}
+
+// ─── Calendar (added 2026-08-06, Phase 1) ───────────────────────────────────
+// Unifies Tasks (team-wide visible, from CLIENT_TASKS) and Reminders (the
+// current viewer's own only -- reminders_select's RLS policy hard-restricts
+// this to owner_email = the logged-in user, by design, not a bug or a gap
+// to work around) into one calendar. Google Calendar "Events" and the
+// "+ New Event" creation flow are Phase 2, not built yet -- the view
+// switcher already shows Day/Week/Year per the approved design, but those
+// three panes are honest "coming soon" placeholders for now rather than
+// pretending to be functional.
+let calendarState = { view: 'month', currentDate: new Date(), syncMode: 'week' };
+const CAL_SYNC_MODE_KEY = 'csh_calendar_sync_mode_v1';
+
+async function loadCalendarItemsForRange(rangeStart, rangeEnd) {
+  const startStr = rangeStart.toISOString().slice(0, 10);
+  const endStr = rangeEnd.toISOString().slice(0, 10);
+  const items = [];
+  CLIENT_TASKS.forEach(t => {
+    if (!t.due_date) return;
+    const taskDateStr = String(t.due_date).slice(0, 10);
+    if (taskDateStr < startStr || taskDateStr > endStr) return;
+    items.push({ id: 'task-' + t.id, type: 'task', title: t.title || '(untitled task)', clientName: t.client_name || null, dateIso: t.due_date, ownerEmail: t.assigned_to_email || null, raw: t });
+  });
+  const u = getCurrentUser();
+  if (u && u.email) {
+    try {
+      const reminders = await sbSelect('reminders', `owner_email=eq.${encodeURIComponent(u.email)}&remind_at=gte.${rangeStart.toISOString()}&remind_at=lte.${rangeEnd.toISOString()}&order=remind_at.asc`);
+      reminders.forEach(r => items.push({ id: 'reminder-' + r.id, type: 'reminder', title: r.title || '(untitled reminder)', clientName: r.client_name || null, dateIso: r.remind_at, ownerEmail: r.owner_email, raw: r }));
+    } catch (e) { console.warn('Could not load reminders for calendar range:', e.message); }
+  }
+  return items.sort((a, b) => a.dateIso.localeCompare(b.dateIso));
+}
+
+function getCalendarSyncMode() {
+  return localStorage.getItem(CAL_SYNC_MODE_KEY) || '1way';
+}
+function setCalendarSyncMode(mode) {
+  localStorage.setItem(CAL_SYNC_MODE_KEY, mode);
+  document.getElementById('calSyncBtn1way').classList.toggle('active', mode === '1way');
+  document.getElementById('calSyncBtn2way').classList.toggle('active', mode === '2way');
+  if (mode === '2way') {
+    showToast('2-Way Sync saved. Note: pushing newly-created calendar items to Google Calendar is coming in Phase 2 — this sets the preference now so it\'s ready.', 'info');
+  }
+}
+function calendarGoToday() {
+  calendarState.currentDate = new Date();
+  rebuildCalendarPage();
+}
+function calendarNav(direction) {
+  const d = calendarState.currentDate;
+  if (calendarState.view === 'month') calendarState.currentDate = new Date(d.getFullYear(), d.getMonth() + direction, 1);
+  else if (calendarState.view === 'schedule') calendarState.currentDate = new Date(d.getFullYear(), d.getMonth(), d.getDate() + direction * 7);
+  else calendarState.currentDate = new Date(d.getFullYear(), d.getMonth() + direction, 1); // day/week/year not built yet -- falls back to month-step navigation
+  rebuildCalendarPage();
+}
+function toggleCalViewMenu() {
+  document.getElementById('calViewMenu').classList.toggle('open');
+  if (document.getElementById('calViewMenu').classList.contains('open')) {
+    const btn = document.querySelector('.view-switcher-btn');
+    const menu = document.getElementById('calViewMenu');
+    const rect = btn.getBoundingClientRect();
+    menu.style.top = (rect.bottom + 4) + 'px';
+    menu.style.left = Math.max(4, rect.right - menu.offsetWidth) + 'px';
+    setTimeout(() => document.addEventListener('click', closeCalViewMenuOnOutsideClick), 0);
+  }
+}
+function closeCalViewMenuOnOutsideClick(e) {
+  if (!e.target.closest('.view-switcher')) {
+    document.getElementById('calViewMenu').classList.remove('open');
+    document.removeEventListener('click', closeCalViewMenuOnOutsideClick);
+  }
+}
+function setCalendarView(view) {
+  calendarState.view = view;
+  document.getElementById('calViewLabel').textContent = view.charAt(0).toUpperCase() + view.slice(1);
+  document.querySelectorAll('#calViewMenu button').forEach(b => b.classList.remove('active'));
+  document.querySelector(`#calViewMenu button[onclick="setCalendarView('${view}')"]`).classList.add('active');
+  document.getElementById('calViewMenu').classList.remove('open');
+  ['month', 'schedule', 'day', 'week', 'year'].forEach(v => {
+    document.getElementById('calViewPane' + v.charAt(0).toUpperCase() + v.slice(1)).style.display = v === view ? '' : 'none';
+  });
+  rebuildCalendarPage();
+}
+let CALENDAR_ITEM_LOOKUP = {}; // id -> item, so onclick handlers can pass a plain id string instead of a serialized object inline
+function openCalendarItemById(id) {
+  const item = CALENDAR_ITEM_LOOKUP[id];
+  if (item && item.clientName) openClientNotesTasksModal(item.clientName);
+}
+async function rebuildCalendarPage() {
+  const mode = getCalendarSyncMode();
+  document.getElementById('calSyncBtn1way').classList.toggle('active', mode === '1way');
+  document.getElementById('calSyncBtn2way').classList.toggle('active', mode === '2way');
+
+  const d = calendarState.currentDate;
+  if (calendarState.view === 'month') {
+    document.getElementById('calTitle').textContent = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    await renderCalendarMonth();
+  } else if (calendarState.view === 'schedule') {
+    document.getElementById('calTitle').textContent = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    await renderCalendarSchedule();
+  } else {
+    document.getElementById('calTitle').textContent = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    document.getElementById('calViewPane' + calendarState.view.charAt(0).toUpperCase() + calendarState.view.slice(1)).innerHTML =
+      `<div class="cal-coming-soon"><div class="icon-lg">🗓️</div><div style="font-weight:600;color:var(--text2)">${calendarState.view.charAt(0).toUpperCase() + calendarState.view.slice(1)} view is coming in Phase 2</div><div style="font-size:11px;margin-top:4px">Month and Schedule are fully working now — try those from the view switcher above.</div></div>`;
+  }
+}
+async function renderCalendarMonth() {
+  const pane = document.getElementById('calViewPaneMonth');
+  const d = calendarState.currentDate;
+  const firstOfMonth = new Date(d.getFullYear(), d.getMonth(), 1);
+  const gridStart = new Date(firstOfMonth);
+  gridStart.setDate(gridStart.getDate() - gridStart.getDay());
+  const gridEnd = new Date(gridStart);
+  gridEnd.setDate(gridEnd.getDate() + 41); // 6 full weeks
+  const items = await loadCalendarItemsForRange(gridStart, gridEnd);
+  const itemsByDate = {};
+  items.forEach(it => { CALENDAR_ITEM_LOOKUP[it.id] = it; const key = it.dateIso.slice(0, 10); (itemsByDate[key] = itemsByDate[key] || []).push(it); });
+
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const dows = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+  let html = dows.map(dow => `<div class="cal-dow">${dow}</div>`).join('');
+  for (let i = 0; i < 42; i++) {
+    const cellDate = new Date(gridStart); cellDate.setDate(cellDate.getDate() + i);
+    const cellStr = cellDate.toISOString().slice(0, 10);
+    const dayItems = itemsByDate[cellStr] || [];
+    const isOtherMonth = cellDate.getMonth() !== d.getMonth();
+    const isToday = cellStr === todayStr;
+    const shown = dayItems.slice(0, 3);
+    const moreCount = dayItems.length - shown.length;
+    html += `<div class="cal-day${isToday ? ' today' : ''}${isOtherMonth ? ' other-month' : ''}">
+      <div class="dnum">${cellDate.getDate()}</div>
+      ${shown.map(it => `<div class="item ${it.type}" onclick="event.stopPropagation();openCalendarItemById('${escOnclickArg(it.id)}')" title="${escAttr(it.title)}${it.clientName ? ' — ' + escAttr(it.clientName) : ''}">${escAttr(it.title)}</div>`).join('')}
+      ${moreCount > 0 ? `<div class="item-more">+${moreCount} more</div>` : ''}
+    </div>`;
+  }
+  pane.innerHTML = `<div class="cal-month-grid">${html}</div>`;
+}
+async function renderCalendarSchedule() {
+  const pane = document.getElementById('calViewPaneSchedule');
+  const d = calendarState.currentDate;
+  const rangeStart = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const rangeEnd = new Date(rangeStart); rangeEnd.setDate(rangeEnd.getDate() + 30);
+  const items = await loadCalendarItemsForRange(rangeStart, rangeEnd);
+  if (items.length === 0) {
+    pane.innerHTML = `<div class="cal-empty-state">Nothing scheduled in the next 30 days from here.</div>`;
+    return;
+  }
+  const byDate = {};
+  items.forEach(it => { CALENDAR_ITEM_LOOKUP[it.id] = it; const key = it.dateIso.slice(0, 10); (byDate[key] = byDate[key] || []).push(it); });
+  const todayStr = new Date().toISOString().slice(0, 10);
+  pane.innerHTML = Object.keys(byDate).sort().map(dateKey => {
+    const dateObj = new Date(dateKey + 'T00:00:00');
+    const label = dateKey === todayStr ? `Today — ${fmtDate(dateKey)}` : dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
+    const dayItems = byDate[dateKey];
+    return `<div class="agenda-date-hdr"><span>${escAttr(label)}</span><span class="muted" style="color:var(--text3)">${dayItems.length} item${dayItems.length === 1 ? '' : 's'}</span></div>` +
+      dayItems.map(it => {
+        const hasTime = it.dateIso.length > 10 && !it.dateIso.endsWith('T00:00:00.000Z');
+        const timeLabel = hasTime ? new Date(it.dateIso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : 'All day';
+        return `<div class="agenda-item" onclick="openCalendarItemById('${escOnclickArg(it.id)}')">
+          <span class="agenda-time">${timeLabel}</span>
+          <span class="chip chip-${it.type}">${it.type === 'task' ? 'Task' : 'Reminder'}</span>
+          <div style="flex:1"><strong>${escAttr(it.title)}</strong>${it.clientName ? `<div class="agenda-client">${escAttr(it.clientName)}</div>` : ''}</div>
+        </div>`;
+      }).join('');
+  }).join('');
 }
 
 // ─── In-Hub task reminders (2026-07-16) ─────────────────────────────────
