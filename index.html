@@ -2045,6 +2045,21 @@ tr.pg-hidden-row { display: none; }
 .voice-plan-badge.plan-scale { background: rgba(168,85,247,.14); color: #a855f7; }
 .bh-history-tab { background: none; border: none; color: var(--text3); font-size: 12.5px; font-weight: 600; padding: 8px 4px; margin-right: 20px; cursor: pointer; border-bottom: 2px solid transparent; font-family: inherit; }
 .bh-history-tab.active { color: var(--orange); border-bottom-color: var(--orange); }
+.bh-month-picker-btn { height: 32px; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); padding: 0 12px; font-size: 12px; font-weight: 600; font-family: inherit; cursor: pointer; text-align: left; min-width: 160px; }
+.bh-month-picker-btn:hover { border-color: var(--orange); }
+.bh-month-picker-btn.open { border-color: var(--orange); color: var(--orange); }
+/* position:fixed from the start -- see the note on this same lesson at
+   .cc-menu-popover and .themed-select-panel earlier this session. */
+.bh-month-picker-popover { position: fixed; background: var(--bg4); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: 0 8px 20px rgba(0,0,0,.4); padding: 10px; z-index: 1300; width: 220px; }
+.bh-mp-year-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; padding: 0 4px; }
+.bh-mp-year-nav span { font-size: 12.5px; font-weight: 700; color: var(--text); }
+.bh-mp-year-nav button { background: none; border: none; color: var(--text2); font-size: 16px; cursor: pointer; padding: 2px 8px; border-radius: var(--radius-xs); line-height: 1; }
+.bh-mp-year-nav button:hover { color: var(--orange); background: var(--bg3); }
+.bh-mp-month-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.bh-mp-month-grid button { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-xs); color: var(--text2); font-size: 11.5px; font-weight: 600; padding: 8px 4px; cursor: pointer; font-family: inherit; }
+.bh-mp-month-grid button:hover { border-color: var(--orange); color: var(--orange); }
+.bh-mp-month-grid button.selected { background: var(--orange-dim); border-color: var(--orange); color: var(--orange); }
+.bh-mp-month-grid button.disabled { opacity: .3; cursor: not-allowed; pointer-events: none; }
 /* ─── ROLES / TEAM ─────────────────────────────────────────────────────── */
 .user-badge {
   display: flex; align-items: center; gap: 8px;
@@ -5812,7 +5827,7 @@ select.wfb-field-input { padding-right: 26px; }
       <div id="bhHistoryPaneSingle">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
           <span class="muted" style="font-size:11px;color:var(--text3)">Viewing:</span>
-          <select id="bhHistoryMonthSelect" class="field-select" onchange="renderBhHistorySingle()"></select>
+          <button type="button" class="bh-month-picker-btn" id="bhHistoryMonthBtn" onclick="openBhMonthPicker('single', event)"></button>
         </div>
         <div class="hub-mini-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:4px">
           <div class="kpi" style="--kpi-accent:var(--text3)"><div class="kpi-lbl">Status</div><div class="kpi-val" id="bhh-status" style="font-size:15px"></div></div>
@@ -5832,8 +5847,8 @@ select.wfb-field-input { padding-right: 26px; }
       <div id="bhHistoryPaneCompare" style="display:none">
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;align-items:center;padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:6px">
           <div></div>
-          <div><select id="bhCompareMonthA" class="field-select" style="width:100%" onchange="renderBhHistoryCompare()"></select></div>
-          <div><select id="bhCompareMonthB" class="field-select" style="width:100%" onchange="renderBhHistoryCompare()"></select></div>
+          <div><button type="button" class="bh-month-picker-btn" style="width:100%" id="bhCompareMonthABtn" onclick="openBhMonthPicker('compareA', event)"></button></div>
+          <div><button type="button" class="bh-month-picker-btn" style="width:100%" id="bhCompareMonthBBtn" onclick="openBhMonthPicker('compareB', event)"></button></div>
         </div>
         <div id="bhCompareRows" style="margin-bottom:14px"></div>
         <div id="bhCompareBanner" style="display:none;font-size:11px;color:var(--yellow);background:rgba(234,179,8,.1);border:1px solid rgba(234,179,8,.3);border-radius:8px;padding:10px 12px"></div>
@@ -5846,6 +5861,19 @@ select.wfb-field-input { padding-right: 26px; }
         <button class="btn btn-ghost" onclick="closeBhHistoryModal()">Close</button>
       </div>
     </div>
+  </div>
+
+  <!-- Shared calendar/month-year picker popover for the History modal --
+       position:fixed and outside any modal from the start, matching the
+       lesson from the Customer Inventory dropdown-clipping bug earlier
+       this session, not repeating that mistake in a new component. -->
+  <div class="bh-month-picker-popover" id="bhMonthPickerPopover" style="display:none">
+    <div class="bh-mp-year-nav">
+      <button type="button" onclick="bhMonthPickerYearNav(-1)" aria-label="Previous year">‹</button>
+      <span id="bhMonthPickerYearLabel"></span>
+      <button type="button" onclick="bhMonthPickerYearNav(1)" aria-label="Next year">›</button>
+    </div>
+    <div class="bh-mp-month-grid" id="bhMonthPickerGrid"></div>
   </div>
 
   <div class="modal-overlay" id="vaUsageMappingModal">
@@ -26629,17 +26657,30 @@ function reconstructBhFieldsAsOf(row, activityLog, asOfIso) {
   });
   return result;
 }
-function getBhHistoryMonthOptions() {
-  const months = [];
-  const now = new Date();
-  for (let i = 0; i < 12; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const label = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-    const endOfMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59);
-    months.push({ label: i === 0 ? `${label} (current)` : label, value: endOfMonth.toISOString() });
-  }
-  return months;
+// Month/year math + labeling shared by every picker instance.
+function bhMonthLabel(year, month) {
+  return new Date(year, month, 1).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 }
+function bhMonthEndIso(year, month) {
+  return new Date(year, month + 1, 0, 23, 59, 59).toISOString();
+}
+function bhIsCurrentMonth(year, month) {
+  const now = new Date();
+  return year === now.getFullYear() && month === now.getMonth();
+}
+function bhMonthBtnLabel(year, month) {
+  const label = bhMonthLabel(year, month);
+  return bhIsCurrentMonth(year, month) ? `${label} (current)` : label;
+}
+function updateBhMonthPickerButtons() {
+  const s = bhMonthPickerState.selected;
+  document.getElementById('bhHistoryMonthBtn').textContent = bhMonthBtnLabel(s.single.year, s.single.month);
+  document.getElementById('bhCompareMonthABtn').textContent = bhMonthBtnLabel(s.compareA.year, s.compareA.month);
+  document.getElementById('bhCompareMonthBBtn').textContent = bhMonthBtnLabel(s.compareB.year, s.compareB.month);
+}
+
+let bhMonthPickerState = { target: null, viewYear: null, selected: { single: null, compareA: null, compareB: null } };
+
 async function openBhHistoryModal(accountId) {
   const row = BH_INVENTORY.find(r => r.id === accountId);
   if (!row) return;
@@ -26649,14 +26690,19 @@ async function openBhHistoryModal(accountId) {
   let activityLog = [];
   try { activityLog = await getClientActivityHistory(row.name); } catch (e) { /* getClientActivityHistory already handles its own errors */ }
   bhHistoryState = { row, activityLog };
-  const months = getBhHistoryMonthOptions();
-  document.getElementById('bhHistoryMonthSelect').innerHTML = months.map(m => `<option value="${m.value}">${m.label}</option>`).join('');
-  document.getElementById('bhCompareMonthA').innerHTML = months.map((m, i) => `<option value="${m.value}" ${i === 1 ? 'selected' : ''}>${m.label}</option>`).join('');
-  document.getElementById('bhCompareMonthB').innerHTML = months.map(m => `<option value="${m.value}">${m.label}</option>`).join('');
+  const now = new Date();
+  const oneMonthBack = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  bhMonthPickerState.selected = {
+    single: { year: now.getFullYear(), month: now.getMonth() },
+    compareA: { year: oneMonthBack.getFullYear(), month: oneMonthBack.getMonth() },
+    compareB: { year: now.getFullYear(), month: now.getMonth() },
+  };
+  updateBhMonthPickerButtons();
   switchBhHistoryMode('single');
 }
 function closeBhHistoryModal() {
   document.getElementById('bhHistoryModal').classList.remove('open');
+  closeBhMonthPicker();
 }
 function switchBhHistoryMode(mode) {
   document.getElementById('bhHistoryTabSingle').classList.toggle('active', mode === 'single');
@@ -26666,10 +26712,81 @@ function switchBhHistoryMode(mode) {
   if (mode === 'single') renderBhHistorySingle(); else renderBhHistoryCompare();
   renderBhHistoryTimeline();
 }
+
+// ─── Calendar/month-year picker (added 2026-08-06, replacing a plain
+// 12-month dropdown) -- built as a real component instead of a native
+// <select> specifically so it can be properly themed (a native select
+// can't be restyled past a certain point, which is exactly what Oscar
+// flagged), and so it isn't artificially limited to the last 12 months --
+// any past year is just a few clicks of year navigation away, with no
+// hardcoded window. Closest in spirit to "Option B" from the original 3
+// mockups, adapted to feed the Single Month / Compare views that actually
+// shipped rather than replacing them.
+function openBhMonthPicker(target, event) {
+  event.stopPropagation();
+  const alreadyOpenForThis = bhMonthPickerState.target === target;
+  closeBhMonthPicker();
+  if (alreadyOpenForThis) return;
+  const btnId = target === 'single' ? 'bhHistoryMonthBtn' : target === 'compareA' ? 'bhCompareMonthABtn' : 'bhCompareMonthBBtn';
+  const btn = document.getElementById(btnId);
+  btn.classList.add('open');
+  bhMonthPickerState.target = target;
+  bhMonthPickerState.viewYear = bhMonthPickerState.selected[target].year;
+  renderBhMonthPickerGrid();
+  const popover = document.getElementById('bhMonthPickerPopover');
+  popover.style.display = 'block';
+  const rect = btn.getBoundingClientRect();
+  const popRect = popover.getBoundingClientRect();
+  const margin = 4;
+  const openUpward = (window.innerHeight - rect.bottom) < popRect.height && rect.top > popRect.height;
+  popover.style.top = openUpward ? '' : (rect.bottom + margin) + 'px';
+  popover.style.bottom = openUpward ? (window.innerHeight - rect.top + margin) + 'px' : '';
+  let left = rect.left;
+  if (left + popRect.width > window.innerWidth - 4) left = window.innerWidth - popRect.width - 4;
+  popover.style.left = Math.max(4, left) + 'px';
+  setTimeout(() => {
+    document.addEventListener('click', closeBhMonthPickerOnOutsideClick);
+    document.addEventListener('scroll', closeBhMonthPicker, true);
+  }, 0);
+}
+function closeBhMonthPicker() {
+  document.getElementById('bhMonthPickerPopover').style.display = 'none';
+  document.querySelectorAll('.bh-month-picker-btn.open').forEach(b => b.classList.remove('open'));
+  bhMonthPickerState.target = null;
+  document.removeEventListener('click', closeBhMonthPickerOnOutsideClick);
+  document.removeEventListener('scroll', closeBhMonthPicker, true);
+}
+function closeBhMonthPickerOnOutsideClick(e) {
+  if (!e.target.closest('#bhMonthPickerPopover') && !e.target.closest('.bh-month-picker-btn')) closeBhMonthPicker();
+}
+function bhMonthPickerYearNav(direction) {
+  bhMonthPickerState.viewYear += direction;
+  renderBhMonthPickerGrid();
+}
+function renderBhMonthPickerGrid() {
+  const { target, viewYear, selected } = bhMonthPickerState;
+  document.getElementById('bhMonthPickerYearLabel').textContent = viewYear;
+  const now = new Date();
+  const monthAbbrevs = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  document.getElementById('bhMonthPickerGrid').innerHTML = monthAbbrevs.map((abbrev, m) => {
+    const isFuture = viewYear > now.getFullYear() || (viewYear === now.getFullYear() && m > now.getMonth());
+    const isSelected = selected[target].year === viewYear && selected[target].month === m;
+    return `<button type="button" class="${isSelected ? 'selected' : ''}${isFuture ? ' disabled' : ''}" ${isFuture ? 'disabled' : `onclick="selectBhMonth(${m})"`}>${abbrev}</button>`;
+  }).join('');
+}
+function selectBhMonth(month) {
+  const { target, viewYear } = bhMonthPickerState;
+  bhMonthPickerState.selected[target] = { year: viewYear, month };
+  updateBhMonthPickerButtons();
+  closeBhMonthPicker();
+  if (target === 'single') renderBhHistorySingle(); else renderBhHistoryCompare();
+  renderBhHistoryTimeline();
+}
+
 function renderBhHistorySingle() {
   const { row, activityLog } = bhHistoryState;
-  const sel = document.getElementById('bhHistoryMonthSelect');
-  const fields = reconstructBhFieldsAsOf(row, activityLog, sel.value);
+  const { year, month } = bhMonthPickerState.selected.single;
+  const fields = reconstructBhFieldsAsOf(row, activityLog, bhMonthEndIso(year, month));
   document.getElementById('bhh-status').textContent = formatBhHistoryValue('Status', fields['Status'].raw);
   document.getElementById('bhh-plan').textContent = formatBhHistoryValue('Plan', fields['Plan'].raw);
   document.getElementById('bhh-billing').textContent = formatBhHistoryValue('Billing', fields['Billing'].raw);
@@ -26679,16 +26796,15 @@ function renderBhHistorySingle() {
   document.getElementById('bhh-payg').textContent = formatBhHistoryValue('Pay as You Go', fields['Pay as You Go'].raw);
   const total = (Number(fields['Monthly Rate'].raw) || 0) + (Number(fields['Google Ads Management'].raw) || 0) + (Number(fields['Pay as You Go'].raw) || 0);
   document.getElementById('bhh-total').textContent = fmtMoney(total);
-  const monthLabel = sel.selectedOptions[0].textContent.replace(' (current)', '');
   document.getElementById('bhh-total-lbl').title = 'Monthly Rate + Google Ads Management + Pay as You Go only -- Ad Spend Budget/Add-ons has no history to reconstruct from, so it\'s left out here (unlike the live Total on the main table, which includes a current Ad Spend match).';
-  document.getElementById('bhh-total-lbl').textContent = `Total (as of ${monthLabel})`;
+  document.getElementById('bhh-total-lbl').textContent = `Total (as of ${bhMonthLabel(year, month)})`;
 }
 function renderBhHistoryCompare() {
   const { row, activityLog } = bhHistoryState;
-  const selA = document.getElementById('bhCompareMonthA');
-  const selB = document.getElementById('bhCompareMonthB');
-  const fieldsA = reconstructBhFieldsAsOf(row, activityLog, selA.value);
-  const fieldsB = reconstructBhFieldsAsOf(row, activityLog, selB.value);
+  const a = bhMonthPickerState.selected.compareA;
+  const b = bhMonthPickerState.selected.compareB;
+  const fieldsA = reconstructBhFieldsAsOf(row, activityLog, bhMonthEndIso(a.year, a.month));
+  const fieldsB = reconstructBhFieldsAsOf(row, activityLog, bhMonthEndIso(b.year, b.month));
   let diffCount = 0;
   const rowsHtml = BH_HISTORY_FIELDS.map(label => {
     const rawA = fieldsA[label].raw, rawB = fieldsB[label].raw;
@@ -26703,10 +26819,8 @@ function renderBhHistoryCompare() {
   document.getElementById('bhCompareRows').innerHTML = rowsHtml;
   const banner = document.getElementById('bhCompareBanner');
   if (diffCount > 0) {
-    const labelA = selA.selectedOptions[0].textContent.replace(' (current)', '');
-    const labelB = selB.selectedOptions[0].textContent.replace(' (current)', '');
     banner.style.display = 'block';
-    banner.innerHTML = `<span class="icon" data-icon="alert" data-icon-size="14"></span> ${diffCount} field${diffCount === 1 ? '' : 's'} changed between ${escAttr(labelA)} and ${escAttr(labelB)} — see the timeline below for exact dates and who made each change.`;
+    banner.innerHTML = `<span class="icon" data-icon="alert" data-icon-size="14"></span> ${diffCount} field${diffCount === 1 ? '' : 's'} changed between ${escAttr(bhMonthLabel(a.year, a.month))} and ${escAttr(bhMonthLabel(b.year, b.month))} — see the timeline below for exact dates and who made each change.`;
   } else {
     banner.style.display = 'none';
   }
