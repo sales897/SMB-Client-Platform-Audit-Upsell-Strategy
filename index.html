@@ -2094,7 +2094,7 @@ tr.pg-hidden-row { display: none; }
 /* Month view */
 .cal-month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
 .cal-dow { font-size: 10px; color: var(--text3); text-align: center; padding-bottom: 4px; font-weight: 700; }
-.cal-day { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-xs); min-height: 118px; padding: 8px; font-size: 11px; cursor: pointer; }
+.cal-day { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-xs); min-height: 118px; padding: 8px; font-size: 11px; cursor: pointer; min-width: 0; overflow: hidden; }
 .cal-day:hover { border-color: var(--orange); }
 .cal-day.today { border-color: var(--orange); }
 .cal-day.other-month { opacity: .35; }
