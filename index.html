@@ -33402,8 +33402,17 @@ async function executeAiTool(name, input) {
       };
     }
     case 'get_plan_breakdown': {
-      let rows = (typeof BH_INVENTORY !== 'undefined' ? BH_INVENTORY : []).filter(r => r.customer_status !== 'cancelled');
-      if (rows.length === 0) return { error: 'No Customer Inventory data loaded.' };
+      // Real bug found 2026-08-06: this used to only read whatever was
+      // already sitting in the in-memory BH_INVENTORY array, which stays
+      // empty until someone actually visits the Business Health page in
+      // this browser session -- Nirvana can be asked this from anywhere,
+      // so it needs to fetch fresh data itself, same as
+      // get_business_health_summary already correctly does, rather than
+      // silently depending on another page having been visited first.
+      try {
+        BH_INVENTORY = await sbSelect('portfolio_clients', 'select=id,name,portfolio,customer_status,plan&order=name.asc');
+      } catch (e) { return { error: 'Could not load the customer inventory: ' + e.message }; }
+      let rows = BH_INVENTORY.filter(r => r.customer_status !== 'cancelled');
       if (input.portfolio) rows = rows.filter(r => r.portfolio === input.portfolio);
       const counts = { Core: 0, Growth: 0, Pro: 0, Scale: 0, 'No Plan Set': 0 };
       rows.forEach(r => {
