@@ -1,16 +1,24 @@
 // netlify/functions/atlas-enrich-background.mjs
 //
-// ATLAS — enrichment + chunking + embedding pipeline.
+// ATLAS — enrichment + chunking + embedding pipeline, plus real-time risk
+// alerting (added 2026-08-05).
 //
 // For each atlas_notes row not yet enriched:
 //   1. Claude extracts structure (summary, action items, commitments made
 //      by Oscar vs. by the client, risk signals, sentiment, next step,
 //      dollar amounts) and classifies note_type.
-//   2. The raw text is split into chunks (~400 tokens, ~50 overlap).
-//   3. Chunks are embedded via the atlas-embed Supabase Edge Function
+//   2. If the enrichment hits Critical/High severity (deterministic
+//      keyword match against the SOP's own escalation language, or
+//      negative sentiment + a real risk signal), an immediate Slack
+//      alert fires -- Critical to the shared channel + DM, High to DM
+//      only -- rather than waiting for the next scheduled brief/EOD.
+//      Max one alert per client per hour (cooldown via
+//      atlas_realtime_alerts).
+//   3. The raw text is split into chunks (~400 tokens, ~50 overlap).
+//   4. Chunks are embedded via the atlas-embed Supabase Edge Function
 //      (gte-small, 384-dim) — NOT locally. Netlify Functions run on Node
 //      and cannot load that model; only Supabase's Edge Runtime can.
-//   4. Chunks + embeddings are written to atlas_note_chunks.
+//   5. Chunks + embeddings are written to atlas_note_chunks.
 //
 // Trigger: fired automatically at the end of atlas-ingest-background.mjs,
 // or callable directly to process any backlog.
@@ -21,6 +29,11 @@
 const SUPABASE_URL = Netlify.env.get("SUPABASE_URL");
 const SERVICE_ROLE_KEY = Netlify.env.get("SUPABASE_SERVICE_ROLE_KEY");
 const ANTHROPIC_API_KEY = Netlify.env.get("ANTHROPIC_API_KEY");
+const SLACK_BOT_TOKEN = Netlify.env.get("SLACK_BOT_TOKEN");
+
+const SLACK_CHANNEL_ID = "C0BLMCCAM3Q"; // #account-management-goats
+const SLACK_USER_ID = "U07KALYMG3Z"; // Oscar
+const ALERT_COOLDOWN_MS = 60 * 60 * 1000; // 1 hour, per Oscar's explicit scoping
 
 const ATLAS_EMBED_URL = `${SUPABASE_URL}/functions/v1/atlas-embed`;
 const CLAUDE_MODEL = "claude-haiku-4-5-20251001"; // cost-effective for structured extraction at volume
@@ -51,6 +64,96 @@ async function sbFetch(path, options = {}) {
       ...(options.headers || {}),
     },
   });
+}
+
+// ---- Real-time risk alerts (Block: 2026-08-05) ----
+// Scoped directly with Oscar: reuse the exact Critical/High/Medium/Low
+// severity language already established in the Preempting Risks SOP,
+// rather than inventing new criteria. Only Critical and High interrupt
+// in real time -- the SOP's own timing table says Medium needs action
+// within 2 business days and Low within 5, neither of which needs an
+// immediate ping; the twice-daily brief/EOD already covers that window.
+// "Real-time" here genuinely means "within this ~30-minute enrichment
+// cycle, not held until the next scheduled digest" -- Close CRM has no
+// webhooks (confirmed early in this build), so a literal instant alert
+// isn't possible without a different data source entirely.
+//
+// Deterministic keyword classification, not an LLM judgment call -- same
+// reasoning as every other mechanical detection in this build (schedule
+// conflicts, sentiment trajectories, phrase routing). Checked against
+// the enrichment's own structured output (summary, risk_signals,
+// next_step) rather than raw transcript text, since that's already
+// Claude's clean distillation and less prone to false positives than
+// scanning a full transcript for a stray keyword mention.
+const CRITICAL_KEYWORDS = /\b(cancel|cancellation|refund|lawsuit|legal action|terminate|terminating|unacceptable)\b/i;
+const HIGH_KEYWORDS = /\b(competitor|unhappy|disappointed|dissatisfied|frustrated|pause|paused|not working)\b/i;
+
+function classifyAlertSeverity(enrichment) {
+  const text = [enrichment.summary, ...(enrichment.risk_signals || []), enrichment.next_step].filter(Boolean).join(" ");
+  if (CRITICAL_KEYWORDS.test(text)) return "critical";
+  if (HIGH_KEYWORDS.test(text)) return "high";
+  // Fallback: negative sentiment plus at least one real risk signal is
+  // High-worthy even without hitting an exact keyword -- matches the
+  // SOP's own "repeated complaints" framing without requiring a literal
+  // complaint word to appear.
+  if (enrichment.sentiment === "negative" && (enrichment.risk_signals || []).length > 0) return "high";
+  return null;
+}
+
+async function isInCooldown(clientName) {
+  const since = new Date(Date.now() - ALERT_COOLDOWN_MS).toISOString();
+  const res = await sbFetch(
+    `atlas_realtime_alerts?select=id&client_name=eq.${encodeURIComponent(clientName)}&created_at=gte.${since}&limit=1`
+  );
+  if (!res.ok) return false; // fail open -- a missed cooldown check shouldn't block a real alert
+  const rows = await res.json();
+  return rows.length > 0;
+}
+
+async function postAlert(target, blocks, fallbackText) {
+  try {
+    const res = await fetch("https://slack.com/api/chat.postMessage", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${SLACK_BOT_TOKEN}` },
+      body: JSON.stringify({ channel: target, blocks, text: fallbackText }),
+    });
+    const data = await res.json();
+    if (!data.ok) console.error(`atlas-enrich-background: alert post to ${target} failed:`, data.error);
+  } catch (e) {
+    console.error(`atlas-enrich-background: alert post to ${target} threw:`, e.message);
+  }
+}
+
+async function sendRealtimeAlert(note, enrichment, severity) {
+  const emoji = severity === "critical" ? "🚨" : "⚠️";
+  const label = severity === "critical" ? "CRITICAL" : "High Priority";
+  const lines = [
+    `*Client:* ${note.client_name || "Unknown"}`,
+    `*Note date:* ${new Date(note.note_date).toDateString()}`,
+    `*Summary:* ${enrichment.summary || "(no summary)"}`,
+  ];
+  if (enrichment.risk_signals?.length) lines.push(`*Risk signals:* ${enrichment.risk_signals.join("; ")}`);
+  if (enrichment.next_step) lines.push(`*Suggested next step:* ${enrichment.next_step}`);
+
+  const blocks = [
+    { type: "header", text: { type: "plain_text", text: `${emoji} ${label} Risk Alert`, emoji: true } },
+    { type: "section", text: { type: "mrkdwn", text: lines.join("\n") } },
+  ];
+  const fallbackText = `${emoji} ${label} Risk Alert — ${note.client_name}: ${enrichment.summary || ""}`;
+
+  // Per Oscar's scoping: Critical goes to both the shared channel and his
+  // DM; High goes to his DM only, to keep the channel reserved for the
+  // genuinely urgent tier rather than every flagged note.
+  if (severity === "critical") {
+    await postAlert(SLACK_CHANNEL_ID, blocks, fallbackText);
+  }
+  await postAlert(SLACK_USER_ID, blocks, fallbackText);
+
+  await sbFetch("atlas_realtime_alerts", {
+    method: "POST",
+    headers: { Prefer: "return=minimal" },
+    body: JSON.stringify([{ client_name: note.client_name, severity, note_id: note.id }]),
+  }).catch((e) => console.error("atlas-enrich-background: alert log insert failed:", e.message));
 }
 
 async function getUnenrichedNotes(limit) {
@@ -246,6 +349,19 @@ export default async (req) => {
             },
           ]),
         }).catch((e) => console.error("atlas-enrich-background: task suggestion insert failed:", e.message));
+      }
+
+      // Real-time risk alert -- only Critical/High interrupt immediately;
+      // Medium/Low stay in the normal scheduled-brief flow (see the block
+      // comment above classifyAlertSeverity for the full reasoning).
+      const severity = classifyAlertSeverity(enrichment);
+      if (severity && note.client_name) {
+        const cooling = await isInCooldown(note.client_name);
+        if (!cooling) {
+          await sendRealtimeAlert(note, enrichment, severity);
+        } else {
+          console.log(`atlas-enrich-background: ${note.client_name} alert suppressed (cooldown active).`);
+        }
       }
 
       const chunks = chunkText(note.raw_text);
