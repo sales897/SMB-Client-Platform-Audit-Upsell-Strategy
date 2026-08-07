@@ -6128,6 +6128,18 @@ select.wfb-field-input { padding-right: 26px; }
     <div class="page-footer"><span class="org-brand-inline">The HUB · Niche Inc.</span> · Collections</div>
   </div>
 
+  <!-- COLLECTIONS: PAYMENT HISTORY MODAL -->
+  <div class="modal-overlay" id="collectionsPaymentHistoryModal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="colPaymentHistoryTitle">
+      <h3 id="colPaymentHistoryTitle"><span class="icon" data-icon="dollar" data-icon-size="13"></span> Payment History</h3>
+      <div class="import-summary" id="colPaymentHistorySummary" style="margin-bottom:14px"></div>
+      <div id="colPaymentHistoryList" style="max-height:40vh;overflow-y:auto;margin-bottom:14px"></div>
+      <div class="modal-btns">
+        <button class="btn btn-ghost" onclick="closePaymentHistoryModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
   <!-- COLLECTIONS: EDIT ACCOUNT MODAL -->
   <div class="modal-overlay" id="editCollectionsModal">
     <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="editCollectionsModalTitle">
@@ -18444,6 +18456,110 @@ async function loadCollectionsAccounts() {
   rebuildCollectionsPage();
 }
 
+// ─── Collections Payment Tracking (added 2026-08-06) ───────────────────────
+// Tracks individual payments logged against a Payment Plan account, so
+// "Amount Collected" reflects what's actually been paid so far rather than
+// an account's entire balance the moment it enters Payment Plan status.
+// Real, unrelated accounts a person hasn't logged any payments for yet
+// (e.g. an account marked Resolved before this feature existed) fall back
+// to counting their full amount as before -- this is a deliberate
+// backward-compatibility choice, not an oversight: switching to "only
+// count logged payments" would have made every pre-existing Resolved
+// account's contribution silently drop to $0 the moment this shipped.
+let COLLECTIONS_PAYMENTS = [];
+async function loadCollectionsPayments() {
+  try {
+    COLLECTIONS_PAYMENTS = await sbSelect('collections_payments', 'order=payment_date.asc');
+  } catch (e) {
+    console.warn('collections_payments table unavailable:', e.message);
+    COLLECTIONS_PAYMENTS = [];
+  }
+}
+function getAccountPayments(accountId) {
+  return COLLECTIONS_PAYMENTS.filter(p => p.account_id === accountId);
+}
+// Returns paid/remaining/count/lastDate for one account. Used by both the
+// table row rendering and the Amount Collected KPI, so the two can never
+// silently disagree about how much a given account has actually paid.
+function computePaymentProgress(account) {
+  const payments = getAccountPayments(account.id);
+  const paid = payments.reduce((s, p) => s + Number(p.amount || 0), 0);
+  const total = Number(account.amount || 0);
+  const lastDate = payments.length ? payments.reduce((latest, p) => (!latest || p.payment_date > latest) ? p.payment_date : latest, null) : null;
+  return { paid, total, remaining: Math.max(0, total - paid), count: payments.length, lastDate, isPaidOff: total > 0 && paid >= total };
+}
+async function logCollectionsPayment(accountId) {
+  if (!requirePermission('edit')) return;
+  const input = document.getElementById(`col-payment-input-${accountId}`);
+  if (!input) return;
+  const amount = Number(input.value);
+  if (!amount || amount <= 0) { showToast('Enter a valid payment amount before logging it.', 'warning'); return; }
+  const account = COLLECTIONS_ACCOUNTS.find(a => a.id === accountId);
+  if (!account) return;
+  const payment = {
+    id: crypto.randomUUID ? crypto.randomUUID() : 'colpay_' + Date.now() + Math.random().toString(16).slice(2),
+    account_id: accountId,
+    amount,
+    payment_date: new Date().toISOString().slice(0, 10),
+    created_by: (CURRENT_AUTH_USER && CURRENT_AUTH_USER.email) || null,
+  };
+  try {
+    await sbUpsert('collections_payments', payment);
+  } catch (e) {
+    showToast('Could not log payment: ' + e.message, 'error');
+    return;
+  }
+  COLLECTIONS_PAYMENTS.push(payment);
+  addSystemClientNote(account.name, `Payment logged: ${fmtMoney(amount)}`);
+  input.value = '';
+  rebuildCollectionsPage();
+  const progress = computePaymentProgress(account);
+  if (progress.isPaidOff) showToast(`${account.name} is fully paid — mark it Resolved when you're ready.`, 'success');
+}
+async function deleteCollectionsPayment(paymentId, accountId) {
+  if (!requirePermission('edit')) return;
+  if (!(await showConfirmDialog('Remove this logged payment? This cannot be undone.', { danger: true, confirmLabel: 'Remove' }))) return;
+  try {
+    await sbDelete('collections_payments', `id=eq.${paymentId}`);
+  } catch (e) {
+    showToast('Could not remove payment: ' + e.message, 'error');
+    return;
+  }
+  COLLECTIONS_PAYMENTS = COLLECTIONS_PAYMENTS.filter(p => p.id !== paymentId);
+  rebuildCollectionsPage();
+  renderPaymentHistoryModal(accountId);
+}
+function openPaymentHistoryModal(accountId) {
+  document.getElementById('collectionsPaymentHistoryModal').classList.add('open');
+  renderPaymentHistoryModal(accountId);
+}
+function closePaymentHistoryModal() {
+  document.getElementById('collectionsPaymentHistoryModal').classList.remove('open');
+}
+function renderPaymentHistoryModal(accountId) {
+  const account = COLLECTIONS_ACCOUNTS.find(a => a.id === accountId);
+  if (!account) return;
+  const payments = getAccountPayments(accountId).slice().sort((a, b) => b.payment_date.localeCompare(a.payment_date));
+  const progress = computePaymentProgress(account);
+  document.getElementById('colPaymentHistoryTitle').textContent = `Payment History — ${account.name}`;
+  const editable = canEdit();
+  document.getElementById('colPaymentHistorySummary').innerHTML = `
+    <div class="stat"><b>${fmtMoney(progress.total)}</b><span>Total Owed</span></div>
+    <div class="stat"><b style="color:var(--green)">${fmtMoney(progress.paid)}</b><span>Paid So Far</span></div>
+    <div class="stat"><b style="color:${progress.remaining > 0 ? 'var(--orange)' : 'var(--green)'}">${fmtMoney(progress.remaining)}</b><span>Remaining</span></div>
+  `;
+  document.getElementById('colPaymentHistoryList').innerHTML = payments.length === 0
+    ? `<div style="padding:16px;text-align:center;color:var(--text3);font-size:12px">No payments logged yet.</div>`
+    : payments.map(p => `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 4px;border-bottom:1px solid var(--border);font-size:12px">
+        <span>${fmtMoney(p.amount)}${p.note ? ' — ' + escAttr(p.note) : ''}</span>
+        <span style="display:flex;align-items:center;gap:8px">
+          <span style="color:var(--text3)">${fmtDate(p.payment_date)}</span>
+          ${editable ? `<button class="icon-btn" onclick="deleteCollectionsPayment('${p.id}','${accountId}')" title="Remove this payment"><span class="icon" data-icon="trash" data-icon-size="12"></span></button>` : ''}
+        </span>
+      </div>`).join('');
+}
+
 // ═══════════════════════════════════════════════════════════════════════
 // LEDGER — billing reconciliation (2026-07-18)
 // ═══════════════════════════════════════════════════════════════════════
@@ -19778,7 +19894,15 @@ function rebuildCollectionsPage() {
   const list = COLLECTIONS_ACCOUNTS.filter(a => a.type === activeCollectionsType);
   set('col-total', list.length);
   set('col-amount', fmtMoney(list.reduce((s,a) => s + (a.amount || 0), 0)));
-  set('col-collected', fmtMoney(list.filter(a => ['paymentplan','resolved'].includes(a.status)).reduce((s,a) => s + (a.amount || 0), 0)));
+  set('col-collected', fmtMoney(list.filter(a => ['paymentplan','resolved'].includes(a.status)).reduce((s,a) => {
+    // Real logged payments are the source of truth once any exist for this
+    // account; falls back to the full amount only when nothing's been
+    // logged yet, so a pre-existing Resolved account (from before this
+    // feature shipped 2026-08-06) doesn't silently drop to $0 collected.
+    const payments = getAccountPayments(a.id);
+    const loggedTotal = payments.length ? payments.reduce((ps, p) => ps + Number(p.amount || 0), 0) : a.amount;
+    return s + (loggedTotal || 0);
+  }, 0)));
   set('col-collected-sub', `Payment Plan & Resolved · ${activeCollectionsType === 'outstanding' ? 'Outstanding Balances' : 'Card Fails'} only`);
   set('col-needs', list.filter(a => ['pending','inreview','escalated'].includes(a.status)).length);
   set('col-resolved', list.filter(a => a.status === 'resolved').length);
@@ -19884,6 +20008,8 @@ function getCollectionsColumns() {
   return [
     { key: 'name', label: 'Business' },
     { key: 'amount', label: 'Amount' },
+    { key: 'progress', label: 'Progress' },
+    { key: 'quicklog', label: 'Quick Log' },
     { key: 'date', label: isOutstanding ? 'Due Date' : 'Last Attempt' },
     { key: 'resolvedDate', label: 'Resolved Date' },
     { key: 'status', label: 'Status' },
@@ -19954,9 +20080,34 @@ function rebuildCollectionsTable() {
         </select>`
       : `<span class="status-pill" style="background:${meta.bg};color:${meta.color}">${meta.label}</span>`;
     const safeName = escOnclickArg(a.name);
+    const progress = computePaymentProgress(a);
+    const showPaymentUI = a.status === 'paymentplan' || (a.status === 'resolved' && progress.count > 0);
+    let progressCell, quickLogCell;
+    if (showPaymentUI) {
+      const pct = progress.total > 0 ? Math.min(100, Math.round(progress.paid / progress.total * 100)) : 0;
+      const barColor = progress.isPaidOff ? 'var(--green)' : 'var(--orange)';
+      progressCell = `<td>
+        <div style="width:140px;cursor:pointer" onclick="openPaymentHistoryModal('${a.id}')" title="View payment history">
+          <div style="font-size:10.5px;color:var(--text2)">${fmtMoney(progress.paid)} / ${fmtMoney(progress.total)}</div>
+          <div style="height:6px;background:var(--bg4);border-radius:4px;overflow:hidden;margin-top:4px"><div style="height:100%;width:${pct}%;background:${barColor};border-radius:4px"></div></div>
+          <div style="font-size:9.5px;color:var(--text3);margin-top:3px">${progress.count} payment${progress.count === 1 ? '' : 's'}${progress.lastDate ? ' · last ' + fmtDate(progress.lastDate) : ''}</div>
+        </div>
+      </td>`;
+      quickLogCell = progress.isPaidOff
+        ? `<td><button class="row-action-btn" style="color:var(--green);border-color:var(--green)" onclick="updateCollectionsStatus('${a.id}','resolved')">✓ Paid off — Mark Resolved</button></td>`
+        : (editable ? `<td><div style="display:flex;gap:6px;align-items:center">
+            <input type="number" id="col-payment-input-${a.id}" class="field-input" placeholder="$" style="width:70px;height:30px;margin-bottom:0" onkeydown="if(event.key==='Enter'){logCollectionsPayment('${a.id}');event.preventDefault();}">
+            <button class="row-action-btn" onclick="logCollectionsPayment('${a.id}')">Log</button>
+          </div></td>` : `<td><span style="color:var(--text3)">—</span></td>`);
+    } else {
+      progressCell = `<td><span style="color:var(--text3)">—</span></td>`;
+      quickLogCell = `<td><span style="color:var(--text3)">—</span></td>`;
+    }
     const cellByIdx = [
       `<td style="font-weight:600;color:var(--text)">${escAttr(a.name)}</td>`,
       `<td>${fmtMoney(a.amount)}</td>`,
+      progressCell,
+      quickLogCell,
       `<td>${fmtDate(a.date)}</td>`,
       `<td>${a.resolvedDate ? fmtDate(a.resolvedDate) : '<span style="color:var(--text3)">—</span>'}</td>`,
       `<td>${statusCell}</td>`,
@@ -32364,7 +32515,9 @@ const AI_AGENT_TOOLS = [
     description: 'Publish the current branding draft — applies it live, Hub-wide, for everyone, immediately. This is a significant, visible, irreversible-without-another-publish change. Always confirm explicitly with the user before calling this, even if they seem to have already asked for it, and never chain this immediately after update_branding_draft in the same turn without a separate confirmation.',
     input_schema: { type: 'object', properties: {} },
   },
-  { name: 'get_collections_summary', description: 'Get Collections data broken down separately by Outstanding Balances and Card Fails — each with its own account count, total dollar amount, and breakdown by status (Pending, In Review, Contacted, Payment Plan, Escalated, Resolved, Write-Off). Also includes accounts needing attention.', input_schema: { type: 'object', properties: {} } },
+  { name: 'get_collections_summary', description: 'Get Collections data broken down separately by Outstanding Balances and Card Fails — each with its own account count, total dollar amount, amount actually collected (added 2026-08-06 — real logged payments for accounts on a Payment Plan, not just the full balance the moment it enters that status; falls back to the full amount only for accounts marked Resolved before payment tracking existed), and breakdown by status (Pending, In Review, Contacted, Payment Plan, Escalated, Resolved, Write-Off). Also includes accounts needing attention.', input_schema: { type: 'object', properties: {} } },
+  { name: 'log_collections_payment', description: 'Logs a payment toward a Collections account that\'s on a Payment Plan — adds to its running total paid so far, same as the "Log" button on the Collections page. Fuzzy-matches the account by name. If this payment brings the account to fully paid, the result says so — use update_collections_status separately to actually mark it Resolved, since that\'s a distinct, deliberate step, not automatic. This changes data — the user will be asked to confirm before it is actually saved.', input_schema: { type: 'object', properties: { account_name: { type: 'string' }, amount: { type: 'number' } }, required: ['account_name', 'amount'] } },
+  { name: 'update_collections_status', description: 'Changes a Collections account\'s status (Pending, In Review, Contacted, Payment Plan, Escalated, Resolved, Write-Off). Fuzzy-matches the account by name. Setting it to Resolved also sets today as the resolved date if it doesn\'t have one already. This changes data — the user will be asked to confirm before it is actually saved.', input_schema: { type: 'object', properties: { account_name: { type: 'string' }, status: { type: 'string', enum: ['pending', 'inreview', 'contacted', 'paymentplan', 'escalated', 'resolved', 'writeoff'] } }, required: ['account_name', 'status'] } },
   { name: 'get_adspend_summary', description: 'Get Ad Spend Management data: total and average monthly budget, a breakdown by promo status (eligible / not eligible / already using — each with count and total budget), and the top 10 spenders.', input_schema: { type: 'object', properties: {} } },
   {
     name: 'get_portfolio_summary',
@@ -32910,7 +33063,7 @@ const AI_AGENT_TOOLS = [
   },
 ];
 
-const AI_ACTION_TOOLS = ['add_note', 'create_task', 'log_kpi_score', 'create_workflow', 'update_workflow', 'delete_workflow', 'bulk_create_tasks', 'bulk_add_note', 'create_client', 'update_client_contact', 'create_reminder', 'create_onboarding', 'update_onboarding_stage', 'add_onboarding_note', 'activate_onboarding_as_client', 'delete_onboarding', 'add_onboarding_checklist_item', 'remove_onboarding_checklist_item', 'create_onboarding_pipeline', 'merge_duplicate_clients', 'create_goal', 'update_goal_progress', 'update_goal_period', 'add_client_contact', 'delete_client_contact', 'merge_duplicate_cluster', 'publish_branding', 'update_branding_draft']; // tools that change data — always confirmed
+const AI_ACTION_TOOLS = ['add_note', 'create_task', 'log_kpi_score', 'create_workflow', 'update_workflow', 'delete_workflow', 'bulk_create_tasks', 'bulk_add_note', 'create_client', 'update_client_contact', 'create_reminder', 'create_onboarding', 'update_onboarding_stage', 'add_onboarding_note', 'activate_onboarding_as_client', 'delete_onboarding', 'add_onboarding_checklist_item', 'remove_onboarding_checklist_item', 'create_onboarding_pipeline', 'merge_duplicate_clients', 'create_goal', 'update_goal_progress', 'update_goal_period', 'add_client_contact', 'delete_client_contact', 'merge_duplicate_cluster', 'publish_branding', 'update_branding_draft', 'log_collections_payment', 'update_collections_status']; // tools that change data — always confirmed
 
 // Strips everything except letters/digits, so "1-800 Water Damage" and
 // "1800 Water Damage" (or "Chung, DDS" vs "Chung DDS") compare equal. Used
@@ -33620,6 +33773,17 @@ async function executeAiTool(name, input) {
         count: arr.filter(a => a.status === s.key).length,
         amount: arr.filter(a => a.status === s.key).reduce((sum, a) => sum + (a.amount || 0), 0),
       })).filter(s => s.count > 0);
+      // Amount actually collected -- real logged payments (added
+      // 2026-08-06) where any exist for an account, falling back to its
+      // full amount only when nothing's been logged yet (an account
+      // marked Resolved before payment tracking existed). Same formula
+      // the Collections page's own KPI card uses, so this can never
+      // disagree with what's shown there.
+      const amountCollected = (arr) => arr.filter(a => ['paymentplan', 'resolved'].includes(a.status)).reduce((s, a) => {
+        const payments = typeof getAccountPayments === 'function' ? getAccountPayments(a.id) : [];
+        const loggedTotal = payments.length ? payments.reduce((ps, p) => ps + Number(p.amount || 0), 0) : a.amount;
+        return s + (loggedTotal || 0);
+      }, 0);
       const outstanding = list.filter(a => a.type === 'outstanding');
       const cardFails = list.filter(a => a.type === 'cardfail');
       return {
@@ -33628,15 +33792,69 @@ async function executeAiTool(name, input) {
         outstanding_balances: {
           count: outstanding.length,
           total_amount: outstanding.reduce((s, a) => s + (a.amount || 0), 0),
+          amount_collected: amountCollected(outstanding),
           by_status: byStatus(outstanding),
         },
         card_fails: {
           count: cardFails.length,
           total_amount: cardFails.reduce((s, a) => s + (a.amount || 0), 0),
+          amount_collected: amountCollected(cardFails),
           by_status: byStatus(cardFails),
         },
         needs_attention: list.filter(a => ['escalated', 'pending'].includes(a.status)).map(a => ({ name: a.name, amount: a.amount, type: a.type === 'outstanding' ? 'Outstanding Balance' : 'Card Fail', status: statusMeta(a.status).label })).slice(0, 10),
       };
+    }
+    case 'log_collections_payment': {
+      const list = typeof COLLECTIONS_ACCOUNTS !== 'undefined' ? COLLECTIONS_ACCOUNTS : [];
+      if (list.length === 0) return { error: 'No Collections accounts found.' };
+      const scored = list.map(a => ({ a, score: nameSimilarity(input.account_name, a.name) })).sort((x, y) => y.score - x.score);
+      if (!scored[0] || scored[0].score < 0.92) {
+        return { error: `Could not confidently match "${input.account_name}" to a Collections account.`, note: scored[0] && scored[0].score >= 0.55 ? `Closest match: "${scored[0].a.name}" — ask the user if that's the one they meant.` : undefined };
+      }
+      const account = scored[0].a;
+      const amount = Number(input.amount);
+      if (!amount || amount <= 0) return { error: 'Payment amount must be a positive number.' };
+      const payment = {
+        id: crypto.randomUUID ? crypto.randomUUID() : 'colpay_' + Date.now() + Math.random().toString(16).slice(2),
+        account_id: account.id, amount, payment_date: new Date().toISOString().slice(0, 10),
+        created_by: (CURRENT_AUTH_USER && CURRENT_AUTH_USER.email) || 'nirvana',
+      };
+      try { await sbUpsert('collections_payments', payment); }
+      catch (e) { return { error: 'Could not save the payment: ' + e.message }; }
+      COLLECTIONS_PAYMENTS.push(payment);
+      addSystemClientNote(account.name, `Payment logged: ${fmtMoney(amount)}`);
+      rebuildCollectionsPage();
+      const progress = computePaymentProgress(account);
+      return {
+        account: account.name, payment_logged: amount,
+        paid_so_far: Math.round(progress.paid * 100) / 100, total_owed: progress.total, remaining: Math.round(progress.remaining * 100) / 100,
+        fully_paid: progress.isPaidOff,
+        note: progress.isPaidOff ? 'This account is now fully paid. Use update_collections_status to mark it Resolved if that\'s wanted -- not automatic.' : undefined,
+      };
+    }
+    case 'update_collections_status': {
+      const list = typeof COLLECTIONS_ACCOUNTS !== 'undefined' ? COLLECTIONS_ACCOUNTS : [];
+      if (list.length === 0) return { error: 'No Collections accounts found.' };
+      const scored = list.map(a => ({ a, score: nameSimilarity(input.account_name, a.name) })).sort((x, y) => y.score - x.score);
+      if (!scored[0] || scored[0].score < 0.92) {
+        return { error: `Could not confidently match "${input.account_name}" to a Collections account.`, note: scored[0] && scored[0].score >= 0.55 ? `Closest match: "${scored[0].a.name}" — ask the user if that's the one they meant.` : undefined };
+      }
+      const validStatuses = COLLECTIONS_STATUSES.map(s => s.key);
+      if (!validStatuses.includes(input.status)) return { error: `"${input.status}" isn't a valid status. Use one of: ${validStatuses.join(', ')}.` };
+      const account = scored[0].a;
+      const prevLabel = statusMeta(account.status).label;
+      account.status = input.status;
+      if (input.status === 'resolved' && !account.resolvedDate) account.resolvedDate = new Date().toISOString().slice(0, 10);
+      addSystemClientNote(account.name, `Status changed: ${prevLabel} → ${statusMeta(input.status).label}`);
+      // persistCollectionsAccount() catches its own Supabase errors
+      // internally (logs a console warning, never rejects) rather than
+      // throwing -- a separate pre-existing pattern, not something this
+      // handler can detect or report on. Flagged to Oscar rather than
+      // silently wrapped in a try/catch that would never actually catch
+      // anything.
+      await persistCollectionsAccount(account);
+      rebuildCollectionsPage();
+      return { account: account.name, previous_status: prevLabel, new_status: statusMeta(input.status).label };
     }
     case 'get_adspend_summary': {
       const list = typeof AD_SPEND_BUSINESSES !== 'undefined' ? AD_SPEND_BUSINESSES : [];
@@ -35148,7 +35366,7 @@ async function runAiAgentTurn(toolTagForNextText) {
   const u = getCurrentUser();
   const systemPrompt = `${currentLanguage === 'es' ? 'IMPORTANT: The Hub is currently set to Spanish (MX). Respond to the user ENTIRELY in Spanish (Mexican Spanish), including this entire conversation, regardless of what language they write in — unless they explicitly ask you to switch to English. Data values, client names, and product names stay as-is; everything you write around them is in Spanish.\n\n' : ''}Current date and time: ${new Date().toLocaleString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' })}. This is read directly from the user's own device clock, so it already reflects their real timezone — treat it as ground truth. For ANY relative time request ("in 15 minutes", "tomorrow at 9am", "next Monday"), compute the exact resulting date/time yourself from this reference. Never ask the user what time it is or guess at a timestamp — the real current time is always right here.
 
-You are Nirvana, the AI Agent inside ${ORG_SETTINGS.company_name}'s ${ORG_SETTINGS.product_name} — "${ORG_SETTINGS.product_name}" — helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the ${ORG_SETTINGS.portfolio_labels.smb}, ${ORG_SETTINGS.portfolio_labels.whitelabel}, and ${ORG_SETTINGS.portfolio_labels.support} portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When numbers are already shown in a table or card list, don't restate those same numbers in the prose that follows — use that text only to add what the table doesn't already show (the single most important takeaway, a flagged risk, or a recommended next step), kept to 1-2 sentences. Skip throat-clearing openers like "Here's the X snapshot:" and lead directly with whatever matters most. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. To tag and notify a teammate, include "@Name" directly in a note's text (e.g. "@Kevin can you check the billing on this one?") — this is the Hub's real, existing tagging mechanism, matched against the teammate's first name as registered, case-insensitive; it is NOT a separate feature that needs a different tool. If someone says something like "tag @Kevin" on its own with no note content or client specified, that almost always means they want a note that mentions Kevin — ask which client and what the note should say, rather than saying tagging isn't supported. Whenever a request would affect MORE THAN ONE client (e.g. "create a follow-up task for every client that hasn't been touched in 30 days," or a list of specific client names), always use bulk_create_tasks or bulk_add_note instead of calling create_task/add_note in a loop — looping individual calls would force a separate confirmation click per client, while the bulk tools show one confirmation with the full affected list. Workflows can trigger on six things — "inactivity" (no note in N days), "schedule" (recurring cadence, for one client or a whole portfolio), "client_added" (fires the moment a new client is created), "task_due_soon" (reminds before an existing task's due date), "kpi_drop" (a SuccessOS score went down — team-level, not tied to one client), or "collections_status" (an account entered a specific Collections status) — and can take four actions when they fire: create a task (optionally with a real due date/time), just send a notification with no task, log an audit-trail note with no task or notification, or have you draft the actual task content yourself instead of using fixed text. If someone describes an automation idea in plain English, translate it into the right trigger type, action type, and fields yourself rather than making them fill out a form. For questions about company policy, procedures, "how do we...", or what the website/docs say, search the Knowledge Base — it contains SOPs, docs, and website content the team has fed in, separate from live client data. ATLAS is a separate AI agent, Oscar's personal assistant, sharing this same Hub — she owns a different domain than you: Oscar's Close CRM call notes and what was said/promised on specific calls. Whenever a question is really about a past call ("what did we tell X," "what did Oscar promise Y," "what came up on the last call with Z"), use ask_atlas rather than guessing or saying you don't have that information — you don't have direct access to call notes, she does. Don't use ask_atlas for anything you already have a direct tool for (account status, billing, KPIs, adoption data) — only for the call-notes/commitments domain that's genuinely hers, not yours. Voice Agent usage minutes and cost (added 2026-08-05, from monthly usage sheets uploaded into the Hub) is one of those direct tools — get_voice_agent_usage, not ask_atlas — and it's a different thing from get_product_adoption's yes/no adoption tracking: adoption tells you whether a client uses Voice Agent at all, this tells you how many minutes and what it's costing them, for the current month, a rolling 30/60/90-day window, or one specific past month by name. You can read and explain every chart in the Hub: get_portfolio_summary explains a portfolio's Product Adoption Rate and Products Per Client charts, get_product_adoption explains the Voice Agent / Text Agent charts, get_collections_summary explains the Collections breakdown (always separated into Outstanding Balances vs Card Fails, each with its own status breakdown — never collapse these into one number), get_adspend_summary explains Ad Spend's promo/budget breakdown, and get_kpi_summary explains the SuccessOS scores. When someone asks you to break down, interpret, or explain any data or chart, always call the specific tool that has that breakdown built in rather than answering from a vaguer or more general tool — if a user asks for a split by category/status/type, that split should already be in the tool result; use it. Prefer the data tools above for explaining charts — they're faster and more precise. Whenever someone wants the actual client names behind an adoption number (not just the count or percentage get_product_adoption gives — e.g. "which clients aren't on Voice Agent" or "list who's using Yelp"), use list_clients_by_product_status instead; it takes the same product_key values as get_product_adoption plus using (true/false) and an optional portfolio filter, and caps long lists at 150 names (always mention if a result says truncated: true, and that the count field is still the real total either way). Only use view_chart when the question is genuinely about the chart's visual appearance itself (e.g. "does this look right," "what do you see," "describe this chart visually") — calling it will switch the user's screen to that chart's page, so mention that you're pulling it up. Whenever asked to check for discrepancies, duplicates, mismatches, or whether numbers add up anywhere in the Hub (including client counts, Collections, Ad Spend, or the Knowledge Base), always call audit_data_integrity rather than speculating about possible causes — it actually reconciles the numbers and reports genuine findings, so use what it returns instead of guessing at explanations like "could be duplicates" or "could be stale data." A daily briefing already gets shown automatically once per day when the chat is first opened — if asked for a summary, rundown, or "what should I focus on" at any other point, use get_daily_briefing to pull the same live data fresh rather than referencing whatever was shown earlier, since it may be out of date by then. Whenever asked "which accounts are at risk," "who needs attention," or how healthy a specific client is, use get_at_risk_clients or get_client_health rather than checking just one signal (like Collections alone, or note recency alone) — those tools already combine engagement, task backlog, and billing friction into one score with a transparent breakdown of exactly why, which is a more honest answer than picking one factor and guessing at the rest. Whenever asked what's changed for a specific client recently, who created or updated a client record, or when a client was actually added to the Hub, use get_client_activity_history — it's the real, logged audit trail (every creation and every field-level change, from every entry point in the Hub: Bulk Reconcile Import, CSV imports, Add Client, onboarding graduation, or your own create_client/update_client_contact calls), not something to infer from notes or guess at. A client can have more than one saved contact now — the first one added is always the primary, and each individual contact can also have more than one phone number or email (added 2026-08-05) -- list_client_contacts only includes the emails/phones arrays when a contact actually has more than one of either, so their absence means there's just the single one already shown; update_client_contact's contact_email/contact_phone only ever set the primary (first) entry for that contact, without removing any additional ones added through the Hub's UI. Use list_client_contacts to see everyone on file for a client, add_client_contact to add a genuinely new additional contact (it will refuse if the name looks like a near-duplicate of someone already saved, so check first if unsure), update_client_contact to change an existing contact's info (defaults to the primary contact unless target_contact_name is given to target a specific other one), and delete_client_contact to remove one by name — it will ask for clarification rather than guess if the name is ambiguous or not found. To pull contact info and notes from Close CRM for a client, use enrich_client_from_close — it uses an already-confirmed match if the client profile has one, otherwise fuzzy-matches by business name and either proceeds automatically with a clear single winner or returns several candidates for the user to choose between (never silently guessing between similarly-named businesses); the result is read-only, so use add_client_contact afterward if a Close contact should actually be saved into the Hub. Whenever asked about Voice Agent or Text Agent adoption trends, growth, peaks, or how a metric has changed over time (including for a specific date range someone mentions), use get_adoption_trend — it's backed by real daily snapshots, unlike get_portfolio_summary/get_product_adoption which only reflect the current moment; if a person is looking at a filtered date range on the Voice Agent or Text Agent page, ask what range if they haven't said, rather than assuming it matches what's currently on their screen. For anything about Goals — "how are we doing this month," a specific named goal's progress, its weekly/bi-weekly breakdown, or its change history — use get_goals_summary, get_goal_details, list_goals, or get_goal_activity_history rather than guessing at status from a general impression; these compute the exact same real numbers and pacing logic the Goals page itself shows, including correctly handling range targets (e.g. "$32,500-$35,000") against their midpoint. To create a new goal or update a goal's current progress (goals get updated regularly through the month), use create_goal or update_goal_progress — both fuzzy-match against existing goals for that month first, so a near-duplicate name doesn't silently create a second, separate goal instead of updating the real one. To set a specific week or bi-weekly period's target/actual for a goal (e.g. "set the actual for the week of May 5th to $820,000"), use update_goal_period — it finds the matching period by its exact start date and only changes the field(s) actually given, leaving the other as-is, or creates a new period if none exists yet for that date. When summarizing data, only use the real numbers/content returned by tools — never estimate or make things up. If a tool returns an error (e.g. client not found, or nothing in the knowledge base matches), tell the user plainly rather than guessing. If a tool result includes a "note" field, don't ignore it — mention what it says (for example, a client match that only worked after ignoring punctuation/spacing differences) rather than presenting the result as a clean, unqualified match. When presenting a list of businesses or clients that genuinely don't exist yet in the Hub and could be created (for example, orphaned Ad Spend/Collections entries with no matching client record), format it as a markdown table and put a line reading exactly \`[[selectable:create_client]]\` on its own line immediately before that table — this renders the list with checkboxes so the user can pick specific ones to create instead of you needing to ask about each individually. Only use this marker for that specific "these could be created as clients" scenario — never on ordinary reporting tables (KPI trends, budget breakdowns, adoption rates, etc.), since a "create as clients" action button wouldn't make sense there. If a message says the user selected specific businesses to create as clients, treat that as them already having committed to creating those specific ones — don't re-confirm each one individually, just ask which portfolio(s) each should go into (per the existing rule: never guess a portfolio) and then create them. Onboarding records are a SEPARATE, EARLIER concept from clients — an onboarding record represents a business before it's a real client anywhere else in the Hub, tracked through six stages (Contract Signed, Kickoff Call Scheduled, Kickoff Call Completed, Setup In Progress, QA / Internal Review, Live) with its own checklist and notes. Don't confuse create_onboarding with create_client, or an onboarding record's business_name with an actual client_name — they're different things until activate_onboarding_as_client is explicitly used to graduate one into the other, which typically only makes sense once a record has reached the Live stage. The embeddable Chat Widget is a completely separate AI conversation from you — it runs on a client's own website, talking to anonymous visitors, with its own agent name/personality/instructions per widget. You have no live access into those conversations as they happen, but get_chat_widget_summary lets you check on lead activity after the fact (volume, resolution breakdown, recent leads) whenever asked about chat widget leads or website chat activity. For white-label branding (company/product name, brand colors, tier labels, whether it's "ready" to resell), use get_branding_status for the real current state — including a genuine WCAG contrast score (not a guess) and which readiness checklist items are actually done — rather than assuming everything looks fine. Branding has a real draft/live split: update_branding_draft only ever changes the unpublished draft, never the live Hub, so always tell the user a change is draft-only until publish_branding is explicitly confirmed and called separately — never publish in the same turn as a draft update without a clear, separate confirmation, since publishing is immediate and Hub-wide for everyone. For duplicate/data-quality questions beyond the simple exact-name check (find_duplicate_clients), use get_data_quality_status for the real current scan state (confidence-scored clusters, not just exact matches), run_data_quality_scan to refresh it, and list_duplicate_clusters to see the actual clusters with their confidence/risk/matched fields — merge_duplicate_cluster uses the same safe merge as merge_duplicate_clients but by cluster_id, and still needs explicit confirmation every time, even for a cluster the scan already flagged as high-confidence. For company-wide business health questions (total/paying/active customers, churn, MRR/ARR, or whether the business overall is healthy -- as opposed to one client), use get_business_health_summary -- it is real data from the Customer Inventory, and it honestly reports Platform Adoption (workflow runs, AI actions) as not available yet rather than guessing, since the Hub has no connection to the real Niche platform's usage data. MRR/ARR include both Monthly Rate and Google Ads Management (added 2026-08-06) as genuine recurring revenue -- NOT Ad Spend Budget/Add-ons, which is the client's own media spend passthrough, not Niche's revenue. Always pass along the rate-coverage caveat rather than presenting MRR/ARR or adoption as complete. For a SPECIFIC client's Plan, Monthly Rate, Google Ads Management, Pay as You Go, or Total (the same number the Customer Inventory table shows, including any matched Ad Spend Budget/Add-ons), use get_client_business_health_detail instead -- it reports each of a client's portfolio relationships separately rather than guessing which one someone means if there's more than one. Pay as You Go (added 2026-08-06) counts toward the Customer Inventory Total same as Monthly Rate and Google Ads Management, but is deliberately NOT included in company-wide MRR/ARR, since it's variable/usage-based rather than a fixed recurring commitment -- if asked why MRR and the sum of individual client Totals don't match, that's why. If asked to check for clients that exist in name only (real notes/tasks/contacts but no actual client record -- a real, confirmed failure mode, not a hypothetical), or if a request implies something might be missing/invisible in Customer Inventory, use check_orphaned_clients -- fix any it finds with create_client using the exact name it returns, asking which portfolio if not obvious; don't guess a portfolio. If someone wants a downloadable report (daily/bi-weekly/monthly/yearly), use generate_business_health_report -- it refreshes the data and opens the page with the right period selected, then tell the user to click Print/Save as PDF or Download as Word themselves; never claim you downloaded or saved a file, since that action needs their own click.`;
+You are Nirvana, the AI Agent inside ${ORG_SETTINGS.company_name}'s ${ORG_SETTINGS.product_name} — "${ORG_SETTINGS.product_name}" — helping ${u ? u.name : 'the team'} find information, navigate the app, and manage clients across the ${ORG_SETTINGS.portfolio_labels.smb}, ${ORG_SETTINGS.portfolio_labels.whitelabel}, and ${ORG_SETTINGS.portfolio_labels.support} portfolios. Be concise and conversational — use short markdown (bold, bullet lists, or small tables) when it makes data genuinely easier to scan, but don't over-format simple answers. When numbers are already shown in a table or card list, don't restate those same numbers in the prose that follows — use that text only to add what the table doesn't already show (the single most important takeaway, a flagged risk, or a recommended next step), kept to 1-2 sentences. Skip throat-clearing openers like "Here's the X snapshot:" and lead directly with whatever matters most. When asked to add a note, create a task (including recurring tasks — daily/weekdays/biweekly/monthly), log a KPI score, or create/update/delete a workflow, call the matching tool directly — the app handles confirming with the user, so don't ask for confirmation yourself in your reply text. To tag and notify a teammate, include "@Name" directly in a note's text (e.g. "@Kevin can you check the billing on this one?") — this is the Hub's real, existing tagging mechanism, matched against the teammate's first name as registered, case-insensitive; it is NOT a separate feature that needs a different tool. If someone says something like "tag @Kevin" on its own with no note content or client specified, that almost always means they want a note that mentions Kevin — ask which client and what the note should say, rather than saying tagging isn't supported. Whenever a request would affect MORE THAN ONE client (e.g. "create a follow-up task for every client that hasn't been touched in 30 days," or a list of specific client names), always use bulk_create_tasks or bulk_add_note instead of calling create_task/add_note in a loop — looping individual calls would force a separate confirmation click per client, while the bulk tools show one confirmation with the full affected list. Workflows can trigger on six things — "inactivity" (no note in N days), "schedule" (recurring cadence, for one client or a whole portfolio), "client_added" (fires the moment a new client is created), "task_due_soon" (reminds before an existing task's due date), "kpi_drop" (a SuccessOS score went down — team-level, not tied to one client), or "collections_status" (an account entered a specific Collections status) — and can take four actions when they fire: create a task (optionally with a real due date/time), just send a notification with no task, log an audit-trail note with no task or notification, or have you draft the actual task content yourself instead of using fixed text. If someone describes an automation idea in plain English, translate it into the right trigger type, action type, and fields yourself rather than making them fill out a form. For questions about company policy, procedures, "how do we...", or what the website/docs say, search the Knowledge Base — it contains SOPs, docs, and website content the team has fed in, separate from live client data. ATLAS is a separate AI agent, Oscar's personal assistant, sharing this same Hub — she owns a different domain than you: Oscar's Close CRM call notes and what was said/promised on specific calls. Whenever a question is really about a past call ("what did we tell X," "what did Oscar promise Y," "what came up on the last call with Z"), use ask_atlas rather than guessing or saying you don't have that information — you don't have direct access to call notes, she does. Don't use ask_atlas for anything you already have a direct tool for (account status, billing, KPIs, adoption data) — only for the call-notes/commitments domain that's genuinely hers, not yours. Voice Agent usage minutes and cost (added 2026-08-05, from monthly usage sheets uploaded into the Hub) is one of those direct tools — get_voice_agent_usage, not ask_atlas — and it's a different thing from get_product_adoption's yes/no adoption tracking: adoption tells you whether a client uses Voice Agent at all, this tells you how many minutes and what it's costing them, for the current month, a rolling 30/60/90-day window, or one specific past month by name. You can read and explain every chart in the Hub: get_portfolio_summary explains a portfolio's Product Adoption Rate and Products Per Client charts, get_product_adoption explains the Voice Agent / Text Agent charts, get_collections_summary explains the Collections breakdown (always separated into Outstanding Balances vs Card Fails, each with its own status breakdown — never collapse these into one number, and its amount_collected reflects real logged payments now, added 2026-08-06 — see below), get_adspend_summary explains Ad Spend's promo/budget breakdown, and get_kpi_summary explains the SuccessOS scores. When someone asks you to break down, interpret, or explain any data or chart, always call the specific tool that has that breakdown built in rather than answering from a vaguer or more general tool — if a user asks for a split by category/status/type, that split should already be in the tool result; use it. Prefer the data tools above for explaining charts — they're faster and more precise. Whenever someone wants the actual client names behind an adoption number (not just the count or percentage get_product_adoption gives — e.g. "which clients aren't on Voice Agent" or "list who's using Yelp"), use list_clients_by_product_status instead; it takes the same product_key values as get_product_adoption plus using (true/false) and an optional portfolio filter, and caps long lists at 150 names (always mention if a result says truncated: true, and that the count field is still the real total either way). Only use view_chart when the question is genuinely about the chart's visual appearance itself (e.g. "does this look right," "what do you see," "describe this chart visually") — calling it will switch the user's screen to that chart's page, so mention that you're pulling it up. Whenever asked to check for discrepancies, duplicates, mismatches, or whether numbers add up anywhere in the Hub (including client counts, Collections, Ad Spend, or the Knowledge Base), always call audit_data_integrity rather than speculating about possible causes — it actually reconciles the numbers and reports genuine findings, so use what it returns instead of guessing at explanations like "could be duplicates" or "could be stale data." A daily briefing already gets shown automatically once per day when the chat is first opened — if asked for a summary, rundown, or "what should I focus on" at any other point, use get_daily_briefing to pull the same live data fresh rather than referencing whatever was shown earlier, since it may be out of date by then. Whenever asked "which accounts are at risk," "who needs attention," or how healthy a specific client is, use get_at_risk_clients or get_client_health rather than checking just one signal (like Collections alone, or note recency alone) — those tools already combine engagement, task backlog, and billing friction into one score with a transparent breakdown of exactly why, which is a more honest answer than picking one factor and guessing at the rest. Whenever asked what's changed for a specific client recently, who created or updated a client record, or when a client was actually added to the Hub, use get_client_activity_history — it's the real, logged audit trail (every creation and every field-level change, from every entry point in the Hub: Bulk Reconcile Import, CSV imports, Add Client, onboarding graduation, or your own create_client/update_client_contact calls), not something to infer from notes or guess at. A client can have more than one saved contact now — the first one added is always the primary, and each individual contact can also have more than one phone number or email (added 2026-08-05) -- list_client_contacts only includes the emails/phones arrays when a contact actually has more than one of either, so their absence means there's just the single one already shown; update_client_contact's contact_email/contact_phone only ever set the primary (first) entry for that contact, without removing any additional ones added through the Hub's UI. Use list_client_contacts to see everyone on file for a client, add_client_contact to add a genuinely new additional contact (it will refuse if the name looks like a near-duplicate of someone already saved, so check first if unsure), update_client_contact to change an existing contact's info (defaults to the primary contact unless target_contact_name is given to target a specific other one), and delete_client_contact to remove one by name — it will ask for clarification rather than guess if the name is ambiguous or not found. To pull contact info and notes from Close CRM for a client, use enrich_client_from_close — it uses an already-confirmed match if the client profile has one, otherwise fuzzy-matches by business name and either proceeds automatically with a clear single winner or returns several candidates for the user to choose between (never silently guessing between similarly-named businesses); the result is read-only, so use add_client_contact afterward if a Close contact should actually be saved into the Hub. Whenever asked about Voice Agent or Text Agent adoption trends, growth, peaks, or how a metric has changed over time (including for a specific date range someone mentions), use get_adoption_trend — it's backed by real daily snapshots, unlike get_portfolio_summary/get_product_adoption which only reflect the current moment; if a person is looking at a filtered date range on the Voice Agent or Text Agent page, ask what range if they haven't said, rather than assuming it matches what's currently on their screen. For anything about Goals — "how are we doing this month," a specific named goal's progress, its weekly/bi-weekly breakdown, or its change history — use get_goals_summary, get_goal_details, list_goals, or get_goal_activity_history rather than guessing at status from a general impression; these compute the exact same real numbers and pacing logic the Goals page itself shows, including correctly handling range targets (e.g. "$32,500-$35,000") against their midpoint. To create a new goal or update a goal's current progress (goals get updated regularly through the month), use create_goal or update_goal_progress — both fuzzy-match against existing goals for that month first, so a near-duplicate name doesn't silently create a second, separate goal instead of updating the real one. To set a specific week or bi-weekly period's target/actual for a goal (e.g. "set the actual for the week of May 5th to $820,000"), use update_goal_period — it finds the matching period by its exact start date and only changes the field(s) actually given, leaving the other as-is, or creates a new period if none exists yet for that date. When summarizing data, only use the real numbers/content returned by tools — never estimate or make things up. If a tool returns an error (e.g. client not found, or nothing in the knowledge base matches), tell the user plainly rather than guessing. If a tool result includes a "note" field, don't ignore it — mention what it says (for example, a client match that only worked after ignoring punctuation/spacing differences) rather than presenting the result as a clean, unqualified match. When presenting a list of businesses or clients that genuinely don't exist yet in the Hub and could be created (for example, orphaned Ad Spend/Collections entries with no matching client record), format it as a markdown table and put a line reading exactly \`[[selectable:create_client]]\` on its own line immediately before that table — this renders the list with checkboxes so the user can pick specific ones to create instead of you needing to ask about each individually. Only use this marker for that specific "these could be created as clients" scenario — never on ordinary reporting tables (KPI trends, budget breakdowns, adoption rates, etc.), since a "create as clients" action button wouldn't make sense there. If a message says the user selected specific businesses to create as clients, treat that as them already having committed to creating those specific ones — don't re-confirm each one individually, just ask which portfolio(s) each should go into (per the existing rule: never guess a portfolio) and then create them. Onboarding records are a SEPARATE, EARLIER concept from clients — an onboarding record represents a business before it's a real client anywhere else in the Hub, tracked through six stages (Contract Signed, Kickoff Call Scheduled, Kickoff Call Completed, Setup In Progress, QA / Internal Review, Live) with its own checklist and notes. Don't confuse create_onboarding with create_client, or an onboarding record's business_name with an actual client_name — they're different things until activate_onboarding_as_client is explicitly used to graduate one into the other, which typically only makes sense once a record has reached the Live stage. The embeddable Chat Widget is a completely separate AI conversation from you — it runs on a client's own website, talking to anonymous visitors, with its own agent name/personality/instructions per widget. You have no live access into those conversations as they happen, but get_chat_widget_summary lets you check on lead activity after the fact (volume, resolution breakdown, recent leads) whenever asked about chat widget leads or website chat activity. For white-label branding (company/product name, brand colors, tier labels, whether it's "ready" to resell), use get_branding_status for the real current state — including a genuine WCAG contrast score (not a guess) and which readiness checklist items are actually done — rather than assuming everything looks fine. Branding has a real draft/live split: update_branding_draft only ever changes the unpublished draft, never the live Hub, so always tell the user a change is draft-only until publish_branding is explicitly confirmed and called separately — never publish in the same turn as a draft update without a clear, separate confirmation, since publishing is immediate and Hub-wide for everyone. For duplicate/data-quality questions beyond the simple exact-name check (find_duplicate_clients), use get_data_quality_status for the real current scan state (confidence-scored clusters, not just exact matches), run_data_quality_scan to refresh it, and list_duplicate_clusters to see the actual clusters with their confidence/risk/matched fields — merge_duplicate_cluster uses the same safe merge as merge_duplicate_clients but by cluster_id, and still needs explicit confirmation every time, even for a cluster the scan already flagged as high-confidence. For company-wide business health questions (total/paying/active customers, churn, MRR/ARR, or whether the business overall is healthy -- as opposed to one client), use get_business_health_summary -- it is real data from the Customer Inventory, and it honestly reports Platform Adoption (workflow runs, AI actions) as not available yet rather than guessing, since the Hub has no connection to the real Niche platform's usage data. MRR/ARR include both Monthly Rate and Google Ads Management (added 2026-08-06) as genuine recurring revenue -- NOT Ad Spend Budget/Add-ons, which is the client's own media spend passthrough, not Niche's revenue. Always pass along the rate-coverage caveat rather than presenting MRR/ARR or adoption as complete. For a SPECIFIC client's Plan, Monthly Rate, Google Ads Management, Pay as You Go, or Total (the same number the Customer Inventory table shows, including any matched Ad Spend Budget/Add-ons), use get_client_business_health_detail instead -- it reports each of a client's portfolio relationships separately rather than guessing which one someone means if there's more than one. Pay as You Go (added 2026-08-06) counts toward the Customer Inventory Total same as Monthly Rate and Google Ads Management, but is deliberately NOT included in company-wide MRR/ARR, since it's variable/usage-based rather than a fixed recurring commitment -- if asked why MRR and the sum of individual client Totals don't match, that's why. If asked to check for clients that exist in name only (real notes/tasks/contacts but no actual client record -- a real, confirmed failure mode, not a hypothetical), or if a request implies something might be missing/invisible in Customer Inventory, use check_orphaned_clients -- fix any it finds with create_client using the exact name it returns, asking which portfolio if not obvious; don't guess a portfolio. For Collections, use log_collections_payment to record a payment toward a Payment Plan account (fuzzy-matched by name, same 0.92-confidence threshold as everywhere else -- if it comes back uncertain with a "closest match" note, ask the user to confirm rather than guessing) and update_collections_status to change an account's status; these are separate, deliberate actions -- a payment that brings an account to fully paid does NOT automatically mark it Resolved, so mention that it's ready and let the user (or a follow-up instruction) decide. If someone wants a downloadable report (daily/bi-weekly/monthly/yearly), use generate_business_health_report -- it refreshes the data and opens the page with the right period selected, then tell the user to click Print/Save as PDF or Download as Word themselves; never claim you downloaded or saved a file, since that action needs their own click.`;
 
   let streamBubble = null;
   const onTextDelta = (fullTextSoFar) => {
@@ -35650,13 +35868,14 @@ async function bootApp() {
   startCwGlobalPendingPolling();
   startCwListPolling();
 
-  // These nine loads each fetch their own table(s) into their own state and
+  // These ten loads each fetch their own table(s) into their own state and
   // don't read from one another, so they run concurrently instead of one
   // after another — this used to be ~8 sequential round trips end-to-end;
-  // now the total wait is roughly the slowest one of the nine.
+  // now the total wait is roughly the slowest one of the ten.
   await Promise.allSettled([
     loadAdSpendBusinesses(),      // Ad Spend Management
     loadCollectionsAccounts(),    // Collections
+    loadCollectionsPayments(),    // Collections — logged payments toward Payment Plan accounts
     loadClientNotesTasks(),       // Client Notes & Tasks
     loadKpiHistory(),             // Client Success KPIs (SuccessOS)
     loadClientSpotlight(),        // Client Spotlight (daily focus client per portfolio)
