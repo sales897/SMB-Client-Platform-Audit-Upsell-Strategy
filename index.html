@@ -2043,6 +2043,8 @@ tr.pg-hidden-row { display: none; }
 .voice-plan-badge.plan-growth { background: var(--orange-dim); color: var(--orange); }
 .voice-plan-badge.plan-pro { background: rgba(34,197,94,.14); color: var(--green); }
 .voice-plan-badge.plan-scale { background: rgba(168,85,247,.14); color: #a855f7; }
+.bh-history-tab { background: none; border: none; color: var(--text3); font-size: 12.5px; font-weight: 600; padding: 8px 4px; margin-right: 20px; cursor: pointer; border-bottom: 2px solid transparent; font-family: inherit; }
+.bh-history-tab.active { color: var(--orange); border-bottom-color: var(--orange); }
 /* ─── ROLES / TEAM ─────────────────────────────────────────────────────── */
 .user-badge {
   display: flex; align-items: center; gap: 8px;
@@ -5791,6 +5793,57 @@ select.wfb-field-input { padding-right: 26px; }
       <div id="orphanCheckBody" style="max-height:50vh;overflow-y:auto;margin-bottom:14px"></div>
       <div class="modal-btns">
         <button class="btn btn-ghost" onclick="closeOrphanCheckModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CUSTOMER INVENTORY: HISTORY MODAL -->
+  <div class="modal-overlay" id="bhHistoryModal">
+    <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="bhHistoryModalTitle">
+      <h3 id="bhHistoryModalTitle"><span class="icon" data-icon="clock" data-icon-size="14"></span> History — <span id="bhHistoryClientName"></span></h3>
+      <p style="font-size:11.5px;color:var(--text3);margin-bottom:14px">Reconstructed from every logged change. History starts accumulating from when this shipped — earlier changes weren't tracked.</p>
+
+      <div style="display:flex;gap:4px;margin-bottom:16px;border-bottom:1px solid var(--border)">
+        <button class="bh-history-tab active" id="bhHistoryTabSingle" onclick="switchBhHistoryMode('single')">Single Month</button>
+        <button class="bh-history-tab" id="bhHistoryTabCompare" onclick="switchBhHistoryMode('compare')">Compare Two Months</button>
+      </div>
+
+      <!-- Single Month pane -->
+      <div id="bhHistoryPaneSingle">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+          <span class="muted" style="font-size:11px;color:var(--text3)">Viewing:</span>
+          <select id="bhHistoryMonthSelect" class="field-select" onchange="renderBhHistorySingle()"></select>
+        </div>
+        <div class="hub-mini-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:4px">
+          <div class="kpi" style="--kpi-accent:var(--text3)"><div class="kpi-lbl">Status</div><div class="kpi-val" id="bhh-status" style="font-size:15px"></div></div>
+          <div class="kpi" style="--kpi-accent:var(--text3)"><div class="kpi-lbl">Plan</div><div class="kpi-val" id="bhh-plan" style="font-size:15px"></div></div>
+          <div class="kpi" style="--kpi-accent:var(--text3)"><div class="kpi-lbl">Billing</div><div class="kpi-val" id="bhh-billing" style="font-size:15px"></div></div>
+          <div class="kpi" style="--kpi-accent:var(--text3)"><div class="kpi-lbl">Owner</div><div class="kpi-val" id="bhh-owner" style="font-size:15px"></div></div>
+        </div>
+        <div class="hub-mini-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px">
+          <div class="kpi" style="--kpi-accent:var(--orange)"><div class="kpi-lbl">Monthly Rate</div><div class="kpi-val" id="bhh-rate" style="font-size:15px"></div></div>
+          <div class="kpi" style="--kpi-accent:var(--orange)"><div class="kpi-lbl">Google Ads Mgmt</div><div class="kpi-val" id="bhh-gam" style="font-size:15px"></div></div>
+          <div class="kpi" style="--kpi-accent:var(--orange)"><div class="kpi-lbl">Pay as You Go</div><div class="kpi-val" id="bhh-payg" style="font-size:15px"></div></div>
+          <div class="kpi" style="--kpi-accent:var(--orange);border-color:var(--orange)"><div class="kpi-lbl" id="bhh-total-lbl">Total</div><div class="kpi-val" id="bhh-total" style="font-size:15px"></div></div>
+        </div>
+      </div>
+
+      <!-- Compare Two Months pane -->
+      <div id="bhHistoryPaneCompare" style="display:none">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;align-items:center;padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:6px">
+          <div></div>
+          <div><select id="bhCompareMonthA" class="field-select" style="width:100%" onchange="renderBhHistoryCompare()"></select></div>
+          <div><select id="bhCompareMonthB" class="field-select" style="width:100%" onchange="renderBhHistoryCompare()"></select></div>
+        </div>
+        <div id="bhCompareRows" style="margin-bottom:14px"></div>
+        <div id="bhCompareBanner" style="display:none;font-size:11px;color:var(--yellow);background:rgba(234,179,8,.1);border:1px solid rgba(234,179,8,.3);border-radius:8px;padding:10px 12px"></div>
+      </div>
+
+      <div style="font-size:12px;font-weight:700;margin:20px 0 8px">Full change history</div>
+      <div id="bhHistoryTimeline" style="max-height:26vh;overflow-y:auto"></div>
+
+      <div class="modal-btns">
+        <button class="btn btn-ghost" onclick="closeBhHistoryModal()">Close</button>
       </div>
     </div>
   </div>
@@ -11213,9 +11266,6 @@ async function logClientActivity({ clientName, source, action, fieldName, oldVal
     });
   } catch (e) { console.warn('Could not log client activity:', e.message); }
 }
-// Pulls the full audit trail for one client, most recent first -- the
-// "hidden" side of the hidden audit log, surfaced on demand rather than
-// shown by default anywhere.
 // Real sync activity logging for the Settings > Integrations redesign --
 // mirrors logClientActivity's fire-and-forget pattern (best-effort, never
 // blocks the calling flow on a logging failure).
@@ -11238,6 +11288,9 @@ async function getIntegrationSyncLog(integration, limit) {
   } catch (e) { console.warn('Could not load integration sync activity:', e.message); return []; }
 }
 
+// Pulls the full audit trail for one client, most recent first -- the
+// "hidden" side of the hidden audit log, surfaced on demand rather than
+// shown by default anywhere.
 async function getClientActivityHistory(clientName) {
   try {
     return await sbSelect('client_activity_log', `client_name=eq.${encodeURIComponent(clientName)}&order=created_at.desc`);
@@ -26423,7 +26476,10 @@ function renderBhInventoryTable() {
       <td><input type="number" id="bh-gam-${r.id}" value="${r.google_ads_management || ''}" placeholder="—" style="width:80px" onkeydown="if(event.key==='Enter') this.blur()" onchange="updateBhField('${r.id}','google_ads_management', this.value ? Number(this.value) : null)"></td>
       <td><input type="number" id="bh-payg-${r.id}" value="${r.pay_as_you_go || ''}" placeholder="—" style="width:80px" onkeydown="if(event.key==='Enter') this.blur()" onchange="updateBhField('${r.id}','pay_as_you_go', this.value ? Number(this.value) : null)"></td>
       <td id="bh-total-${r.id}">${renderBhTotalCell(r)}</td>
-      <td><button class="row-action-btn" onclick="openClientNotesTasksModal('${escAttr(r.name)}')" title="Open profile"><span class="icon" data-icon="eye" data-icon-size="13"></span></button></td>
+      <td>
+        <button class="row-action-btn" onclick="openClientNotesTasksModal('${escAttr(r.name)}')" title="Open profile"><span class="icon" data-icon="eye" data-icon-size="13"></span></button>
+        <button class="row-action-btn" onclick="openBhHistoryModal('${r.id}')" title="View history"><span class="icon" data-icon="clock" data-icon-size="13"></span></button>
+      </td>
     </tr>`;
   }).join('');
 
@@ -26478,6 +26534,12 @@ function renderBhTotalCell(r) {
   else parts.push('no matching Ad Spend record found');
   return `<span style="font-weight:700" title="${parts.join(' + ')}">$${total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>`;
 }
+// Human-readable labels for logging + displaying Business Health field
+// changes -- keep in sync with BH_FIELDS wherever that's defined.
+const BH_FIELD_LABELS = {
+  customer_status: 'Status', plan: 'Plan', account_owner: 'Owner', billing_status: 'Billing',
+  monthly_rate: 'Monthly Rate', google_ads_management: 'Google Ads Management', pay_as_you_go: 'Pay as You Go',
+};
 async function updateBhField(id, field, value) {
   if (!requirePermission('edit')) { renderBhInventoryTable(); return; }
   const row = BH_INVENTORY.find(r => r.id === id);
@@ -26486,6 +26548,15 @@ async function updateBhField(id, field, value) {
   row[field] = value;
   try { await sbPatch('portfolio_clients', `id=eq.${id}`, { [field]: value }); }
   catch (e) { row[field] = prev; showToast('Could not save: ' + e.message, 'error'); renderBhInventoryTable(); return; }
+  // Foundation for the Customer Inventory History feature (added
+  // 2026-08-06) -- logs every change so a client's value at any past
+  // month can be reconstructed later. Only logs fields that actually
+  // changed and that have a real label; best-effort, doesn't block the
+  // save above if it fails (logClientActivity already swallows its own
+  // errors internally).
+  if (BH_FIELD_LABELS[field] && prev !== value) {
+    logClientActivity({ clientName: row.name, source: 'customer_inventory', action: 'field_changed', fieldName: BH_FIELD_LABELS[field], oldValue: prev, newValue: value });
+  }
   // Also mirror this change into PORTFOLIOS[pk].clients, the completely
   // separate in-memory list saveClientsToSupabase() reads from on any
   // directory-level edit (a product checkbox, renaming an org, etc.).
@@ -26508,6 +26579,156 @@ async function updateBhField(id, field, value) {
   const totalCell = document.getElementById('bh-total-' + id);
   if (totalCell) totalCell.innerHTML = renderBhTotalCell(row);
   renderBhReportPanels();
+}
+
+// ─── Customer Inventory History (added 2026-08-06) ─────────────────────────
+// Reconstructs a client's Business Health field values as of any past
+// month, using the client_activity_log entries updateBhField() now writes.
+// This was designed and mocked up (3 options, then a hybrid of two of
+// them) well before it was actually built -- picked back up after being
+// sidetracked by the Tint Pros data-loss incident and everything that
+// followed from it the same day.
+const BH_HISTORY_FIELDS = ['Status', 'Plan', 'Owner', 'Billing', 'Monthly Rate', 'Google Ads Management', 'Pay as You Go'];
+const BH_STATUS_LABELS = { trial: 'Trial', active: 'Active', complimentary: 'Complimentary', cancelled: 'Cancelled', internal: 'Internal' };
+const BH_BILLING_LABELS = { billed: 'Billed', not_billed: 'Not Billed', unknown: 'Unknown' };
+let bhHistoryState = { row: null, activityLog: [] };
+
+function formatBhHistoryValue(label, raw) {
+  if (raw === null || raw === undefined || raw === '') return '—';
+  if (['Monthly Rate', 'Google Ads Management', 'Pay as You Go'].includes(label)) {
+    const num = Number(raw);
+    return Number.isFinite(num) ? fmtMoney(num) : String(raw);
+  }
+  if (label === 'Status') return BH_STATUS_LABELS[raw] || raw;
+  if (label === 'Billing') return BH_BILLING_LABELS[raw] || raw;
+  if (label === 'Owner') { const m = TEAM_MEMBERS.find(t => t.email === raw); return m ? m.name : raw; }
+  return raw; // Plan is already human-readable (Core/Growth/Pro/Scale)
+}
+
+// Reconstructs every tracked field's value as of the end of a given date.
+// For a field with no logged changes at all, the only honest answer is
+// its current live value (constant since before tracking started, or
+// never set). For a field with logged changes, finds the latest one at or
+// before asOfIso; if asOfIso is earlier than every logged change for that
+// field, the correct historical value is that FIRST change's old_value
+// (what it was right before the earliest tracked edit) -- not the current
+// live value, which would silently show a future state for a past date.
+function reconstructBhFieldsAsOf(row, activityLog, asOfIso) {
+  const relevant = activityLog.filter(h => h.source === 'customer_inventory' && h.action === 'field_changed' && BH_HISTORY_FIELDS.includes(h.field_name));
+  const asOfMs = new Date(asOfIso).getTime();
+  const result = {};
+  BH_HISTORY_FIELDS.forEach(label => {
+    const fieldKey = Object.keys(BH_FIELD_LABELS).find(k => BH_FIELD_LABELS[k] === label);
+    const entries = relevant.filter(h => h.field_name === label).slice().sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    if (entries.length === 0) { result[label] = { raw: row[fieldKey] }; return; }
+    let applicable = null;
+    for (const e of entries) {
+      if (new Date(e.created_at).getTime() <= asOfMs) applicable = e; else break;
+    }
+    result[label] = applicable ? { raw: applicable.new_value } : { raw: entries[0].old_value };
+  });
+  return result;
+}
+function getBhHistoryMonthOptions() {
+  const months = [];
+  const now = new Date();
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const label = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    const endOfMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59);
+    months.push({ label: i === 0 ? `${label} (current)` : label, value: endOfMonth.toISOString() });
+  }
+  return months;
+}
+async function openBhHistoryModal(accountId) {
+  const row = BH_INVENTORY.find(r => r.id === accountId);
+  if (!row) return;
+  document.getElementById('bhHistoryClientName').textContent = row.name;
+  document.getElementById('bhHistoryTimeline').innerHTML = `<div style="padding:16px;text-align:center;color:var(--text3)">Loading…</div>`;
+  document.getElementById('bhHistoryModal').classList.add('open');
+  let activityLog = [];
+  try { activityLog = await getClientActivityHistory(row.name); } catch (e) { /* getClientActivityHistory already handles its own errors */ }
+  bhHistoryState = { row, activityLog };
+  const months = getBhHistoryMonthOptions();
+  document.getElementById('bhHistoryMonthSelect').innerHTML = months.map(m => `<option value="${m.value}">${m.label}</option>`).join('');
+  document.getElementById('bhCompareMonthA').innerHTML = months.map((m, i) => `<option value="${m.value}" ${i === 1 ? 'selected' : ''}>${m.label}</option>`).join('');
+  document.getElementById('bhCompareMonthB').innerHTML = months.map(m => `<option value="${m.value}">${m.label}</option>`).join('');
+  switchBhHistoryMode('single');
+}
+function closeBhHistoryModal() {
+  document.getElementById('bhHistoryModal').classList.remove('open');
+}
+function switchBhHistoryMode(mode) {
+  document.getElementById('bhHistoryTabSingle').classList.toggle('active', mode === 'single');
+  document.getElementById('bhHistoryTabCompare').classList.toggle('active', mode === 'compare');
+  document.getElementById('bhHistoryPaneSingle').style.display = mode === 'single' ? '' : 'none';
+  document.getElementById('bhHistoryPaneCompare').style.display = mode === 'compare' ? '' : 'none';
+  if (mode === 'single') renderBhHistorySingle(); else renderBhHistoryCompare();
+  renderBhHistoryTimeline();
+}
+function renderBhHistorySingle() {
+  const { row, activityLog } = bhHistoryState;
+  const sel = document.getElementById('bhHistoryMonthSelect');
+  const fields = reconstructBhFieldsAsOf(row, activityLog, sel.value);
+  document.getElementById('bhh-status').textContent = formatBhHistoryValue('Status', fields['Status'].raw);
+  document.getElementById('bhh-plan').textContent = formatBhHistoryValue('Plan', fields['Plan'].raw);
+  document.getElementById('bhh-billing').textContent = formatBhHistoryValue('Billing', fields['Billing'].raw);
+  document.getElementById('bhh-owner').textContent = formatBhHistoryValue('Owner', fields['Owner'].raw);
+  document.getElementById('bhh-rate').textContent = formatBhHistoryValue('Monthly Rate', fields['Monthly Rate'].raw);
+  document.getElementById('bhh-gam').textContent = formatBhHistoryValue('Google Ads Management', fields['Google Ads Management'].raw);
+  document.getElementById('bhh-payg').textContent = formatBhHistoryValue('Pay as You Go', fields['Pay as You Go'].raw);
+  const total = (Number(fields['Monthly Rate'].raw) || 0) + (Number(fields['Google Ads Management'].raw) || 0) + (Number(fields['Pay as You Go'].raw) || 0);
+  document.getElementById('bhh-total').textContent = fmtMoney(total);
+  const monthLabel = sel.selectedOptions[0].textContent.replace(' (current)', '');
+  document.getElementById('bhh-total-lbl').title = 'Monthly Rate + Google Ads Management + Pay as You Go only -- Ad Spend Budget/Add-ons has no history to reconstruct from, so it\'s left out here (unlike the live Total on the main table, which includes a current Ad Spend match).';
+  document.getElementById('bhh-total-lbl').textContent = `Total (as of ${monthLabel})`;
+}
+function renderBhHistoryCompare() {
+  const { row, activityLog } = bhHistoryState;
+  const selA = document.getElementById('bhCompareMonthA');
+  const selB = document.getElementById('bhCompareMonthB');
+  const fieldsA = reconstructBhFieldsAsOf(row, activityLog, selA.value);
+  const fieldsB = reconstructBhFieldsAsOf(row, activityLog, selB.value);
+  let diffCount = 0;
+  const rowsHtml = BH_HISTORY_FIELDS.map(label => {
+    const rawA = fieldsA[label].raw, rawB = fieldsB[label].raw;
+    const isDiff = String(rawA ?? '') !== String(rawB ?? '');
+    if (isDiff) diffCount++;
+    return `<div style="display:grid;grid-template-columns:1fr 1fr 1fr;padding:9px 0;border-bottom:1px solid var(--border);align-items:center${isDiff ? ';background:rgba(226,84,31,.06)' : ''}">
+      <div style="font-size:11.5px;color:var(--text3);font-weight:600">${label}</div>
+      <div style="text-align:center;font-size:12.5px;font-weight:600">${escAttr(formatBhHistoryValue(label, rawA))}</div>
+      <div style="text-align:center;font-size:12.5px;font-weight:600;${isDiff ? 'color:var(--orange)' : ''}">${escAttr(formatBhHistoryValue(label, rawB))}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('bhCompareRows').innerHTML = rowsHtml;
+  const banner = document.getElementById('bhCompareBanner');
+  if (diffCount > 0) {
+    const labelA = selA.selectedOptions[0].textContent.replace(' (current)', '');
+    const labelB = selB.selectedOptions[0].textContent.replace(' (current)', '');
+    banner.style.display = 'block';
+    banner.innerHTML = `<span class="icon" data-icon="alert" data-icon-size="14"></span> ${diffCount} field${diffCount === 1 ? '' : 's'} changed between ${escAttr(labelA)} and ${escAttr(labelB)} — see the timeline below for exact dates and who made each change.`;
+  } else {
+    banner.style.display = 'none';
+  }
+}
+function renderBhHistoryTimeline() {
+  const { activityLog } = bhHistoryState;
+  const relevant = activityLog.filter(h => h.source === 'customer_inventory' && h.action === 'field_changed' && BH_HISTORY_FIELDS.includes(h.field_name)).slice().sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  const el = document.getElementById('bhHistoryTimeline');
+  if (relevant.length === 0) {
+    el.innerHTML = `<div style="padding:16px;text-align:center;color:var(--text3);font-size:12px">No changes logged yet for this client since history tracking started.</div>`;
+    return;
+  }
+  el.innerHTML = relevant.map(h => `
+    <div style="display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--orange);margin-top:5px;flex-shrink:0"></div>
+      <div style="flex:1;font-size:12px">
+        <span style="font-weight:600">${escAttr(h.field_name)}</span> changed
+        <span style="color:var(--red);text-decoration:line-through;opacity:.7">${escAttr(formatBhHistoryValue(h.field_name, h.old_value))}</span>
+        → <span style="color:var(--green);font-weight:700">${escAttr(formatBhHistoryValue(h.field_name, h.new_value))}</span>
+        <div style="font-size:10.5px;color:var(--text3);margin-top:2px">${fmtDate(h.created_at)} · ${escAttr(h.changed_by || 'Unknown')}</div>
+      </div>
+    </div>`).join('');
 }
 
 // ─── Bulk Cancel Unbilled Active Clients (added 2026-08-06) ────────────────
