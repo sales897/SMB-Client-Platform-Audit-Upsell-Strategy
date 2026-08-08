@@ -2062,12 +2062,30 @@ tr.pg-hidden-row { display: none; }
 .bh-mp-month-grid button.disabled { opacity: .3; cursor: not-allowed; pointer-events: none; }
 
 /* ─── Calendar (added 2026-08-06) ────────────────────────────────────────── */
-.cal-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px; }
+/* Fills exactly one viewport height, no page-level scroll (2026-08-07 follow
+   -up) -- .page's default padding/flow lets content run past the viewport
+   and the whole document scrolls, which is fine for most pages but wrong
+   for a calendar grid, where the point is seeing the whole month at once.
+   The DOW header is deliberately its own row OUTSIDE the 6-row day grid
+   (not 7 rows sharing the same grid) -- mixing an auto-sized header row
+   into grid-template-rows: repeat(6, 1fr) would make the "6" wrong the
+   moment a header row exists, so they're two separate grids that happen
+   to share column widths instead. */
+.cal-page { height: 100vh; padding: 16px 24px; overflow: hidden; }
+#page-calendar.active { display: flex; flex-direction: column; }
+.cal-page-card { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.cal-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px; flex-shrink: 0; }
+.cal-legend { display: flex; gap: 16px; font-size: 10.5px; color: var(--text3); margin-bottom: 10px; flex-shrink: 0; }
+.cal-view-pane { flex: 1; min-height: 0; display: none; }
+.cal-view-pane.active { display: flex; flex-direction: column; }
+.cal-dow-row { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; flex-shrink: 0; margin-bottom: 4px; }
+.cal-month-grid { flex: 1; display: grid; grid-template-columns: repeat(7, 1fr); grid-template-rows: repeat(6, 1fr); gap: 4px; min-height: 0; }
+.cal-schedule-scroll { flex: 1; min-height: 0; overflow-y: auto; }
+
 .cal-nav { display: flex; align-items: center; gap: 8px; }
 .cal-arrow-btn { background: var(--bg3); border: 1px solid var(--border); color: var(--text2); width: 30px; height: 30px; border-radius: var(--radius-sm); cursor: pointer; font-size: 13px; }
 .cal-arrow-btn:hover { border-color: var(--orange); color: var(--orange); }
 .cal-title { font-size: 15px; font-weight: 700; min-width: 150px; }
-.cal-legend { display: flex; gap: 16px; font-size: 10.5px; color: var(--text3); margin-bottom: 10px; }
 .chip { font-size: 9.5px; font-weight: 700; padding: 1px 6px; border-radius: var(--radius-pill); white-space: nowrap; }
 .chip-event { background: rgba(59,130,246,.16); color: var(--blue); }
 .chip-task { background: var(--orange-dim); color: var(--orange); }
@@ -2092,9 +2110,8 @@ tr.pg-hidden-row { display: none; }
 .view-switcher-menu .kbd { font-size: 10px; color: var(--text3); }
 
 /* Month view */
-.cal-month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-.cal-dow { font-size: 10px; color: var(--text3); text-align: center; padding-bottom: 4px; font-weight: 700; }
-.cal-day { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-xs); min-height: 118px; padding: 8px; font-size: 11px; cursor: pointer; min-width: 0; overflow: hidden; }
+.cal-dow { font-size: 10px; color: var(--text3); text-align: center; font-weight: 700; }
+.cal-day { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-xs); padding: 8px; font-size: 11px; cursor: pointer; min-width: 0; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
 .cal-day:hover { border-color: var(--orange); }
 .cal-day.today { border-color: var(--orange); }
 .cal-day.other-month { opacity: .35; }
@@ -4234,8 +4251,8 @@ select.wfb-field-input { padding-right: 26px; }
   <!-- ═══════════════════════════════════════════════════════════════════
        PAGE: CALENDAR — Events, Tasks & Reminders, unified across clients
   ════════════════════════════════════════════════════════════════════════ -->
-  <div class="page" id="page-calendar">
-    <div class="card" style="width:100%">
+  <div class="page cal-page" id="page-calendar">
+    <div class="card cal-page-card">
       <div class="cal-toolbar">
         <div class="cal-nav">
           <button class="btn btn-sm" onclick="calendarGoToday()">Today</button>
@@ -4269,12 +4286,11 @@ select.wfb-field-input { padding-right: 26px; }
       </div>
 
       <div id="calViewPaneMonth" class="cal-view-pane active"></div>
-      <div id="calViewPaneSchedule" class="cal-view-pane" style="display:none"></div>
-      <div id="calViewPaneDay" class="cal-view-pane" style="display:none"></div>
-      <div id="calViewPaneWeek" class="cal-view-pane" style="display:none"></div>
-      <div id="calViewPaneYear" class="cal-view-pane" style="display:none"></div>
+      <div id="calViewPaneSchedule" class="cal-view-pane"></div>
+      <div id="calViewPaneDay" class="cal-view-pane"></div>
+      <div id="calViewPaneWeek" class="cal-view-pane"></div>
+      <div id="calViewPaneYear" class="cal-view-pane"></div>
     </div>
-    <div class="page-footer"><span class="org-brand-inline">The HUB · Niche Inc.</span> · Calendar</div>
   </div>
 
   <!-- ═══════════════════════════════════════════════════════════════════
@@ -20741,7 +20757,7 @@ function setCalendarView(view) {
   document.querySelector(`#calViewMenu button[onclick="setCalendarView('${view}')"]`).classList.add('active');
   document.getElementById('calViewMenu').classList.remove('open');
   ['month', 'schedule', 'day', 'week', 'year'].forEach(v => {
-    document.getElementById('calViewPane' + v.charAt(0).toUpperCase() + v.slice(1)).style.display = v === view ? '' : 'none';
+    document.getElementById('calViewPane' + v.charAt(0).toUpperCase() + v.slice(1)).classList.toggle('active', v === view);
   });
   rebuildCalendarPage();
 }
@@ -20782,7 +20798,8 @@ async function renderCalendarMonth() {
 
   const todayStr = new Date().toISOString().slice(0, 10);
   const dows = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
-  let html = dows.map(dow => `<div class="cal-dow">${dow}</div>`).join('');
+  const dowHtml = dows.map(dow => `<div class="cal-dow">${dow}</div>`).join('');
+  let html = '';
   for (let i = 0; i < 42; i++) {
     const cellDate = new Date(gridStart); cellDate.setDate(cellDate.getDate() + i);
     const cellStr = cellDate.toISOString().slice(0, 10);
@@ -20797,7 +20814,7 @@ async function renderCalendarMonth() {
       ${moreCount > 0 ? `<div class="item-more">+${moreCount} more</div>` : ''}
     </div>`;
   }
-  pane.innerHTML = `<div class="cal-month-grid">${html}</div>`;
+  pane.innerHTML = `<div class="cal-dow-row">${dowHtml}</div><div class="cal-month-grid">${html}</div>`;
 }
 async function renderCalendarSchedule() {
   const pane = document.getElementById('calViewPaneSchedule');
@@ -20812,7 +20829,7 @@ async function renderCalendarSchedule() {
   const byDate = {};
   items.forEach(it => { CALENDAR_ITEM_LOOKUP[it.id] = it; const key = it.dateIso.slice(0, 10); (byDate[key] = byDate[key] || []).push(it); });
   const todayStr = new Date().toISOString().slice(0, 10);
-  pane.innerHTML = Object.keys(byDate).sort().map(dateKey => {
+  const listHtml = Object.keys(byDate).sort().map(dateKey => {
     const dateObj = new Date(dateKey + 'T00:00:00');
     const label = dateKey === todayStr ? `Today — ${fmtDate(dateKey)}` : dateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
     const dayItems = byDate[dateKey];
@@ -20827,6 +20844,7 @@ async function renderCalendarSchedule() {
         </div>`;
       }).join('');
   }).join('');
+  pane.innerHTML = `<div class="cal-schedule-scroll">${listHtml}</div>`;
 }
 
 // ─── In-Hub task reminders (2026-07-16) ─────────────────────────────────
