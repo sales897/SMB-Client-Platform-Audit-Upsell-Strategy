@@ -2123,8 +2123,8 @@ html.cal-page-open, html.cal-page-open body { overflow: hidden; height: 100%; }
 .cal-day .dnum { color: var(--text3); font-weight: 700; margin-bottom: 5px; font-size: 12px; }
 .cal-day.today .dnum { color: var(--orange); }
 .cal-day .item { font-size: 10px; padding: 3px 6px; border-radius: 4px; margin-bottom: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
-.cal-day .item.task { background: var(--orange-dim); color: var(--orange); }
-.cal-day .item.reminder { background: rgba(168,85,247,.16); color: var(--purple); }
+.cal-day .item.task, .cal-allday-row .item.task, .week-allday-cell .item.task { background: var(--orange-dim); color: var(--orange); }
+.cal-day .item.reminder, .cal-allday-row .item.reminder, .week-allday-cell .item.reminder { background: rgba(168,85,247,.16); color: var(--purple); }
 .cal-day .item:hover { filter: brightness(1.3); }
 .cal-day .item-more { font-size: 8.5px; color: var(--text3); }
 
@@ -2137,6 +2137,38 @@ html.cal-page-open, html.cal-page-open body { overflow: hidden; height: 100%; }
 .cal-empty-state { padding: 40px 20px; text-align: center; color: var(--text3); font-size: 12px; }
 .cal-coming-soon { padding: 60px 20px; text-align: center; color: var(--text3); }
 .cal-coming-soon .icon-lg { font-size: 32px; margin-bottom: 10px; opacity: .5; }
+
+/* Day / Week views (added 2026-08-08) -- 24 hours can't reasonably all fit
+   in the available height without shrinking rows to illegibility, so the
+   hour grid scrolls WITHIN its own pane (same pattern as Schedule's
+   .cal-schedule-scroll) rather than the outer page ever scrolling -- that
+   stays locked exactly like Month does. Auto-scrolls to a sensible hour on
+   open rather than always starting at midnight. */
+.cal-allday-row { display: flex; flex-wrap: wrap; gap: 4px; padding: 6px 0; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.cal-allday-row .item, .week-allday-cell .item { font-size: 10px; padding: 3px 8px; border-radius: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+.cal-day-scroll, .week-header-row, .week-allday-row { flex-shrink: 0; }
+.cal-day-scroll { flex: 1; min-height: 0; overflow-y: auto; }
+.cal-day-hourgrid { display: grid; grid-template-columns: 60px 1fr; }
+.day-hour-lbl { font-size: 10px; color: var(--text3); text-align: right; padding: 4px 8px 0 0; border-top: 1px solid var(--border); }
+.day-hour-cell { border-top: 1px solid var(--border); min-height: 44px; padding: 2px 6px; }
+.day-event { border-radius: 4px; padding: 3px 8px; font-size: 11px; margin-bottom: 2px; cursor: pointer; }
+.day-event.task { background: var(--orange-dim); border-left: 3px solid var(--orange); }
+.day-event.task strong { color: var(--orange); }
+.day-event.reminder { background: rgba(168,85,247,.16); border-left: 3px solid var(--purple); }
+.day-event.reminder strong { color: var(--purple); }
+.day-event .muted { font-size: 9.5px; color: var(--text3); }
+
+.week-header-row { display: grid; grid-template-columns: 50px repeat(7, 1fr); gap: 2px; margin-bottom: 4px; }
+.week-hdr { text-align: center; font-size: 10px; color: var(--text3); font-weight: 700; padding: 6px 0; }
+.week-hdr.today { color: var(--orange); }
+.week-allday-row { display: grid; grid-template-columns: 50px repeat(7, 1fr); gap: 2px; margin-bottom: 4px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.week-allday-cell { display: flex; flex-direction: column; gap: 2px; min-height: 0; }
+.week-hourgrid { display: grid; grid-template-columns: 50px repeat(7, 1fr); gap: 2px; }
+.week-hour-lbl { font-size: 9px; color: var(--text3); text-align: right; padding: 2px 6px 0 0; grid-column: 1; }
+.week-cell { background: var(--bg3); border: 1px solid var(--border); min-height: 44px; padding: 1px; overflow: hidden; }
+.week-event { background: rgba(59,130,246,.16); border-left: 2px solid var(--blue); color: var(--blue); font-size: 8.5px; padding: 1px 3px; border-radius: 3px; margin-bottom: 1px; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.week-event.task { background: var(--orange-dim); border-left-color: var(--orange); color: var(--orange); }
+.week-event.reminder { background: rgba(168,85,247,.16); border-left-color: var(--purple); color: var(--purple); }
 /* ─── ROLES / TEAM ─────────────────────────────────────────────────────── */
 .user-badge {
   display: flex; align-items: center; gap: 8px;
@@ -20745,7 +20777,9 @@ function calendarNav(direction) {
   const d = calendarState.currentDate;
   if (calendarState.view === 'month') calendarState.currentDate = new Date(d.getFullYear(), d.getMonth() + direction, 1);
   else if (calendarState.view === 'schedule') calendarState.currentDate = new Date(d.getFullYear(), d.getMonth(), d.getDate() + direction * 7);
-  else calendarState.currentDate = new Date(d.getFullYear(), d.getMonth() + direction, 1); // day/week/year not built yet -- falls back to month-step navigation
+  else if (calendarState.view === 'day') calendarState.currentDate = new Date(d.getFullYear(), d.getMonth(), d.getDate() + direction);
+  else if (calendarState.view === 'week') calendarState.currentDate = new Date(d.getFullYear(), d.getMonth(), d.getDate() + direction * 7);
+  else calendarState.currentDate = new Date(d.getFullYear(), d.getMonth() + direction, 1); // year view not built yet -- falls back to month-step navigation
   rebuildCalendarPage();
 }
 function toggleCalViewMenu() {
@@ -20793,11 +20827,27 @@ async function rebuildCalendarPage() {
   } else if (calendarState.view === 'schedule') {
     document.getElementById('calTitle').textContent = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
     await renderCalendarSchedule();
+  } else if (calendarState.view === 'day') {
+    document.getElementById('calTitle').textContent = d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+    await renderCalendarDay();
+  } else if (calendarState.view === 'week') {
+    const weekStart = getWeekStart(d);
+    const weekEnd = new Date(weekStart); weekEnd.setDate(weekEnd.getDate() + 6);
+    const sameMonth = weekStart.getMonth() === weekEnd.getMonth();
+    document.getElementById('calTitle').textContent = sameMonth
+      ? `${weekStart.toLocaleDateString('en-US', { month: 'short' })} ${weekStart.getDate()} – ${weekEnd.getDate()}, ${weekEnd.getFullYear()}`
+      : `${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}, ${weekEnd.getFullYear()}`;
+    await renderCalendarWeek();
   } else {
     document.getElementById('calTitle').textContent = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
     document.getElementById('calViewPane' + calendarState.view.charAt(0).toUpperCase() + calendarState.view.slice(1)).innerHTML =
-      `<div class="cal-coming-soon"><div class="icon-lg">🗓️</div><div style="font-weight:600;color:var(--text2)">${calendarState.view.charAt(0).toUpperCase() + calendarState.view.slice(1)} view is coming in Phase 2</div><div style="font-size:11px;margin-top:4px">Month and Schedule are fully working now — try those from the view switcher above.</div></div>`;
+      `<div class="cal-coming-soon"><div class="icon-lg">🗓️</div><div style="font-weight:600;color:var(--text2)">${calendarState.view.charAt(0).toUpperCase() + calendarState.view.slice(1)} view is coming in a later pass</div><div style="font-size:11px;margin-top:4px">Day, Week, Month, and Schedule are all working now — try those from the view switcher above.</div></div>`;
   }
+}
+function getWeekStart(d) {
+  const start = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  start.setDate(start.getDate() - start.getDay());
+  return start;
 }
 async function renderCalendarMonth() {
   const pane = document.getElementById('calViewPaneMonth');
@@ -20850,7 +20900,7 @@ async function renderCalendarSchedule() {
     const dayItems = byDate[dateKey];
     return `<div class="agenda-date-hdr"><span>${escAttr(label)}</span><span class="muted" style="color:var(--text3)">${dayItems.length} item${dayItems.length === 1 ? '' : 's'}</span></div>` +
       dayItems.map(it => {
-        const hasTime = it.dateIso.length > 10 && !it.dateIso.endsWith('T00:00:00.000Z');
+        const hasTime = calendarItemHasTime(it);
         const timeLabel = hasTime ? new Date(it.dateIso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : 'All day';
         return `<div class="agenda-item" onclick="openCalendarItemById('${escOnclickArg(it.id)}')">
           <span class="agenda-time">${timeLabel}</span>
@@ -20860,6 +20910,86 @@ async function renderCalendarSchedule() {
       }).join('');
   }).join('');
   pane.innerHTML = `<div class="cal-schedule-scroll">${listHtml}</div>`;
+}
+
+// A task or reminder created without an explicit time gets stored at
+// midnight (T00:00:00) as a convention -- this distinguishes a genuine
+// "due at midnight" from "no time was ever set, treat as all-day". Shared
+// by Schedule, Day, and Week, so all three can never disagree about which
+// items are "all day" vs actually timed.
+function calendarItemHasTime(it) {
+  return it.dateIso.length > 10 && !it.dateIso.endsWith('T00:00:00.000Z');
+}
+const CAL_HOUR_ROW_PX = 44; // must match .day-hour-cell / .week-cell min-height in CSS
+function calendarHourLabel(h) {
+  return h === 0 ? '12 AM' : h < 12 ? `${h} AM` : h === 12 ? '12 PM' : `${h - 12} PM`;
+}
+async function renderCalendarDay() {
+  const pane = document.getElementById('calViewPaneDay');
+  const d = calendarState.currentDate;
+  const dayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const dayEnd = new Date(dayStart); dayEnd.setHours(23, 59, 59, 999);
+  const items = await loadCalendarItemsForRange(dayStart, dayEnd);
+  items.forEach(it => { CALENDAR_ITEM_LOOKUP[it.id] = it; });
+
+  const allDay = items.filter(it => !calendarItemHasTime(it));
+  const timed = items.filter(it => calendarItemHasTime(it));
+
+  const allDayHtml = allDay.length > 0 ? `<div class="cal-allday-row">${allDay.map(it => `
+    <div class="item ${it.type}" onclick="openCalendarItemById('${escOnclickArg(it.id)}')" title="${escAttr(it.title)}${it.clientName ? ' — ' + escAttr(it.clientName) : ''}">${escAttr(it.title)}</div>
+  `).join('')}</div>` : '';
+
+  let hourRows = '';
+  for (let h = 0; h < 24; h++) {
+    const hourItems = timed.filter(it => new Date(it.dateIso).getHours() === h);
+    hourRows += `<div class="day-hour-lbl">${calendarHourLabel(h)}</div><div class="day-hour-cell">
+      ${hourItems.map(it => `<div class="day-event ${it.type}" onclick="openCalendarItemById('${escOnclickArg(it.id)}')">
+        <strong>${escAttr(it.title)}</strong>
+        <div class="muted">${new Date(it.dateIso).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}${it.clientName ? ' · ' + escAttr(it.clientName) : ''}</div>
+      </div>`).join('')}
+    </div>`;
+  }
+
+  pane.innerHTML = `${allDayHtml}<div class="cal-day-scroll"><div class="cal-day-hourgrid">${hourRows}</div></div>`;
+  const scrollEl = pane.querySelector('.cal-day-scroll');
+  if (scrollEl) {
+    const anchorHour = timed.length > 0 ? Math.max(0, new Date(timed[0].dateIso).getHours() - 1) : 7;
+    scrollEl.scrollTop = anchorHour * CAL_HOUR_ROW_PX;
+  }
+}
+async function renderCalendarWeek() {
+  const pane = document.getElementById('calViewPaneWeek');
+  const weekStart = getWeekStart(calendarState.currentDate);
+  const weekEnd = new Date(weekStart); weekEnd.setDate(weekEnd.getDate() + 6); weekEnd.setHours(23, 59, 59, 999);
+  const items = await loadCalendarItemsForRange(weekStart, weekEnd);
+  items.forEach(it => { CALENDAR_ITEM_LOOKUP[it.id] = it; });
+
+  const days = [];
+  for (let i = 0; i < 7; i++) { const dd = new Date(weekStart); dd.setDate(dd.getDate() + i); days.push(dd); }
+  const dowLabels = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const dayStrs = days.map(dd => dd.toISOString().slice(0, 10));
+
+  const headerHtml = '<div></div>' + days.map((dd, i) => `<div class="week-hdr${dayStrs[i] === todayStr ? ' today' : ''}">${dowLabels[i]} ${dd.getDate()}</div>`).join('');
+
+  const allDayByDay = dayStrs.map(dStr => items.filter(it => it.dateIso.slice(0, 10) === dStr && !calendarItemHasTime(it)));
+  const hasAnyAllDay = allDayByDay.some(arr => arr.length > 0);
+  const allDayRowHtml = hasAnyAllDay
+    ? '<div class="week-allday-row"><div></div>' + allDayByDay.map(dayItems => `<div class="week-allday-cell">${dayItems.map(it => `<div class="item ${it.type}" onclick="openCalendarItemById('${escOnclickArg(it.id)}')" title="${escAttr(it.title)}">${escAttr(it.title)}</div>`).join('')}</div>`).join('') + '</div>'
+    : '';
+
+  let hourRows = '';
+  for (let h = 0; h < 24; h++) {
+    hourRows += `<div class="week-hour-lbl">${calendarHourLabel(h)}</div>`;
+    dayStrs.forEach(dStr => {
+      const cellItems = items.filter(it => calendarItemHasTime(it) && it.dateIso.slice(0, 10) === dStr && new Date(it.dateIso).getHours() === h);
+      hourRows += `<div class="week-cell">${cellItems.map(it => `<div class="week-event ${it.type}" onclick="openCalendarItemById('${escOnclickArg(it.id)}')" title="${escAttr(it.title)}">${escAttr(it.title)}</div>`).join('')}</div>`;
+    });
+  }
+
+  pane.innerHTML = `<div class="week-header-row">${headerHtml}</div>${allDayRowHtml}<div class="cal-day-scroll"><div class="week-hourgrid">${hourRows}</div></div>`;
+  const scrollEl = pane.querySelector('.cal-day-scroll');
+  if (scrollEl) scrollEl.scrollTop = 7 * CAL_HOUR_ROW_PX;
 }
 
 // ─── In-Hub task reminders (2026-07-16) ─────────────────────────────────
