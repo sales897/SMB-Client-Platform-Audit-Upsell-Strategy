@@ -22,5 +22,9 @@ export default async (req) => {
 };
 
 export const config = {
-  schedule: "0 16 * * *",
+  // Weekdays only (Mon-Fri), added 2026-08-08 per Oscar's request. No UTC
+  // day-shift concern here, unlike the EOD schedule -- 16:00 UTC is still
+  // the same calendar day at 10:00 AM Mexico City (-6h stays within the
+  // same day), so UTC weekday = local weekday directly. 1-5 = Mon-Fri.
+  schedule: "0 16 * * 1-5",
 };

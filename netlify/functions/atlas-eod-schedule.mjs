@@ -18,5 +18,12 @@ export default async (req) => {
 };
 
 export const config = {
-  schedule: "0 0 * * *",
+  // Weekdays only (Mon-Fri evenings, local time), added 2026-08-08 per
+  // Oscar's request. NOT the same "1-5" as the morning brief -- 00:00 UTC
+  // is 6:00 PM the PREVIOUS day at Mexico City (-6h crosses midnight), so
+  // a local Monday evening is actually UTC Tuesday 00:00. Mapped out
+  // explicitly: UTC dow 2 (Tue) = Mon 6pm local, ... UTC dow 6 (Sat) =
+  // Fri 6pm local. UTC dow 1 (Mon) would incorrectly fire Sunday evening
+  // local -- do not "simplify" this back to 1-5, it would be wrong.
+  schedule: "0 0 * * 2-6",
 };
