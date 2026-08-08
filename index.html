@@ -20923,6 +20923,15 @@ function setCalendarView(view) {
   });
   rebuildCalendarPage();
 }
+// Jumping into a specific day from the Month grid -- previously the "+N
+// more" label (and the rest of an otherwise-empty day cell) didn't do
+// anything at all when clicked, a real dead end Oscar found using this
+// live. Reuses Day view rather than building a separate popover, so it's
+// the same full detail already available anywhere else in the Calendar.
+function calendarGoToDayView(year, month, day) {
+  calendarState.currentDate = new Date(year, month, day);
+  setCalendarView('day');
+}
 let CALENDAR_ITEM_LOOKUP = {}; // id -> item, so onclick handlers can pass a plain id string instead of a serialized object inline
 function openCalendarItemById(id) {
   const item = CALENDAR_ITEM_LOOKUP[id];
@@ -20986,10 +20995,10 @@ async function renderCalendarMonth() {
     const isToday = cellStr === todayStr;
     const shown = dayItems.slice(0, 3);
     const moreCount = dayItems.length - shown.length;
-    html += `<div class="cal-day${isToday ? ' today' : ''}${isOtherMonth ? ' other-month' : ''}">
+    html += `<div class="cal-day${isToday ? ' today' : ''}${isOtherMonth ? ' other-month' : ''}" onclick="calendarGoToDayView(${cellDate.getFullYear()}, ${cellDate.getMonth()}, ${cellDate.getDate()})">
       <div class="dnum">${cellDate.getDate()}</div>
       ${shown.map(it => `<div class="item ${it.type}" onclick="event.stopPropagation();openCalendarItemById('${escOnclickArg(it.id)}')" title="${escAttr(it.title)}${it.clientName ? ' — ' + escAttr(it.clientName) : ''}">${escAttr(it.title)}</div>`).join('')}
-      ${moreCount > 0 ? `<div class="item-more">+${moreCount} more</div>` : ''}
+      ${moreCount > 0 ? `<div class="item-more" onclick="event.stopPropagation();calendarGoToDayView(${cellDate.getFullYear()}, ${cellDate.getMonth()}, ${cellDate.getDate()})">+${moreCount} more</div>` : ''}
     </div>`;
   }
   pane.innerHTML = `<div class="cal-dow-row">${dowHtml}</div><div class="cal-month-grid">${html}</div>`;
