@@ -2072,6 +2072,11 @@ tr.pg-hidden-row { display: none; }
    moment a header row exists, so they're two separate grids that happen
    to share column widths instead. */
 .cal-page { height: 100vh; padding: 12px 24px 8px; overflow: hidden; box-sizing: border-box; }
+/* Belt-and-suspenders final lock -- see the comment in showPage() for why
+   this exists alongside .cal-page's own height/overflow. Scoped to only
+   apply while the Calendar page is genuinely active, so it cannot affect
+   scrolling anywhere else in the Hub. */
+html.cal-page-open, html.cal-page-open body { overflow: hidden; height: 100%; }
 #page-calendar.active { display: flex; flex-direction: column; }
 .cal-page-card { flex: 1; display: flex; flex-direction: column; min-height: 0; overflow: hidden; box-sizing: border-box; padding: 16px; }
 .cal-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 10px; flex-shrink: 0; }
@@ -7732,6 +7737,16 @@ function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + id).classList.add('active');
+  // Calendar is the one page designed to fit exactly within the viewport
+  // with no page-level scroll at all (2026-08-08) -- every individual
+  // element measures exactly correct against the viewport height, but a
+  // few pixels of document-level scroll still showed up from somewhere
+  // that didn't trace to any one element even under careful measurement.
+  // Locking scroll on <html> specifically while this page is active is a
+  // more bulletproof fix than continuing to chase the exact pixel source,
+  // and it's scoped narrowly (removed the instant any other page is
+  // shown) so it can't affect scrolling anywhere else in the Hub.
+  document.documentElement.classList.toggle('cal-page-open', id === 'calendar');
   const activeNavItem = document.querySelector(`.nav-item[onclick="showPage('${id}')"]`);
   if (activeNavItem) {
     activeNavItem.classList.add('active');
