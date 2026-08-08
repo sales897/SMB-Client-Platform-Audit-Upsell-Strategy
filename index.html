@@ -2123,6 +2123,7 @@ html.cal-page-open, html.cal-page-open body { overflow: hidden; height: 100%; }
 .cal-day .dnum { color: var(--text3); font-weight: 700; margin-bottom: 5px; font-size: 12px; }
 .cal-day.today .dnum { color: var(--orange); }
 .cal-day .item { font-size: 10px; padding: 3px 6px; border-radius: 4px; margin-bottom: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+.cal-day .item.event, .cal-allday-row .item.event, .week-allday-cell .item.event { background: rgba(59,130,246,.16); color: var(--blue); }
 .cal-day .item.task, .cal-allday-row .item.task, .week-allday-cell .item.task { background: var(--orange-dim); color: var(--orange); }
 .cal-day .item.reminder, .cal-allday-row .item.reminder, .week-allday-cell .item.reminder { background: rgba(168,85,247,.16); color: var(--purple); }
 .cal-day .item:hover { filter: brightness(1.3); }
@@ -2152,6 +2153,8 @@ html.cal-page-open, html.cal-page-open body { overflow: hidden; height: 100%; }
 .day-hour-lbl { font-size: 10px; color: var(--text3); text-align: right; padding: 4px 8px 0 0; border-top: 1px solid var(--border); }
 .day-hour-cell { border-top: 1px solid var(--border); min-height: 44px; padding: 2px 6px; }
 .day-event { border-radius: 4px; padding: 3px 8px; font-size: 11px; margin-bottom: 2px; cursor: pointer; }
+.day-event.event { background: rgba(59,130,246,.16); border-left: 3px solid var(--blue); }
+.day-event.event strong { color: var(--blue); }
 .day-event.task { background: var(--orange-dim); border-left: 3px solid var(--orange); }
 .day-event.task strong { color: var(--orange); }
 .day-event.reminder { background: rgba(168,85,247,.16); border-left: 3px solid var(--purple); }
@@ -4314,10 +4317,12 @@ select.wfb-field-input { padding-right: 26px; }
               <button type="button" onclick="setCalendarView('schedule')">Schedule <span class="kbd">A</span></button>
             </div>
           </div>
+          <button type="button" class="btn btn-primary btn-sm" onclick="openCalNewItemModal()">+ New Event</button>
         </div>
       </div>
 
       <div class="cal-legend">
+        <span><span class="chip chip-event">Event</span> from your connected Google Calendar, if any</span>
         <span><span class="chip chip-task">Task</span> due date, visible to the whole team</span>
         <span><span class="chip chip-reminder">Reminder</span> set in the Hub, only visible to whoever set it</span>
       </div>
@@ -6017,6 +6022,38 @@ select.wfb-field-input { padding-right: 26px; }
 
       <div class="modal-btns">
         <button class="btn btn-ghost" onclick="closeBhHistoryModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CALENDAR: NEW ITEM MODAL -->
+  <div class="modal-overlay" id="calNewItemModal">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="calNewItemModalTitle">
+      <h3 id="calNewItemModalTitle"><span class="icon" data-icon="calendar" data-icon-size="14"></span> New Calendar Item</h3>
+      <label for="calNewItemType" class="field-label">Type</label>
+      <select id="calNewItemType" class="field-select" style="height:36px;width:100%;margin-bottom:8px">
+        <option value="task">Task — visible to the whole team</option>
+        <option value="reminder">Reminder — only visible to you</option>
+      </select>
+      <label for="calNewItemTitle" class="field-label">Title</label>
+      <input type="text" id="calNewItemTitle" class="field-input" style="height:36px;margin-bottom:8px" placeholder="What needs to happen?">
+      <label for="calNewItemClient" class="field-label">Client (optional)</label>
+      <input type="text" id="calNewItemClient" class="field-input" style="height:36px;margin-bottom:8px" list="calNewItemClientList" placeholder="Start typing a client name…" autocomplete="off">
+      <datalist id="calNewItemClientList"></datalist>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px">
+        <div>
+          <label for="calNewItemDate" class="field-label">Date</label>
+          <input type="date" id="calNewItemDate" class="field-input" style="height:36px">
+        </div>
+        <div>
+          <label for="calNewItemTime" class="field-label">Time (optional)</label>
+          <input type="time" id="calNewItemTime" class="field-input" style="height:36px">
+        </div>
+      </div>
+      <p id="calNewItemSyncNote" style="font-size:10.5px;color:var(--text3);margin-top:8px"></p>
+      <div class="modal-btns">
+        <button class="btn btn-ghost" onclick="closeCalNewItemModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveCalNewItem()">Create</button>
       </div>
     </div>
   </div>
@@ -20738,6 +20775,65 @@ async function loadClientNotesTasks() {
 let calendarState = { view: 'month', currentDate: new Date(), syncMode: 'week' };
 const CAL_SYNC_MODE_KEY = 'csh_calendar_sync_mode_v1';
 
+// Matches a Google Calendar event's title/description text against every
+// real client name in the Hub, by substring rather than fuzzy edit-distance
+// -- real event titles typically include the actual business name
+// verbatim ("Call with HQR Air", "HQR Air — Renewal"), so a direct
+// substring match is both simpler and more reliably correct here than the
+// Levenshtein-based matching used elsewhere for typo-tolerant lookups.
+// Prefers the longest matching name, so a short client name can't
+// spuriously match inside an unrelated longer word. Returns null (never
+// guesses) if nothing matches.
+function matchGoogleEventToClient(summary, description) {
+  const text = `${summary || ''} ${description || ''}`.toLowerCase();
+  if (!text.trim()) return null;
+  const merged = buildMergedClients();
+  let best = null;
+  for (const key in merged) {
+    if (key.length < 3) continue;
+    // Word-boundary match, not plain substring -- a short client name like
+    // "AB Co" would otherwise spuriously match inside an unrelated word
+    // like "grab coffee" (which genuinely contains "ab co" as a literal
+    // substring). Found and fixed via direct testing before shipping, not
+    // theoretical -- confirmed the false positive first, then confirmed
+    // this fixes it.
+    const escaped = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const re = new RegExp(`\\b${escaped}\\b`, 'i');
+    if (re.test(text) && (!best || key.length > best.length)) best = key;
+  }
+  return best ? merged[best].displayName : null;
+}
+// Real events from the connected Google Calendar -- read-only visibility
+// into this browser's own connected account (per-user, same as the rest
+// of the existing Google Calendar integration). Returns an empty array,
+// not an error, if nothing's connected -- this is meant to work silently
+// for whoever hasn't connected, not force a popup or show a broken state.
+async function loadGoogleCalendarEventsForRange(rangeStart, rangeEnd) {
+  if (!(await ensureGoogleAccessToken())) return [];
+  try {
+    const params = new URLSearchParams({
+      timeMin: rangeStart.toISOString(), timeMax: rangeEnd.toISOString(),
+      singleEvents: 'true', orderBy: 'startTime', maxResults: '250',
+    });
+    const res = await fetch(`https://www.googleapis.com/calendar/v3/calendars/primary/events?${params}`, {
+      headers: { 'Authorization': 'Bearer ' + googleAccessToken },
+    });
+    if (!res.ok) throw new Error('Calendar API ' + res.status);
+    const data = await res.json();
+    return (data.items || []).filter(ev => ev.status !== 'cancelled' && (ev.start.dateTime || ev.start.date)).map(ev => ({
+      id: 'gcalevent-' + ev.id,
+      type: 'event',
+      title: ev.summary || '(untitled event)',
+      clientName: matchGoogleEventToClient(ev.summary, ev.description),
+      dateIso: ev.start.dateTime || (ev.start.date + 'T00:00:00.000Z'),
+      ownerEmail: null,
+      raw: ev,
+    }));
+  } catch (e) {
+    console.warn('Could not load Google Calendar events:', e.message);
+    return [];
+  }
+}
 async function loadCalendarItemsForRange(rangeStart, rangeEnd) {
   const startStr = rangeStart.toISOString().slice(0, 10);
   const endStr = rangeEnd.toISOString().slice(0, 10);
@@ -20755,6 +20851,12 @@ async function loadCalendarItemsForRange(rangeStart, rangeEnd) {
       reminders.forEach(r => items.push({ id: 'reminder-' + r.id, type: 'reminder', title: r.title || '(untitled reminder)', clientName: r.client_name || null, dateIso: r.remind_at, ownerEmail: r.owner_email, raw: r }));
     } catch (e) { console.warn('Could not load reminders for calendar range:', e.message); }
   }
+  // Real Google Calendar events -- shown regardless of the 1-Way/2-Way
+  // toggle, since that toggle only ever controls whether NEW items
+  // created here get pushed OUT to Google Calendar. Reading events IN is
+  // exactly what "1-Way (Read Only)" already meant from the start.
+  const gcalEvents = await loadGoogleCalendarEventsForRange(rangeStart, rangeEnd);
+  items.push(...gcalEvents);
   return items.sort((a, b) => a.dateIso.localeCompare(b.dateIso));
 }
 
@@ -20990,6 +21092,74 @@ async function renderCalendarWeek() {
   pane.innerHTML = `<div class="week-header-row">${headerHtml}</div>${allDayRowHtml}<div class="cal-day-scroll"><div class="week-hourgrid">${hourRows}</div></div>`;
   const scrollEl = pane.querySelector('.cal-day-scroll');
   if (scrollEl) scrollEl.scrollTop = 7 * CAL_HOUR_ROW_PX;
+}
+
+// ─── "+ New Event" creation (added 2026-08-08) ──────────────────────────────
+// Creates a Task (team-wide visible, reuses the CLIENT_TASKS shape and
+// table directly) or a Reminder (reuses createReminder() as-is, already a
+// clean function with no DOM dependency). Deliberately does NOT reuse
+// addClientTask() -- that function already unconditionally pushes a
+// self-assigned task with a due date to Google Calendar, everywhere else
+// in the Hub, regardless of any setting. This is the one place the 1-Way/
+// 2-Way toggle is actually supposed to mean something, so it needs its own
+// lighter creation path that checks the toggle instead of always pushing.
+function openCalNewItemModal() {
+  if (!requirePermission('edit')) return;
+  document.getElementById('calNewItemType').value = 'task';
+  document.getElementById('calNewItemTitle').value = '';
+  document.getElementById('calNewItemClient').value = '';
+  const d = calendarState.currentDate || new Date();
+  document.getElementById('calNewItemDate').value = new Date(d.getFullYear(), d.getMonth(), d.getDate()).toISOString().slice(0, 10);
+  document.getElementById('calNewItemTime').value = '';
+  document.getElementById('calNewItemClientList').innerHTML = Object.values(buildMergedClients()).map(m => `<option value="${escAttr(m.displayName)}">`).join('');
+  const mode = getCalendarSyncMode();
+  document.getElementById('calNewItemSyncNote').textContent = mode === '2way'
+    ? 'A Task created here will also be pushed to your connected Google Calendar (2-Way Sync is on) — Reminders never push, they\'re Hub-only either way.'
+    : '1-Way Sync is on, so this stays in the Hub only — nothing gets pushed to Google Calendar. Switch to 2-Way above if you want new Tasks to push automatically.';
+  document.getElementById('calNewItemModal').classList.add('open');
+  document.getElementById('calNewItemTitle').focus();
+}
+function closeCalNewItemModal() {
+  document.getElementById('calNewItemModal').classList.remove('open');
+}
+async function saveCalNewItem() {
+  if (!requirePermission('edit')) return;
+  const type = document.getElementById('calNewItemType').value;
+  const title = document.getElementById('calNewItemTitle').value.trim();
+  const clientName = document.getElementById('calNewItemClient').value.trim() || null;
+  const dateVal = document.getElementById('calNewItemDate').value;
+  const timeVal = document.getElementById('calNewItemTime').value;
+  if (!title) { showToast('Enter a title before creating this.', 'warning'); document.getElementById('calNewItemTitle').focus(); return; }
+  if (!dateVal) { showToast('Pick a date before creating this.', 'warning'); return; }
+  const dateIso = timeVal ? new Date(`${dateVal}T${timeVal}:00`).toISOString() : new Date(`${dateVal}T00:00:00`).toISOString();
+
+  if (type === 'reminder') {
+    const u = getCurrentUser();
+    const reminder = await createReminder(title, dateIso, clientName, u ? u.email : '');
+    if (!reminder) { showToast('Could not create the reminder.', 'error'); return; }
+    showToast(`Reminder created${clientName ? ' for ' + escAttr(clientName) : ''}.`, 'success');
+  } else {
+    const u = getCurrentUser();
+    const task = {
+      id: (crypto.randomUUID ? crypto.randomUUID() : 't_' + Date.now() + Math.random().toString(16).slice(2)),
+      client_name: clientName, title,
+      assigned_to_email: u ? u.email : '', assigned_to_name: u ? u.name : '',
+      created_by_email: u ? u.email : '', created_by_name: u ? u.name : 'Guest',
+      due_date: dateIso, duration_minutes: null, reminder_minutes: null,
+      recurrence: null, recurrence_custom_n: null, recurrence_custom_unit: null,
+      status: 'open', created_at: new Date().toISOString(),
+    };
+    CLIENT_TASKS.unshift(task);
+    try { await sbUpsert('client_tasks', task); }
+    catch (e) { CLIENT_TASKS.shift(); showToast('Could not save the task: ' + e.message, 'error'); return; }
+    localStorage.setItem(CLIENT_TASKS_CACHE_KEY, JSON.stringify(CLIENT_TASKS));
+    showToast(`Task created${clientName ? ' for ' + escAttr(clientName) : ''}.`, 'success');
+    if (getCalendarSyncMode() === '2way') {
+      pushTaskToGoogleCalendar(task).then(ok => { if (ok) showToast('Also added to your Google Calendar.', 'success'); });
+    }
+  }
+  closeCalNewItemModal();
+  rebuildCalendarPage();
 }
 
 // ─── In-Hub task reminders (2026-07-16) ─────────────────────────────────
