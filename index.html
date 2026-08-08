@@ -2120,14 +2120,14 @@ html.cal-page-open, html.cal-page-open body { overflow: hidden; height: 100%; }
 .cal-day:hover { border-color: var(--orange); }
 .cal-day.today { border-color: var(--orange); }
 .cal-day.other-month { opacity: .35; }
-.cal-day .dnum { color: var(--text3); font-weight: 700; margin-bottom: 5px; font-size: 12px; }
+.cal-day .dnum { color: var(--text3); font-weight: 700; margin-bottom: 5px; font-size: 12px; flex-shrink: 0; }
 .cal-day.today .dnum { color: var(--orange); }
-.cal-day .item { font-size: 10px; padding: 3px 6px; border-radius: 4px; margin-bottom: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+.cal-day .item { font-size: 10px; padding: 3px 6px; border-radius: 4px; margin-bottom: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; flex-shrink: 0; }
 .cal-day .item.event, .cal-allday-row .item.event, .week-allday-cell .item.event { background: rgba(59,130,246,.16); color: var(--blue); }
 .cal-day .item.task, .cal-allday-row .item.task, .week-allday-cell .item.task { background: var(--orange-dim); color: var(--orange); }
 .cal-day .item.reminder, .cal-allday-row .item.reminder, .week-allday-cell .item.reminder { background: rgba(168,85,247,.16); color: var(--purple); }
 .cal-day .item:hover { filter: brightness(1.3); }
-.cal-day .item-more { font-size: 8.5px; color: var(--text3); }
+.cal-day .item-more { font-size: 8.5px; color: var(--text3); flex-shrink: 0; }
 
 /* Schedule (agenda) view */
 .agenda-date-hdr { font-size: 11px; font-weight: 700; color: var(--text2); padding: 10px 0 6px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; }
@@ -20838,11 +20838,19 @@ async function loadCalendarItemsForRange(rangeStart, rangeEnd) {
   const startStr = rangeStart.toISOString().slice(0, 10);
   const endStr = rangeEnd.toISOString().slice(0, 10);
   const items = [];
+  const pushedGcalIds = new Set();
   CLIENT_TASKS.forEach(t => {
     if (!t.due_date) return;
     const taskDateStr = String(t.due_date).slice(0, 10);
     if (taskDateStr < startStr || taskDateStr > endStr) return;
     items.push({ id: 'task-' + t.id, type: 'task', title: t.title || '(untitled task)', clientName: t.client_name || null, dateIso: t.due_date, ownerEmail: t.assigned_to_email || null, raw: t });
+    // Remember which Google Calendar event this task IS, if 2-Way sync
+    // already pushed it there -- otherwise it would show up twice, once
+    // as this Task and once again as a separately-fetched Event for the
+    // exact same thing (real problem found from Oscar's own screenshot:
+    // a pushed task and its own Google Calendar event both rendering,
+    // looking like an unrelated duplicate rather than one real item).
+    if (t.gcal_event_id) pushedGcalIds.add(t.gcal_event_id);
   });
   const u = getCurrentUser();
   if (u && u.email) {
@@ -20855,7 +20863,8 @@ async function loadCalendarItemsForRange(rangeStart, rangeEnd) {
   // toggle, since that toggle only ever controls whether NEW items
   // created here get pushed OUT to Google Calendar. Reading events IN is
   // exactly what "1-Way (Read Only)" already meant from the start.
-  const gcalEvents = await loadGoogleCalendarEventsForRange(rangeStart, rangeEnd);
+  const gcalEventsRaw = await loadGoogleCalendarEventsForRange(rangeStart, rangeEnd);
+  const gcalEvents = gcalEventsRaw.filter(ev => !pushedGcalIds.has(ev.id.replace(/^gcalevent-/, '')));
   items.push(...gcalEvents);
   return items.sort((a, b) => a.dateIso.localeCompare(b.dateIso));
 }
@@ -20868,7 +20877,9 @@ function setCalendarSyncMode(mode) {
   document.getElementById('calSyncBtn1way').classList.toggle('active', mode === '1way');
   document.getElementById('calSyncBtn2way').classList.toggle('active', mode === '2way');
   if (mode === '2way') {
-    showToast('2-Way Sync saved. Note: pushing newly-created calendar items to Google Calendar is coming in Phase 2 — this sets the preference now so it\'s ready.', 'info');
+    showToast('2-Way Sync on — new Tasks created here will also push to your connected Google Calendar. Reminders always stay Hub-only.', 'success');
+  } else {
+    showToast('1-Way Sync on — new Tasks and Reminders created here stay in the Hub only.', 'info');
   }
 }
 function calendarGoToday() {
@@ -20973,7 +20984,7 @@ async function renderCalendarMonth() {
     const dayItems = itemsByDate[cellStr] || [];
     const isOtherMonth = cellDate.getMonth() !== d.getMonth();
     const isToday = cellStr === todayStr;
-    const shown = dayItems.slice(0, 4);
+    const shown = dayItems.slice(0, 3);
     const moreCount = dayItems.length - shown.length;
     html += `<div class="cal-day${isToday ? ' today' : ''}${isOtherMonth ? ' other-month' : ''}">
       <div class="dnum">${cellDate.getDate()}</div>
